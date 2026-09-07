@@ -122,7 +122,16 @@ tr.hi:hover td{background:var(--accent-2)}
 svg text{font-family:Sarabun,"Segoe UI",Tahoma,sans-serif}
 .chart{width:auto;max-width:100%;max-height:430px;height:auto;display:block;margin:0 auto}
 .k .spark{width:100%;max-width:none;height:54px;margin:6px 0 0}
-body.present #overview .k .spark{height:120px}
+.donutbox{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.donut{width:150px;height:150px;flex:0 0 auto;max-height:none}
+.dlegend{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--ink-2);min-width:0}
+.dlegend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px}
+.dlegend b{font-weight:600}
+.dlegend em{font-style:normal;color:var(--faint);margin-left:4px}
+.covergrid{display:grid;grid-template-columns:1.25fr 1fr;gap:18px;margin-top:16px;align-items:start}
+.coverbox{background:var(--surface);border-radius:var(--r-md);padding:14px 16px}
+@media (max-width:900px){ .covergrid{grid-template-columns:1fr} }
+body.present #overview .k .spark{height:74px}
 @media (min-width:1500px){ .chart{max-height:520px} }
 @media (min-width:1900px){ .chart{max-height:600px} }
 
@@ -151,14 +160,30 @@ body.present .rank .num{width:30px;height:30px;font-size:15px;border-radius:9px}
 body.present .rank li{grid-template-columns:30px 1fr 1fr 78px 100px;padding:10px 0}
 body.present .two h3{font-size:19px}
 body.present .cards,body.present .strip{gap:18px}
-body.present #overview .cards{flex:1;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);align-content:stretch;gap:18px}
+body.present #overview .cards{flex:0 0 auto;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+body.present #overview .k{padding:13px 18px}
+body.present #overview .k .l{font-size:16px}
+body.present #overview .k .v{font-size:38px;margin:2px 0 2px}
+body.present #overview .k .s{font-size:14px}
+body.present #overview .k .spark{height:58px}
+body.present #overview .k:first-child .v{font-size:62px;letter-spacing:-.03em}
+body.present #overview .k:first-child .l{font-size:19px}
+body.present #overview .k:first-child .s{font-size:16px}
+body.present #overview .covergrid{flex:1;min-height:0;margin-top:14px;gap:14px;align-items:stretch}
+body.present #overview .covergrid>div:last-child{display:grid;grid-template-rows:1fr 1fr;gap:14px;min-height:0}
+body.present #overview .coverbox{display:flex;flex-direction:column;justify-content:center;padding:12px 18px;min-height:0}
+body.present #overview .grp{font-size:15px;margin-bottom:4px}
+body.present #overview .chart{max-height:26vh}
+body.present #overview .donut{width:132px;height:132px}
+body.present #overview .dlegend{font-size:15px;gap:4px}
+body.present #overview .legend{font-size:14px;margin-top:4px}
 body.present #overview .k:first-child{grid-column:span 2;background:linear-gradient(140deg,var(--accent-2),var(--card))}
-body.present #overview .k:first-child .v{font-size:96px;letter-spacing:-.03em}
+body.present #overview .k:first-child .v{font-size:72px;letter-spacing:-.03em}
 body.present #overview .k:first-child .l{font-size:22px}
 body.present #overview .k:first-child .s{font-size:19px}
 body.present #overview .k{display:flex;flex-direction:column;justify-content:center;padding:26px 30px}
 body.present #overview .k .l{font-size:19px}
-body.present #overview .k .v{font-size:62px;margin:8px 0 6px}
+body.present #overview .k .v{font-size:46px;margin:4px 0 4px}
 body.present #overview .k .s{font-size:17px}
 body.present .dist{height:44px}
 body.present .chart{max-height:48vh;width:auto;max-width:100%;margin:0 auto}
@@ -441,6 +466,23 @@ function spark(vals,labels){
     <text x="${W-R}" y="${H-3}" font-size="10" fill="var(--faint)" text-anchor="end">${labels[1]}</text>`:''}
   </svg>`;
 }
+/* ---- โดนัท: สัดส่วน ---- */
+function donut(items,title,sub){
+  const tot=items.reduce((a,b)=>a+b.v,0); if(!tot) return '';
+  const R=54,C=2*Math.PI*R,W=150,H=150;
+  let off=0;
+  const segs=items.map(it=>{ const f=it.v/tot, len=C*f;
+    const d=`<circle cx="${W/2}" cy="${H/2}" r="${R}" fill="none" stroke="${it.c}" stroke-width="26"
+      stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 ${W/2} ${H/2})"/>`;
+    off+=len; return d; }).join('');
+  return `<div class="donutbox">
+    <svg class="donut" viewBox="0 0 ${W} ${H}">${segs}
+      <text x="${W/2}" y="${H/2-2}" text-anchor="middle" font-size="21" font-weight="700" fill="var(--ink)">${title}</text>
+      <text x="${W/2}" y="${H/2+18}" text-anchor="middle" font-size="11" fill="var(--mute)">${sub||''}</text>
+    </svg>
+    <div class="dlegend">${items.map(it=>`<span><i style="background:${it.c}"></i>${it.name} <b>${it.v%1?it.v.toFixed(2):it.v}</b> <em>${(it.v/tot*100).toFixed(0)}%</em></span>`).join('')}</div>
+  </div>`;
+}
 /* ---- แท่งซ้อน: โครงสร้างต้นทุนรายเดือน (% ของรายได้) ---- */
 function costStack(rows){
   if(!rows.length) return '';
@@ -547,7 +589,27 @@ function build(m){
         ${d.cem?`<div class="k"><div class="l">CEM เฉลี่ย</div><div class="v">${d.cem.avgNow}%</div><div class="s">${d.cem.stores} สาขา · ดีเยี่ยม ${d.cem.distNow[0]} สาขา</div></div>`:''}
         ${d.oss?`<div class="k"><div class="l">OSS เฉลี่ย</div><div class="v">${d.oss.avgNow}%</div><div class="s">ตรวจแล้ว ${d.oss.stores} สาขา</div></div>`:''}
         <div class="k"><div class="l">สาขาที่มียอด ${label(m)}</div><div class="v">${d.stores?d.stores.now+' สาขา':'—'}</div><div class="s">${d.stores&&d.stores.ly!=null?`${YEAR-1}: ${d.stores.ly} สาขา`:''}</div></div>
-      </div>`));
+      </div>
+      ${(()=>{
+        const vs=rows.filter(r=>r.budget!=null).slice(-6).map(r=>({name:MONTH_TH[r.m-1],prev:r.budget,now:r.sales}));
+        const dl=d.delivery&&d.delivery.platforms&&d.delivery.platforms.length
+          ? donut(d.delivery.platforms.map((x,i)=>({name:x.name,v:x.now,c:['#F4610F','#F7B076','#C9A227','#8FA1B3'][i%4]})),
+                  (d.delivery.platforms.reduce((a,b)=>a+b.now,0)).toFixed(1)+'M','ยอด Delivery')
+          : '';
+        const ce=d.cem&&d.cem.distNow
+          ? donut([{name:'ดีเยี่ยม',v:d.cem.distNow[0],c:'#1f8f4e'},{name:'ปานกลาง',v:d.cem.distNow[1],c:'#d99a1e'},{name:'ต้องปรับปรุง',v:d.cem.distNow[2],c:'#cf3a3a'}],
+                  d.cem.avgNow+'%','CEM เฉลี่ย')
+          : '';
+        if(!vs.length && !dl && !ce) return '';
+        return `<div class="covergrid">
+          ${vs.length?`<div class="coverbox"><div class="grp">ยอดขายเทียบ Budget รายเดือน</div>${barPairs(vs,'M')}
+            <div class="legend"><span><i style="background:var(--chart-soft)"></i>Budget</span><span><i style="background:var(--chart-1)"></i>ยอดขายจริง</span></div></div>`:''}
+          <div style="display:grid;gap:14px">
+            ${dl?`<div class="coverbox"><div class="grp">สัดส่วน Delivery แยกแพลตฟอร์ม</div>${dl}</div>`:''}
+            ${ce?`<div class="coverbox"><div class="grp">คุณภาพสาขา (CEM)</div>${ce}</div>`:''}
+          </div>
+        </div>`;
+      })()}`));
   }
 
   // 2 monthly
