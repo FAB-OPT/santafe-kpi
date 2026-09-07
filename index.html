@@ -56,7 +56,7 @@ nav a.on{background:var(--accent);border-color:var(--accent);color:#fff;font-wei
 nav a.on::before{background:rgba(255,255,255,.28);color:#fff}
 main{display:flex;flex-direction:column;gap:var(--gap);min-width:0}
 
-section.slide{background:var(--card);border-radius:var(--r);overflow:hidden;scroll-margin-top:118px;box-shadow:var(--sh)}
+section.slide{background:var(--card);border-radius:var(--r);overflow:hidden;scroll-margin-top:var(--stick,118px);box-shadow:var(--sh)}
 .bar{background:var(--card);color:var(--ink);padding:15px var(--pad) 12px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--hair)}
 .bar h2{margin:0;font-size:17px;font-weight:600;display:flex;align-items:center;gap:10px}
 .bar h2::before{content:attr(data-n);width:24px;height:24px;border-radius:8px;background:var(--accent-2);color:var(--accent-ink);font-size:12.5px;font-weight:700;display:grid;place-items:center;flex:0 0 auto}
@@ -253,7 +253,7 @@ body.locked{overflow:hidden}
   nav{top:52px;gap:7px;padding:9px 0;margin:0 0 12px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
   nav::-webkit-scrollbar{display:none}
   nav a{padding:5px 13px 5px 6px;font-size:12.5px}
-  section.slide{border-radius:14px;scroll-margin-top:104px}
+  section.slide{border-radius:14px}
   .bar{padding:13px 15px 10px} .bar h2{font-size:15.5px;gap:8px} .bar h2::before{width:21px;height:21px;font-size:11.5px}
   .bar .sub{font-size:12px}
   .body{padding:14px 15px 16px}
@@ -573,7 +573,11 @@ function build(m){
   }
 
   // 7.2 กำไรรายสาขา (จาก P&L ชีต SUM)
-  const plb=d.plBranches;
+  let plb=d.plBranches, plbM=m;
+  if(!(plb&&plb.length)){                       // เดือนนี้ยังไม่มีงบรายสาขา → ใช้เดือนล่าสุดที่มี
+    for(let k=m-1;k>=1;k--){ const dd=DETAIL[k]||{};
+      if(dd.plBranches&&dd.plBranches.length){ plb=dd.plBranches; plbM=k; break; } }
+  }
   if(plb && plb.length){
     const MIN=200000;                       // กันสาขาที่ปิด/ยอดเกือบศูนย์ ทำให้ %กำไร เพี้ยน
     const rank=plb.filter(b=>b.sales>=MIN), skipped=plb.length-rank.length;
@@ -581,7 +585,7 @@ function build(m){
     const t=(arr)=>`<div class="scroll"><table><tr><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">กำไร</th><th class="n">%กำไร</th><th class="n">%COS</th><th class="n">%COL</th></tr>
       ${arr.map(b=>`<tr><td>${b.name}</td><td class="n">${(b.sales/1e6).toFixed(2)}M</td><td class="n ${cls(b.profit)}">${(b.profit/1e3).toFixed(0)}K</td><td class="n ${cls(b.gp)}">${b.gp.toFixed(1)}%</td><td class="n">${b.cos.toFixed(1)}%</td><td class="n">${b.col.toFixed(1)}%</td></tr>`).join('')}</table></div>`;
     const loss=plb.filter(b=>b.profit<0);
-    out.push(sec('plbr','กำไรรายสาขา',`${label(m)} · ${rank.length} สาขา · เรียงตาม %กำไร${skipped?` (ไม่รวม ${skipped} สาขาที่ยอดต่ำกว่า 0.2M)`:''}`,`
+    out.push(sec('plbr','กำไรรายสาขา',`${label(plbM)}${plbM!==m?' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':''} · ${rank.length} สาขา · เรียงตาม %กำไร${skipped?` (ไม่รวม ${skipped} สาขาที่ยอดต่ำกว่า 0.2M)`:''}`,`
       <div class="strip">
         <div class="st pos"><div class="l">สาขาที่กำไร</div><div class="v">${plb.length-loss.length}</div><div class="s">จาก ${plb.length} สาขา</div></div>
         <div class="st neg"><div class="l">สาขาที่ขาดทุน</div><div class="v">${loss.length}</div><div class="s">รวม ${(loss.reduce((a,b)=>a+b.profit,0)/1e6).toFixed(2)}M</div></div>
@@ -664,6 +668,7 @@ function build(m){
 
   $('#main').innerHTML=out.join('');
   if(BR_CTX){ const sel=$('#brSel'); if(sel){ sel.onchange=()=>drawBranch(sel.value); drawBranch(sel.value); } }
+  setStick(); requestAnimationFrame(setStick);
   [...$('#main').children].forEach((s,i)=>{const h=s.querySelector('.bar h2'); if(h) h.dataset.n=i+1;});
   $('#hsub').textContent=label(m);
   $('#nav').innerHTML=out.map((_,i)=>{const s=$('#main').children[i];return `<a href="#${s.id}" data-i="${i}"><span>${NAV_SHORT[s.id]||s.dataset.title.replace(/ — .*$/,'')}</span></a>`;}).join('');
@@ -687,6 +692,14 @@ $('#nextM').onclick=()=>setMonth(months[months.indexOf(curM)+1]);
 
 /* ========================= nav highlight ========================= */
 let io;
+function setStick(){
+  const t=document.querySelector('.top'), n=document.getElementById('nav');
+  if(!t||!n) return;
+  const h=Math.round(t.getBoundingClientRect().height+n.getBoundingClientRect().height+10);
+  document.documentElement.style.setProperty('--stick', h+'px');
+  n.style.top=Math.round(t.getBoundingClientRect().height)+'px';
+}
+addEventListener('resize',setStick);
 function observeNav(){ if(io) io.disconnect(); io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id));}})},{rootMargin:'-40% 0px -55% 0px'}); document.querySelectorAll('section.slide').forEach(s=>io.observe(s)); }
 
 /* ========================= present mode ========================= */
