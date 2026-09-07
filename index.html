@@ -315,7 +315,7 @@ const YEAR = 2026;
 // ชื่อย่อที่ใช้ในแถบเมนูด้านบน (หัวข้อเต็มยังอยู่ในแถบหัวข้อของแต่ละส่วน)
 const NAV_SHORT={overview:'KPI ภาพรวม',monthly:'ยอดขายรายเดือน',sssg:'%SSSG รายเดือน',
   delivery:'Delivery รายแพลตฟอร์ม',decline:'สาขา Delivery ลดแรง',trans:'Trans · Ticket · ลูกค้า',
-  branches:'รายสาขา ดี/น่าห่วง',cem:'CEM',oss:'OSS'};
+  branches:'รายสาขา ดี/น่าห่วง',pl:'กำไร-ต้นทุน (P&L)',cem:'CEM',oss:'OSS'};
 
 // ตารางรายเดือน (ทุกเดือนที่มีข้อมูล) — ใช้กับกราฟและตาราง
 const DEFAULT_MONTHLY = [
@@ -524,6 +524,26 @@ function build(m){
         <div class="legend"><span><i style="background:var(--good)"></i>ดีเยี่ยม</span><span><i style="background:var(--amber)"></i>ปานกลาง</span><span><i style="background:var(--bad)"></i>ต้องปรับปรุง</span></div></div>
       <div><h3>Top 5 สาขาคะแนนสูงสุด 2026</h3><ol class="rank">${a.top.map((r,i)=>`<li><span class="num">${i+1}</span><span>${r[0]}</span><span class="track"><i style="width:${r[1]/mx*100}%"></i></span><span class="sc">${r[1].toFixed(1)}${u}</span><span style="font-size:12.5px;color:var(--mute)">2025: ${r[2].toFixed(1)} ${pill(r[1]-r[2],1,'')}</span></li>`).join('')}</ol></div></div>`);
   };
+  // 8 P&L (ถ้ามีข้อมูล)
+  const plRows=MONTHLY.filter(r=>r.m<=m && DETAIL[r.m] && DETAIL[r.m].pl).map(r=>({m:r.m,...DETAIL[r.m].pl}));
+  if(plRows.length){
+    const cur2=plRows[plRows.length-1], prev2=plRows.length>1?plRows[plRows.length-2]:null;
+    const P=(v,base)=>base?(v/base*100):0, fm=v=>(v/1e6).toFixed(2)+'M';
+    const tile=(l,v,s2,cl)=>`<div class="st ${cl||''}"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s2}</div></div>`;
+    out.push(sec('pl','กำไร-ต้นทุน (P&L) '+label(cur2.m),'จากงบกำไรขาดทุน — Santa Fe',`
+      <div class="strip">
+        ${tile('รายได้จากการขาย',fm(cur2.revenue),prev2?'เดือนก่อน '+fm(prev2.revenue)+' '+pill(pct(prev2.revenue,cur2.revenue)):'')}
+        ${tile('ต้นทุนอาหาร (Food)',P(cur2.food,cur2.revenue).toFixed(1)+'%',fm(cur2.food)+(prev2?' · เดือนก่อน '+P(prev2.food,prev2.revenue).toFixed(1)+'%':''),prev2&&cur2.food/cur2.revenue<=prev2.food/prev2.revenue?'pos':'neg')}
+        ${tile('ค่าแรง (Labor)',P(cur2.labor,cur2.revenue).toFixed(1)+'%',fm(cur2.labor)+(prev2?' · เดือนก่อน '+P(prev2.labor,prev2.revenue).toFixed(1)+'%':''),prev2&&cur2.labor/cur2.revenue<=prev2.labor/prev2.revenue?'pos':'neg')}
+        ${tile('ค่าเช่า+สาธารณูปโภค',P(cur2.rent,cur2.revenue).toFixed(1)+'%',fm(cur2.rent),'')}
+        ${tile('กำไรก่อนโบนัส',fm(cur2.profit),P(cur2.profit,cur2.revenue).toFixed(1)+'% ของรายได้',cur2.profit>=0?'pos':'neg')}
+      </div>
+      <div class="scroll"><table>
+        <tr><th>เดือน</th><th class="n">รายได้</th><th class="n">Food</th><th class="n">%Food</th><th class="n">Labor</th><th class="n">%Labor</th><th class="n">เช่า+Utility</th><th class="n">รวมค่าใช้จ่าย</th><th class="n">กำไร</th><th class="n">%กำไร</th></tr>
+        ${plRows.map(r=>`<tr class="${r.m===cur2.m?'hi':''}"><td>${r.m===cur2.m?'★ ':''}${MONTH_TH[r.m-1]}</td><td class="n">${fm(r.revenue)}</td><td class="n">${fm(r.food)}</td><td class="n">${P(r.food,r.revenue).toFixed(1)}%</td><td class="n">${fm(r.labor)}</td><td class="n">${P(r.labor,r.revenue).toFixed(1)}%</td><td class="n">${fm(r.rent)}</td><td class="n">${fm(r.expense)}</td><td class="n ${cls(r.profit)}">${fm(r.profit)}</td><td class="n ${cls(r.profit)}">${P(r.profit,r.revenue).toFixed(1)}%</td></tr>`).join('')}
+      </table></div>`));
+  }
+
   out.push(audit('cem','CEM (Customer Experience)',d.cem));
   out.push(audit('oss','OSS (Operations & Service Standard)',d.oss));
 
@@ -787,12 +807,145 @@ function parseDailySale(wb){
   return {mon,det,fileM,warn};
 }
 
+/* ===== ตัวอ่านไฟล์ "แบบฟอร์มส่งยอดขาย" (รายสาขา รายเดือน) ===== */
+const TH_FULL=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+function monthSheetsOf(wb){ // → {m: ชื่อชีต}
+  const out={};
+  wb.SheetNames.forEach(n=>{ const t=n.trim();
+    const i=TH_FULL.findIndex(x=>t.startsWith(x)); if(i<0) return;
+    if(!/\d{2}\s*$/.test(t)) return; out[i+1]=n; });
+  return out;
+}
+function isSalesFormWb(wb){ return Object.keys(monthSheetsOf(wb)).length>0 && wb.SheetNames.some(n=>/^Plan Sale/i.test(n.trim())); }
+
+function parseSalesForm(wb){
+  const N=v=>typeof v==='number'&&isFinite(v)?v:0;
+  const pct=(a,b)=>(a==null||b==null||!a)?null:(b-a)/a*100;
+  const rows=n=>XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:null});
+  const C={plan:2,act:5,act2:4,dine:7,take:8,grab:9,lm:10,sp:11,deli:12,
+           tr:13,trDine:14,trTake:15,trDeli:19,tk:20,tkDine:21,tkTake:22,tkDeli:23,cust:24,custAvg:25};
+  const sheets=monthSheetsOf(wb), data={}, warn=[];
+
+  for(const m of Object.keys(sheets).map(Number)){
+    const rs=rows(sheets[m]); const list=[]; let inSF=false;
+    for(const r of rs){
+      const c0=r[0], c1=r[1];
+      if(typeof c0==='string' && (c1==null||c1==='')){ inSF=/santa\s*fe/i.test(c0); continue; }
+      if(typeof c1!=='string') continue;
+      const mt=c1.trim().match(/^(\d{4})\s+(.+)$/); if(!mt) continue;
+      if(/^total$/i.test(String(c0||'').trim())) continue;
+      if(!inSF) continue;
+      if(!/^50/.test(mt[1])) continue;          // เฉพาะสาขา Santa Fe รหัส 50xx
+      const act=N(r[C.act2])||N(r[C.act]);      // ใช้คอลัมน์ "Actual Sale สิ้นวัน" เป็นหลัก
+      list.push({code:mt[1], name:mt[2].trim(), plan:N(r[C.plan]), sales:act,
+        dine:N(r[C.dine]), take:N(r[C.take]), grab:N(r[C.grab]), lm:N(r[C.lm]), sp:N(r[C.sp]), deli:N(r[C.deli]),
+        tr:N(r[C.tr]), trDine:N(r[C.trDine]), trTake:N(r[C.trTake]), trDeli:N(r[C.trDeli]),
+        tk:N(r[C.tk]), tkDine:N(r[C.tkDine]), tkTake:N(r[C.tkTake]), tkDeli:N(r[C.tkDeli]),
+        cust:N(r[C.cust])});
+    }
+    if(list.some(b=>b.sales>0)) data[m]=list;
+  }
+  if(!Object.keys(data).length){ return {mon:{},det:{},months:[],warn:['ไม่พบชีตรายเดือนที่มียอดขาย']}; }
+
+  const S=(l,k)=>l.reduce((a,b)=>a+b[k],0);
+  const mon={}, det={}, partial=[];
+  Object.keys(data).map(Number).forEach(m=>{ const l=data[m], pl=S(l,'plan'), ac=S(l,'sales');
+    if(pl>0 && ac < pl*0.55){ partial.push(m); delete data[m]; } });   // เดือนที่ยังเก็บข้อมูลไม่ครบ
+  const ms=Object.keys(data).map(Number).sort((a,b)=>a-b);
+
+  for(const m of ms){
+    const cur=data[m], prev=data[m-1];
+    const sales=S(cur,'sales'), plan=S(cur,'plan');
+    mon[m]={m, sales:+(sales/1e6).toFixed(2), ly:null, budget:plan?+(plan/1e6).toFixed(2):null,
+            sssgSales:null, sssg:null, mom:prev?+pct(S(prev,'sales'),sales).toFixed(1):null};
+    const d=det[m]={};
+    d.stores={now:cur.filter(b=>b.sales>0).length, ly:null, sameStore:prev?cur.filter(b=>b.sales>0&&prev.some(p=>p.code===b.code&&p.sales>0)).length:null};
+
+    /* ---- Delivery ---- */
+    if(prev){
+      const pf=[['Grab','grab'],['Line Man','lm'],['Shopee Food','sp']]
+        .map(([name,k])=>({name, prev:+(S(prev,k)/1e6).toFixed(2), now:+(S(cur,k)/1e6).toFixed(2)}))
+        .filter(p=>p.now>0||p.prev>0);
+      if(pf.length){
+        const tn=S(cur,'deli'), tp=S(prev,'deli'), sp=S(prev,'sales');
+        const byCode={}; prev.forEach(b=>byCode[b.code]=b);
+        const drop=(k)=>cur.map(b=>{const p=byCode[b.code]; return p?[b.name,p[k],b[k]]:null;})
+            .filter(x=>x&&x[1]>0&&x[2]<x[1]).sort((a,b)=>(a[2]-a[1])-(b[2]-b[1]));
+        d.delivery={compare:`${MONTH_TH[m-2>=0?m-2:11]} vs ${MONTH_TH[m-1]} ${YEAR}`, platforms:pf,
+          sharePrev:sp?+(tp/sp*100).toFixed(1):null, shareNow:sales?+(tn/sales*100).toFixed(1):null,
+          topDecline:drop('deli').slice(0,8).map(r=>[r[0],Math.round(r[1]),Math.round(r[2])]),
+          lineManDecline:drop('lm').slice(0,7).map(r=>[r[0],Math.round(r[1]),Math.round(r[2])]),
+          note:`รวม Delivery ${(tn/1e6).toFixed(2)}M เทียบเดือนก่อน ${(tp/1e6).toFixed(2)}M (${(pct(tp,tn)>=0?'+':'')+pct(tp,tn).toFixed(1)}%) — ตัวเลขจากแบบฟอร์มส่งยอดขายรายสาขา`};
+      }
+
+      /* ---- Trans · Ticket · ลูกค้า (เทียบเดือนก่อน) ---- */
+      const ch=(name,tk,tkk)=>({name, trans:[S(prev,tk),S(cur,tk)],
+        ticket:[Math.round(S(prev,tkk)?S(prev,tkk)/prev.filter(b=>b[tkk]).length:0), Math.round(S(cur,tkk)?S(cur,tkk)/cur.filter(b=>b[tkk]).length:0)]});
+      const tkOf=(l,salesKey,transKey)=>{const t=S(l,transKey);return t?Math.round(S(l,salesKey)/t):0;};
+      d.trans={compare:`${MONTH_TH[m-1]} vs ${MONTH_TH[m-2>=0?m-2:11]} ${YEAR}`,
+        trans:[S(prev,'tr'),S(cur,'tr')],
+        ticket:[tkOf(prev,'sales','tr'),tkOf(cur,'sales','tr')],
+        customer:[S(prev,'cust'),S(cur,'cust')],
+        custAvg:[+(S(prev,'cust')/S(prev,'tr')).toFixed(2),+(S(cur,'cust')/S(cur,'tr')).toFixed(2)],
+        channels:[
+          {name:'Dine In',   trans:[S(prev,'trDine'),S(cur,'trDine')], ticket:[tkOf(prev,'dine','trDine'),tkOf(cur,'dine','trDine')]},
+          {name:'Take away', trans:[S(prev,'trTake'),S(cur,'trTake')], ticket:[tkOf(prev,'take','trTake'),tkOf(cur,'take','trTake')]},
+          {name:'Delivery',  trans:[S(prev,'trDeli'),S(cur,'trDeli')], ticket:[tkOf(prev,'deli','trDeli'),tkOf(cur,'deli','trDeli')]}],
+        note:'จำนวนบิล/เช็คเฉลี่ย/ลูกค้า จากแบบฟอร์มส่งยอดขายรายสาขา (เทียบเดือนก่อนหน้า)'};
+
+      /* ---- สาขาดี / น่าเป็นห่วง (MoM) ---- */
+      const byC={}; prev.forEach(b=>byC[b.code]=b);
+      const rowsB=cur.map(b=>{const p=byC[b.code]; if(!p||!p.tr||!b.tr||!p.sales) return null;
+        const tp=pct(p.tr,b.tr), kp=pct(p.sales/p.tr, b.sales/b.tr);
+        return (tp==null||kp==null)?null:{name:b.name, t:tp, k:kp};}).filter(Boolean);
+      const good=rowsB.filter(r=>r.t>=0&&r.k>=-1).sort((a,b)=>(b.t+b.k)-(a.t+a.k)).slice(0,5);
+      const bad =rowsB.filter(r=>r.t<0&&r.k<0).sort((a,b)=>(a.t+a.k)-(b.t+b.k)).slice(0,5);
+      if(good.length||bad.length)
+        d.branches={good:good.map(r=>[r.name,+r.t.toFixed(1),+r.k.toFixed(1)]),
+                    bad: bad.map(r=>[r.name,+r.t.toFixed(1),+r.k.toFixed(1)]),
+                    note:`เทียบ ${MONTH_TH[m-1]} กับ ${MONTH_TH[m-2>=0?m-2:11]} ${YEAR} · จำนวนบิลและเช็คเฉลี่ยรายสาขา`};
+    }
+  }
+  return {mon,det,months:ms,partial,warn};
+}
+
+/* ===== ตัวอ่านไฟล์ P&L (งบกำไรขาดทุน) ===== */
+function isPLWb(wb){ return wb.SheetNames.some(n=>/^Dashboard\s*P[_ ]?L$/i.test(n.trim())); }
+function parsePL(wb){
+  const N=v=>typeof v==='number'&&isFinite(v)?v:0;
+  const k=wb.SheetNames.find(n=>/^Dashboard\s*P[_ ]?L$/i.test(n.trim()));
+  const rs=XLSX.utils.sheet_to_json(wb.Sheets[k],{header:1,defval:null});
+  // หาบล็อก "Santa Fe" แล้วอ่านบรรทัดที่ต้องการ (คอลัมน์ 2..13 = ม.ค..ธ.ค.)
+  let start=-1; rs.forEach((r,i)=>{ if(start<0&&typeof r[1]==='string'&&/^santa\s*fe$/i.test(r[1].trim())) start=i; });
+  if(start<0) return {det:{},warn:['ไม่พบบล็อก Santa Fe ในชีต Dashboard P_L']};
+  const find=re=>{ for(let i=start+1;i<Math.min(rs.length,start+40);i++){ const v=rs[i]&&rs[i][1];
+      if(typeof v==='string'&&re.test(v.trim())) return rs[i]; } return null; };
+  const L={rev:find(/^Revenue from sale$/i), tot:find(/^Total Revenue$/i), food:find(/^Food$/i),
+           labor:find(/^Labor/i), rent:find(/Rent & Utilities/i), admin:find(/^Admin Expense$/i),
+           exp:find(/^Total Expense$/i), cp:find(/^Contribution Profit \(Before Bonus\)$/i)};
+  const det={}, warn=[];
+  for(let m=1;m<=12;m++){ const c=m+1;
+    const rev=L.rev?N(L.rev[c]):0; if(rev<=0) continue;
+    const g=r=>r?N(r[c]):0;
+    det[m]={pl:{revenue:rev, totalRevenue:g(L.tot)||rev, food:g(L.food), labor:g(L.labor),
+      rent:g(L.rent), admin:g(L.admin), expense:g(L.exp), profit:g(L.cp)}};
+  }
+  if(!Object.keys(det).length) warn.push('ไม่พบตัวเลขรายเดือนในบล็อก Santa Fe');
+  return {det,warn};
+}
+
 /* ---- รวมข้อมูลใหม่เข้ากับของเดิม (ไม่ทับค่าที่ไฟล์ใหม่ไม่มี) ---- */
-function mergeMonthly(rows){
+function mergeMonthly(rows,opt){
+  opt=opt||{}; const kept=[];
   rows.forEach(r=>{ const ex=MONTHLY.find(x=>x.m===r.m);
-    if(!ex){ MONTHLY.push(r); return; }
-    Object.keys(r).forEach(k=>{ if(r[k]!=null) ex[k]=r[k]; }); });
+    if(!ex){ MONTHLY.push(Object.assign({},r)); return; }
+    Object.keys(r).forEach(k=>{ if(r[k]==null) return;
+      if(k==='budget' && opt.keepBudget && ex.budget!=null){
+        if(Math.abs(ex.budget-r.budget)>0.05) kept.push(`${MONTH_TH[r.m-1]} ${ex.budget}M (ไฟล์ ${r.budget}M)`);
+        return; }
+      ex[k]=r[k]; }); });
   MONTHLY.sort((a,b)=>a.m-b.m);
+  return kept;
 }
 function mergeDetail(det){
   Object.entries(det).forEach(([m,d])=>{ const cur=DETAIL[m]=DETAIL[m]||{};
@@ -807,10 +960,30 @@ function showMsg(t,c){const el=$('#msg');el.textContent=t;el.className='msg '+c;
 async function importFile(file){
   try{
     const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+    if(isSalesFormWb(wb)){   // ไฟล์ "แบบฟอร์มส่งยอดขาย" (รายสาขา รายเดือน)
+      const {mon,det,months,partial,warn}=parseSalesForm(wb);
+      if(!months.length) throw new Error('อ่านชีตรายเดือนในแบบฟอร์มส่งยอดขายไม่ได้');
+      const kept=mergeMonthly(Object.values(mon),{keepBudget:true}); mergeDetail(det);
+      curM=months[months.length-1]; await saveState();
+      showMsg('นำเข้าแบบฟอร์มส่งยอดขายสำเร็จ: '+months.map(m=>MONTH_TH[m-1]).join(', ')+' · เดือนหลัก '+label(curM)
+        +(partial&&partial.length?' — ข้ามเดือนที่ยังเก็บข้อมูลไม่ครบ: '+partial.map(m=>MONTH_TH[m-1]).join(', '):'')
+        +(kept.length?' — คง Budget เดิมไว้: '+kept.join(', '):'')
+        +(warn.length?' ['+warn.join('; ')+']':''),'ok');
+      return;
+    }
+    if(isPLWb(wb)){          // ไฟล์ P&L (งบกำไรขาดทุน)
+      const {det,warn}=parsePL(wb);
+      const ms=Object.keys(det).map(Number).sort((a,b)=>a-b);
+      if(!ms.length) throw new Error('อ่านงบกำไรขาดทุนจากไฟล์นี้ไม่ได้'+(warn.length?' ('+warn.join('; ')+')':''));
+      mergeDetail(det); if(!MONTHLY.some(r=>r.m===curM)) curM=ms[ms.length-1];
+      await saveState();
+      showMsg('นำเข้างบกำไรขาดทุน (P&L) สำเร็จ: '+ms.map(m=>MONTH_TH[m-1]).join(', ')+' — เพิ่มหัวข้อ "กำไร-ต้นทุน" ให้แล้ว','ok');
+      return;
+    }
     if(isDailySaleWb(wb)){   // ไฟล์ Daily Sale (ไฟล์ปฏิบัติการรายเดือน)
       const {mon,det,fileM,warn}=parseDailySale(wb);
       const list=Object.values(mon); if(!list.length) throw new Error('อ่านยอดขายจากไฟล์ Daily Sale ไม่ได้');
-      mergeMonthly(list); mergeDetail(det);
+      mergeMonthly(list,{keepBudget:true}); mergeDetail(det);
       curM=fileM||list[list.length-1].m; await saveState();
       const miss=[]; const d=DETAIL[curM]||{};
       if(!d.delivery) miss.push('Delivery แยก Platform (ชีตรายวันของเดือนนี้ยังว่าง)');
