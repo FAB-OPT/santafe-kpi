@@ -140,6 +140,25 @@ svg text{font-family:Sarabun,"Segoe UI",Tahoma,sans-serif}
 body.present .headline{padding:14px 22px;margin-bottom:16px;gap:18px}
 body.present .headline .hlnum{font-size:44px}
 body.present .headline .hltxt{font-size:22px}
+
+/* ---------- โครงหัวข้อภาพรวม ---------- */
+.ovgrid{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(0,1fr);gap:12px;align-items:start}
+.ovmain{display:flex;flex-direction:column;gap:12px;min-width:0}
+.ovside{display:flex;flex-direction:column;gap:12px;min-width:0}
+.ovmain .cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+.ovgrid{align-items:stretch}
+.ovmain .coverbox{flex:1;display:flex;flex-direction:column;justify-content:center}
+.ovside .rank li{grid-template-columns:18px minmax(0,1fr) 52px;gap:8px}
+.ovside .rank .track{display:none}
+.ovside .rank li span:nth-child(2){white-space:normal;line-height:1.25}
+.ovnote{font-size:11.5px;color:var(--mute);margin-top:8px}
+.ovside .donutbox{gap:12px}
+@media (max-width:1100px){ .ovgrid{grid-template-columns:1fr} }
+body.present .ovgrid{gap:16px}
+body.present .ovmain{gap:16px}
+body.present .ovside{gap:16px}
+body.present .ovmain .cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+body.present .ovnote{font-size:16px;margin-top:10px}
 .covergrid{display:grid;grid-template-columns:1.25fr 1fr;gap:18px;margin-top:16px;align-items:start}
 .coverbox{background:var(--surface);border-radius:var(--r-md);padding:12px 14px}
 .coverbox .chart{max-height:210px}
@@ -658,36 +677,34 @@ function build(m){
       .filter(Boolean).join(' · ');
     out.push(sec('overview','ภาพรวม '+label(m),subLine,`
       <div class="headline"><span class="hlnum">฿${cur.sales.toFixed(1)}M</span><span class="hltxt">${hlBits.join(' · ')}</span></div>
-      <div class="cards">
-        <div class="k"><div class="l">Total Sales ${label(m)}</div><div class="v">฿${cur.sales.toFixed(1)}M</div><div class="s">${cur.ly!=null?`${YEAR-1}: ${cur.ly.toFixed(1)}M (${sgn(yoy)})`:'ยังไม่มีตัวเลขปีก่อน'}</div>${spark(rows.map(r=>r.sales),[MONTH_TH[rows[0].m-1],MONTH_TH[m-1]])}</div>
-        <div class="k"><div class="l">vs Budget</div><div class="v ${cur.budget!=null?cls(vb):''}">${cur.budget!=null?sgn(vb):'—'}</div><div class="s">${cur.budget!=null?'Budget '+cur.budget.toFixed(1)+'M':'ยังไม่ได้ใส่ Budget เดือนนี้'}</div></div>
-        <div class="k"><div class="l">Same Store Sales Growth</div><div class="v ${cls(cur.sssg)}">${sgn(cur.sssg)}</div><div class="s">${d.stores?.sameStore? d.stores.sameStore+' สาขา Same Store':'เทียบเดือนเดียวกันปีก่อน'}</div></div>
-        <div class="k"><div class="l">MoM (${m>1?MONTH_TH[m-2]:'—'} → ${MONTH_TH[m-1]})</div><div class="v ${cls(cur.mom??0)}">${sgn(cur.mom)}</div><div class="s">${cur.equalDays?'เทียบช่วงวันเท่ากัน (1–30)':'เทียบเดือนก่อนหน้า'}</div></div>
-        ${d.pl?`<div class="k"><div class="l">กำไรก่อนโบนัส (P&L)</div><div class="v ${cls(d.pl.profit)}">${(d.pl.profit/1e6).toFixed(2)}M</div><div class="s">${(d.pl.profit/d.pl.revenue*100).toFixed(1)}% ของรายได้</div></div>`:''}
-        ${d.cem?`<div class="k"><div class="l">CEM เฉลี่ย</div><div class="v">${d.cem.avgNow}%</div><div class="s">${d.cem.stores} สาขา · ดีเยี่ยม ${d.cem.distNow[0]} สาขา</div></div>`:''}
-        ${d.oss?`<div class="k"><div class="l">OSS เฉลี่ย</div><div class="v">${d.oss.avgNow}%</div><div class="s">ตรวจแล้ว ${d.oss.stores} สาขา</div></div>`:''}
-        <div class="k"><div class="l">สาขาที่มียอด ${label(m)}</div><div class="v">${d.stores?d.stores.now+' สาขา':'—'}</div><div class="s">${d.stores&&d.stores.ly!=null?`${YEAR-1}: ${d.stores.ly} สาขา`:''}</div></div>
-      </div>
-      ${(()=>{
-        const vs=rows.filter(r=>r.budget!=null).slice(-6).map(r=>({name:MONTH_TH[r.m-1],prev:r.budget,now:r.sales}));
-        const dl=d.delivery&&d.delivery.platforms&&d.delivery.platforms.length
-          ? donut(d.delivery.platforms.map((x,i)=>({name:x.name,v:x.now,c:['#F4610F','#F7B076','#C9A227','#8FA1B3'][i%4]})),
-                  (d.delivery.platforms.reduce((a,b)=>a+b.now,0)).toFixed(1)+'M','ยอด Delivery')
-          : '';
-        const ce=d.cem&&d.cem.distNow
-          ? donut([{name:'ดีเยี่ยม',v:d.cem.distNow[0],c:'#1f8f4e'},{name:'ปานกลาง',v:d.cem.distNow[1],c:'#d99a1e'},{name:'ต้องปรับปรุง',v:d.cem.distNow[2],c:'#cf3a3a'}],
-                  d.cem.avgNow+'%','CEM เฉลี่ย')
-          : '';
-        if(!vs.length && !dl && !ce) return '';
-        return `<div class="covergrid">
-          ${vs.length?`<div class="coverbox"><div class="grp">ยอดขายเทียบ Budget รายเดือน</div>${barPairs(vs,'M')}
-            <div class="legend"><span><i style="background:var(--chart-soft)"></i>Budget</span><span><i style="background:var(--chart-1)"></i>ยอดขายจริง</span></div></div>`:''}
-          <div style="display:grid;gap:14px">
-            ${dl?`<div class="coverbox"><div class="grp">สัดส่วน Delivery แยกแพลตฟอร์ม</div>${dl}</div>`:''}
-            ${ce?`<div class="coverbox"><div class="grp">คุณภาพสาขา (CEM)</div>${ce}</div>`:''}
+      <div class="ovgrid">
+        <div class="ovmain">
+          <div class="cards">
+            <div class="k"><div class="l">ยอดขายรวม ${label(m)}</div><div class="v">฿${cur.sales.toFixed(1)}M</div><div class="s">${cur.ly!=null?`ปีก่อน ${cur.ly.toFixed(1)}M · ${sgn(yoy)}`:'ยังไม่มีตัวเลขปีก่อน'}</div>${spark(rows.map(r=>r.sales),[MONTH_TH[rows[0].m-1],MONTH_TH[m-1]])}</div>
+            <div class="k"><div class="l">เทียบแผน (Budget)</div><div class="v ${cur.budget!=null?cls(vb):''}">${cur.budget!=null?sgn(vb):'—'}</div><div class="s">${cur.budget!=null?`แผน ${cur.budget.toFixed(1)}M · ${vb>=0?'เกิน':'ขาด'} ${Math.abs(cur.sales-cur.budget).toFixed(1)}M`:'ยังไม่ได้ใส่แผนเดือนนี้'}</div></div>
+            <div class="k"><div class="l">SSSG (สาขาเดิม)</div><div class="v ${cls(cur.sssg)}">${sgn(cur.sssg)}</div><div class="s">${d.stores&&d.stores.sameStore?`${d.stores.sameStore} สาขาเทียบปีก่อน`:'เทียบเดือนเดียวกันปีก่อน'}</div></div>
+            <div class="k"><div class="l">MoM (${m>1?MONTH_TH[m-2]:'—'} → ${MONTH_TH[m-1]})</div><div class="v ${cls(cur.mom??0)}">${sgn(cur.mom)}</div><div class="s">${cur.equalDays?'เทียบช่วงวันเท่ากัน (1–30)':'เทียบเดือนก่อนหน้า'}</div></div>
+            ${d.cem?`<div class="k"><div class="l">CEM (ประสบการณ์ลูกค้า)</div><div class="v">${d.cem.avgNow}%</div><div class="s">${d.cem.stores} สาขา · ดีเยี่ยม ${d.cem.distNow[0]} · ต้องปรับปรุง ${d.cem.distNow[2]}</div></div>`:''}
+            ${d.oss?`<div class="k"><div class="l">OSS (มาตรฐานปฏิบัติการ)</div><div class="v">${d.oss.avgNow}%</div><div class="s">ตรวจแล้ว ${d.oss.stores} สาขา</div></div>`:''}
           </div>
-        </div>`;
-      })()}`));
+          ${(()=>{ const vs=rows.filter(r=>r.budget!=null).slice(-6).map(r=>({name:MONTH_TH[r.m-1],prev:r.budget,now:r.sales}));
+            return vs.length?`<div class="coverbox"><div class="grp">ยอดขายจริงเทียบแผน 6 เดือนล่าสุด</div>${barPairs(vs,'M')}
+              <div class="legend"><span><i style="background:var(--chart-soft)"></i>แผน (Budget)</span><span><i style="background:var(--chart-1)"></i>ยอดขายจริง</span></div></div>`:''; })()}
+        </div>
+        <div class="ovside">
+          ${(()=>{ const pf=d.delivery&&d.delivery.platforms||[];
+            if(!pf.length) return '';
+            const tn=pf.reduce((a,b)=>a+b.now,0);
+            return `<div class="coverbox"><div class="grp">Delivery แยกแพลตฟอร์ม</div>
+              ${donut(pf.map((x,i)=>({name:x.name,v:x.now,c:['#F4610F','#F7B076','#C9A227','#8FA1B3'][i%4]})),tn.toFixed(1)+'M','ยอด Delivery')}
+              <div class="ovnote">${cur.sales?`คิดเป็น ${(tn/cur.sales*100).toFixed(1)}% ของยอดขายรวม`:''}</div></div>`; })()}
+          ${d.cem?`<div class="coverbox"><div class="grp">คุณภาพสาขา (CEM)</div>
+            ${donut([{name:'ดีเยี่ยม',v:d.cem.distNow[0],c:'#1f8f4e'},{name:'ปานกลาง',v:d.cem.distNow[1],c:'#d99a1e'},{name:'ต้องปรับปรุง',v:d.cem.distNow[2],c:'#cf3a3a'}],d.cem.avgNow+'%','เฉลี่ย')}
+            <div class="ovnote">${d.cem.distNow[2]?`มี ${d.cem.distNow[2]} สาขาที่ต่ำกว่าเกณฑ์ ดูรายละเอียดในหัวข้อ CEM`:'ทุกสาขาผ่านเกณฑ์'}</div></div>`:''}
+          ${d.oss&&d.oss.sections&&d.oss.sections.length?`<div class="coverbox"><div class="grp">OSS · หมวดที่คะแนนต่ำสุด</div>
+            <ol class="rank">${d.oss.sections.slice(0,3).map((x,i)=>`<li><span class="num">${i+1}</span><span>${x.name}</span><span class="track"><i style="width:${Math.max(2,Math.min(100,x.avg))}%"></i></span><span class="sc ${x.avg<90?'neg':'pos'}">${x.avg.toFixed(1)}%</span><span></span></li>`).join('')}</ol></div>`:''}
+        </div>
+      </div>`));
   }
 
   // 2 monthly
