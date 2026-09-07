@@ -413,8 +413,8 @@ body:not(.present) .brcards{grid-template-columns:repeat(auto-fit,minmax(126px,1
       <button data-x="data">Excel ไฟล์ข้อมูลทุกเดือน (แก้แล้วนำเข้าได้)</button>
     </div></div>
   <select id="uiSize" class="btn" title="ขนาดตัวอักษร/กรอบ" aria-label="ขนาดการแสดงผล">
-    <option value="0.8">ขนาด 80%</option><option value="0.9">ขนาด 90%</option>
-    <option value="1" selected>ขนาด 100%</option><option value="1.1">ขนาด 110%</option>
+    <option value="0.8" selected>ขนาด 80%</option><option value="0.9">ขนาด 90%</option>
+    <option value="1">ขนาด 100%</option><option value="1.1">ขนาด 110%</option>
   </select>
   <button class="btn" id="importBtn">⤒ นำเข้าข้อมูล</button>
   <button class="btn primary" id="presentBtn">▶ โหมดพรีเซนต์</button>
@@ -981,7 +981,7 @@ function applyUiSize(v){
 }
 $('#uiSize').onchange=e=>applyUiSize(e.target.value);
 (()=>{ let v=null; try{ v=localStorage.getItem('sf-kpi-size'); }catch(e){}
-  if(v) applyUiSize(v); })();
+  applyUiSize(v||0.8); })();   // ค่าเริ่มต้น 80%
 
 /* ========================= รหัสผ่าน (ถอดรหัสข้อมูลในเครื่องผู้ใช้) ========================= */
 const B64 = b => Uint8Array.from(atob(b), ch => ch.charCodeAt(0));
