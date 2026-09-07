@@ -112,6 +112,8 @@ tr.hi:hover td{background:var(--accent-2)}
 .dist{display:flex;height:30px;border-radius:var(--r-sm);overflow:hidden;margin:7px 0 12px;gap:3px}
 .dist span{display:grid;place-items:center;color:#fff;font-weight:600;font-size:13px;border-radius:4px}
 .brpick{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+#uiSize{padding-right:6px;cursor:pointer;color-scheme:dark;background:transparent}
+#uiSize option{background:#1f1a17;color:#f4efea}
 .brpick input{border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:13.5px;border-radius:10px;padding:8px 12px;min-width:180px}
 .brpick input:focus{outline:none;border-color:var(--accent)}
 .brpick select{border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:14px;font-weight:600;border-radius:10px;padding:8px 12px;max-width:100%}
@@ -143,7 +145,7 @@ body.present #overview .k .spark{height:74px}
 /* present */
 body.present{background:#0e0c0b;overflow:hidden}
 body.present .top,body.present nav{display:none}
-body.present .wrap{display:block;max-width:none;padding:0;margin:0}
+body.present .wrap{display:block;max-width:none;padding:0;margin:0;zoom:1!important}
 body.present main{display:block}
 body.present section.slide{display:none;position:fixed;inset:0;border-radius:0;background:var(--card);overflow:auto;box-shadow:none}
 body.present section.slide.cur{display:flex;flex-direction:column}
@@ -410,6 +412,10 @@ body:not(.present) .brcards{grid-template-columns:repeat(auto-fit,minmax(126px,1
       <button data-x="report">Excel รายงานเดือนนี้</button>
       <button data-x="data">Excel ไฟล์ข้อมูลทุกเดือน (แก้แล้วนำเข้าได้)</button>
     </div></div>
+  <select id="uiSize" class="btn" title="ขนาดตัวอักษร/กรอบ" aria-label="ขนาดการแสดงผล">
+    <option value="0.8">ขนาด 80%</option><option value="0.9">ขนาด 90%</option>
+    <option value="1" selected>ขนาด 100%</option><option value="1.1">ขนาด 110%</option>
+  </select>
   <button class="btn" id="importBtn">⤒ นำเข้าข้อมูล</button>
   <button class="btn primary" id="presentBtn">▶ โหมดพรีเซนต์</button>
 </header>
@@ -964,6 +970,18 @@ async function boot(){
   dbDoc=db.doc('kpi/data');
   dbDoc.onSnapshot(snap=>{ if(snap.exists){ if(!snap.metadata.hasPendingWrites) applyState(snap.data()); } else if(!saving){ /* first time: seed with what we have */ saveState(); } }, e=>console.warn('db',e));
 }
+
+/* ---- ขนาดการแสดงผล (ย่อ/ขยายเนื้อหา) ---- */
+function applyUiSize(v){
+  const w=document.querySelector('.wrap'); if(!w) return;
+  w.style.zoom = (+v===1) ? '' : v;
+  const sel=$('#uiSize'); if(sel) sel.value=String(v);
+  try{ localStorage.setItem('sf-kpi-size',v); }catch(e){}
+  if(typeof setStick==='function') setStick();
+}
+$('#uiSize').onchange=e=>applyUiSize(e.target.value);
+(()=>{ let v=null; try{ v=localStorage.getItem('sf-kpi-size'); }catch(e){}
+  if(v) applyUiSize(v); })();
 
 /* ========================= รหัสผ่าน (ถอดรหัสข้อมูลในเครื่องผู้ใช้) ========================= */
 const B64 = b => Uint8Array.from(atob(b), ch => ch.charCodeAt(0));
