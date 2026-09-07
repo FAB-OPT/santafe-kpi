@@ -1,0 +1,5 @@
+# ไฟล์ข้อมูลดิบ — ห้าม push ขึ้น repo public
+*.xlsb
+*.xlsx
+*.xls
+*.csv
