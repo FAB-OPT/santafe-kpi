@@ -121,6 +121,8 @@ tr.hi:hover td{background:var(--accent-2)}
 .legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;vertical-align:middle}
 svg text{font-family:Sarabun,"Segoe UI",Tahoma,sans-serif}
 .chart{width:auto;max-width:100%;max-height:430px;height:auto;display:block;margin:0 auto}
+.k .spark{width:100%;max-width:none;height:54px;margin:6px 0 0}
+body.present #overview .k .spark{height:120px}
 @media (min-width:1500px){ .chart{max-height:520px} }
 @media (min-width:1900px){ .chart{max-height:600px} }
 
@@ -420,6 +422,75 @@ function sssgBars(rows){
   return `<svg class="chart" viewBox="0 0 ${W} ${H}">${s}</svg>`;
 }
 
+/* ---- กราฟเล็กในการ์ด (เส้นแนวโน้ม) ---- */
+function spark(vals,labels){
+  const v=vals.filter(x=>x!=null); if(v.length<2) return '';
+  const W=340,H=76,L=6,R=6,T=10,B=16;
+  const lo=Math.min(...v)*0.985, hi=Math.max(...v)*1.015;
+  const x=i=>L+(W-L-R)*(vals.length===1?0.5:i/(vals.length-1));
+  const y=n=>T+(H-T-B)*(1-(n-lo)/(hi-lo||1));
+  const pts=vals.map((n,i)=>({i,n})).filter(o=>o.n!=null);
+  const d=pts.map((o,k)=>(k?'L':'M')+x(o.i)+','+y(o.n)).join(' ');
+  const area=d+` L${x(pts[pts.length-1].i)},${H-B} L${x(pts[0].i)},${H-B} Z`;
+  const last=pts[pts.length-1];
+  return `<svg class="chart spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+    <path d="${area}" fill="var(--accent)" opacity=".13"/>
+    <path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>
+    <circle cx="${x(last.i)}" cy="${y(last.n)}" r="4" fill="var(--card)" stroke="var(--accent)" stroke-width="2.5"/>
+    ${labels?`<text x="${L}" y="${H-3}" font-size="10" fill="var(--faint)">${labels[0]}</text>
+    <text x="${W-R}" y="${H-3}" font-size="10" fill="var(--faint)" text-anchor="end">${labels[1]}</text>`:''}
+  </svg>`;
+}
+/* ---- แท่งซ้อน: โครงสร้างต้นทุนรายเดือน (% ของรายได้) ---- */
+function costStack(rows){
+  if(!rows.length) return '';
+  const W=760,H=250,L=34,R=8,T=14,B=30, gw=(W-L-R)/rows.length, bw=Math.min(58,gw*0.6);
+  const seg=[['Food','food','#E4572E'],['Labor','labor','#F2A65A'],['เช่า+Utility','rent','#8FA1B3'],['Admin','admin','#C9CBA3'],['กำไร','profit','#1f8f4e']];
+  const y=v=>T+(H-T-B)*(1-v/100);
+  let g='';
+  for(let v=0;v<=100;v+=25) g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--hair)"/><text x="${L-6}" y="${y(v)+4}" font-size="10.5" fill="var(--faint)" text-anchor="end">${v}%</text>`;
+  rows.forEach((r,i)=>{ const cx=L+gw*(i+.5); let acc=0;
+    seg.forEach(([nm,k,c])=>{ const val=r.revenue?Math.max(0,(r[k]||0)/r.revenue*100):0; if(val<=0) return;
+      const y1=y(acc+val), y2=y(acc);
+      g+=`<rect x="${cx-bw/2}" y="${y1}" width="${bw}" height="${Math.max(0,y2-y1)}" fill="${c}"/>`;
+      if(val>=7) g+=`<text x="${cx}" y="${(y1+y2)/2+4}" font-size="11" font-weight="600" fill="#fff" text-anchor="middle">${val.toFixed(0)}</text>`;
+      acc+=val; });
+    g+=`<text x="${cx}" y="${H-10}" font-size="12" fill="var(--mute)" text-anchor="middle">${MONTH_TH[r.m-1]}</text>`; });
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}">${g}</svg>
+    <div class="legend">${seg.map(x=>`<span><i style="background:${x[2]}"></i>${x[0]}</span>`).join('')}</div>`;
+}
+/* ---- ฮิสโทแกรม: การกระจาย %กำไรรายสาขา ---- */
+function histo(vals,edges,labels){
+  const cnt=edges.map(()=>0);
+  vals.forEach(v=>{ let k=edges.findIndex((e,i)=>v<e); if(k<0)k=edges.length-1; cnt[k]++; });
+  const W=760,H=190,L=30,R=8,T=16,B=38, gw=(W-L-R)/cnt.length, bw=Math.min(74,gw*0.62);
+  const mx=Math.max(...cnt,1), y=v=>T+(H-T-B)*(1-v/mx);
+  let g=`<line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="var(--line)"/>`;
+  cnt.forEach((n,i)=>{ const cx=L+gw*(i+.5), c=i<2?'var(--bad)':(i<3?'var(--amber)':'var(--good)');
+    g+=`<rect x="${cx-bw/2}" y="${y(n)}" width="${bw}" height="${H-B-y(n)}" fill="${c}" rx="4"/>
+        <text x="${cx}" y="${y(n)-6}" font-size="12.5" font-weight="600" fill="var(--ink)" text-anchor="middle">${n}</text>
+        <text x="${cx}" y="${H-14}" font-size="11.5" fill="var(--mute)" text-anchor="middle">${labels[i]}</text>`; });
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}">${g}</svg>`;
+}
+/* ---- เส้นยอดขายรายเดือนของสาขาเดียว + เส้นแผน ---- */
+function branchLine(hist){
+  const rows=hist.filter(h=>h.r); if(rows.length<2) return '';
+  const W=740,H=210,L=46,R=12,T=16,B=30;
+  const all=rows.flatMap(h=>[h.r.sales,h.r.plan]).filter(v=>v>0);
+  const lo=Math.min(...all)*0.9, hi=Math.max(...all)*1.06;
+  const x=i=>L+(W-L-R)*(rows.length===1?0.5:i/(rows.length-1));
+  const y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo||1));
+  let g='';
+  for(let k=0;k<=3;k++){ const v=lo+(hi-lo)*k/3; g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--hair)"/><text x="${L-6}" y="${y(v)+4}" font-size="10.5" fill="var(--faint)" text-anchor="end">${(v/1e6).toFixed(2)}M</text>`; }
+  const line=(k,color,dash)=>{ const pts=rows.map((h,i)=>({i,v:h.r[k]})).filter(o=>o.v>0); if(!pts.length) return '';
+    return `<path d="${pts.map((o,n)=>(n?'L':'M')+x(o.i)+','+y(o.v)).join(' ')}" fill="none" stroke="${color}" stroke-width="2.5" ${dash?'stroke-dasharray="6 5"':''}/>`+
+      pts.map(o=>`<circle cx="${x(o.i)}" cy="${y(o.v)}" r="3.6" fill="var(--card)" stroke="${color}" stroke-width="2.2"/>`).join(''); };
+  g+=line('plan','var(--chart-3)',true)+line('sales','var(--accent)');
+  g+=rows.map((h,i)=>`<text x="${x(i)}" y="${H-10}" font-size="11.5" fill="var(--mute)" text-anchor="middle">${MONTH_TH[h.m-1]}</text>
+     <text x="${x(i)}" y="${y(h.r.sales)-9}" font-size="11" font-weight="600" fill="var(--accent-ink)" text-anchor="middle">${(h.r.sales/1e6).toFixed(2)}</text>`).join('');
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}">${g}</svg>
+    <div class="legend"><span><i style="background:var(--accent)"></i>ยอดขายจริง</span><span><i style="background:var(--chart-3)"></i>แผน</span></div>`;
+}
 /* ========================= sections ========================= */
 function sec(id,title,sub,body){ return `<section class="slide" id="${id}" data-title="${title}"><div class="bar"><h2>${title}</h2><span class="sub">${sub||''}</span></div><div class="body">${body}</div></section>`; }
 const EMPTY = t => `<div class="empty">ยังไม่มีข้อมูล${t?' '+t:''} สำหรับเดือนนี้</div>`;
@@ -448,6 +519,7 @@ function drawBranch(code){
       <div class="scroll"><table><tr><th>แพลตฟอร์ม</th><th class="n">ยอดขาย</th><th class="n">สัดส่วนใน Delivery</th></tr>
       ${[['Grab',b.grab],['Line Man',b.lm],['Shopee Food',b.sp]].filter(x=>x[1]>0).map(x=>`<tr><td>${x[0]}</td><td class="n">${M(x[1])}</td><td class="n">${(x[1]/b.deli*100).toFixed(1)}%</td></tr>`).join('')}
       </table></div>`:''}
+    ${hist.length>1?`<div class="grp" style="margin-top:16px">ยอดขายรายเดือนของสาขานี้</div>`+branchLine(hist):''}
     ${hist.length>1?`<div class="grp" style="margin-top:16px">ย้อนหลังรายเดือน</div>
       <div class="scroll"><table><tr><th>เดือน</th><th class="n">ยอดขาย</th><th class="n">%แผน</th><th class="n">MoM</th><th class="n">Delivery</th><th class="n">บิล</th><th class="n">เช็คเฉลี่ย</th></tr>
       ${hist.map(h=>`<tr class="${h.m===BR_CTX.m?'hi':''}"><td>${h.m===BR_CTX.m?'★ ':''}${MONTH_TH[h.m-1]}</td><td class="n">${M(h.r.sales)}</td>
@@ -467,7 +539,7 @@ function build(m){
     const vb=pct(cur.budget,cur.sales), yoy=pct(cur.ly,cur.sales);
     out.push(sec('overview','KPI '+label(m),'Santa Fe — ภาพรวมเดือนนี้',`
       <div class="cards">
-        <div class="k"><div class="l">Total Sales ${label(m)}</div><div class="v">฿${cur.sales.toFixed(1)}M</div><div class="s">${cur.ly!=null?`2025: ${cur.ly.toFixed(1)}M (${sgn(yoy)})`:'ยังไม่มีตัวเลขปีก่อน'}</div></div>
+        <div class="k"><div class="l">Total Sales ${label(m)}</div><div class="v">฿${cur.sales.toFixed(1)}M</div><div class="s">${cur.ly!=null?`${YEAR-1}: ${cur.ly.toFixed(1)}M (${sgn(yoy)})`:'ยังไม่มีตัวเลขปีก่อน'}</div>${spark(rows.map(r=>r.sales),[MONTH_TH[rows[0].m-1],MONTH_TH[m-1]])}</div>
         <div class="k"><div class="l">vs Budget</div><div class="v ${cur.budget!=null?cls(vb):''}">${cur.budget!=null?sgn(vb):'—'}</div><div class="s">${cur.budget!=null?'Budget '+cur.budget.toFixed(1)+'M':'ยังไม่ได้ใส่ Budget เดือนนี้'}</div></div>
         <div class="k"><div class="l">Same Store Sales Growth</div><div class="v ${cls(cur.sssg)}">${sgn(cur.sssg)}</div><div class="s">${d.stores?.sameStore? d.stores.sameStore+' สาขา Same Store':'เทียบเดือนเดียวกันปีก่อน'}</div></div>
         <div class="k"><div class="l">MoM (${m>1?MONTH_TH[m-2]:'—'} → ${MONTH_TH[m-1]})</div><div class="v ${cls(cur.mom??0)}">${sgn(cur.mom)}</div><div class="s">${cur.equalDays?'เทียบช่วงวันเท่ากัน (1–30)':'เทียบเดือนก่อนหน้า'}</div></div>
@@ -517,6 +589,10 @@ function build(m){
     if(t.mom){ h+=`<div class="grp">เทียบเดือนก่อน (MoM)</div><div class="strip">${strip(t.mom)}</div>`;
                h+=`<div class="grp">เทียบเดือนเดียวกันปีก่อน (YoY)</div>`; }
     h+=`<div class="strip">${strip(t)}</div>`;
+    if(t.channels&&t.channels.length&&t.channels.every(c=>c.trans&&c.trans[0]>0))
+      h+=`<div class="grp">จำนวนบิลรายช่องทาง (เดือนก่อน vs เดือนนี้)</div>`+
+         barPairs(t.channels.map(c=>({name:c.name,prev:c.trans[0]/1000,now:c.trans[1]/1000})),'K')+
+         `<div class="legend"><span><i style="background:var(--chart-soft)"></i>เดือนก่อน</span><span><i style="background:var(--chart-1)"></i>เดือนนี้</span></div>`;
     if(t.channelSales&&t.channelSales.length){ const tot=t.channelSales.reduce((a,c)=>a+c.now,0);
       h+=`<div class="scroll"><table><tr><th>ช่องทาง (ยอดขาย)</th><th class="n">เดือนก่อน</th><th class="n">เดือนนี้</th><th class="n">% เปลี่ยน</th><th class="n">สัดส่วน</th></tr>
       ${t.channelSales.map(c=>`<tr><td>${c.name}</td><td class="n">${(c.prev/1e6).toFixed(2)}M</td><td class="n">${(c.now/1e6).toFixed(2)}M</td><td class="n">${pill(pct(c.prev,c.now))}</td><td class="n">${(c.now/tot*100).toFixed(1)}%</td></tr>`).join('')}</table></div>`; }
@@ -605,7 +681,9 @@ function build(m){
         <div class="st"><div class="l">%COS เฉลี่ย</div><div class="v">${(plb.reduce((a,b)=>a+b.cos,0)/plb.length).toFixed(1)}%</div><div class="s">ต้นทุนอาหาร</div></div>
         <div class="st"><div class="l">%COL เฉลี่ย</div><div class="v">${(plb.reduce((a,b)=>a+b.col,0)/plb.length).toFixed(1)}%</div><div class="s">ค่าแรง</div></div>
       </div>
-      <div class="two"><div><h3 class="g">กำไรดีที่สุด 5 สาขา</h3>${t(srt.slice(0,5))}</div>
+      <div class="grp">การกระจาย %กำไร (จำนวนสาขา)</div>
+      ${histo(rank.map(b=>b.gp),[-10,0,5,10,15,1e9],['ขาดทุน>10%','ขาดทุน 0-10%','0-5%','5-10%','10-15%','>15%'])}
+      <div class="two" style="margin-top:16px"><div><h3 class="g">กำไรดีที่สุด 5 สาขา</h3>${t(srt.slice(0,5))}</div>
       <div><h3 class="r">ต้องดูแลด่วน 5 สาขา</h3>${t(srt.slice(-5).reverse())}</div></div>`));
   }
 
@@ -655,7 +733,8 @@ function build(m){
         ${tile('ค่าเช่า+สาธารณูปโภค',P(cur2.rent,cur2.revenue).toFixed(1)+'%',fm(cur2.rent),'')}
         ${tile('กำไรก่อนโบนัส',fm(cur2.profit),P(cur2.profit,cur2.revenue).toFixed(1)+'% ของรายได้',cur2.profit>=0?'pos':'neg')}
       </div>
-      <div class="grp" style="margin-top:4px">โครงสร้างต้นทุน ${label(cur2.m)} — เทียบเดือนก่อนและสะสมทั้งปี</div>
+      ${plRows.length>1?`<div class="grp" style="margin-top:2px">สัดส่วนต้นทุนต่อรายได้ รายเดือน (%)</div>`+costStack(plRows):''}
+      <div class="grp" style="margin-top:18px">โครงสร้างต้นทุน ${label(cur2.m)} — เทียบเดือนก่อนและสะสมทั้งปี</div>
       <div class="scroll"><table>
         <tr><th>รายการ</th><th class="n">จำนวนเงิน</th><th class="n">% ของรายได้</th><th class="n">เดือนก่อน</th><th class="n">เปลี่ยน (ppt)</th><th class="n">YTD %</th></tr>
         ${(()=>{ const yt=plRows.reduce((a,r)=>{for(const k in r){ if(typeof r[k]==='number') a[k]=(a[k]||0)+r[k]; } return a;},{});
