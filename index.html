@@ -315,7 +315,7 @@ const YEAR = 2026;
 // ชื่อย่อที่ใช้ในแถบเมนูด้านบน (หัวข้อเต็มยังอยู่ในแถบหัวข้อของแต่ละส่วน)
 const NAV_SHORT={overview:'KPI ภาพรวม',monthly:'ยอดขายรายเดือน',sssg:'%SSSG รายเดือน',
   delivery:'Delivery รายแพลตฟอร์ม',decline:'สาขา Delivery ลดแรง',trans:'Trans · Ticket · ลูกค้า',
-  branches:'รายสาขา ดี/น่าห่วง',pl:'กำไร-ต้นทุน (P&L)',cem:'CEM',oss:'OSS'};
+  branches:'รายสาขา ดี/น่าห่วง',plan:'ทำได้ตามแผน',plbr:'กำไรรายสาขา',pl:'กำไร-ต้นทุน (P&L)',cem:'CEM',oss:'OSS'};
 
 // ตารางรายเดือน (ทุกเดือนที่มีข้อมูล) — ใช้กับกราฟและตาราง
 const DEFAULT_MONTHLY = [
@@ -446,6 +446,9 @@ function build(m){
         <div class="k"><div class="l">vs Budget</div><div class="v ${cur.budget!=null?cls(vb):''}">${cur.budget!=null?sgn(vb):'—'}</div><div class="s">${cur.budget!=null?'Budget '+cur.budget.toFixed(1)+'M':'ยังไม่ได้ใส่ Budget เดือนนี้'}</div></div>
         <div class="k"><div class="l">Same Store Sales Growth</div><div class="v ${cls(cur.sssg)}">${sgn(cur.sssg)}</div><div class="s">${d.stores?.sameStore? d.stores.sameStore+' สาขา Same Store':'เทียบเดือนเดียวกันปีก่อน'}</div></div>
         <div class="k"><div class="l">MoM (${m>1?MONTH_TH[m-2]:'—'} → ${MONTH_TH[m-1]})</div><div class="v ${cls(cur.mom??0)}">${sgn(cur.mom)}</div><div class="s">${cur.equalDays?'เทียบช่วงวันเท่ากัน (1–30)':'เทียบเดือนก่อนหน้า'}</div></div>
+        ${d.pl?`<div class="k"><div class="l">กำไรก่อนโบนัส (P&L)</div><div class="v ${cls(d.pl.profit)}">${(d.pl.profit/1e6).toFixed(2)}M</div><div class="s">${(d.pl.profit/d.pl.revenue*100).toFixed(1)}% ของรายได้</div></div>`:''}
+        ${d.cem?`<div class="k"><div class="l">CEM เฉลี่ย</div><div class="v">${d.cem.avgNow}%</div><div class="s">${d.cem.stores} สาขา · ดีเยี่ยม ${d.cem.distNow[0]} สาขา</div></div>`:''}
+        ${d.oss?`<div class="k"><div class="l">OSS เฉลี่ย</div><div class="v">${d.oss.avgNow}%</div><div class="s">ตรวจแล้ว ${d.oss.stores} สาขา</div></div>`:''}
         <div class="k"><div class="l">สาขาที่มียอด ${label(m)}</div><div class="v">${d.stores?d.stores.now+' สาขา':'—'}</div><div class="s">${d.stores&&d.stores.ly!=null?`${YEAR-1}: ${d.stores.ly} สาขา`:''}</div></div>
       </div>`));
   }
@@ -526,6 +529,43 @@ function build(m){
         <div class="legend"><span><i style="background:var(--good)"></i>ดีเยี่ยม</span><span><i style="background:var(--amber)"></i>ปานกลาง</span><span><i style="background:var(--bad)"></i>ต้องปรับปรุง</span></div></div>
       <div><h3>Top 5 สาขาคะแนนสูงสุด ${YEAR}</h3><ol class="rank">${a.top.map((r,i)=>`<li><span class="num">${i+1}</span><span>${r[0]}</span><span class="track"><i style="width:${r[1]/mx*100}%"></i></span><span class="sc">${r[1].toFixed(1)}${u}</span><span style="font-size:12.5px;color:var(--mute)">${r[2]!=null?`${YEAR-1}: ${r[2].toFixed(1)} `+pill(r[1]-r[2],1,''):''}</span></li>`).join('')}</ol></div></div>`);
   };
+  // 7.1 ทำได้ตามแผนรายสาขา (จากแบบฟอร์มส่งยอดขาย)
+  const pb=d.planBranches;
+  if(pb && pb.length){
+    const tot=pb.reduce((a,b)=>a+b.sales,0), totP=pb.reduce((a,b)=>a+b.plan,0);
+    const srt=pb.slice().sort((a,b)=>b.ach-a.ach);
+    const mxA=Math.max(...pb.map(b=>b.ach));
+    const li=(arr)=>`<ol class="rank">${arr.map((b,i)=>`<li><span class="num">${i+1}</span><span>${b.name}</span><span class="track"><i style="width:${Math.max(2,Math.min(100,b.ach/mxA*100))}%"></i></span><span class="sc ${b.ach>=100?'pos':'neg'}">${b.ach.toFixed(0)}%</span><span style="font-size:12.5px;color:var(--mute)">${(b.sales/1e6).toFixed(2)}M / แผน ${(b.plan/1e6).toFixed(2)}M</span></li>`).join('')}</ol>`;
+    out.push(sec('plan','ทำได้ตามแผนรายสาขา (Plan Achievement)',`${label(m)} · ${pb.length} สาขา`,`
+      <div class="strip">
+        <div class="st ${cls(tot/totP*100-100)}"><div class="l">ทั้งเครือข่าย</div><div class="v">${(tot/totP*100).toFixed(1)}%</div><div class="s">${(tot/1e6).toFixed(2)}M จากแผน ${(totP/1e6).toFixed(2)}M</div></div>
+        <div class="st pos"><div class="l">ทำได้ตามแผน (≥100%)</div><div class="v">${pb.filter(b=>b.ach>=100).length}</div><div class="s">จาก ${pb.length} สาขา</div></div>
+        <div class="st neg"><div class="l">ต่ำกว่าแผน 10%+</div><div class="v">${pb.filter(b=>b.ach<90).length}</div><div class="s">ต้องเร่งแก้</div></div>
+      </div>
+      <div class="two"><div><h3 class="g">ทำได้เกินแผนมากสุด</h3>${li(srt.slice(0,5))}</div>
+      <div><h3 class="r">ต่ำกว่าแผนมากสุด</h3>${li(srt.slice(-5).reverse())}</div></div>`));
+  }
+
+  // 7.2 กำไรรายสาขา (จาก P&L ชีต SUM)
+  const plb=d.plBranches;
+  if(plb && plb.length){
+    const MIN=200000;                       // กันสาขาที่ปิด/ยอดเกือบศูนย์ ทำให้ %กำไร เพี้ยน
+    const rank=plb.filter(b=>b.sales>=MIN), skipped=plb.length-rank.length;
+    const srt=rank.slice().sort((a,b)=>b.gp-a.gp);
+    const t=(arr)=>`<div class="scroll"><table><tr><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">กำไร</th><th class="n">%กำไร</th><th class="n">%COS</th><th class="n">%COL</th></tr>
+      ${arr.map(b=>`<tr><td>${b.name}</td><td class="n">${(b.sales/1e6).toFixed(2)}M</td><td class="n ${cls(b.profit)}">${(b.profit/1e3).toFixed(0)}K</td><td class="n ${cls(b.gp)}">${b.gp.toFixed(1)}%</td><td class="n">${b.cos.toFixed(1)}%</td><td class="n">${b.col.toFixed(1)}%</td></tr>`).join('')}</table></div>`;
+    const loss=plb.filter(b=>b.profit<0);
+    out.push(sec('plbr','กำไรรายสาขา',`${label(m)} · ${rank.length} สาขา · เรียงตาม %กำไร${skipped?` (ไม่รวม ${skipped} สาขาที่ยอดต่ำกว่า 0.2M)`:''}`,`
+      <div class="strip">
+        <div class="st pos"><div class="l">สาขาที่กำไร</div><div class="v">${plb.length-loss.length}</div><div class="s">จาก ${plb.length} สาขา</div></div>
+        <div class="st neg"><div class="l">สาขาที่ขาดทุน</div><div class="v">${loss.length}</div><div class="s">รวม ${(loss.reduce((a,b)=>a+b.profit,0)/1e6).toFixed(2)}M</div></div>
+        <div class="st"><div class="l">%COS เฉลี่ย</div><div class="v">${(plb.reduce((a,b)=>a+b.cos,0)/plb.length).toFixed(1)}%</div><div class="s">ต้นทุนอาหาร</div></div>
+        <div class="st"><div class="l">%COL เฉลี่ย</div><div class="v">${(plb.reduce((a,b)=>a+b.col,0)/plb.length).toFixed(1)}%</div><div class="s">ค่าแรง</div></div>
+      </div>
+      <div class="two"><div><h3 class="g">กำไรดีที่สุด 5 สาขา</h3>${t(srt.slice(0,5))}</div>
+      <div><h3 class="r">ต้องดูแลด่วน 5 สาขา</h3>${t(srt.slice(-5).reverse())}</div></div>`));
+  }
+
   // 8 P&L (ถ้ามีข้อมูล)
   const plRows=MONTHLY.filter(r=>r.m<=m && DETAIL[r.m] && DETAIL[r.m].pl).map(r=>({m:r.m,...DETAIL[r.m].pl}));
   if(plRows.length){
@@ -825,7 +865,8 @@ function parseSalesForm(wb){
   const pct=(a,b)=>(a==null||b==null||!a)?null:(b-a)/a*100;
   const rows=n=>XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:null});
   const C={plan:2,act:5,act2:4,dine:7,take:8,grab:9,lm:10,sp:11,deli:12,
-           tr:13,trDine:14,trTake:15,trDeli:19,tk:20,tkDine:21,tkTake:22,tkDeli:23,cust:24,custAvg:25};
+           tr:13,trDine:14,trTake:15,trDeli:19,tk:20,tkDine:21,tkTake:22,tkDeli:23,cust:24,custAvg:25,
+           labH:26,labB:27,colPct:28};
   const sheets=monthSheetsOf(wb), data={}, warn=[];
 
   for(const m of Object.keys(sheets).map(Number)){
@@ -843,7 +884,7 @@ function parseSalesForm(wb){
         dine:N(r[C.dine]), take:N(r[C.take]), grab:N(r[C.grab]), lm:N(r[C.lm]), sp:N(r[C.sp]), deli:N(r[C.deli]),
         tr:N(r[C.tr]), trDine:N(r[C.trDine]), trTake:N(r[C.trTake]), trDeli:N(r[C.trDeli]),
         tk:N(r[C.tk]), tkDine:N(r[C.tkDine]), tkTake:N(r[C.tkTake]), tkDeli:N(r[C.tkDeli]),
-        cust:N(r[C.cust])});
+        cust:N(r[C.cust]), labB:N(r[C.labB]), colPct:N(r[C.colPct])*100});
     }
     if(list.some(b=>b.sales>0)) data[m]=list;
   }
@@ -861,6 +902,8 @@ function parseSalesForm(wb){
     mon[m]={m, sales:+(sales/1e6).toFixed(2), ly:null, budget:plan?+(plan/1e6).toFixed(2):null,
             sssgSales:null, sssg:null, mom:prev?+pct(S(prev,'sales'),sales).toFixed(1):null};
     const d=det[m]={};
+    d.planBranches=cur.filter(b=>b.plan>0&&b.sales>0)
+      .map(b=>({name:b.name, plan:b.plan, sales:b.sales, ach:b.sales/b.plan*100, col:b.colPct}));
     d.stores={now:cur.filter(b=>b.sales>0).length, ly:null, sameStore:prev?cur.filter(b=>b.sales>0&&prev.some(p=>p.code===b.code&&p.sales>0)).length:null};
 
     /* ---- Delivery ---- */
@@ -931,6 +974,21 @@ function parsePL(wb){
     const g=r=>r?N(r[c]):0;
     det[m]={pl:{revenue:rev, totalRevenue:g(L.tot)||rev, food:g(L.food), labor:g(L.labor),
       rent:g(L.rent), admin:g(L.admin), expense:g(L.exp), profit:g(L.cp)}};
+  }
+  // ---- กำไรรายสาขา จากชีต SUM (บล็อกละ 7 คอลัมน์ต่อเดือน) ----
+  const kSum=wb.SheetNames.find(n=>n.trim().toLowerCase()==='sum');
+  if(kSum){
+    const sm=XLSX.utils.sheet_to_json(wb.Sheets[kSum],{header:1,defval:null});
+    for(let m=1;m<=12;m++){ const c0=4+(m-1)*7, list=[];
+      for(const r of sm){ if(!r) continue;
+        const code=r[2]==null?'':String(r[2]).trim();
+        if(!/^50\d{2}$/.test(code)) continue;   // เฉพาะสาขา Santa Fe รหัส 50xx
+        const sales=N(r[c0]); if(sales<=0) continue;
+        list.push({code, name:String(r[1]||code).trim(), sales, profit:N(r[c0+1]),
+          gp:N(r[c0+2])*100, cos:N(r[c0+3])*100, col:N(r[c0+4])*100});
+      }
+      if(list.length>=3){ det[m]=det[m]||{}; det[m].plBranches=list; }
+    }
   }
   if(!Object.keys(det).length) warn.push('ไม่พบตัวเลขรายเดือนในบล็อก Santa Fe');
   return {det,warn};
