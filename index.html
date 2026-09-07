@@ -178,7 +178,7 @@ body.present #overview .covergrid{flex:1;min-height:0;margin-top:14px;gap:14px;a
 body.present #overview .covergrid>div:last-child{display:grid;grid-template-rows:1fr 1fr;gap:14px;min-height:0}
 body.present #overview .coverbox{display:flex;flex-direction:column;justify-content:center;padding:12px 18px;min-height:0}
 body.present #overview .grp{font-size:15px;margin-bottom:4px}
-body.present #overview .chart{max-height:26vh}
+body.present #overview .chart{max-height:26vh;width:100%}
 body.present #overview .donut{width:132px;height:132px}
 body.present #overview .dlegend{font-size:15px;gap:4px}
 body.present #overview .legend{font-size:14px;margin-top:4px}
@@ -191,7 +191,7 @@ body.present #overview .k .l{font-size:19px}
 body.present #overview .k .v{font-size:46px;margin:4px 0 4px}
 body.present #overview .k .s{font-size:17px}
 body.present .dist{height:44px}
-body.present .chart{max-height:48vh;width:auto;max-width:100%;margin:0 auto}
+body.present .chart{max-height:48vh;width:100%;max-width:100%;margin:0}
 .pctl{position:fixed;bottom:0;left:0;right:0;z-index:30;display:none;justify-content:space-between;align-items:center;padding:10px 60px;color:#fff;background:var(--accent);font-size:14px}
 body.present .pctl{display:flex}
 .pctl button{background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:8px;padding:5px 13px;transition:.15s}
@@ -361,11 +361,10 @@ body:not(.present) table{font-size:11.5px}
 body:not(.present) th{padding:5px 8px;font-size:10.5px}
 body:not(.present) td{padding:4px 8px}
 body:not(.present) .pill{font-size:10.5px;padding:0 6px}
-body:not(.present) .chart{max-height:230px}
-@media (min-width:1500px){ body:not(.present) .chart{max-height:260px} }
-@media (min-width:1900px){ body:not(.present) .chart{max-height:290px} }
+body:not(.present) .chart{max-height:none}
+
 body:not(.present) .coverbox{padding:10px 12px}
-body:not(.present) .coverbox .chart{max-height:170px}
+body:not(.present) .coverbox .chart{max-height:none}
 body:not(.present) .covergrid{gap:10px;margin-top:10px}
 body:not(.present) .covergrid .donut{width:104px;height:104px}
 body:not(.present) .dlegend{font-size:11px;gap:3px}
@@ -465,7 +464,7 @@ const label = m => MONTH_TH[m-1]+' '+YEAR;
 
 /* ========================= charts (SVG) ========================= */
 function lineChart(rows){
-  const W=720,H=260,L=48,R=16,T=14,B=36;
+  const W=1180,H=250,L=52,R=18,T=14,B=36;
   const ys=rows.flatMap(r=>[r.sales,r.ly,r.budget]).filter(v=>v!=null);
   const lo=Math.floor(Math.min(...ys)/5)*5-5, hi=Math.ceil(Math.max(...ys)/5)*5+5;
   const x=i=>L+(W-L-R)*(rows.length===1?0.5:i/(rows.length-1));
@@ -482,7 +481,7 @@ function lineChart(rows){
   <div class="legend"><span><i style="background:var(--chart-1)"></i>ยอดขาย 2026</span><span><i style="background:var(--chart-2)"></i>ปีก่อน 2025</span><span><i style="background:var(--chart-3)"></i>Budget 2026</span></div>`;
 }
 function barPairs(items,unit='M'){ // items: [{name,prev,now}]
-  const W=720,H=230,L=40,R=10,T=20,B=34; const max=Math.max(...items.flatMap(i=>[i.prev,i.now]))*1.15;
+  const W=1180,H=215,L=44,R=12,T=18,B=34; const max=Math.max(...items.flatMap(i=>[i.prev,i.now]))*1.15;
   const gw=(W-L-R)/items.length, bw=Math.min(44,gw*0.28);
   const y=v=>T+(H-T-B)*(1-v/max);
   let s=`<line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="var(--line)"/>`;
@@ -495,7 +494,7 @@ function barPairs(items,unit='M'){ // items: [{name,prev,now}]
   return `<svg class="chart" viewBox="0 0 ${W} ${H}">${s}</svg>`;
 }
 function sssgBars(rows){
-  const W=720,H=200,L=40,R=10,T=22,B=30; const vals=rows.map(r=>r.sssg).filter(v=>v!=null);
+  const W=1180,H=185,L=44,R=12,T=20,B=30; const vals=rows.map(r=>r.sssg).filter(v=>v!=null);
   const mx=Math.max(4,...vals.map(Math.abs))+1; const gw=(W-L-R)/rows.length, bw=Math.min(46,gw*.55);
   const y=v=>T+(H-T-B)*(1-(v+mx)/(2*mx)); const y0=y(0);
   let s=`<line x1="${L}" x2="${W-R}" y1="${y0}" y2="${y0}" stroke="var(--mute)"/>`;
@@ -545,7 +544,7 @@ function donut(items,title,sub){
 /* ---- แท่งซ้อน: โครงสร้างต้นทุนรายเดือน (% ของรายได้) ---- */
 function costStack(rows){
   if(!rows.length) return '';
-  const W=760,H=250,L=34,R=8,T=14,B=30, gw=(W-L-R)/rows.length, bw=Math.min(58,gw*0.6);
+  const W=1180,H=230,L=38,R=10,T=14,B=30, gw=(W-L-R)/rows.length, bw=Math.min(58,gw*0.6);
   const seg=[['Food','food','#E4572E'],['Labor','labor','#F2A65A'],['เช่า+Utility','rent','#8FA1B3'],['Admin','admin','#C9CBA3'],['กำไร','profit','#1f8f4e']];
   const y=v=>T+(H-T-B)*(1-v/100);
   let g='';
@@ -564,7 +563,7 @@ function costStack(rows){
 function histo(vals,edges,labels){
   const cnt=edges.map(()=>0);
   vals.forEach(v=>{ let k=edges.findIndex((e,i)=>v<e); if(k<0)k=edges.length-1; cnt[k]++; });
-  const W=760,H=190,L=30,R=8,T=16,B=38, gw=(W-L-R)/cnt.length, bw=Math.min(74,gw*0.62);
+  const W=1180,H=175,L=34,R=10,T=14,B=36, gw=(W-L-R)/cnt.length, bw=Math.min(74,gw*0.62);
   const mx=Math.max(...cnt,1), y=v=>T+(H-T-B)*(1-v/mx);
   let g=`<line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="var(--line)"/>`;
   cnt.forEach((n,i)=>{ const cx=L+gw*(i+.5), c=i<2?'var(--bad)':(i<3?'var(--amber)':'var(--good)');
@@ -576,7 +575,7 @@ function histo(vals,edges,labels){
 /* ---- เส้นยอดขายรายเดือนของสาขาเดียว + เส้นแผน ---- */
 function branchLine(hist){
   const rows=hist.filter(h=>h.r); if(rows.length<2) return '';
-  const W=740,H=210,L=46,R=12,T=16,B=30;
+  const W=1180,H=200,L=50,R=14,T=14,B=30;
   const all=rows.flatMap(h=>[h.r.sales,h.r.plan]).filter(v=>v>0);
   const lo=Math.min(...all)*0.9, hi=Math.max(...all)*1.06;
   const x=i=>L+(W-L-R)*(rows.length===1?0.5:i/(rows.length-1));
