@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Santa Fe KPI — เทียบ 5 แบบ</title>
+<title>Santa Fe KPI — เทียบโทนสี</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -54,7 +54,7 @@ body[data-view="desk"] .stage .shell{border-radius:8px;border:1px solid #DAD4CD}
 
 <header>
   <div class="logo">Santa Fe<small>HAPPY STEAK</small></div>
-  <h1>เทียบโทนสี 4 แบบ <span>Monthly Performance Review — ก.ค. 2026</span></h1>
+  <h1>เทียบโทนสี 8 แบบ <span>Monthly Performance Review — ก.ค. 2026</span></h1>
   <div class="seg">
     <button data-v="desk" class="on">🖥 จอคอม</button>
     <button data-v="mob">📱 มือถือ</button>
@@ -66,10 +66,14 @@ body[data-view="desk"] .stage .shell{border-radius:8px;border:1px solid #DAD4CD}
 
 <script>
 const DESIGNS=[
-  {n:1,file:'theme-1.html',name:'ส้ม-ดำ (ปัจจุบัน)',desc:'ท็อปบาร์ดำ แถบหัวข้อส้มเต็มแถบ หัวตารางดำตัวขาว แถวเดือนนี้พื้นส้มตัวขาว — คอนทราสต์สูงสุด'},
-  {n:2,file:'theme-2.html',name:'ขาว-ส้ม (สว่าง เรียบ)',desc:'ท็อปบาร์ขาว แถบหัวข้อส้มอ่อนตัวหนังสือส้มเข้ม หัวตารางเทาอ่อนขีดส้ม — สุภาพ เหมาะส่งผู้บริหาร/พิมพ์'},
-  {n:3,file:'theme-3.html',name:'น้ำเงิน-ส้ม (คอร์ปอเรต)',desc:'หัวข้อและหัวตารางน้ำเงิน ส้มเป็นสีเน้นตัวเลข/กราฟ — แยกหมวดง่าย ดูเป็นทางการ'},
-  {n:4,file:'theme-4.html',name:'น้ำตาล-ครีม (สเต็กเฮาส์)',desc:'พื้นครีมอุ่น หัวข้อน้ำตาลเข้ม หัวตารางส้ม — โทนอาหาร/พรีเมียม ตรงคาแรกเตอร์แบรนด์'},
+  {n:1,file:'theme-1.html',name:'ส้ม-ดำ (ปัจจุบัน)',desc:'ท็อปบาร์ดำ แถบหัวข้อส้มเต็มแถบ หัวตารางดำตัวขาว แถวเดือนนี้พื้นส้ม — คอนทราสต์สูงสุด'},
+  {n:2,file:'theme-2.html',name:'ขาว-ส้ม (สว่าง เรียบ)',desc:'ท็อปบาร์ขาว แถบหัวข้อส้มอ่อน หัวตารางเทาอ่อนขีดส้ม — สุภาพ เหมาะส่งผู้บริหาร/พิมพ์'},
+  {n:3,file:'theme-3.html',name:'น้ำเงิน-ส้ม (คอร์ปอเรต)',desc:'หัวข้อ/หัวตารางน้ำเงิน ส้มเน้นตัวเลขและเส้นกราฟ — เป็นทางการ แยกหมวดง่าย'},
+  {n:4,file:'theme-4.html',name:'น้ำตาล-ครีม (สเต็กเฮาส์)',desc:'พื้นครีมอุ่น หัวข้อน้ำตาลเข้ม หัวตารางส้ม — โทนอาหาร ตรงคาแรกเตอร์แบรนด์'},
+  {n:5,file:'theme-5.html',name:'เทาเข้ม-ส้ม (มินิมอล)',desc:'หัวข้อเทาชาร์โคล ส้มเป็นสีเน้นล้วน — เรียบ กลาง ใช้ได้กับทุกบริบท'},
+  {n:6,file:'theme-6.html',name:'เขียวเข้ม-ส้ม (เนเชอรัล)',desc:'หัวข้อเขียวป่าเข้ม ส้มตัดกัน — โทนอาหาร/สุขภาพ ดูสงบกว่าส้มล้วน'},
+  {n:7,file:'theme-7.html',name:'เบอร์กันดี-ครีม (คลาสสิก)',desc:'หัวข้อแดงเบอร์กันดี พื้นครีม — โทนไวน์/สเต็ก ดูหรูแบบร้านดั้งเดิม'},
+  {n:8,file:'theme-8.html',name:'ดำ-ทอง (พรีเมียม)',desc:'หัวข้อดำ ขลิบทอง หัวตารางดำตัวทองอ่อน — หรูที่สุด เหมาะงานนำเสนอผู้บริหาร'},
 ];
 const VIEW={desk:{w:1440,h:1150,label:'1440 × 1150'},mob:{w:390,h:760,label:'390 × 760'}};
 

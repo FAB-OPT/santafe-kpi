@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Santa Fe KPI — โทน 1 · ส้ม-ดำ (ปัจจุบัน)</title>
+<title>Santa Fe KPI — โทน 8 · ดำ-ทอง</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -262,6 +262,24 @@ body.present .bar{padding:26px 60px 20px}
   .scroll{overflow:visible}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+/* ===== โทน 8 : ดำ-ทอง (พรีเมียม) ===== */
+:root{--gold:#C08A2E;--gold-2:#F7EEDC;--blk:#181614;--accent:#D9791F;--accent-ink:#9C5309;--accent-2:#FAF0E2;--accent-3:#E8D3B3;
+ --bg:#F3F1ED;--card:#fff;--surface:#F9F7F3;--line:#E6E2DA;--hair:#F0EDE7;--chart-1:#D9791F;--chart-2:#A79C88;--chart-3:#E2DBCB;--chart-soft:#EBB77C}
+.top{background:var(--blk);border-bottom:2px solid var(--gold)}
+.logo{background:var(--gold);color:var(--blk)}
+.bar{background:var(--blk);border-bottom:2px solid var(--gold)}
+.bar h2::before{background:var(--gold);color:var(--blk)}
+.bar .sub{color:rgba(255,255,255,.7)}
+th{background:var(--blk);color:var(--gold-2);border-bottom:2px solid var(--gold)}
+.k{border-left-color:var(--gold)}
+.k.tot{background:var(--blk);border-color:var(--blk)} .k.tot .v{color:var(--gold)}
+.st{border-left-color:var(--gold)}
+nav a.on{background:var(--blk);color:#fff} nav a.on::before{background:var(--gold);color:var(--blk)}
+.two h3{border-left-color:var(--gold)}
+.rank li:nth-child(1) .num{background:var(--gold);color:var(--blk)}
+.pctl{background:var(--blk);border-top:2px solid var(--gold)}
+
 </style>
 </head>
 <body>

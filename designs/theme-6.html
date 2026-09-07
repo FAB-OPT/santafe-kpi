@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Santa Fe KPI — โทน 1 · ส้ม-ดำ (ปัจจุบัน)</title>
+<title>Santa Fe KPI — โทน 6 · เขียวเข้ม-ส้ม</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -262,6 +262,21 @@ body.present .bar{padding:26px 60px 20px}
   .scroll{overflow:visible}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+/* ===== โทน 6 : เขียวเข้ม-ส้ม (เนเชอรัล) ===== */
+:root{--grn:#1F4232;--grn-d:#14291F;--chart-2:#7E9A8B;--chart-3:#D3DED7;--bg:#EFF2EF;--surface:#F7FAF8;--line:#DFE7E2;--hair:#EDF2EF}
+.top{background:var(--grn-d)}
+.bar{background:var(--grn)}
+.bar h2::before{background:var(--accent);color:#fff}
+.bar .sub{color:rgba(255,255,255,.72)}
+th{background:var(--grn);color:#fff}
+.k{border-left-color:var(--grn)}
+.k.tot{background:var(--grn);border-color:var(--grn)}
+.st{border-left-color:var(--grn)}
+nav a.on{background:var(--grn);color:#fff}
+.two h3{border-left-color:var(--grn)}
+.pctl{background:var(--grn)}
+
 </style>
 </head>
 <body>
