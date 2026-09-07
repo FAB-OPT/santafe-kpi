@@ -109,6 +109,8 @@ tr.hi:hover td{background:var(--accent-2)}
 .rank .sc{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
 .dist{display:flex;height:30px;border-radius:var(--r-sm);overflow:hidden;margin:7px 0 12px;gap:3px}
 .dist span{display:grid;place-items:center;color:#fff;font-weight:600;font-size:13px;border-radius:4px}
+.grp{margin:0 0 7px;font-size:12px;font-weight:600;color:var(--mute);letter-spacing:.02em}
+.grp+.strip{margin-bottom:14px}
 .legend{display:flex;gap:16px;font-size:12.5px;color:var(--mute);flex-wrap:wrap;margin-top:8px}
 .legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;vertical-align:middle}
 svg text{font-family:Sarabun,"Segoe UI",Tahoma,sans-serif}
@@ -293,8 +295,8 @@ body.present .bar{padding:26px 60px 20px}
 
 <div class="modal" id="importModal"><div class="box">
   <h2>นำเข้าข้อมูล</h2>
-  <p>อัปโหลดไฟล์ Excel ตามแบบ "ไฟล์ข้อมูล" — เดือนที่อยู่ในไฟล์จะแทนที่เดือนเดิม เดือนที่ไม่อยู่ในไฟล์คงไว้ตามเดิม</p>
-  <label class="drop" id="drop">ลากไฟล์ .xlsx มาวางที่นี่ หรือแตะเพื่อเลือกไฟล์<input type="file" id="file" accept=".xlsx,.xls"></label>
+  <p>รองรับ 2 แบบ — <b>ไฟล์ Daily Sale</b> (ไฟล์ปฏิบัติการรายเดือน .xlsb/.xlsx) ระบบจะอ่านยอดขาย/สาขา/Delivery ให้เอง · หรือ <b>ไฟล์ข้อมูล</b> ที่ดาวน์โหลดจากหน้านี้ (ใช้กรอก CEM/OSS และรายละเอียดที่ไฟล์ Daily Sale ไม่มี) — ค่าที่ไฟล์ใหม่ไม่มี จะคงของเดิมไว้</p>
+  <label class="drop" id="drop">ลากไฟล์ .xlsx / .xlsb มาวางที่นี่ หรือแตะเพื่อเลือกไฟล์<input type="file" id="file" accept=".xlsx,.xls,.xlsb"></label>
   <div class="msg" id="msg"></div>
   <div class="row"><button class="btn" data-x="data" id="tplBtn">⤓ ดาวน์โหลดไฟล์ข้อมูลปัจจุบัน (ใช้เป็นแบบฟอร์ม)</button></div>
   <p style="margin-top:16px">เดือนที่มีข้อมูล (กด × เพื่อลบเดือน)</p>
@@ -370,10 +372,10 @@ let DETAIL = JSON.parse(JSON.stringify(DEFAULT_DETAIL));
 const $ = s => document.querySelector(s);
 const fmtM = v => v==null ? '—' : v.toFixed(1)+'M';
 const fmtN = v => v.toLocaleString('en-US');
-const pct = (a,b) => (b-a)/a*100;
+const pct = (a,b) => (a==null||b==null||!a) ? null : (b-a)/a*100;
 const sgn = (v,d=1,suffix='%') => v==null ? '—' : (v>0?'+':'')+v.toFixed(d)+suffix;
 const pill = (v,d=1,suffix='%') => v==null ? '<span class="pill">—</span>' : `<span class="pill ${v>=0?'pos':'neg'}">${sgn(v,d,suffix)}</span>`;
-const cls = v => v>=0?'pos':'neg';
+const cls = v => v==null?'':(v>=0?'pos':'neg');
 const label = m => MONTH_TH[m-1]+' '+YEAR;
 
 /* ========================= charts (SVG) ========================= */
@@ -383,12 +385,14 @@ function lineChart(rows){
   const lo=Math.floor(Math.min(...ys)/5)*5-5, hi=Math.ceil(Math.max(...ys)/5)*5+5;
   const x=i=>L+(W-L-R)*(rows.length===1?0.5:i/(rows.length-1));
   const y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
-  const path=(k,color,dash)=>`<path d="${rows.map((r,i)=>(i?'L':'M')+x(i)+','+y(r[k])).join(' ')}" fill="none" stroke="${color}" stroke-width="2.5" ${dash?'stroke-dasharray="6 5"':''} stroke-linejoin="round"/>`+
-    rows.map((r,i)=>`<circle cx="${x(i)}" cy="${y(r[k])}" r="4" fill="var(--card)" stroke="${color}" stroke-width="2.5"/>`).join('');
+  const path=(k,color,dash)=>{ const pts=rows.map((r,i)=>({i,v:r[k]})).filter(p=>p.v!=null);
+    if(!pts.length) return '';
+    return `<path d="${pts.map((p,n)=>(n?'L':'M')+x(p.i)+','+y(p.v)).join(' ')}" fill="none" stroke="${color}" stroke-width="2.5" ${dash?'stroke-dasharray="6 5"':''} stroke-linejoin="round"/>`+
+      pts.map(p=>`<circle cx="${x(p.i)}" cy="${y(p.v)}" r="4" fill="var(--card)" stroke="${color}" stroke-width="2.5"/>`).join(''); };
   let grid='';
   for(let v=lo;v<=hi;v+=5) grid+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-8}" y="${y(v)+4}" font-size="11" fill="var(--mute)" text-anchor="end">${v}M</text>`;
   const xl=rows.map((r,i)=>`<text x="${x(i)}" y="${H-12}" font-size="12" fill="var(--mute)" text-anchor="middle">${MONTH_TH[r.m-1]}</text>`).join('');
-  const vals=rows.map((r,i)=>`<text x="${x(i)}" y="${y(r.sales)-10}" font-size="11.5" font-weight="600" fill="var(--orange-ink)" text-anchor="middle">${r.sales.toFixed(1)}</text>`).join('');
+  const vals=rows.filter(r=>r.sales!=null).map(r=>{const i=rows.indexOf(r);return `<text x="${x(i)}" y="${y(r.sales)-10}" font-size="11.5" font-weight="600" fill="var(--accent-ink)" text-anchor="middle">${r.sales.toFixed(1)}</text>`;}).join('');
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="ยอดขายรายเดือน">${grid}${path('budget','#DCD3CA',true)}${path('ly','#9A8F86')}${path('sales','#F66B21')}${vals}${xl}</svg>
   <div class="legend"><span><i style="background:#F66B21"></i>ยอดขาย 2026</span><span><i style="background:#9A8F86"></i>ปีก่อน 2025</span><span><i style="background:#DCD3CA"></i>Budget 2026</span></div>`;
 }
@@ -432,10 +436,10 @@ function build(m){
     const vb=pct(cur.budget,cur.sales), yoy=pct(cur.ly,cur.sales);
     out.push(sec('overview','KPI '+label(m),'Santa Fe — ภาพรวมเดือนนี้',`
       <div class="cards">
-        <div class="k"><div class="l">Total Sales ${label(m)}</div><div class="v">฿${cur.sales.toFixed(1)}M</div><div class="s">2025: ${cur.ly.toFixed(1)}M (${sgn(yoy)})</div></div>
-        <div class="k"><div class="l">vs Budget</div><div class="v ${cls(vb)}">${sgn(vb)}</div><div class="s">Budget ${cur.budget.toFixed(1)}M</div></div>
+        <div class="k"><div class="l">Total Sales ${label(m)}</div><div class="v">฿${cur.sales.toFixed(1)}M</div><div class="s">${cur.ly!=null?`2025: ${cur.ly.toFixed(1)}M (${sgn(yoy)})`:'ยังไม่มีตัวเลขปีก่อน'}</div></div>
+        <div class="k"><div class="l">vs Budget</div><div class="v ${cur.budget!=null?cls(vb):''}">${cur.budget!=null?sgn(vb):'—'}</div><div class="s">${cur.budget!=null?'Budget '+cur.budget.toFixed(1)+'M':'ยังไม่ได้ใส่ Budget เดือนนี้'}</div></div>
         <div class="k"><div class="l">Same Store Sales Growth</div><div class="v ${cls(cur.sssg)}">${sgn(cur.sssg)}</div><div class="s">${d.stores?.sameStore? d.stores.sameStore+' สาขา Same Store':'เทียบเดือนเดียวกันปีก่อน'}</div></div>
-        <div class="k"><div class="l">MoM (${m>1?MONTH_TH[m-2]:'—'} → ${MONTH_TH[m-1]})</div><div class="v ${cls(cur.mom??0)}">${sgn(cur.mom)}</div><div class="s">เทียบเดือนก่อนหน้า</div></div>
+        <div class="k"><div class="l">MoM (${m>1?MONTH_TH[m-2]:'—'} → ${MONTH_TH[m-1]})</div><div class="v ${cls(cur.mom??0)}">${sgn(cur.mom)}</div><div class="s">${cur.equalDays?'เทียบช่วงวันเท่ากัน (1–30)':'เทียบเดือนก่อนหน้า'}</div></div>
         <div class="k"><div class="l">สาขาที่มียอด ${label(m)}</div><div class="v">${d.stores?d.stores.now+' สาขา':'—'}</div><div class="s">${d.stores?'2025: '+d.stores.ly+' สาขา':''}</div></div>
       </div>`));
   }
@@ -472,17 +476,27 @@ function build(m){
 
   // 6 trans / ticket
   const t=d.trans;
-  out.push(sec('trans','Trans. · Ticket · ลูกค้า', t?t.compare+' — แยกช่องทาง Dine In / Take away / Delivery':'', !t?EMPTY('Trans/Ticket'):(()=>{
+  out.push(sec('trans','Trans. · Ticket · ลูกค้า', t?t.compare:'', !t?EMPTY('Trans/Ticket'):(()=>{
     const st=(l,a,b,f=fmtN,pre='')=>{const p=pct(a,b);return `<div class="st ${cls(p)}"><div class="l">${l}</div><div class="v">${sgn(p)}</div><div class="s">${pre}${f(a)} → ${pre}${f(b)}</div></div>`;};
-    return `<div class="strip">${st('Trans.',t.trans[0],t.trans[1])}${st('Ticket',t.ticket[0],t.ticket[1],v=>v,'฿')}${st('Customer',t.customer[0],t.customer[1])}${st('Customer avg.',t.custAvg[0],t.custAvg[1],v=>v.toFixed(2))}</div>
-    <div class="scroll"><table><tr><th>ช่องทาง</th><th class="n">Trans ก่อน</th><th class="n">Trans นี้</th><th class="n">% เปลี่ยน</th><th class="n">Ticket ก่อน</th><th class="n">Ticket นี้</th><th class="n">% เปลี่ยน</th></tr>
-    ${t.channels.map(c=>`<tr><td>${c.name}</td><td class="n">${fmtN(c.trans[0])}</td><td class="n">${fmtN(c.trans[1])}</td><td class="n">${pill(pct(c.trans[0],c.trans[1]))}</td><td class="n">฿${c.ticket[0]}</td><td class="n">฿${c.ticket[1]}</td><td class="n">${pill(pct(c.ticket[0],c.ticket[1]))}</td></tr>`).join('')}</table></div>
-    <div class="note">${t.note}</div>`; })()));
+    const strip=o=>`${st('Trans.',o.trans[0],o.trans[1])}${st('Ticket',o.ticket[0],o.ticket[1],v=>v,'฿')}${st('Customer',o.customer[0],o.customer[1])}${st('Customer avg.',o.custAvg[0],o.custAvg[1],v=>(+v).toFixed(2))}`;
+    let h='';
+    if(t.mom){ h+=`<div class="grp">เทียบเดือนก่อน (MoM)</div><div class="strip">${strip(t.mom)}</div>`;
+               h+=`<div class="grp">เทียบเดือนเดียวกันปีก่อน (YoY)</div>`; }
+    h+=`<div class="strip">${strip(t)}</div>`;
+    if(t.channelSales&&t.channelSales.length){ const tot=t.channelSales.reduce((a,c)=>a+c.now,0);
+      h+=`<div class="scroll"><table><tr><th>ช่องทาง (ยอดขาย)</th><th class="n">เดือนก่อน</th><th class="n">เดือนนี้</th><th class="n">% เปลี่ยน</th><th class="n">สัดส่วน</th></tr>
+      ${t.channelSales.map(c=>`<tr><td>${c.name}</td><td class="n">${(c.prev/1e6).toFixed(2)}M</td><td class="n">${(c.now/1e6).toFixed(2)}M</td><td class="n">${pill(pct(c.prev,c.now))}</td><td class="n">${(c.now/tot*100).toFixed(1)}%</td></tr>`).join('')}</table></div>`; }
+    else if(t.channels&&t.channels.length){
+      h+=`<div class="scroll"><table><tr><th>ช่องทาง</th><th class="n">Trans ก่อน</th><th class="n">Trans นี้</th><th class="n">% เปลี่ยน</th><th class="n">Ticket ก่อน</th><th class="n">Ticket นี้</th><th class="n">% เปลี่ยน</th></tr>
+      ${t.channels.map(c=>`<tr><td>${c.name}</td><td class="n">${fmtN(c.trans[0])}</td><td class="n">${fmtN(c.trans[1])}</td><td class="n">${pill(pct(c.trans[0],c.trans[1]))}</td><td class="n">฿${c.ticket[0]}</td><td class="n">฿${c.ticket[1]}</td><td class="n">${pill(pct(c.ticket[0],c.ticket[1]))}</td></tr>`).join('')}</table></div>`; }
+    if(t.note) h+=`<div class="note">${t.note}</div>`;
+    return h; })()));
 
   // 7 branches good vs bad
   const b=d.branches;
-  const bt=(arr)=>`<table><tr><th>สาขา</th><th class="n">Trans %</th><th class="n">Ticket %</th></tr>${arr.map(r=>`<tr><td>${r[0]}</td><td class="n ${cls(r[1])}">${sgn(r[1])}</td><td class="n ${cls(r[2])}">${sgn(r[2])}</td></tr>`).join('')}</table>`;
-  out.push(sec('branches','ผลงานรายสาขา: สาขาที่ดี vs สาขาที่น่าเป็นห่วง','จำนวนบิล (Trans.) และเช็คเฉลี่ย (Ticket) เทียบเดือนก่อน', !b?EMPTY('รายสาขา'):`
+  const bt=(arr)=>{const f=arr.some(r=>r.length>3&&r[3]!=null);
+    return `<table><tr><th>สาขา</th><th class="n">Trans %</th><th class="n">Ticket %</th>${f?'<th class="n">ยอดขาย MoM</th>':''}</tr>${arr.map(r=>`<tr><td>${r[0]}</td><td class="n ${cls(r[1])}">${sgn(r[1])}</td><td class="n ${cls(r[2])}">${sgn(r[2])}</td>${f?`<td class="n ${cls(r[3]??0)}">${sgn(r[3])}</td>`:''}</tr>`).join('')}</table>`;};
+  out.push(sec('branches','ผลงานรายสาขา: สาขาที่ดี vs สาขาที่น่าเป็นห่วง', b&&b.basis==='yoy'?'จำนวนบิล (Trans.) และเช็คเฉลี่ย (Ticket) เทียบเดือนเดียวกันปีก่อน':'จำนวนบิล (Trans.) และเช็คเฉลี่ย (Ticket) เทียบเดือนก่อน', !b?EMPTY('รายสาขา'):`
     <div class="two"><div><h3 class="g">สาขาที่ผลงานดี (Trans.+Ticket โตพร้อมกัน / ทรงตัว)</h3>${bt(b.good)}</div><div><h3 class="r">สาขาที่น่าเป็นห่วง (Trans.+Ticket ลดพร้อมกัน)</h3>${bt(b.bad)}</div></div>
     <div class="note">${b.note}</div>`));
 
@@ -611,12 +625,196 @@ function fromRows(S){ // sheets → state (months present in file)
   Object.entries(det).forEach(([m,d])=>{const p=m>1?MONTH_TH[m-2]:'—',c=MONTH_TH[m-1]; if(d.delivery)d.delivery.compare=`${p} vs ${c} ${YEAR}`; if(d.trans)d.trans.compare=`${c} vs ${p} ${YEAR}`; ['cem','oss'].forEach(k=>{if(d[k]&&(d[k].avgNow==null||!d[k].distLY||!d[k].distNow)) delete d[k];});});
   return {mon,det};
 }
+
+/* ===== ตัวอ่านไฟล์ Daily Sale (ไฟล์ปฏิบัติการรายเดือน) — ใช้ร่วมกับ XLSX, MONTH_TH, YEAR ===== */
+function isDailySaleWb(wb){
+  const has=re=>wb.SheetNames.some(n=>re.test(n.trim()));
+  return has(/^Data Sales Daily$/i) && (has(/^Daily Sales YTD$/i)||has(/^Area7Dept$/i));
+}
+function parseDailySale(wb){
+  const sheet=re=>{const k=wb.SheetNames.find(n=>re.test(n.trim()));return k?XLSX.utils.sheet_to_json(wb.Sheets[k],{header:1,defval:null}):null;};
+  const N=v=>typeof v==='number'&&isFinite(v)?v:0;
+  const ymd=s=>{if(typeof s!=='number'||s<30000||s>60000)return null;const o=XLSX.SSF.parse_date_code(s);return o?{y:o.y,m:o.m,d:o.d}:null;};
+  const pct=(a,b)=>(a&&b)?(b-a)/a*100:null;
+  const mon={}, det={}, warn=[];
+  const D=m=>(det[m]=det[m]||{});
+
+  /* ---- 1) รายเดือนจากยอดรายวัน (Daily Sales YTD) : คอลัมน์ STF KT ---- */
+  const yt=sheet(/^Daily Sales YTD$/i);
+  const day={}; // 'y-m' → ยอดรวมรายเดือน
+  if(yt){
+    const C={sales:5,dine:13,deli:21,take:29,bill:37,cust:51};
+    let last=0;
+    for(const r of yt){ const s0=r[3]; const k=ymd(s0); if(!k) continue;
+      if(s0<last) break; last=s0;   // ตัดตอนเจอบล็อกสรุปท้ายชีต (วันที่ย้อนกลับ)
+      const key=k.y+'-'+k.m, a=day[key]||(day[key]={sales:0,dine:0,deli:0,take:0,bill:0,cust:0});
+      for(const c in C) a[c]+=N(r[C[c]]); }
+  }
+  const got=(y,m)=>{const a=day[y+'-'+m];return a&&a.sales>0?a:null;};
+  for(let m=1;m<=12;m++){ const a=got(YEAR,m); if(!a) continue;
+    const ly=got(YEAR-1,m), pv=m>1?got(YEAR,m-1):null;
+    mon[m]={m, sales:+(a.sales/1e6).toFixed(2), ly:ly?+(ly.sales/1e6).toFixed(2):null, budget:null,
+            sssgSales:null, sssg:null, mom:pv?+pct(pv.sales,a.sales).toFixed(1):null};
+  }
+
+  /* ---- 2) เดือนของไฟล์ จาก Data Sales Daily (รายสาขา + แถวรวม) ---- */
+  const ds=sheet(/^Data Sales Daily$/i);
+  let fileM=null, brs=[], tot=null;
+  if(ds){
+    // หาแถวรวมของ Santa Fe KT (col2 = "STF KTR")
+    let ti=-1; ds.forEach((r,i)=>{ if(ti<0 && typeof r[2]==='string' && /^STF\s*KTR$/i.test(r[2].trim())) ti=i; });
+    // หาคอลัมน์ ยอดเดือนนี้ / เดือนก่อน / ปีก่อน จากข้อความหัวตาราง เช่น "1- 30 ส.ค. 26"
+    const hits=[];
+    for(let i=0;i<Math.min(ds.length,10);i++){ const r=ds[i]||[];
+      r.forEach((v,c)=>{ if(typeof v!=='string') return;
+        const mi=MONTH_TH.findIndex(t=>v.indexOf(t)>=0); if(mi<0) return;
+        const yy=(v.match(/(\d{2})\s*$/)||[])[1]; if(!yy) return;
+        hits.push({c, m:mi+1, y:2000+ +yy}); }); }
+  const uniq={}; hits.forEach(h=>{ if(!uniq[h.c]) uniq[h.c]=h; });
+    const cand=Object.values(uniq).sort((a,b)=>a.c-b.c);
+    const mx=Math.max(...cand.filter(h=>h.y===YEAR).map(h=>h.m).concat([0]));
+    const val=c=>(ti>=0&&typeof (ds[ti]||[])[c]==='number')?Math.abs(ds[ti][c]):0;
+    const now=cand.filter(h=>h.y===YEAR&&h.m===mx).sort((a,b)=>val(b.c)-val(a.c))[0];
+    if(now){
+      fileM=now.m;
+      const pm=now.m>1?now.m-1:12;
+      const prev=cand.filter(h=>h.y===YEAR&&h.m===pm).sort((a,b)=>val(b.c)-val(a.c))[0];
+      const lyc=cand.filter(h=>h.y===YEAR-1&&h.m===now.m).sort((a,b)=>val(b.c)-val(a.c))[0];
+      // รายสาขาเฉพาะกลุ่ม Santa Fe KT TH
+      let inSec=false;
+      ds.forEach((r,i)=>{
+        if(r[1]==null&&typeof r[2]==='string'&&r[2].trim()){ inSec=/Santa\s*Fe\s*KT/i.test(r[2]); return; }
+        if(!inSec) return;
+        if(typeof r[1]==='number'&&typeof r[2]==='string'&&r[2].trim()&&i!==ti)
+          brs.push({name:r[2].trim(), now:N(r[now.c]), prev:prev?N(r[prev.c]):0, ly:lyc?N(r[lyc.c]):0});
+      });
+      if(ti>=0) tot={now:N(ds[ti][now.c]), prev:prev?N(ds[ti][prev.c]):0, ly:lyc?N(ds[ti][lyc.c]):0, stores:N(ds[ti][1])};
+    }
+  }
+  if(!fileM){ warn.push('อ่านเดือนของไฟล์จากชีต Data Sales Daily ไม่ได้'); }
+
+  if(fileM && tot && tot.now>0){
+    const same=brs.filter(b=>b.now>0&&b.ly>0);
+    const ss=same.reduce((a,b)=>a+b.now,0), sl=same.reduce((a,b)=>a+b.ly,0);
+    const prevMonthTotal=(()=>{ const a=got(YEAR,fileM>1?fileM-1:12); return a?a.sales:null; })();
+    mon[fileM]={m:fileM,
+      sales:+(tot.now/1e6).toFixed(2),
+      ly:+(tot.ly/1e6).toFixed(2),
+      budget:(mon[fileM]&&mon[fileM].budget)||null,
+      sssgSales:+(ss/1e6).toFixed(2),
+      sssg:sl?+pct(sl,ss).toFixed(1):null,
+      mom:tot.prev?+pct(tot.prev,tot.now).toFixed(1):(prevMonthTotal?+pct(prevMonthTotal,tot.now).toFixed(1):null),
+      equalDays:!!tot.prev};
+    D(fileM).stores={now:brs.filter(b=>b.now>0).length||tot.stores, ly:brs.filter(b=>b.ly>0).length, sameStore:same.length};
+  }
+
+  /* ---- 3) Delivery แยก Platform (Daily Sale Delivery, รายวัน) ---- */
+  const dv=sheet(/^Daily Sale Delivery$/i);
+  if(dv){
+    const P={}; const head=dv[1]||[];
+    head.forEach((v,c)=>{ if(typeof v!=='string')return; const t=v.trim();
+      if(/^Grab/i.test(t))P['Grab']=c; else if(/^Line\s*Man/i.test(t))P['Line Man']=c;
+      else if(/^Shopee/i.test(t))P['Shopee Food']=c; else if(/^Robin/i.test(t))P['Robinhood']=c;
+      else if(/^Food\s*Panda/i.test(t))P['Food Panda']=c; });
+    const dagg={};
+    let dlast=0;
+    for(const r of dv){ const s0=r[3]; const k=ymd(s0); if(!k) continue;
+      if(s0<dlast) break; dlast=s0;  // ตัดบล็อกสรุปรายเดือนท้ายชีต
+      const key=k.y+'-'+k.m, a=dagg[key]||(dagg[key]={}); for(const p in P) a[p]=(a[p]||0)+N(r[P[p]]); }
+    for(let m=1;m<=12;m++){
+      const cur=dagg[YEAR+'-'+m], pv=dagg[YEAR+'-'+(m>1?m-1:12)];
+      if(!cur||!pv) continue;
+      const plats=Object.keys(P).map(p=>({name:p, prev:+(pv[p]/1e6).toFixed(2), now:+(cur[p]/1e6).toFixed(2)})).filter(p=>p.now>0||p.prev>0);
+      if(!plats.length) continue;
+      const tn=plats.reduce((a,b)=>a+b.now,0), tp=plats.reduce((a,b)=>a+b.prev,0);
+      if(tn<=0) continue;   // เดือนนี้ยังไม่มีข้อมูลรายวัน
+      const sN=mon[m]&&mon[m].sales, sP=mon[m>1?m-1:12]&&mon[m>1?m-1:12].sales;
+      D(m).delivery={compare:`${MONTH_TH[(m>1?m-2:11)]} vs ${MONTH_TH[m-1]} ${YEAR}`, platforms:plats,
+        sharePrev:sP?+(tp/sP*100).toFixed(1):null, shareNow:sN?+(tn/sN*100).toFixed(1):null,
+        topDecline:[], lineManDecline:[],
+        note:'ตัวเลขจากไฟล์ Daily Sale (ยอดรวมรายเดือนของแต่ละแพลตฟอร์ม) — รายละเอียดรายสาขาให้นำเข้าด้วยแบบฟอร์มเดิม'};
+    }
+  }
+
+  /* ---- 4) Trans · Ticket · ลูกค้า + สาขาดี/น่าเป็นห่วง (Area7Dept = เทียบปีก่อน) ---- */
+  const a7=sheet(/^Area7Dept$/i);
+  if(a7 && fileM){
+    let hi=-1, blocks=[];
+    for(let i=0;i<Math.min(a7.length,12);i++){ const r=a7[i]||[]; const cs=[];
+      r.forEach((v,c)=>{ if(typeof v==='string'&&v.trim()==='Stores') cs.push(c); });
+      if(cs.length>blocks.length){ blocks=cs; hi=i; } }
+    const names=new Set(brs.map(b=>b.name));
+    const prevOf={}; brs.forEach(b=>prevOf[b.name]=b);
+    const seen=new Set(), rows=[];
+    for(const c of blocks) for(let i=hi+1;i<a7.length;i++){ const r=a7[i]||[]; const nm=r[c];
+      if(typeof nm!=='string'||!nm.trim()) continue; const name=nm.trim();
+      if(!names.has(name)||seen.has(name)) continue; seen.add(name);
+      rows.push({name, sNow:N(r[c+4]), sLY:N(r[c+5]), tNow:N(r[c+7]), tLY:N(r[c+8]), cNow:N(r[c+10]), cLY:N(r[c+11])}); }
+    const kept=rows.filter(r=>r.sNow>0&&r.tNow>0);
+    if(kept.length){
+      const S=k=>kept.reduce((a,b)=>a+b[k],0);
+      const t={compare:`${MONTH_TH[fileM-1]} ${YEAR} เทียบ ${MONTH_TH[fileM-1]} ${YEAR-1} (YoY)`, channels:[],
+        trans:[S('tLY'),S('tNow')],
+        ticket:[Math.round(S('sLY')/S('tLY')),Math.round(S('sNow')/S('tNow'))],
+        customer:[S('cLY'),S('cNow')],
+        custAvg:[+(S('cLY')/S('tLY')).toFixed(2),+(S('cNow')/S('tNow')).toFixed(2)],
+        basis:'yoy'};
+      // ช่องทางขาย (ยอดขาย) จากยอดรายวัน ถ้ามีเดือนนี้
+      const cur=got(YEAR,fileM), pvm=got(YEAR,fileM>1?fileM-1:12);
+      if(cur&&pvm) t.channelSales=[{name:'Dine In',prev:pvm.dine,now:cur.dine},{name:'Take away',prev:pvm.take,now:cur.take},{name:'Delivery',prev:pvm.deli,now:cur.deli}];
+      if(cur&&pvm) t.mom={trans:[pvm.bill,cur.bill], ticket:[Math.round(pvm.sales/pvm.bill),Math.round(cur.sales/cur.bill)], customer:[pvm.cust,cur.cust], custAvg:[+(pvm.cust/pvm.bill).toFixed(2),+(cur.cust/cur.bill).toFixed(2)]};
+      t.note='จำนวนบิล/ลูกค้า มาจากชีต Area7Dept (เทียบเดือนเดียวกันปีก่อน) — ส่วนแยกช่องทางเป็นยอดขาย ไม่ใช่จำนวนบิล';
+      D(fileM).trans=t;
+
+      const withPct=kept.map(r=>({name:r.name,
+        trans:pct(r.tLY,r.tNow), ticketv:pct(r.sLY/r.tLY, r.sNow/r.tNow),
+        momSales:prevOf[r.name]&&prevOf[r.name].prev?pct(prevOf[r.name].prev,r.sNow):null}))
+        .filter(r=>r.trans!=null&&isFinite(r.trans)&&r.ticketv!=null&&isFinite(r.ticketv));
+      const good=withPct.filter(r=>r.trans>=0&&r.ticketv>=-1).sort((a,b)=>(b.trans+b.ticketv)-(a.trans+a.ticketv)).slice(0,5);
+      const bad =withPct.filter(r=>r.trans<0&&r.ticketv<0).sort((a,b)=>(a.trans+a.ticketv)-(b.trans+b.ticketv)).slice(0,5);
+      D(fileM).branches={ basis:'yoy',
+        good:good.map(r=>[r.name,+r.trans.toFixed(1),+r.ticketv.toFixed(1),r.momSales==null?null:+r.momSales.toFixed(1)]),
+        bad: bad.map(r=>[r.name,+r.trans.toFixed(1),+r.ticketv.toFixed(1),r.momSales==null?null:+r.momSales.toFixed(1)]),
+        note:`เทียบ ${MONTH_TH[fileM-1]} ${YEAR} กับ ${MONTH_TH[fileM-1]} ${YEAR-1} · คอลัมน์สุดท้ายคือยอดขายเทียบเดือนก่อน (MoM)` };
+    }
+  }
+  return {mon,det,fileM,warn};
+}
+
+/* ---- รวมข้อมูลใหม่เข้ากับของเดิม (ไม่ทับค่าที่ไฟล์ใหม่ไม่มี) ---- */
+function mergeMonthly(rows){
+  rows.forEach(r=>{ const ex=MONTHLY.find(x=>x.m===r.m);
+    if(!ex){ MONTHLY.push(r); return; }
+    Object.keys(r).forEach(k=>{ if(r[k]!=null) ex[k]=r[k]; }); });
+  MONTHLY.sort((a,b)=>a.m-b.m);
+}
+function mergeDetail(det){
+  Object.entries(det).forEach(([m,d])=>{ const cur=DETAIL[m]=DETAIL[m]||{};
+    Object.entries(d).forEach(([k,v])=>{
+      if(k==='delivery'&&cur.delivery){
+        if(!(v.topDecline||[]).length) v.topDecline=cur.delivery.topDecline||[];
+        if(!(v.lineManDecline||[]).length) v.lineManDecline=cur.delivery.lineManDecline||[];
+      }
+      cur[k]=v; }); });
+}
 function showMsg(t,c){const el=$('#msg');el.textContent=t;el.className='msg '+c;}
 async function importFile(file){
   try{
     const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+    if(isDailySaleWb(wb)){   // ไฟล์ Daily Sale (ไฟล์ปฏิบัติการรายเดือน)
+      const {mon,det,fileM,warn}=parseDailySale(wb);
+      const list=Object.values(mon); if(!list.length) throw new Error('อ่านยอดขายจากไฟล์ Daily Sale ไม่ได้');
+      mergeMonthly(list); mergeDetail(det);
+      curM=fileM||list[list.length-1].m; await saveState();
+      const miss=[]; const d=DETAIL[curM]||{};
+      if(!d.delivery) miss.push('Delivery แยก Platform (ชีตรายวันของเดือนนี้ยังว่าง)');
+      if(!d.cem&&!d.oss) miss.push('CEM/OSS (ไม่มีในไฟล์นี้ — ใช้แบบฟอร์มเดิม)');
+      showMsg('นำเข้าไฟล์ Daily Sale สำเร็จ: อัปเดต '+list.map(r=>MONTH_TH[r.m-1]).join(', ')+' · เดือนหลัก '+label(curM)+
+        (miss.length?' — ยังไม่มี: '+miss.join(' / '):'')+(warn.length?' ['+warn.join('; ')+']':''),'ok');
+      return;
+    }
     const S={}; wb.SheetNames.forEach(n=>S[n]=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:null}));
-    if(!S[SHEETS.monthly]) throw new Error('ไม่พบชีต "Monthly" — ใช้ไฟล์ข้อมูลที่ดาวน์โหลดจากหน้านี้เป็นแบบฟอร์ม');
+    if(!S[SHEETS.monthly]) throw new Error('ไม่พบชีต "Monthly" และไม่ใช่ไฟล์ Daily Sale — ใช้ไฟล์ข้อมูลที่ดาวน์โหลดจากหน้านี้เป็นแบบฟอร์ม');
     const {mon,det}=fromRows(S); const ms=Object.keys(mon).map(Number);
     if(!ms.length) throw new Error('ชีต Monthly ไม่มีแถวข้อมูล');
     MONTHLY=MONTHLY.filter(r=>!ms.includes(r.m)).concat(Object.values(mon)).sort((a,b)=>a.m-b.m);
