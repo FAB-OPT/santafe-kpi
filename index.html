@@ -132,6 +132,14 @@ svg text{font-family:Sarabun,"Segoe UI",Tahoma,sans-serif}
 .dlegend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px}
 .dlegend b{font-weight:600}
 .dlegend em{font-style:normal;color:var(--faint);margin-left:4px}
+.headline{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;background:var(--accent-2);border-left:4px solid var(--accent);
+  border-radius:var(--r-sm);padding:9px 14px;margin-bottom:12px}
+.headline .hlnum{font-size:26px;font-weight:700;color:var(--accent-ink);line-height:1.1;letter-spacing:-.02em}
+.headline .hltxt{font-size:13px;color:var(--ink-2)}
+.headline b{font-weight:600}
+body.present .headline{padding:14px 22px;margin-bottom:16px;gap:18px}
+body.present .headline .hlnum{font-size:44px}
+body.present .headline .hltxt{font-size:22px}
 .covergrid{display:grid;grid-template-columns:1.25fr 1fr;gap:18px;margin-top:16px;align-items:start}
 .coverbox{background:var(--surface);border-radius:var(--r-md);padding:12px 14px}
 .coverbox .chart{max-height:210px}
@@ -636,7 +644,20 @@ function build(m){
   // 1 overview
   if(cur && cur.sales!=null){
     const vb=pct(cur.budget,cur.sales), yoy=pct(cur.ly,cur.sales);
-    out.push(sec('overview','KPI '+label(m),'Santa Fe — ภาพรวมเดือนนี้',`
+    const hlBits=[];
+    if(cur.budget!=null) hlBits.push(vb>=0
+      ? `<b class="pos">เกินแผน ${(cur.sales-cur.budget).toFixed(1)}M (${sgn(vb)})</b>`
+      : `<b class="neg">ต่ำกว่าแผน ${(cur.budget-cur.sales).toFixed(1)}M (${sgn(vb)})</b>`);
+    if(cur.mom!=null) hlBits.push(Math.abs(cur.mom)<1
+      ? `ทรงตัวจากเดือนก่อน (${sgn(cur.mom)})`
+      : `<b class="${cls(cur.mom)}">${cur.mom>0?'โตจาก':'ลดจาก'}เดือนก่อน ${sgn(cur.mom)}</b>`);
+    if(cur.ly!=null) hlBits.push(`<b class="${cls(yoy)}">เทียบปีก่อน ${sgn(yoy)}</b>`);
+    if(cur.sssg!=null) hlBits.push(`SSSG ${sgn(cur.sssg)}`);
+    if(d.cem) hlBits.push(`CEM ${d.cem.avgNow}%`);
+    const subLine=[`Santa Fe Happy Steak`, d.stores?`${d.stores.now} สาขา`:'', d.stores&&d.stores.sameStore?`Same Store ${d.stores.sameStore} สาขา`:'']
+      .filter(Boolean).join(' · ');
+    out.push(sec('overview','ภาพรวม '+label(m),subLine,`
+      <div class="headline"><span class="hlnum">฿${cur.sales.toFixed(1)}M</span><span class="hltxt">${hlBits.join(' · ')}</span></div>
       <div class="cards">
         <div class="k"><div class="l">Total Sales ${label(m)}</div><div class="v">฿${cur.sales.toFixed(1)}M</div><div class="s">${cur.ly!=null?`${YEAR-1}: ${cur.ly.toFixed(1)}M (${sgn(yoy)})`:'ยังไม่มีตัวเลขปีก่อน'}</div>${spark(rows.map(r=>r.sales),[MONTH_TH[rows[0].m-1],MONTH_TH[m-1]])}</div>
         <div class="k"><div class="l">vs Budget</div><div class="v ${cur.budget!=null?cls(vb):''}">${cur.budget!=null?sgn(vb):'—'}</div><div class="s">${cur.budget!=null?'Budget '+cur.budget.toFixed(1)+'M':'ยังไม่ได้ใส่ Budget เดือนนี้'}</div></div>
