@@ -438,7 +438,7 @@ function build(m){
   const out=[];
 
   // 1 overview
-  if(cur){
+  if(cur && cur.sales!=null){
     const vb=pct(cur.budget,cur.sales), yoy=pct(cur.ly,cur.sales);
     out.push(sec('overview','KPI '+label(m),'Santa Fe — ภาพรวมเดือนนี้',`
       <div class="cards">
@@ -446,7 +446,7 @@ function build(m){
         <div class="k"><div class="l">vs Budget</div><div class="v ${cur.budget!=null?cls(vb):''}">${cur.budget!=null?sgn(vb):'—'}</div><div class="s">${cur.budget!=null?'Budget '+cur.budget.toFixed(1)+'M':'ยังไม่ได้ใส่ Budget เดือนนี้'}</div></div>
         <div class="k"><div class="l">Same Store Sales Growth</div><div class="v ${cls(cur.sssg)}">${sgn(cur.sssg)}</div><div class="s">${d.stores?.sameStore? d.stores.sameStore+' สาขา Same Store':'เทียบเดือนเดียวกันปีก่อน'}</div></div>
         <div class="k"><div class="l">MoM (${m>1?MONTH_TH[m-2]:'—'} → ${MONTH_TH[m-1]})</div><div class="v ${cls(cur.mom??0)}">${sgn(cur.mom)}</div><div class="s">${cur.equalDays?'เทียบช่วงวันเท่ากัน (1–30)':'เทียบเดือนก่อนหน้า'}</div></div>
-        <div class="k"><div class="l">สาขาที่มียอด ${label(m)}</div><div class="v">${d.stores?d.stores.now+' สาขา':'—'}</div><div class="s">${d.stores?'2025: '+d.stores.ly+' สาขา':''}</div></div>
+        <div class="k"><div class="l">สาขาที่มียอด ${label(m)}</div><div class="v">${d.stores?d.stores.now+' สาขา':'—'}</div><div class="s">${d.stores&&d.stores.ly!=null?`${YEAR-1}: ${d.stores.ly} สาขา`:''}</div></div>
       </div>`));
   }
 
@@ -509,20 +509,22 @@ function build(m){
   // 8-9 CEM / OSS
   const audit=(id,title,a)=>{
     if(!a) return sec(id,title,'',EMPTY(title.split(' ')[0]));
-    const u=a.unit, diff=a.avgNow-a.avgLY;
+    const u=a.unit, diff=(a.avgLY==null?null:a.avgNow-a.avgLY);
     const dist=(arr)=>{const tot=arr.reduce((x,y)=>x+y,0);const c=['var(--good)','var(--amber)','var(--bad)'];return `<div class="dist">${arr.map((v,i)=>v?`<span style="flex:${v};background:${c[i]}">${v}</span>`:'').join('')}</div>`;};
     const mx=Math.max(...a.top.map(r=>r[1]));
-    return sec(id,title,`ซานตาเฟ่ สเต็ก · ค่าเฉลี่ย ม.ค.–${MONTH_TH[m-1]} · ${a.stores} สาขา (รหัส 50xx) · 2025 vs 2026`,`
+    return sec(id,title, a.avgLY!=null
+        ? `ซานตาเฟ่ สเต็ก · ค่าเฉลี่ย ม.ค.–${MONTH_TH[m-1]} · ${a.stores} สาขา (รหัส 50xx) · ${YEAR-1} vs ${YEAR}`
+        : `ซานตาเฟ่ สเต็ก · ${label(m)} · ${a.stores} สาขาที่ตรวจแล้ว`,`
       <div class="strip">
-        <div class="st"><div class="l">เฉลี่ย 2025</div><div class="v">${a.avgLY}${u}</div><div class="s">ม.ค.–${MONTH_TH[m-1]}</div></div>
+        <div class="st"><div class="l">เฉลี่ย ${YEAR-1}</div><div class="v">${a.avgLY!=null?a.avgLY+u:'—'}</div><div class="s">${a.avgLY!=null?'ม.ค.–'+MONTH_TH[m-1]:'ยังไม่มีข้อมูลปีก่อน'}</div></div>
         <div class="st" style="border-color:var(--orange)"><div class="l">เฉลี่ย 2026</div><div class="v" style="color:var(--orange)">${a.avgNow}${u}</div><div class="s">ม.ค.–${MONTH_TH[m-1]}</div></div>
-        <div class="st ${cls(diff)}"><div class="l">YoY</div><div class="v">${sgn(diff,1,u?' ppt':'')}</div><div class="s">เทียบปีก่อน</div></div>
+        <div class="st ${cls(diff)}"><div class="l">YoY</div><div class="v">${diff==null?'—':sgn(diff,1,u?' ppt':'')}</div><div class="s">เทียบปีก่อน</div></div>
         <div class="st"><div class="l">จำนวนสาขา</div><div class="v">${a.stores}</div><div class="s">รหัส 50xx</div></div>
       </div>
       <div class="two"><div><h3>การกระจายคะแนน</h3><div style="font-size:13px;color:var(--mute)">${a.criteria}</div>
-        <div style="margin-top:10px;font-size:13px">ปี 2025</div>${dist(a.distLY)}<div style="font-size:13px">ปี 2026</div>${dist(a.distNow)}
+        ${a.distLY?`<div style="margin-top:10px;font-size:13px">ปี ${YEAR-1}</div>`+dist(a.distLY):''}<div style="margin-top:10px;font-size:13px">ปี ${YEAR}</div>${dist(a.distNow)}
         <div class="legend"><span><i style="background:var(--good)"></i>ดีเยี่ยม</span><span><i style="background:var(--amber)"></i>ปานกลาง</span><span><i style="background:var(--bad)"></i>ต้องปรับปรุง</span></div></div>
-      <div><h3>Top 5 สาขาคะแนนสูงสุด 2026</h3><ol class="rank">${a.top.map((r,i)=>`<li><span class="num">${i+1}</span><span>${r[0]}</span><span class="track"><i style="width:${r[1]/mx*100}%"></i></span><span class="sc">${r[1].toFixed(1)}${u}</span><span style="font-size:12.5px;color:var(--mute)">2025: ${r[2].toFixed(1)} ${pill(r[1]-r[2],1,'')}</span></li>`).join('')}</ol></div></div>`);
+      <div><h3>Top 5 สาขาคะแนนสูงสุด ${YEAR}</h3><ol class="rank">${a.top.map((r,i)=>`<li><span class="num">${i+1}</span><span>${r[0]}</span><span class="track"><i style="width:${r[1]/mx*100}%"></i></span><span class="sc">${r[1].toFixed(1)}${u}</span><span style="font-size:12.5px;color:var(--mute)">${r[2]!=null?`${YEAR-1}: ${r[2].toFixed(1)} `+pill(r[1]-r[2],1,''):''}</span></li>`).join('')}</ol></div></div>`);
   };
   // 8 P&L (ถ้ามีข้อมูล)
   const plRows=MONTHLY.filter(r=>r.m<=m && DETAIL[r.m] && DETAIL[r.m].pl).map(r=>({m:r.m,...DETAIL[r.m].pl}));
@@ -648,7 +650,7 @@ function fromRows(S){ // sheets → state (months present in file)
   rows(SHEETS.audit).forEach(r=>{const m=num(r[0]),d=D(m),k=String(r[1]).toLowerCase(); if(!['cem','oss'].includes(k)) return; const a=d[k]=d[k]||{top:[],unit:k==='cem'?'%':'',criteria:k==='cem'?'ดีเยี่ยม = 100% · ปานกลาง 92–99% · ต้องปรับปรุง < 92%':'ดีเยี่ยม ≥ 90 · ปานกลาง 85–89 · ต้องปรับปรุง < 85'}; const t=String(r[2]);
     if(t==='สรุป'){a.avgLY=num(r[3]);a.avgNow=num(r[4]);a.stores=num(r[5]);} else if(t==='กระจาย2025')a.distLY=[num(r[3])||0,num(r[4])||0,num(r[5])||0]; else if(t==='กระจาย2026')a.distNow=[num(r[3])||0,num(r[4])||0,num(r[5])||0]; else if(t==='Top')a.top.push([String(r[3]),num(r[4]),num(r[5])]);});
   rows(SHEETS.notes).forEach(r=>{const m=num(r[0]),d=D(m),s=String(r[1]); if(d[s]) d[s].note=String(r[2]);});
-  Object.entries(det).forEach(([m,d])=>{const p=m>1?MONTH_TH[m-2]:'—',c=MONTH_TH[m-1]; if(d.delivery)d.delivery.compare=`${p} vs ${c} ${YEAR}`; if(d.trans)d.trans.compare=`${c} vs ${p} ${YEAR}`; ['cem','oss'].forEach(k=>{if(d[k]&&(d[k].avgNow==null||!d[k].distLY||!d[k].distNow)) delete d[k];});});
+  Object.entries(det).forEach(([m,d])=>{const p=m>1?MONTH_TH[m-2]:'—',c=MONTH_TH[m-1]; if(d.delivery)d.delivery.compare=`${p} vs ${c} ${YEAR}`; if(d.trans)d.trans.compare=`${c} vs ${p} ${YEAR}`; ['cem','oss'].forEach(k=>{if(d[k]&&(d[k].avgNow==null||!d[k].distNow)) delete d[k];});});
   return {mon,det};
 }
 
@@ -934,6 +936,73 @@ function parsePL(wb){
   return {det,warn};
 }
 
+/* ===== ตัวอ่านไฟล์ CEM (ผลสำรวจลูกค้า ทุกสาขาในเดือนเดียว) ===== */
+function isCEMWb(wb){ return wb.SheetNames.some(n=>/^Survey Questions/i.test(n.trim())); }
+function parseCEM(wb){
+  const key=wb.SheetNames.find(n=>/^Survey Questions/i.test(n.trim()));
+  const rs=XLSX.utils.sheet_to_json(wb.Sheets[key],{header:1,defval:null});
+  let hi=-1; rs.forEach((r,i)=>{ if(hi<0 && (r||[]).some(v=>typeof v==='string'&&v.trim()==='Location ID')) hi=i; });
+  if(hi<0) return {warn:['ไม่พบหัวตาราง Location ID ในไฟล์ CEM']};
+  const H=rs[hi], col=t=>H.findIndex(v=>typeof v==='string'&&v.trim()===t);
+  const cId=col('Location ID'), cName=col('Location Name'), cSurvey=col('Survey Name'), cScore=col('คะแนนรวม');
+  if(cScore<0) return {warn:['ไม่พบคอลัมน์ "คะแนนรวม" ในไฟล์ CEM']};
+  const stores={}; let ym=null;
+  for(let i=hi+1;i<rs.length;i++){ const r=rs[i]||[];
+    const code=String(r[cId]==null?'':r[cId]).trim(); const sc=r[cScore];
+    if(!code || typeof sc!=='number' || !isFinite(sc)) continue;
+    if(!ym && typeof r[cSurvey]==='string'){ const mt=r[cSurvey].match(/(\d{4})[_\-\/](\d{1,2})/); if(mt) ym={y:+mt[1], m:+mt[2]}; }
+    const nm=String(r[cName]||code).replace(/^Santa\s*Fe\s*-\s*/i,'').trim();
+    if(!stores[code] || sc>stores[code].score) stores[code]={name:nm, score:sc};
+  }
+  const list=Object.entries(stores).map(([code,v])=>({code,...v}));
+  if(!list.length) return {warn:['ไม่พบคะแนนรายสาขาในไฟล์ CEM']};
+  return {ym, stores:list};
+}
+
+/* ===== ตัวอ่านไฟล์ OSS (ใบตรวจมาตรฐาน 1 สาขา ต่อ 1 ไฟล์) ===== */
+function isOSSWb(wb){ const s=wb.SheetNames.map(n=>n.trim().toLowerCase());
+  return s.includes('summary') && s.includes('detail') && s.includes('code'); }
+function parseOSS(wb){
+  const key=wb.SheetNames.find(n=>n.trim().toLowerCase()==='summary');
+  const rs=XLSX.utils.sheet_to_json(wb.Sheets[key],{header:1,defval:null});
+  let code=null, name=null, dateTxt=null, score=null, totalScore=null, cScore=-1;
+  const lastNum=r=>{ for(let c=r.length-1;c>=0;c--) if(typeof r[c]==='number'&&isFinite(r[c])) return r[c]; return null; };
+  for(const r of rs){ if(!r) continue;
+    const a=typeof r[0]==='string'?r[0].trim():'';
+    if(/^สาขา/.test(a)){ code=r[1]!=null?String(r[1]).trim():null; name=typeof r[2]==='string'?r[2].trim():null; }
+    if(/^วัน/.test(a) && typeof r[1]==='string') dateTxt=r[1];
+    // คอลัมน์ "Total score คะแนนที่ได้" จากหัวตาราง
+    if(cScore<0) r.forEach((v,c)=>{ if(typeof v==='string'&&/Total\s*score/i.test(v)) cScore=c; });
+    // แถวรวม → คะแนนรวมก่อนหักหมวดพิเศษ
+    if(r.some(v=>typeof v==='string'&&v.trim()==='Total') && cScore>=0 && typeof r[cScore]==='number') totalScore=r[cScore];
+    // แถว "% Achieved" = คะแนนสุทธิ (หัก Other Program / Critical Issue แล้ว)
+    if(r.some(v=>typeof v==='string'&&/%\s*Achieved/i.test(v))) { const v=lastNum(r); if(v!=null) score=v; }
+  }
+  if(score==null) score=totalScore;
+  if(code==null||score==null) return {warn:['อ่านสาขา/คะแนนจากชีต Summary ของไฟล์ OSS ไม่ได้']};
+  let ym=null;
+  if(dateTxt){ const mi=TH_FULL.findIndex(t=>dateTxt.indexOf(t)>=0);
+    const yy=(dateTxt.match(/(\d{4})/g)||[]).map(Number).filter(v=>v>2500).pop();
+    if(mi>=0) ym={m:mi+1, y:yy?yy-543:YEAR}; }
+  return {ym, code:String(code), name:name||String(code), score:+(+score).toFixed(1), dateTxt};
+}
+
+/* ---- รวมคะแนนรายสาขา → ชุดข้อมูลของหัวข้อ CEM/OSS ---- */
+function auditFromScores(scores,kind){
+  const list=Object.entries(scores).map(([code,v])=>({code,...v})).filter(s=>typeof s.score==='number');
+  if(!list.length) return null;
+  const avg=list.reduce((a,b)=>a+b.score,0)/list.length;
+  const cut=kind==='cem'?[100,92]:[90,85];   // [ดีเยี่ยม≥, ปานกลาง≥]
+  const dist=[list.filter(s=>s.score>=cut[0]).length,
+              list.filter(s=>s.score<cut[0]&&s.score>=cut[1]).length,
+              list.filter(s=>s.score<cut[1]).length];
+  const top=list.slice().sort((a,b)=>b.score-a.score).slice(0,5).map(s=>[s.name,+s.score.toFixed(1),null]);
+  return {avgNow:+avg.toFixed(1), avgLY:null, stores:list.length, distNow:dist, distLY:null, top,
+    unit:kind==='cem'?'%':'%',
+    criteria:kind==='cem'?'ดีเยี่ยม = 100% · ปานกลาง 92–99% · ต้องปรับปรุง < 92%'
+                         :'ดีมาก ≥ 90% · มาตรฐาน 85–89% · ต้องปรับปรุง < 85%'};
+}
+
 /* ---- รวมข้อมูลใหม่เข้ากับของเดิม (ไม่ทับค่าที่ไฟล์ใหม่ไม่มี) ---- */
 function mergeMonthly(rows,opt){
   opt=opt||{}; const kept=[];
@@ -960,6 +1029,28 @@ function showMsg(t,c){const el=$('#msg');el.textContent=t;el.className='msg '+c;
 async function importFile(file){
   try{
     const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+    if(isCEMWb(wb)){         // ไฟล์ CEM (ผลสำรวจลูกค้า ทุกสาขา)
+      const R=parseCEM(wb);
+      if(!R.stores) throw new Error((R.warn||['อ่านไฟล์ CEM ไม่ได้']).join('; '));
+      const m=(R.ym&&R.ym.m)||curM; const d=DETAIL[m]=DETAIL[m]||{};
+      d.cemStores=d.cemStores||{}; R.stores.forEach(x=>d.cemStores[x.code]={name:x.name,score:x.score});
+      d.cem=auditFromScores(d.cemStores,'cem');
+      if(!MONTHLY.some(r=>r.m===m)) MONTHLY.push({m,sales:null,ly:null,budget:null,sssgSales:null,sssg:null,mom:null});
+      MONTHLY.sort((a,b)=>a.m-b.m); curM=m; await saveState();
+      showMsg(`นำเข้า CEM สำเร็จ: ${label(m)} · ${R.stores.length} สาขา · เฉลี่ย ${d.cem.avgNow}% (ดีเยี่ยม ${d.cem.distNow[0]} · ปานกลาง ${d.cem.distNow[1]} · ต้องปรับปรุง ${d.cem.distNow[2]})`,'ok');
+      return;
+    }
+    if(isOSSWb(wb)){         // ไฟล์ OSS (ใบตรวจ 1 สาขา)
+      const R=parseOSS(wb);
+      if(R.code==null) throw new Error((R.warn||['อ่านไฟล์ OSS ไม่ได้']).join('; '));
+      const m=(R.ym&&R.ym.m)||curM; const d=DETAIL[m]=DETAIL[m]||{};
+      d.ossStores=d.ossStores||{}; d.ossStores[R.code]={name:R.name,score:R.score};
+      d.oss=auditFromScores(d.ossStores,'oss');
+      if(!MONTHLY.some(r=>r.m===m)) MONTHLY.push({m,sales:null,ly:null,budget:null,sssgSales:null,sssg:null,mom:null});
+      MONTHLY.sort((a,b)=>a.m-b.m); curM=m; await saveState();
+      showMsg(`นำเข้า OSS สำเร็จ: ${R.name} (${R.code}) ${R.score}% · ${label(m)} — สะสมแล้ว ${Object.keys(d.ossStores).length} สาขา เฉลี่ย ${d.oss.avgNow}% · ลากไฟล์สาขาอื่นมาเพิ่มได้เรื่อยๆ`,'ok');
+      return;
+    }
     if(isSalesFormWb(wb)){   // ไฟล์ "แบบฟอร์มส่งยอดขาย" (รายสาขา รายเดือน)
       const {mon,det,months,partial,warn}=parseSalesForm(wb);
       if(!months.length) throw new Error('อ่านชีตรายเดือนในแบบฟอร์มส่งยอดขายไม่ได้');
