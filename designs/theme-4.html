@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Santa Fe KPI 2026</title>
+<title>Santa Fe KPI — โทน 4 · น้ำตาล-ครีม</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -262,6 +262,26 @@ body.present .bar{padding:26px 60px 20px}
   .scroll{overflow:visible}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+/* ===== โทน 4 : น้ำตาลเข้ม-ครีม (สเต็กเฮาส์ พรีเมียม) ===== */
+:root{--bg:#F2ECE3;--card:#fffdfa;--surface:#FAF4EC;--line:#E6DBCC;--hair:#F0E8DC;
+ --accent:#DD6317;--accent-ink:#A23D05;--accent-2:#FBEADA;--accent-3:#EDCFAE;
+ --ink:#241810;--ink-2:#4a3a2e;--mute:#8a7a68;--faint:#a8977f;--brown:#33200F;
+ --chart-1:#DD6317;--chart-2:#A2907B;--chart-3:#DDD0BD;--chart-soft:#EDB07A}
+.top{background:var(--brown)}
+.bar{background:var(--brown)}
+.bar h2::before{background:var(--accent);color:#fff}
+.bar .sub{color:rgba(255,255,255,.72)}
+th{background:var(--accent);color:#fff}
+.k{border-left-color:var(--accent)}
+.k.tot{background:var(--brown);border-color:var(--brown)}
+.st{border-left-color:var(--accent)}
+nav a.on{background:var(--accent);color:#fff}
+tr.hi td{background:var(--accent-2);color:var(--ink)}
+tr.hi td:first-child{box-shadow:inset 3px 0 var(--accent)}
+tr.hi td.pos,tr.hi td .pill.pos{color:var(--good)} tr.hi td.neg,tr.hi td .pill.neg{color:var(--bad)}
+.pctl{background:var(--accent)}
+
 </style>
 </head>
 <body>

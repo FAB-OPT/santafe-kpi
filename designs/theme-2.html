@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Santa Fe KPI 2026</title>
+<title>Santa Fe KPI — โทน 2 · ขาว-ส้ม</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -262,6 +262,25 @@ body.present .bar{padding:26px 60px 20px}
   .scroll{overflow:visible}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+/* ===== โทน 2 : ขาว-ส้ม (สว่าง เรียบ) ===== */
+:root{--chart-2:#A79E96}
+.top{background:var(--card);border-bottom:1px solid var(--line)}
+.top h1{color:var(--ink)} .top h1 span{color:var(--faint)} .status{color:var(--faint)}
+.month{background:var(--surface);border-color:var(--line)} .month select{color:var(--ink)} .month button{color:var(--mute)}
+.btn{background:var(--card);border-color:var(--line);color:var(--ink-2)}
+.btn:hover{background:var(--surface);border-color:var(--accent-3);color:var(--accent-ink)}
+.bar{background:var(--accent-2);border-bottom:1px solid var(--accent-3)}
+.bar h2{color:var(--accent-ink)} .bar h2::before{background:var(--accent);color:#fff}
+.bar .sub{color:var(--mute)}
+th{background:var(--surface);color:var(--mute);border-bottom:2px solid var(--accent)}
+th:first-child,th:last-child{border-radius:0}
+tr.hi td{background:var(--accent-2);color:var(--ink)}
+tr.hi td:first-child{box-shadow:inset 3px 0 var(--accent)}
+tr.hi td.pos,tr.hi td .pill.pos{color:var(--good)} tr.hi td.neg,tr.hi td .pill.neg{color:var(--bad)}
+.k.tot{background:var(--accent-2);border-color:var(--accent-3)}
+.k.tot .l,.k.tot .s{color:var(--mute)} .k.tot .v{color:var(--accent-ink)}
+
 </style>
 </head>
 <body>
