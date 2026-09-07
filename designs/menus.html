@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Santa Fe KPI — เทียบโทนสี</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --accent:#F66B21; --accent-ink:#C9490B; --accent-2:#FFF3EB;
+  --ink:#191512; --ink-2:#3d3733; --mute:#8a807a; --faint:#a9a19b;
+  --line:#E7E1DA; --card:#fff; --bg:#F2EEE9;
+  --sh:0 1px 2px rgba(28,20,14,.05), 0 14px 34px -20px rgba(28,20,14,.4);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Sarabun,"Segoe UI",Tahoma,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;font-size:14px}
+button{font:inherit;cursor:pointer}
+
+header{position:sticky;top:0;z-index:10;background:var(--card);border-bottom:1px solid var(--line);padding:12px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{background:var(--accent);color:#fff;font-weight:700;padding:6px 12px;border-radius:10px;line-height:1.05;font-size:14px}
+.logo small{display:block;font-weight:400;font-size:8.5px;letter-spacing:.14em}
+header h1{margin:0;font-size:16px;font-weight:600;flex:1;min-width:180px}
+header h1 span{color:var(--faint);font-weight:400;font-size:13px;margin-left:8px}
+.seg{display:flex;background:#F5F1EC;border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;color:var(--mute);border-radius:999px;padding:6px 16px;font-size:13.5px;font-weight:500;transition:.15s}
+.seg button.on{background:var(--accent);color:#fff}
+.hint{font-size:12.5px;color:var(--faint);width:100%}
+
+.grid{display:grid;gap:20px;padding:20px 22px 60px;max-width:1900px;margin:0 auto}
+body[data-view="desk"] .grid{grid-template-columns:repeat(auto-fit,minmax(430px,1fr))}
+body[data-view="mob"] .grid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+
+.card{background:var(--card);border-radius:16px;box-shadow:var(--sh);overflow:hidden;display:flex;flex-direction:column}
+.head{padding:13px 16px 11px;border-bottom:1px solid #F2ECE5;display:flex;align-items:flex-start;gap:10px}
+.num{flex:0 0 auto;width:26px;height:26px;border-radius:8px;background:var(--accent-2);color:var(--accent-ink);font-weight:700;font-size:13px;display:grid;place-items:center}
+.head h2{margin:0;font-size:15px;font-weight:600}
+.head p{margin:2px 0 0;font-size:12px;color:var(--mute);line-height:1.45}
+.head a{margin-left:auto;flex:0 0 auto;font-size:12.5px;color:var(--accent-ink);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.head a:hover{background:var(--accent-2);border-color:#F9D9C4}
+
+.stage{position:relative;overflow:hidden;background:#EDE9E4;display:grid;place-items:start center;padding:14px}
+.stage .shell{position:relative;overflow:hidden;background:#fff;flex:0 0 auto}
+.stage iframe{border:0;display:block;transform-origin:top left;pointer-events:none}
+body[data-view="mob"] .stage .shell{border-radius:22px;border:6px solid #221D19;box-shadow:0 10px 30px -14px rgba(0,0,0,.5)}
+body[data-view="desk"] .stage .shell{border-radius:8px;border:1px solid #DAD4CD}
+.tag{position:absolute;right:10px;top:10px;background:rgba(25,21,18,.72);color:#fff;font-size:11px;padding:2px 8px;border-radius:999px;z-index:2}
+@media (max-width:700px){ header{padding:10px 14px} .grid{padding:14px 14px 40px} }
+</style>
+</head>
+<body data-view="desk">
+
+<header>
+  <div class="logo">Santa Fe<small>HAPPY STEAK</small></div>
+  <h1>เทียบเมนู 5 แบบ <span>Monthly Performance Review — ก.ค. 2026</span></h1>
+  <div class="seg">
+    <button data-v="desk" class="on">🖥 จอคอม</button>
+    <button data-v="mob">📱 มือถือ</button>
+  </div>
+  <div class="hint">ภาพในกรอบเป็นเว็บจริง (เลื่อน/กดไม่ได้ในหน้านี้) — กด “เปิดเต็มจอ” เพื่อลองใช้จริงทีละแบบ</div>
+</header>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const DESIGNS=[
+  {n:1,file:'menu-1.html',name:'ปัจจุบัน (ชื่อเต็ม)',desc:'ตัวเลขลำดับ + ชื่อหัวข้อเต็ม ขึ้นบรรทัดที่สองได้ ตัวที่เปิดอยู่พื้นส้ม'},
+  {n:2,file:'menu-2.html',name:'ชื่อสั้น บรรทัดเดียว',desc:'ย่อชื่อหัวข้อให้จบในบรรทัดเดียวทุกอัน เมนูสั้นลง กวาดตาหาหัวข้อได้ไวขึ้น'},
+  {n:3,file:'menu-3.html',name:'การ์ดเด่น อ่านง่าย',desc:'ตัวหนังสือใหญ่ขึ้น เว้นห่างขึ้น ตัวเลขเป็นวงกลม มีเส้นคั่นแต่ละหัวข้อ — ชัดตอนประชุม'},
+  {n:4,file:'menu-4.html',name:'มีตัวเลขกำกับ',desc:'ใต้ชื่อหัวข้อมีค่าเด่นของหัวข้อนั้น (ยอดขาย / MoM / SSSG / สัดส่วน Delivery) เห็นภาพรวมจากเมนูเลย'},
+  {n:5,file:'menu-5.html',name:'แถบบนแนวนอน',desc:'ย้ายเมนูขึ้นไปเป็นชิปใต้ท็อปบาร์ ตัดคอลัมน์ซ้ายออก — เนื้อหากว้างเต็มจอ ตารางเห็นครบไม่ต้องเลื่อน'},
+];
+const VIEW={desk:{w:1440,h:1150,label:'1440 × 1150'},mob:{w:390,h:760,label:'390 × 760'}};
+
+function render(v){
+  const {w,h,label}=VIEW[v];
+  document.getElementById('grid').innerHTML=DESIGNS.map(d=>`
+    <div class="card">
+      <div class="head"><span class="num">${d.n}</span>
+        <div><h2>${d.name}</h2><p>${d.desc}</p></div>
+        <a href="${d.file}" target="_blank">เปิดเต็มจอ ↗</a></div>
+      <div class="stage"><span class="tag">${label}</span>
+        <div class="shell" data-w="${w}" data-h="${h}">
+          <iframe src="${d.file}" width="${w}" height="${h}" loading="lazy" scrolling="no" title="${d.name}"></iframe>
+        </div></div>
+    </div>`).join('');
+  fit(); requestAnimationFrame(fit); setTimeout(fit,400);
+}
+function fit(){
+  document.querySelectorAll('.shell').forEach(sh=>{
+    const w=+sh.dataset.w, h=+sh.dataset.h;
+    const avail=sh.parentElement.clientWidth-28;
+    const s=Math.min(1,avail/w);
+    sh.style.width=Math.round(w*s)+'px';
+    sh.style.height=Math.round(h*s)+'px';
+    sh.querySelector('iframe').style.transform='scale('+s+')';
+  });
+}
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.seg button').forEach(x=>x.classList.toggle('on',x===b));
+  document.body.dataset.view=b.dataset.v; render(b.dataset.v);
+});
+addEventListener('resize',fit);
+render('desk');
+</script>
+</body>
+</html>
