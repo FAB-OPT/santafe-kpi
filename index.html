@@ -527,7 +527,21 @@ function build(m){
       <div class="two"><div><h3>การกระจายคะแนน</h3><div style="font-size:13px;color:var(--mute)">${a.criteria}</div>
         ${a.distLY?`<div style="margin-top:10px;font-size:13px">ปี ${YEAR-1}</div>`+dist(a.distLY):''}<div style="margin-top:10px;font-size:13px">ปี ${YEAR}</div>${dist(a.distNow)}
         <div class="legend"><span><i style="background:var(--good)"></i>ดีเยี่ยม</span><span><i style="background:var(--amber)"></i>ปานกลาง</span><span><i style="background:var(--bad)"></i>ต้องปรับปรุง</span></div></div>
-      <div><h3>Top 5 สาขาคะแนนสูงสุด ${YEAR}</h3><ol class="rank">${a.top.map((r,i)=>`<li><span class="num">${i+1}</span><span>${r[0]}</span><span class="track"><i style="width:${r[1]/mx*100}%"></i></span><span class="sc">${r[1].toFixed(1)}${u}</span><span style="font-size:12.5px;color:var(--mute)">${r[2]!=null?`${YEAR-1}: ${r[2].toFixed(1)} `+pill(r[1]-r[2],1,''):''}</span></li>`).join('')}</ol></div></div>`);
+      <div><h3>Top 5 สาขาคะแนนสูงสุด ${YEAR}</h3><ol class="rank">${a.top.map((r,i)=>`<li><span class="num">${i+1}</span><span>${r[0]}</span><span class="track"><i style="width:${r[1]/mx*100}%"></i></span><span class="sc">${r[1].toFixed(1)}${u}</span><span style="font-size:12.5px;color:var(--mute)">${r[2]!=null?`${YEAR-1}: ${r[2].toFixed(1)} `+pill(r[1]-r[2],1,''):''}</span></li>`).join('')}</ol></div></div>
+      ${(a.sections&&a.sections.length)?`<div class="grp" style="margin-top:18px">คะแนนรายหมวด${a.branches?' (เฉลี่ยจากสาขาที่ตรวจแล้ว)':''}</div>
+        <ol class="rank">${a.sections.map((x,i)=>`<li><span class="num">${i+1}</span><span>${x.name}</span><span class="track"><i style="width:${Math.max(2,Math.min(100,x.avg))}%"></i></span><span class="sc ${x.avg>=95?'pos':(x.avg<85?'neg':'')}">${x.avg.toFixed(1)}%</span><span></span></li>`).join('')}</ol>`:''}
+      ${(a.questions&&a.questions.length)?`<div class="grp" style="margin-top:18px">ข้อที่ตกบ่อยที่สุด (สาขาที่ได้คะแนนไม่เต็ม)</div>
+        <div class="scroll"><table><tr><th>หัวข้อ</th><th class="n">สาขาที่ตก</th><th class="n">% ของสาขา</th><th class="n">คะแนนเฉลี่ย</th></tr>
+        ${a.questions.map(q=>`<tr><td style="white-space:normal">${q.name}</td><td class="n">${q.fail}</td><td class="n ${q.fail/q.stores>=.3?'neg':''}">${(q.fail/q.stores*100).toFixed(0)}%</td><td class="n">${q.pct.toFixed(1)}%</td></tr>`).join('')}</table></div>`:''}
+      ${(a.fails&&a.fails.length)?`<div class="grp" style="margin-top:18px">ข้อที่ถูกหักคะแนนบ่อยที่สุด</div>
+        <div class="scroll"><table><tr><th>หมวด</th><th>หัวข้อที่ตก</th><th class="n">สาขาที่ถูกหัก</th></tr>
+        ${a.fails.map(f=>`<tr><td>${f.section||'\u2014'}</td><td style="white-space:normal">${f.text}</td><td class="n neg">${f.n}</td></tr>`).join('')}</table></div>`:''}
+      ${(a.low&&a.low.length)?`<div class="grp" style="margin-top:18px">สาขาคะแนนต่ำสุด</div>
+        <div class="scroll"><table><tr><th>สาขา</th><th class="n">คะแนน</th></tr>
+        ${a.low.map(r=>`<tr><td>${r[0]}</td><td class="n ${(+r[1])<(a.fails?85:92)?'neg':''}">${(+r[1]).toFixed(1)}%</td></tr>`).join('')}</table></div>`:''}
+      ${(a.branches&&a.branches.length)?`<div class="grp" style="margin-top:18px">สาขาที่ตรวจแล้ว (${a.branches.length})</div>
+        <div class="scroll"><table><tr><th>สาขา</th><th class="n">คะแนน</th><th class="n">ข้อที่ถูกหัก</th><th>วันที่ตรวจ</th></tr>
+        ${a.branches.map(b=>`<tr><td>${b[0]}</td><td class="n ${b[1]>=90?'pos':(b[1]<85?'neg':'')}">${(+b[1]).toFixed(1)}%</td><td class="n">${b[2]}</td><td style="white-space:normal">${b[3]}</td></tr>`).join('')}</table></div>`:''}`);
   };
   // 7.1 ทำได้ตามแผนรายสาขา (จากแบบฟอร์มส่งยอดขาย)
   const pb=d.planBranches;
@@ -580,6 +594,21 @@ function build(m){
         ${tile('ค่าเช่า+สาธารณูปโภค',P(cur2.rent,cur2.revenue).toFixed(1)+'%',fm(cur2.rent),'')}
         ${tile('กำไรก่อนโบนัส',fm(cur2.profit),P(cur2.profit,cur2.revenue).toFixed(1)+'% ของรายได้',cur2.profit>=0?'pos':'neg')}
       </div>
+      <div class="grp" style="margin-top:4px">โครงสร้างต้นทุน ${label(cur2.m)} — เทียบเดือนก่อนและสะสมทั้งปี</div>
+      <div class="scroll"><table>
+        <tr><th>รายการ</th><th class="n">จำนวนเงิน</th><th class="n">% ของรายได้</th><th class="n">เดือนก่อน</th><th class="n">เปลี่ยน (ppt)</th><th class="n">YTD %</th></tr>
+        ${(()=>{ const yt=plRows.reduce((a,r)=>{for(const k in r){ if(typeof r[k]==='number') a[k]=(a[k]||0)+r[k]; } return a;},{});
+          const rowsPL=[['ต้นทุนอาหาร (Food)','food',1],['\u2014 ไม่รวมแก๊ส','foodNoGas',0],['\u2014 แก๊ส','gas',0],
+            ['ค่าแรงรวม (Labor)','labor',1],['\u2014 พนักงานร้าน','stLabor',0],['\u2014 ผู้จัดการ','mgr',0],
+            ['ค่าเช่า','rentOnly',1],['สาธารณูปโภค + ค่าขาย','util',1],['ค่าใช้จ่ายบริหาร (Admin)','admin',1],
+            ['ตัดจำหน่าย/ของเสีย','writeoff',0],['รวมค่าใช้จ่าย','expense',2],['กำไรก่อนโบนัส','profit',2],['ค่าเสื่อม (DA)','da',0]];
+          return rowsPL.filter(x=>cur2[x[1]]).map(x=>{ const lab=x[0], k=x[1], bold=x[2];
+            const now=P(cur2[k],cur2.revenue), pv=prev2?P(prev2[k],prev2.revenue):null, dd=pv==null?null:now-pv;
+            const good=(k==='profit')?(dd>=0):(dd<=0);
+            return `<tr${bold===2?' class="hi"':''}${bold===1?' style="font-weight:600"':''}><td>${lab}</td><td class="n">${fm(cur2[k])}</td><td class="n">${now.toFixed(1)}%</td><td class="n">${pv==null?'\u2014':pv.toFixed(1)+'%'}</td><td class="n ${dd==null?'':(good?'pos':'neg')}">${dd==null?'\u2014':(dd>0?'+':'')+dd.toFixed(1)}</td><td class="n">${P(yt[k],yt.revenue).toFixed(1)}%</td></tr>`;
+          }).join(''); })()}
+      </table></div>
+      <div class="grp" style="margin-top:16px">รายเดือน</div>
       <div class="scroll"><table>
         <tr><th>เดือน</th><th class="n">รายได้</th><th class="n">Food</th><th class="n">%Food</th><th class="n">Labor</th><th class="n">%Labor</th><th class="n">เช่า+Utility</th><th class="n">รวมค่าใช้จ่าย</th><th class="n">กำไร</th><th class="n">%กำไร</th></tr>
         ${plRows.map(r=>`<tr class="${r.m===cur2.m?'hi':''}"><td>${r.m===cur2.m?'★ ':''}${MONTH_TH[r.m-1]}</td><td class="n">${fm(r.revenue)}</td><td class="n">${fm(r.food)}</td><td class="n">${P(r.food,r.revenue).toFixed(1)}%</td><td class="n">${fm(r.labor)}</td><td class="n">${P(r.labor,r.revenue).toFixed(1)}%</td><td class="n">${fm(r.rent)}</td><td class="n">${fm(r.expense)}</td><td class="n ${cls(r.profit)}">${fm(r.profit)}</td><td class="n ${cls(r.profit)}">${P(r.profit,r.revenue).toFixed(1)}%</td></tr>`).join('')}
@@ -967,13 +996,19 @@ function parsePL(wb){
       if(typeof v==='string'&&re.test(v.trim())) return rs[i]; } return null; };
   const L={rev:find(/^Revenue from sale$/i), tot:find(/^Total Revenue$/i), food:find(/^Food$/i),
            labor:find(/^Labor/i), rent:find(/Rent & Utilities/i), admin:find(/^Admin Expense$/i),
-           exp:find(/^Total Expense$/i), cp:find(/^Contribution Profit \(Before Bonus\)$/i)};
+           exp:find(/^Total Expense$/i), cp:find(/^Contribution Profit \(Before Bonus\)$/i),
+           other:find(/^Other Revenue$/i), foodNoGas:find(/Food no gas/i), gas:find(/^-?\s*Gas$/i),
+           stLabor:find(/Store labor/i), mgr:find(/Manager \(direct/i),
+           rentOnly:find(/^Rent$/i), util:find(/^Utilities and Selling$/i),
+           wo:find(/write-off/i), da:find(/^DA$/i)};
   const det={}, warn=[];
   for(let m=1;m<=12;m++){ const c=m+1;
     const rev=L.rev?N(L.rev[c]):0; if(rev<=0) continue;
     const g=r=>r?N(r[c]):0;
     det[m]={pl:{revenue:rev, totalRevenue:g(L.tot)||rev, food:g(L.food), labor:g(L.labor),
-      rent:g(L.rent), admin:g(L.admin), expense:g(L.exp), profit:g(L.cp)}};
+      rent:g(L.rent), admin:g(L.admin), expense:g(L.exp), profit:g(L.cp),
+      other:g(L.other), foodNoGas:g(L.foodNoGas), gas:g(L.gas), stLabor:g(L.stLabor), mgr:g(L.mgr),
+      rentOnly:g(L.rentOnly), util:g(L.util), writeoff:g(L.wo), da:g(L.da)}};
   }
   // ---- กำไรรายสาขา จากชีต SUM (บล็อกละ 7 คอลัมน์ต่อเดือน) ----
   const kSum=wb.SheetNames.find(n=>n.trim().toLowerCase()==='sum');
@@ -1014,7 +1049,23 @@ function parseCEM(wb){
   }
   const list=Object.entries(stores).map(([code,v])=>({code,...v}));
   if(!list.length) return {warn:['ไม่พบคะแนนรายสาขาในไฟล์ CEM']};
-  return {ym, stores:list};
+
+  // ---- คะแนนรายหมวด + รายข้อ (หัวข้อที่ตก) ----
+  const body=rs.slice(hi+1).filter(r=>r&&String(r[cId]==null?'':r[cId]).trim());
+  const numsOf=c=>body.map(r=>r[c]).filter(v=>typeof v==='number'&&isFinite(v));
+  const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+  const sections=[], questions=[];
+  H.forEach((v,c)=>{ if(typeof v!=='string') return; const t=v.trim();
+    if(!t||c===cScore) return;
+    if(/คะแนนรวม$/.test(t)){ const n=numsOf(c); if(n.length) sections.push({name:t.replace(/\s*คะแนนรวม$/,''), avg:+avg(n).toFixed(1), stores:n.length}); return; }
+    if(/^Comment:/i.test(t)||/^Info\./i.test(t)||/Answer$/i.test(t)) return;
+    const n=numsOf(c); if(n.length<Math.max(5,body.length*0.5)) return;
+    const mx=Math.max(...n); if(mx<=0) return;
+    const fail=n.filter(v=>v<mx).length;
+    questions.push({name:t.replace(/\s+/g,' ').trim(), max:mx, fail, stores:n.length, pct:+(avg(n)/mx*100).toFixed(1)});
+  });
+  questions.sort((a,b)=>b.fail-a.fail||a.pct-b.pct);
+  return {ym, stores:list, sections, questions};
 }
 
 /* ===== ตัวอ่านไฟล์ OSS (ใบตรวจมาตรฐาน 1 สาขา ต่อ 1 ไฟล์) ===== */
@@ -1042,7 +1093,27 @@ function parseOSS(wb){
   if(dateTxt){ const mi=TH_FULL.findIndex(t=>dateTxt.indexOf(t)>=0);
     const yy=(dateTxt.match(/(\d{4})/g)||[]).map(Number).filter(v=>v>2500).pop();
     if(mi>=0) ym={m:mi+1, y:yy?yy-543:YEAR}; }
-  return {ym, code:String(code), name:name||String(code), score:+(+score).toFixed(1), dateTxt};
+  // ---- คะแนนรายหมวด จากชีต Summary ----
+  const sections=[];
+  for(const r of rs){ if(!r) continue;
+    const L=typeof r[4]==='string'?r[4].trim():'';
+    if(!/^[A-Z]$/.test(L)) continue;
+    const nm=typeof r[5]==='string'?r[5].trim():''; const pctv=r[9];
+    if(nm&&typeof pctv==='number'&&isFinite(pctv)) sections.push({code:L, name:nm, pct:+pctv.toFixed(1), items:+(r[6]||0), miss:+(r[7]||0)});
+  }
+  // ---- ข้อที่ถูกหักคะแนน จากชีต detail ----
+  const fails=[];
+  const kd=wb.SheetNames.find(n=>n.trim().toLowerCase()==='detail');
+  if(kd){ const dt=XLSX.utils.sheet_to_json(wb.Sheets[kd],{header:1,defval:null});
+    let secNow='';
+    for(const r of dt){ if(!r) continue;
+      const L=typeof r[1]==='string'?r[1].trim():'';
+      if(/^[A-Z]$/.test(L)&&typeof r[2]==='string'){ secNow=r[2].trim().split(':')[0].trim(); continue; }
+      if(typeof r[0]==='number' && typeof r[3]==='string' && r[2]===1)
+        fails.push({section:secNow, text:r[3].replace(/\s+/g,' ').trim()});
+    }
+  }
+  return {ym, code:String(code), name:name||String(code), score:+(+score).toFixed(1), dateTxt, sections, fails};
 }
 
 /* ---- รวมคะแนนรายสาขา → ชุดข้อมูลของหัวข้อ CEM/OSS ---- */
@@ -1093,6 +1164,8 @@ async function importFile(file){
       const m=(R.ym&&R.ym.m)||curM; const d=DETAIL[m]=DETAIL[m]||{};
       d.cemStores=d.cemStores||{}; R.stores.forEach(x=>d.cemStores[x.code]={name:x.name,score:x.score});
       d.cem=auditFromScores(d.cemStores,'cem');
+      d.cem.sections=R.sections||[]; d.cem.questions=(R.questions||[]).slice(0,10);
+      d.cem.low=Object.values(d.cemStores).slice().sort((a,b)=>a.score-b.score).slice(0,5).map(x=>[x.name,x.score]);
       if(!MONTHLY.some(r=>r.m===m)) MONTHLY.push({m,sales:null,ly:null,budget:null,sssgSales:null,sssg:null,mom:null});
       MONTHLY.sort((a,b)=>a.m-b.m); curM=m; await saveState();
       showMsg(`นำเข้า CEM สำเร็จ: ${label(m)} · ${R.stores.length} สาขา · เฉลี่ย ${d.cem.avgNow}% (ดีเยี่ยม ${d.cem.distNow[0]} · ปานกลาง ${d.cem.distNow[1]} · ต้องปรับปรุง ${d.cem.distNow[2]})`,'ok');
@@ -1102,8 +1175,15 @@ async function importFile(file){
       const R=parseOSS(wb);
       if(R.code==null) throw new Error((R.warn||['อ่านไฟล์ OSS ไม่ได้']).join('; '));
       const m=(R.ym&&R.ym.m)||curM; const d=DETAIL[m]=DETAIL[m]||{};
-      d.ossStores=d.ossStores||{}; d.ossStores[R.code]={name:R.name,score:R.score};
+      d.ossStores=d.ossStores||{}; d.ossStores[R.code]={name:R.name,score:R.score,sections:R.sections||[],fails:R.fails||[],date:R.dateTxt||''};
       d.oss=auditFromScores(d.ossStores,'oss');
+      { const all=Object.values(d.ossStores), sec={}, fq={};
+        all.forEach(b=>{ (b.sections||[]).forEach(x=>{ (sec[x.code+' '+x.name]=sec[x.code+' '+x.name]||[]).push(x.pct); });
+                         (b.fails||[]).forEach(f=>{ const k=f.text; fq[k]=fq[k]||{text:f.text,section:f.section,n:0}; fq[k].n++; }); });
+        d.oss.sections=Object.entries(sec).map(([k,v])=>({name:k, avg:+(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1)})).sort((a,b)=>a.avg-b.avg);
+        d.oss.fails=Object.values(fq).sort((a,b)=>b.n-a.n).slice(0,10);
+        d.oss.branches=all.map(b=>[b.name,b.score,(b.fails||[]).length,b.date||'']).sort((a,b)=>a[1]-b[1]);
+        d.oss.low=d.oss.branches.slice(0,5).map(b=>[b[0],b[1]]); }
       if(!MONTHLY.some(r=>r.m===m)) MONTHLY.push({m,sales:null,ly:null,budget:null,sssgSales:null,sssg:null,mom:null});
       MONTHLY.sort((a,b)=>a.m-b.m); curM=m; await saveState();
       showMsg(`นำเข้า OSS สำเร็จ: ${R.name} (${R.code}) ${R.score}% · ${label(m)} — สะสมแล้ว ${Object.keys(d.ossStores).length} สาขา เฉลี่ย ${d.oss.avgNow}% · ลากไฟล์สาขาอื่นมาเพิ่มได้เรื่อยๆ`,'ok');
