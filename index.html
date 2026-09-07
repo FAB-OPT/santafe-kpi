@@ -138,7 +138,6 @@ svg text{font-family:Sarabun,"Segoe UI",Tahoma,sans-serif}
 .covergrid .donut{width:124px;height:124px}
 .covergrid .dlegend{font-size:12px}
 @media (max-width:900px){ .covergrid{grid-template-columns:1fr} }
-body.present #overview .k .spark{height:74px}
 @media (min-width:1500px){ .chart{max-height:360px} }
 @media (min-width:1900px){ .chart{max-height:400px} }
 
@@ -167,33 +166,27 @@ body.present .rank .num{width:30px;height:30px;font-size:15px;border-radius:9px}
 body.present .rank li{grid-template-columns:30px 1fr 1fr 78px 100px;padding:10px 0}
 body.present .two h3{font-size:19px}
 body.present .cards,body.present .strip{gap:18px}
-body.present #overview .cards{flex:0 0 auto;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-body.present #overview .k{padding:13px 18px}
-body.present #overview .k .l{font-size:16px}
-body.present #overview .k .v{font-size:38px;margin:2px 0 2px}
-body.present #overview .k .s{font-size:14px}
-body.present #overview .k .spark{height:58px}
-body.present #overview .k:first-child .v{font-size:62px;letter-spacing:-.03em}
-body.present #overview .k:first-child .l{font-size:19px}
-body.present #overview .k:first-child .s{font-size:16px}
-body.present #overview .covergrid{flex:1;min-height:0;margin-top:14px;gap:14px;align-items:stretch}
-body.present #overview .covergrid>div:last-child{display:grid;grid-template-rows:1fr 1fr;gap:14px;min-height:0}
-body.present #overview .coverbox{display:flex;flex-direction:column;justify-content:center;padding:12px 18px;min-height:0}
-body.present #overview .grp{font-size:15px;margin-bottom:4px}
-body.present #overview .chart{max-height:26vh;width:100%}
-body.present #overview .donut{width:132px;height:132px}
-body.present #overview .dlegend{font-size:15px;gap:4px}
-body.present #overview .legend{font-size:14px;margin-top:4px}
-body.present #overview .k:first-child{grid-column:span 2;background:linear-gradient(140deg,var(--accent-2),var(--card))}
-body.present #overview .k:first-child .v{font-size:72px;letter-spacing:-.03em}
-body.present #overview .k:first-child .l{font-size:22px}
-body.present #overview .k:first-child .s{font-size:19px}
-body.present #overview .k{display:flex;flex-direction:column;justify-content:center;padding:26px 30px}
-body.present #overview .k .l{font-size:19px}
-body.present #overview .k .v{font-size:46px;margin:4px 0 4px}
-body.present #overview .k .s{font-size:17px}
 body.present .dist{height:44px}
 body.present .chart{max-height:48vh;width:100%;max-width:100%;margin:0}
+body.present #overview .cards{flex:0 0 auto;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+body.present #overview .k{display:flex;flex-direction:column;justify-content:center;padding:18px 24px}
+body.present #overview .k .l{font-size:18px}
+body.present #overview .k .v{font-size:50px;margin:4px 0 3px}
+body.present #overview .k .s{font-size:16px}
+body.present #overview .k .spark{height:70px}
+body.present #overview .k:first-child{grid-column:span 2;background:linear-gradient(140deg,var(--accent-2),var(--card))}
+body.present #overview .k:first-child .l{font-size:21px}
+body.present #overview .k:first-child .v{font-size:84px;letter-spacing:-.03em}
+body.present #overview .k:first-child .s{font-size:18px}
+body.present #overview .covergrid{flex:0 0 auto;margin-top:14px;gap:14px;align-items:stretch}
+body.present #overview .covergrid>div:last-child{display:grid;grid-template-rows:auto auto;gap:14px}
+body.present #overview .coverbox{display:flex;flex-direction:column;justify-content:center;padding:14px 20px}
+body.present #overview .grp{font-size:16px;margin-bottom:6px}
+body.present #overview .chart{width:100%;max-height:none}
+body.present #overview .donut{width:150px;height:150px}
+body.present #overview .dlegend{font-size:17px;gap:6px}
+body.present #overview .legend{font-size:15px;margin-top:6px}
+body.present #overview .body{justify-content:center}
 .pctl{position:fixed;bottom:0;left:0;right:0;z-index:30;display:none;justify-content:space-between;align-items:center;padding:10px 60px;color:#fff;background:var(--accent);font-size:14px}
 body.present .pctl{display:flex}
 .pctl button{background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:8px;padding:5px 13px;transition:.15s}
