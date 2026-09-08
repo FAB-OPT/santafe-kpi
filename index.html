@@ -605,6 +605,10 @@ body.present #overview .k:first-child{background:linear-gradient(140deg,var(--ac
 body.present #overview .k:first-child .l{font-size:17px}
 body.present #overview .k:first-child .v{font-size:46px;letter-spacing:-.02em}
 body.present #overview .k:first-child .s{font-size:14px}
+/* ---- กว้างเต็มจอ เหลือขอบข้างนิดเดียว ---- */
+.wrap{max-width:none;margin:0;padding:18px 24px 44px;gap:22px}
+body:not(.present) .wrap{max-width:none;padding:16px 24px 40px;gap:20px}
+@media (min-width:2000px){.wrap,body:not(.present) .wrap{grid-template-columns:230px minmax(0,1fr)}}
 </style>
 </head>
 <body>
