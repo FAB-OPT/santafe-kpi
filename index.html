@@ -475,6 +475,137 @@ body:not(.present) .empty{font-size:12px;padding:18px 0}
 body:not(.present) .brpick input,body:not(.present) .brpick select{font-size:12.5px;padding:6px 10px}
 body:not(.present) .brcards{grid-template-columns:repeat(auto-fit,minmax(126px,1fr));gap:8px}
 </style>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style id="theme-new">
+/* ============ ธีมใหม่ตาม pnl-dashboard.html : ขาวนวล · การ์ดขาวขอบเทา · แถบส้มซ้าย · ป้ายเขียว/แดง ============ */
+:root{--bg:#FAFAF8;--card:#fff;--surface:#F8FAFC;--line:#E2E8F0;--hair:#F1F5F9;
+ --accent:#D9822D;--accent-ink:#B8681F;--accent-2:#FFF7ED;--accent-3:#FED7AA;
+ --ink:#0F172A;--ink-2:#334155;--mute:#64748B;--faint:#94A3B8;
+ --good:#10B981;--good-2:#ECFDF5;--bad:#F43F5E;--bad-2:#FFF1F2;--amber:#F59E0B;
+ --chart-1:#2563EB;--chart-2:#F59E0B;--chart-3:#94A3B8;--chart-soft:#BFDBFE;
+ --r:12px;--r-md:12px;--r-sm:8px;--gap:20px;
+ --sh:0 1px 2px rgba(15,23,42,.05),0 1px 3px rgba(15,23,42,.04);
+ --f:Inter,Sarabun,"Segoe UI",Tahoma,Arial,sans-serif}
+body{background:var(--bg)}
+/* ---- แถบบน: ขาว มีเส้นส้มสั้นใต้โลโก้ ---- */
+.top{background:#fff;border-bottom:1px solid var(--line);padding:10px 24px;position:sticky;gap:12px}
+.top::after{content:"";position:absolute;left:24px;bottom:-1px;width:64px;height:2px;background:var(--accent)}
+.top h1{color:var(--ink);font-weight:700;font-size:17px;letter-spacing:-.01em}
+.top h1 span{color:var(--faint);font-weight:400;font-size:12px}
+.logo{border-radius:8px;background:transparent}
+.filters select,.month{background:#fff;border:1px solid var(--line);color:var(--ink-2);border-radius:8px;font-weight:600;font-size:13px;color-scheme:light}
+.filters select{padding:6px 28px 6px 10px;
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;appearance:none}
+.filters select option{background:#fff;color:var(--ink)}
+.month{border-radius:8px;padding:0 2px}
+.month select{color:var(--ink-2);color-scheme:light;font-size:13px}
+.month select option{background:#fff;color:var(--ink)}
+.month button{color:var(--faint)} .month button:hover:not(:disabled){background:var(--hair);color:var(--ink)}
+.filters .dash{color:var(--faint)}
+.btn{background:#fff;border:1px solid var(--line);color:var(--ink-2);border-radius:8px;font-weight:600;font-size:13px;padding:7px 12px}
+.btn:hover{background:var(--surface);border-color:#CBD5E1;color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-ink);border-color:var(--accent-ink)}
+.status{color:var(--faint)}
+/* ---- เมนูซ้าย ---- */
+nav a{color:var(--mute);border-radius:8px;font-size:13px}
+nav a::before{background:var(--hair);color:var(--faint)}
+nav a:hover{background:#fff;border-color:var(--line);color:var(--ink)}
+nav a.on{background:#fff;border-color:var(--line);color:var(--ink);font-weight:700;box-shadow:inset 3px 0 0 var(--accent)}
+nav a.on::before{background:var(--accent-2);color:var(--accent-ink)}
+/* ---- การ์ดหัวข้อ ---- */
+section.slide{background:#fff;border:1px solid rgba(226,232,240,.8);border-radius:12px;box-shadow:var(--sh)}
+.bar{background:#fff;color:var(--ink);border-bottom:0;padding:16px 20px 2px;gap:8px}
+.bar h2{color:var(--ink);font-size:14.5px;font-weight:700;gap:8px}
+.bar h2::before{width:22px;height:22px;border-radius:6px;background:var(--accent-2);color:var(--accent);font-size:11.5px}
+.bar .sub{color:var(--faint);font-size:12px}
+.body{padding:12px 20px 18px}
+.grp{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mute)}
+.scopebar{background:var(--accent-2);border-color:var(--accent-3);border-radius:10px}
+/* ---- การ์ดตัวเลข ---- */
+.cards{gap:12px}
+.k,.st{background:#fff;border:1px solid rgba(226,232,240,.8);border-left:4px solid var(--accent);border-radius:12px;box-shadow:var(--sh);padding:14px 16px;transition:box-shadow .2s}
+.k:hover,.st:hover{box-shadow:0 4px 12px -4px rgba(15,23,42,.12);border-left-color:var(--accent)}
+.k .l,.st .l{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--mute)}
+.k .v,.st .v{font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.k .s,.st .s{font-size:12px;color:var(--faint)}
+.k.tot:not(.plat){background:#fff;border-color:rgba(226,232,240,.8);border-left-color:var(--ink)}
+.k.tot .l,.k.tot .s{color:var(--faint)} .k.tot .v{color:var(--ink)}
+.st.pos{border-left-color:var(--good)} .st.neg{border-left-color:var(--bad)}
+.cards.slide .k{position:relative;background:#fff;border:1px solid rgba(226,232,240,.8);border-left:4px solid var(--accent);border-radius:12px}
+.cards.slide .k .ic{position:absolute;right:12px;top:12px;width:28px;height:28px;border-radius:8px;background:var(--accent-2);color:var(--accent);font-size:14px;padding:0;display:grid;place-items:center}
+.cards.slide .k .bd{padding:14px 16px 14px}
+.cards.slide .k .l{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--mute);min-height:2.4em;padding-right:36px}
+.cards.slide .k .v{font-size:26px;font-weight:800;color:var(--ink);margin:6px 0 4px}
+.cards.slide .k .v.pos{color:var(--good)} .cards.slide .k .v.neg{color:var(--bad)}
+.cards.slide .k .s{font-size:12px;color:var(--faint)}
+.k.plat .ic{background:transparent;color:var(--mute);font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;text-align:left;padding:12px 14px 0}
+.k.plat.tot .ic{background:transparent;color:var(--accent-ink)}
+.cards .k.plat.tot{background:#fff} .cards .k.plat.tot .v{color:var(--ink)}
+.cards .k.plat.tot .l,.cards .k.plat.tot .s{color:var(--faint)}
+.k.plat .v{font-size:24px;font-weight:800}
+.headline{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.headline .hlnum{color:var(--ink);font-weight:800}
+/* ---- ป้าย % แบบเม็ดยา เขียว/แดง ---- */
+.pill{background:var(--hair);color:var(--mute);font-weight:700;padding:2px 9px;box-shadow:0 1px 1px rgba(0,0,0,.04)}
+.pill.pos{background:var(--good);color:#fff} .pill.neg{background:var(--bad);color:#fff}
+.pill.pos::before{content:"↗ ";font-size:10px} .pill.neg::before{content:"↘ ";font-size:10px}
+/* ---- ตาราง ---- */
+th{background:transparent;color:var(--faint);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--line);padding:8px 10px;border-radius:0}
+th:first-child,th:last-child{border-radius:0}
+td{padding:8px 10px;border-bottom:1px solid var(--hair);color:var(--ink-2);font-size:13px}
+td:first-child{color:var(--ink);font-weight:500}
+tr:nth-child(even) td{background:transparent}
+tr.hi td{background:var(--accent-2);color:var(--ink);font-weight:600}
+tr.hi .tiny{color:var(--mute)} tr.hi .pill{box-shadow:none}
+tr.clk:hover td{background:var(--surface)} tr.sel td{background:var(--accent-2)}
+.pick{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.pick table{background:#fff;border-radius:8px}
+/* ---- แถบควบคุม / ปุ่มเลือกช่องทาง ---- */
+.plbar{background:var(--surface);border:1px solid var(--line);border-radius:10px;font-size:12.5px}
+.plbar select{border-color:var(--line);border-radius:8px;font-weight:600;color:var(--ink-2)}
+.plbar .btn,.pick .btn{background:#fff;border-color:var(--line);color:var(--ink-2)}
+.chips{background:var(--hair);border-radius:8px;padding:3px;display:inline-flex;gap:2px}
+.chip{border:0;background:transparent;border-radius:6px;color:var(--faint);font-weight:600;font-size:12px;padding:5px 12px}
+.chip:hover{color:var(--ink-2)}
+.chip.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(15,23,42,.12)}
+.pltg{background:var(--accent)}
+.rank li{font-size:13px} .rank .num{background:transparent;color:var(--faint);font-size:11px}
+.rank li:nth-child(1) .num{background:var(--accent);color:#fff} .rank li:nth-child(2) .num{background:var(--accent-2);color:var(--accent-ink)}
+.rank .track{height:6px} .rank .track i{background:var(--chart-1)}
+.two h3{font-size:14px;font-weight:700;color:var(--ink)}
+.note{background:var(--accent-2);border-left:3px solid var(--accent);border-radius:8px;font-size:12.5px;color:var(--ink-2)}
+.note b{color:var(--accent-ink)}
+.legend{font-size:12px;color:var(--mute)}
+.dist span{border-radius:4px;font-size:12px}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:12px}
+/* ---- พรีเซนต์ ---- */
+body.present section.slide{border:0;border-radius:0}
+body.present .bar{border-bottom:1px solid var(--line);padding:22px 60px 12px}
+body.present .bar h2{color:var(--ink)}
+body.present .bar h2::before{background:var(--accent-2);color:var(--accent)}
+body.present .bar .sub{color:var(--faint)}
+tr.hi td.pos{color:var(--good)} tr.hi td.neg{color:var(--bad)} tr.hi td .pill.pos{color:#fff} tr.hi td .pill.neg{color:#fff}
+tr.hi td:first-child{box-shadow:inset 3px 0 var(--accent)} tr.hi:hover td{background:var(--accent-2)}
+.cards.slide .k .l{letter-spacing:.02em}
+
+/* ---- โหมดพรีเซนต์: การ์ดใหญ่ ไม่ให้ตัวเลขล้นกรอบ ---- */
+body.present .cards.slide .k{overflow:visible}
+body.present .cards.slide .k .ic{right:16px;top:16px;width:40px;height:40px;border-radius:10px;font-size:20px;padding:0}
+body.present .cards.slide .k .bd{padding:20px 22px 20px}
+body.present .cards.slide .k .l{font-size:17px;min-height:2.4em;padding-right:52px;letter-spacing:.02em}
+body.present .cards.slide .k .v{font-size:40px;margin:8px 0 6px;letter-spacing:-.02em}
+body.present .cards.slide .k .s{font-size:14px}
+body.present .k.plat .ic{font-size:15px;padding:14px 18px 0}
+body.present .k.plat .v{font-size:40px}
+body.present .st .l{font-size:14px} body.present .st .v{font-size:34px} body.present .st .s{font-size:13px}
+
+body.present #overview .k:first-child{background:linear-gradient(140deg,var(--accent-2),#fff)}
+body.present #overview .k:first-child .l{font-size:17px}
+body.present #overview .k:first-child .v{font-size:46px;letter-spacing:-.02em}
+body.present #overview .k:first-child .s{font-size:14px}
+</style>
 </head>
 <body>
 
