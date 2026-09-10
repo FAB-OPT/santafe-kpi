@@ -581,6 +581,7 @@ table.plmx tr:hover td:first-child{color:var(--accent-ink)}
 .rank li:nth-child(1) .num{background:var(--accent);color:#fff} .rank li:nth-child(2) .num{background:var(--accent-2);color:var(--accent-ink)}
 .rank .track{height:6px} .rank .track i{background:var(--chart-1)}
 .two h3{font-size:14px;font-weight:700;color:var(--ink)}
+.two>*{min-width:0}
 .note{background:var(--accent-2);border-left:3px solid var(--accent);border-radius:8px;font-size:12.5px;color:var(--ink-2)}
 .note b{color:var(--accent-ink)}
 .legend{font-size:12px;color:var(--mute)}
@@ -650,6 +651,63 @@ body:not(.present) section.slide.ghide{display:none}
 body.present .tabbar{display:none}
 @media print{ section.slide.ghide{display:block!important} .tabbar{display:none} }
 
+
+/* ============ อ่านง่ายขึ้น ============ */
+/* ตาราง: แถบสลับสี เส้นชัดขึ้น ตรึงคอลัมน์แรกไว้ตอนเลื่อนแนวนอน */
+body:not(.present) table{font-size:13.5px}
+body:not(.present) th{padding:9px 12px;font-size:11.5px;color:var(--mute)}
+body:not(.present) td{padding:9px 12px;font-size:13.5px}
+body:not(.present) .pill{font-size:12px;padding:2px 9px}
+th{color:var(--mute);border-bottom:2px solid var(--line)}
+table:not(.pltable) tr:nth-child(even) td{background:var(--surface)}
+table:not(.pltable) tr:hover td{background:var(--accent-2)}
+.scroll{position:relative}
+.scroll > table:not(.pltable) td:first-child,.scroll > table:not(.pltable) th:first-child{position:sticky;left:0;z-index:1;background:#fff;box-shadow:1px 0 0 var(--hair)}
+.scroll > table:not(.pltable) tr:nth-child(even) td:first-child{background:var(--surface)}
+.scroll > table:not(.pltable) tr:hover td:first-child{background:var(--accent-2)}
+.scroll > table:not(.pltable) tr.hi td:first-child,.scroll > table:not(.pltable) tr.sel td:first-child{background:var(--accent-2)}
+table.plmx td.plc{border-radius:0}
+/* ตัวหนังสือใหญ่ขึ้น สีเข้มขึ้น */
+body:not(.present) .bar h2{font-size:16px}
+body:not(.present) .bar .sub{font-size:12.5px}
+body:not(.present) .st .v{font-size:22px}
+body:not(.present) .st .l,body:not(.present) .k .l{font-size:11.5px}
+body:not(.present) .st .s,body:not(.present) .k .s{font-size:11.5px}
+body:not(.present) .k .v{font-size:24px}
+body:not(.present) nav a{font-size:13.5px;padding:6px 10px}
+body:not(.present) .note{font-size:13px;padding:10px 13px}
+body:not(.present) .rank li{font-size:13px;padding:6px 0}
+body:not(.present) .grp{font-size:11.5px;margin-bottom:7px}
+body:not(.present) .legend{font-size:12.5px}
+body:not(.present) .plbar{font-size:13px}
+.bar .sub,.k .s,.st .s,.hint,.plbar .hint,.tiny{color:var(--mute)}
+.grp{color:var(--ink-2)}
+/* ตารางยาว: ย่อไว้ก่อน */
+tr.rowhide{display:none}
+.morebar{margin-top:9px;text-align:center}
+.morebar .btn{background:var(--surface);border-color:var(--line);color:var(--ink-2);font-size:12.5px}
+.morebar .btn:hover{border-color:var(--accent-3);color:var(--accent-ink)}
+/* ค้นหาหัวข้อ */
+.find{position:relative;flex:0 0 auto}
+.find input{width:150px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;
+  padding:7px 11px;font:inherit;font-size:13px;font-weight:500;outline:none;transition:.15s}
+.find input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-2);width:210px}
+.find input::placeholder{color:var(--faint)}
+.findlist{display:none;position:absolute;right:0;top:calc(100% + 6px);min-width:260px;background:#fff;
+  border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh-lg);padding:5px;z-index:40}
+.findlist.open{display:block}
+.findlist button{display:flex;align-items:baseline;justify-content:space-between;gap:12px;width:100%;text-align:left;
+  border:0;background:transparent;border-radius:8px;padding:8px 11px;font:inherit;font-size:13px;color:var(--ink-2);cursor:pointer}
+.findlist button:hover{background:var(--accent-2);color:var(--accent-ink)}
+.findlist button span{font-size:11px;color:var(--faint);white-space:nowrap}
+.fnone{padding:9px 11px;font-size:12.5px;color:var(--faint)}
+/* ปุ่มดูทุกหัวข้อ */
+.ngall{width:100%;margin-top:6px;border:1px dashed var(--line);background:transparent;border-radius:10px;
+  padding:7px 11px;font:inherit;font-size:12.5px;font-weight:600;color:var(--mute);cursor:pointer}
+.ngall:hover{border-color:var(--accent-3);color:var(--accent-ink)}
+.ngall.on{background:var(--ink);border-style:solid;border-color:var(--ink);color:#fff}
+@media (max-width:820px){ .find input{width:120px} .find input:focus{width:150px} .ngall{display:none} }
+
 </style>
 </head>
 <body>
@@ -686,6 +744,8 @@ body.present .tabbar{display:none}
       <span class="dash">–</span><select id="fTo" aria-label="ถึงเดือน"></select></span>
     <select id="fZone" aria-label="โซนผู้จัดการเขต"><option value="all">ทุกโซน</option></select>
   </div>
+  <div class="find"><input id="secFind" type="search" placeholder="ค้นหาหัวข้อ" autocomplete="off" aria-label="ค้นหาหัวข้อ">
+    <div class="findlist" id="findList"></div></div>
   <div class="menu"><button class="btn" id="exportBtn">⤓ ดึงรายงาน</button>
     <div class="dd" id="exportDd">
       <button data-x="print">พิมพ์ / บันทึก PDF (เดือนนี้)</button>
@@ -1325,9 +1385,11 @@ function rankSection(m0){
   const streak=(code,set)=>hist.filter(mm=>set[mm]&&set[mm].has(code)).length;
   const M2=v=>v==null?'—':(v/1e6).toFixed(2)+'M';
   const dots=(k,tot)=>`<span class="dots" title="ติดอันดับ ${k} จาก ${tot} เดือนล่าสุด">${Array.from({length:tot},(_,i)=>`<i class="${i<k?'on':''}"></i>`).join('')}</span>`;
-  const tbl=(arr,set,cl)=>`<div class="scroll"><table><tr><th>#</th><th>สาขา</th><th>โซน</th><th class="n">ยอด ${MONTH_TH[m-1]}</th><th class="n">ปีก่อน</th><th class="n">YoY</th><th class="n">ติดอันดับ</th></tr>
-    ${arr.map((r,i)=>`<tr class="clk" data-ssbr="${r.code}"><td>${i+1}</td><td>${r.code} ${r.name}</td><td>${r.zone||''}</td>
-      <td class="n"><b>${M2(r.ty)}</b></td><td class="n">${M2(r.ly)}</td><td class="n">${r.g==null?'—':pill(r.g)}</td>
+  const tbl=(arr,set)=>`<div class="scroll"><table><tr><th>#</th><th>สาขา</th><th class="n">ยอด ${MONTH_TH[m-1]}</th><th class="n">YoY</th><th class="n">ติดอันดับ</th></tr>
+    ${arr.map((r,i)=>`<tr class="clk" data-ssbr="${r.code}"><td>${i+1}</td>
+      <td>${r.code} ${r.name}<span class="tiny">${r.zone||''}</span></td>
+      <td class="n"><b>${M2(r.ty)}</b><span class="tiny">ปีก่อน ${M2(r.ly)}</span></td>
+      <td class="n">${r.g==null?'—':pill(r.g)}</td>
       <td class="n">${dots(streak(r.code,set),hist.length)}</td></tr>`).join('')}</table></div>`;
   const bar=`<div class="plbar"><label>เรียงตาม <select id="rkBy"><option value="sales" ${RNK.by==='sales'?'selected':''}>ยอดขาย</option><option value="sssg" ${RNK.by==='sssg'?'selected':''}>%SSSG (โตเทียบปีก่อน)</option></select></label>
     <label>จำนวน <select id="rkN">${[5,10,15,20].map(n=>`<option value="${n}" ${RNK.n===n?'selected':''}>${n} สาขา</option>`).join('')}</select></label>
@@ -1520,7 +1582,7 @@ const GROUPS=[
   {k:'oss',ic:'✅',name:'OSS',subs:[{cap:'',ids:['oss']}]}];
 const SEC_GROUP={}, SEC_ORDER=[];
 GROUPS.forEach(g=>g.subs.forEach(s=>s.ids.forEach(id=>{ SEC_GROUP[id]=g.k; SEC_ORDER.push(id); })));
-let GRP='sales'; try{ const v=localStorage.getItem('sf-kpi-grp'); if(v&&GROUPS.some(g=>g.k===v)) GRP=v; }catch(e){}
+let GRP='sales'; try{ const v=localStorage.getItem('sf-kpi-grp'); if(v&&(v==='all'||GROUPS.some(g=>g.k===v))) GRP=v; }catch(e){}
 function setGroup(k){ if(GRP===k) return; GRP=k; try{localStorage.setItem('sf-kpi-grp',k)}catch(e){}
   build(curM); window.scrollTo({top:0}); }
 /* กระโดดไปหัวข้อ แม้จะอยู่คนละหมวด */
@@ -1594,11 +1656,50 @@ function cosSection(){
 }
 
 /* ---- เมนูหมวด + แถบล่างบนมือถือ ---- */
+/* ---- ค้นหาหัวข้อข้ามหมวด ---- */
+function secIndex(){ const out=[];
+  GROUPS.forEach(g=>g.subs.forEach(sb=>sb.ids.forEach(id=>{ const el=document.getElementById(id);
+    if(el) out.push({id,g:g.name,name:NAV_SHORT[id]||el.dataset.title||id}); }))); return out; }
+function bindFind(){ const inp=$('#secFind'), box=$('#findList'); if(!inp||inp.dataset.on) return; inp.dataset.on='1';
+  const close=()=>{ box.classList.remove('open'); box.innerHTML=''; };
+  inp.oninput=()=>{ const q=inp.value.trim().toLowerCase(); if(!q){ close(); return; }
+    const hits=secIndex().filter(x=>(x.name+' '+x.g).toLowerCase().includes(q)).slice(0,8);
+    box.innerHTML=hits.length?hits.map(x=>`<button data-go="${x.id}"><b>${x.name}</b><span>${x.g}</span></button>`).join('')
+      :'<div class="fnone">ไม่พบหัวข้อนี้</div>';
+    box.classList.add('open');
+    box.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{ inp.value=''; close(); goSec(b.dataset.go); }); };
+  inp.onkeydown=e=>{ if(e.key==='Enter'){ const f=box.querySelector('[data-go]'); if(f) f.click(); }
+                     else if(e.key==='Escape'){ inp.value=''; close(); } };
+  document.addEventListener('click',e=>{ if(!e.target.closest('.find')) close(); });
+}
+/* ---- ตารางยาวเกิน: โชว์ 12 แถวก่อน แล้วกดดูทั้งหมด ---- */
+const CAPROWS=12;
+function capTables(){
+  document.querySelectorAll('#main .scroll > table').forEach(t=>{
+    if(t.classList.contains('pltable')) return;
+    const rows=[...t.rows].filter(r=>r.cells.length&&r.cells[0].tagName==='TD');
+    if(rows.length<=CAPROWS+3) return;
+    const wrap=t.parentElement;
+    if(wrap.nextElementSibling&&wrap.nextElementSibling.classList.contains('morebar')) return;
+    rows.forEach((r,i)=>{ if(i>=CAPROWS) r.classList.add('rowhide'); });
+    const bar=document.createElement('div'); bar.className='morebar';
+    const btn=document.createElement('button'); btn.className='btn small';
+    btn.textContent=`แสดงทั้งหมด ${rows.length} แถว`;
+    btn.onclick=()=>{ const hidden=rows[CAPROWS].classList.contains('rowhide');
+      rows.forEach((r,i)=>{ if(i>=CAPROWS) r.classList.toggle('rowhide',!hidden); });
+      btn.textContent = hidden?`ย่อกลับ (แสดง ${CAPROWS} แถวแรก)`:`แสดงทั้งหมด ${rows.length} แถว`; };
+    bar.appendChild(btn); wrap.after(bar);
+  });
+}
 function renderNav(allEls,vis){
-  const cur=GROUPS.find(g=>g.k===GRP)||GROUPS[0];
+  const cur=(GRP==='all')
+    ? {subs:GROUPS.map(g=>({cap:g.name,ids:g.subs.flatMap(sb=>sb.ids)}))}
+    : (GROUPS.find(g=>g.k===GRP)||GROUPS[0]);
   const el=id=>allEls.find(s=>s.id===id);
-  let h=`<div class="navg">${GROUPS.map(g=>`<button class="ngb ${g.k===GRP?'on':''}" data-grp="${g.k}"><span class="ngi">${g.ic}</span><span>${g.name}</span></button>`).join('')}</div>`;
+  let h=`<div class="navg">${GROUPS.map(g=>`<button class="ngb ${g.k===GRP?'on':''}" data-grp="${g.k}"><span class="ngi">${g.ic}</span><span>${g.name}</span></button>`).join('')}
+    <button class="ngall ${GRP==='all'?'on':''}" data-grp="all">ทุกหัวข้อ (${SEC_ORDER.filter(id=>el(id)).length})</button></div>`;
   const nSec=cur.subs.reduce((a,sb)=>a+sb.ids.filter(id=>el(id)).length,0);
+  void nSec;
   if(nSec>1) h+=cur.subs.map(sb=>{ const ids=sb.ids.filter(id=>el(id)); if(!ids.length) return '';
     return (sb.cap?`<div class="navcap">${sb.cap}</div>`:'')
       +ids.map(id=>`<a href="#${id}" data-i="${vis.indexOf(el(id))}"><span>${NAV_SHORT[id]||el(id).dataset.title}</span></a>`).join(''); }).join('');
@@ -1867,11 +1968,11 @@ function build(m){
   const mainEl=$('#main');
   SEC_ORDER.forEach(id=>{ const el=mainEl.querySelector('#'+id); if(el) mainEl.appendChild(el); });
   const allEls=[...mainEl.querySelectorAll('section.slide')];
-  allEls.forEach(x=>{ const g=SEC_GROUP[x.id]||'sales'; x.dataset.g=g; x.classList.toggle('ghide', g!==GRP); });
+  allEls.forEach(x=>{ const g=SEC_GROUP[x.id]||'sales'; x.dataset.g=g; x.classList.toggle('ghide', GRP!=='all'&&g!==GRP); });
   const vis=allEls.filter(x=>!x.classList.contains('ghide'));
   vis.forEach((x,i)=>{const h=x.querySelector('.bar h2'); if(h) h.dataset.n=i+1;});
   $('#hsub').textContent=label(m);
-  renderNav(allEls,vis);;
+  renderNav(allEls,vis); capTables(); bindFind();;
   slideIdx=0; if(document.body.classList.contains('present')) showSlide(0);
   observeNav();
 }
