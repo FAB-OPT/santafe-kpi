@@ -1794,6 +1794,10 @@ function drawBranch(code){
       </table></div>`:''}`;
 }
 function build(m){
+  // โหมดพรีเซนต์: จำสไลด์ที่เปิดอยู่และระยะที่เลื่อนไว้ เพื่อกลับมาที่เดิมหลังสร้างหน้าใหม่
+  const presOn=document.body.classList.contains('present');
+  const presCur=presOn?slides()[slideIdx]:null;
+  const presKeep=presCur?{id:presCur.id,top:presCur.scrollTop}:null;
   const rows = MONTHLY.filter(r=>r.m<=m);
   const cur = MONTHLY.find(r=>r.m===m);
   const d = DETAIL[m]||{};
@@ -2024,7 +2028,9 @@ function build(m){
   vis.forEach((x,i)=>{const h=x.querySelector('.bar h2'); if(h) h.dataset.n=i+1;});
   $('#hsub').textContent=label(m);
   frameBlocks(); renderNav(allEls,vis); capTables(); bindFind();;
-  slideIdx=0; if(document.body.classList.contains('present')) showSlide(0);
+  if(presOn){ const ss=slides(); const i=presKeep?ss.findIndex(x=>x.id===presKeep.id):-1;
+    showSlide(i>=0?i:0); if(i>=0&&ss[i]) ss[i].scrollTop=presKeep.top; }
+  else slideIdx=0;
   observeNav();
 }
 
@@ -2142,6 +2148,7 @@ function exitPresent(){document.body.classList.remove('present');slides().forEac
 $('#presentBtn').onclick=enterPresent; $('#pExit').onclick=exitPresent;
 $('#pNext').onclick=()=>showSlide(slideIdx+1); $('#pPrev').onclick=()=>showSlide(slideIdx-1);
 document.addEventListener('keydown',e=>{
+  if(e.target.closest&&e.target.closest('input,select,textarea')) return;
   if(!document.body.classList.contains('present')){ if(e.key==='p'||e.key==='P') enterPresent(); return; }
   if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();showSlide(slideIdx+1);}
   else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();showSlide(slideIdx-1);}
@@ -2149,7 +2156,7 @@ document.addEventListener('keydown',e=>{
 });
 document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&document.body.classList.contains('present'))exitPresent();});
 // แตะซ้าย/ขวาของจอเพื่อเลื่อนสไลด์ (มือถือ)
-document.addEventListener('click',e=>{if(!document.body.classList.contains('present')||e.target.closest('.pctl,a,button,select'))return;const w=window.innerWidth;if(e.clientX>w*0.7)showSlide(slideIdx+1);else if(e.clientX<w*0.3)showSlide(slideIdx-1);});
+document.addEventListener('click',e=>{if(!document.body.classList.contains('present')||e.target.closest('.pctl,a,button,select,input,label,textarea,.clk,.chip,.plbar,.pick,.find,.morebar'))return;const w=window.innerWidth;if(e.clientX>w*0.7)showSlide(slideIdx+1);else if(e.clientX<w*0.3)showSlide(slideIdx-1);});
 
 /* ========================= storage (db → localStorage) ========================= */
 let db=null, dbDoc=null, saving=false;
