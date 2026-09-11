@@ -733,70 +733,109 @@ body.present .panel{padding:14px 18px 14px;border-radius:14px}
 
 
 /* ============ ศูนย์นำเข้าข้อมูล ============ */
-.box.wide{max-width:1120px;padding:20px 22px}
+.box.wide.imp{max-width:1180px;padding:22px 24px 18px;background:var(--bg)}
 .imphd{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:14px}
-.imphd p{margin:4px 0 0}
-.impgrid{display:grid;grid-template-columns:340px minmax(0,1fr);gap:20px;align-items:start}
+.imphd h2{font-size:20px;font-weight:800;letter-spacing:-.01em}
+.imphd p{margin:3px 0 0;color:var(--mute);font-size:13px}
+.imp .btn{background:#fff}
+/* แถบสรุป */
+.impstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.is{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 14px;display:flex;flex-direction:column;gap:2px;min-width:0;box-shadow:var(--sh)}
+.il{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mute)}
+.iv{font-size:24px;font-weight:800;color:var(--ink);line-height:1.15;letter-spacing:-.01em}
+.iv small{font-size:13px;font-weight:600;color:var(--mute)}
+.iv.sm{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:4px 0 2px}
+.isub{font-size:11.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ibar{height:5px;background:var(--hair);border-radius:99px;overflow:hidden;margin:4px 0 3px}
+.ibar i{display:block;height:100%;background:linear-gradient(90deg,#34D399,#10B981);border-radius:99px}
+.is.warn{border-left:4px solid var(--amber)} .is.warn .iv{color:#B45309}
+.is.good{border-left:4px solid var(--good)} .is.good .iv{color:var(--good)}
+.impgrid{display:grid;grid-template-columns:350px minmax(0,1fr);gap:18px;align-items:start}
 .impgrid>*{min-width:0}
-.impL .drop{margin:0 0 10px;padding:22px 16px;display:flex;flex-direction:column;gap:4px;align-items:center}
-.impL .drop b{color:var(--ink-2);font-size:14px}
-.impL .drop small{font-size:12px;color:var(--mute)}
-.fmt{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
-.fmt span{font-size:11.5px;background:var(--hair);color:var(--ink-2);border-radius:999px;padding:3px 9px;font-weight:600}
-.imph{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:14px 0 8px;font-size:12px;font-weight:700;
-  letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
-.imph .hint{font-weight:500;letter-spacing:0;text-transform:none}
-.impR > .imph:first-child,.impL > .imph:first-child{margin-top:0}
-.lnk{margin-left:auto;border:0;background:transparent;color:var(--mute);font:inherit;font-size:11.5px;font-weight:600;
-  text-transform:none;letter-spacing:0;cursor:pointer;text-decoration:underline}
-.lnk:hover{color:var(--bad)}
+/* ช่องวางไฟล์ */
+.imp .drop{margin:0 0 10px;padding:20px 16px 18px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:#fff;border:2px dashed #CBD5E1;border-radius:14px}
+.imp .drop:hover,.imp .drop.over{border-color:var(--accent);background:var(--accent-2)}
+.dico{width:38px;height:38px;border-radius:11px;background:var(--accent-2);color:var(--accent);display:grid;place-items:center;font-size:19px;font-weight:800;margin-bottom:5px}
+.imp .drop b{color:var(--ink);font-size:14px}
+.imp .drop small{font-size:12px;color:var(--mute)}
+.fmt{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+.fmt span{font-size:11px;background:#fff;border:1px solid var(--line);color:var(--ink-2);border-radius:999px;padding:2px 9px;font-weight:600}
+.imph{display:flex;align-items:baseline;gap:10px;margin:16px 0 8px;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2)}
+.lnk{margin-left:auto;border:0;background:transparent;color:var(--mute);font:inherit;font-size:11.5px;font-weight:600;text-transform:none;letter-spacing:0;cursor:pointer}
+.lnk:hover{color:var(--bad);text-decoration:underline}
+/* จุดสถานะ (ใช้ร่วมกันทั้งตาราง รายการ และคำอธิบาย) */
+.dk{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 5px;border-radius:7px;font-style:normal;
+  font-size:11px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.dk.ok{background:#D1FAE5;color:#047857}
+.dk.part{background:#FEF3C7;color:#B45309}
+.dk.miss{background:#fff;color:#E11D48;border:1.5px dashed #FDA4AF}
+.dk.open{background:transparent;border:1.5px dashed #E2E8F0}
+/* ต้องนำเข้าต่อ */
+.todo{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;box-shadow:var(--sh)}
+.todo .th{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.todo .th b{font-size:13.5px;color:var(--ink)}
+.todo .th span{font-size:12px;color:var(--bad);font-weight:700}
+.todo.okall{border-left:4px solid var(--good)} .todo.okall .th{margin:0} .todo.okall b{color:var(--good)}
+.ti{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--hair)}
+.ti b{display:block;font-size:13px;color:var(--ink)}
+.ti small{display:block;font-size:11.5px;color:var(--mute)}
+.ti .src{font-size:11px;font-weight:700;color:var(--accent-ink);background:var(--accent-2);border-radius:999px;padding:3px 9px;white-space:nowrap}
+.ti.fixed .src{color:var(--mute);background:var(--hair)}
 /* ประวัติ */
-#impLog{display:flex;flex-direction:column;gap:6px;max-height:520px;overflow:auto}
-.lg{display:flex;gap:10px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:#fff}
-.lg .li{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:12px;font-weight:800;flex:0 0 auto;
-  background:var(--good-2);color:var(--good)}
-.lg.err{border-color:#FECDD3;background:var(--bad-2)} .lg.err .li{background:var(--bad);color:#fff}
-.lg.base{background:var(--surface);border-style:dashed} .lg.base .li{background:var(--accent-2);color:var(--accent)}
+#impLog{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto}
+.lg{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 11px}
+.li{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:11px;font-weight:800;font-style:normal;flex:0 0 auto;background:#D1FAE5;color:#047857}
+.lg.err{border-color:#FECDD3;background:#FFF7F8} .lg.err .li{background:var(--bad);color:#fff}
 .lb{min-width:0;flex:1}
 .lf{font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lm{font-size:12px;color:var(--ink-2);margin-top:1px}
+.lm{font-size:11.5px;color:var(--ink-2);display:flex;gap:4px;flex-wrap:wrap}
 .lk{font-weight:700;color:var(--accent-ink)}
-.le{font-size:12px;color:var(--bad);margin-top:3px;line-height:1.45}
-.lt{font-size:11.5px;color:var(--mute);margin-top:2px}
-.lgnone{font-size:12.5px;color:var(--mute);padding:12px;border:1px dashed var(--line);border-radius:10px;text-align:center}
+.lt{margin-left:auto;color:var(--mute)}
+.le{font-size:11.5px;color:var(--bad);margin-top:2px;line-height:1.45}
+.lgnone{font-size:12.5px;color:var(--mute);padding:12px;border:1.5px dashed var(--line);border-radius:10px;text-align:center;background:#fff}
 /* ตารางความครบ */
-.covwrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
-table.cov{font-size:12.5px;width:100%}
-table.cov th{padding:7px 6px;font-size:11px;background:var(--surface);position:static;box-shadow:none}
-table.cov th.c{text-align:center;min-width:38px}
-table.cov th small{display:block;font-size:9.5px;font-weight:600;color:var(--accent-ink);letter-spacing:0;text-transform:none}
-table.cov td{padding:5px 6px;font-size:12.5px;position:static;box-shadow:none}
-table.cov td.cn{white-space:nowrap;font-weight:600;color:var(--ink)}
-table.cov td.cs{font-size:11.5px;color:var(--mute);white-space:nowrap}
-table.cov tr.cg td{background:var(--hair)!important;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mute);padding:4px 8px}
-table.cov td.c{text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
-table.cov td.c.ok{background:#E7F8F1;color:#047857}
-table.cov td.c.part{background:#FEF3C7;color:#B45309}
-table.cov td.c.miss{background:#FFE4E6;color:#E11D48}
-table.cov td.c.open{background:#F8FAFC;color:var(--faint)}
-table.cov td.c.cur,table.cov th.c.cur{box-shadow:inset 2px 0 0 var(--accent),inset -2px 0 0 var(--accent)}
-table.cov th.c.cur{color:var(--accent-ink)}
-.fx{font-size:10px;font-weight:700;background:var(--hair);color:var(--mute);border-radius:999px;padding:1px 6px;margin-left:4px}
-/* ยังขาด */
-.missbox{margin-top:12px;border:1px solid #FECDD3;background:#FFF7F8;border-radius:10px;padding:11px 13px}
-.missbox.okbox{border-color:#A7F3D0;background:var(--good-2)}
-.missbox .mh{font-size:13.5px;font-weight:700;color:var(--ink);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.missbox .mh span{font-size:12px;font-weight:500;color:var(--mute)}
-.missbox ul{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px}
-.missbox li{background:#fff;border:1px solid var(--line);border-left:3px solid var(--bad);border-radius:8px;padding:7px 10px;font-size:12.5px;line-height:1.45}
-.missbox li.part{border-left-color:var(--amber)} .missbox li.open{border-left-color:var(--faint)}
-.missbox li b{display:block;color:var(--ink)}
-.missbox li span{color:var(--ink-2)}
-.missbox li em{display:block;font-style:normal;font-size:11.5px;color:var(--accent-ink);font-weight:600}
+.covcard{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--sh);overflow:hidden}
+.covhd{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--hair)}
+.covhd b{font-size:14px;color:var(--ink)}
+.lgd{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11.5px;color:var(--mute)}
+.lgd .dk{min-width:20px;height:20px;margin-left:6px}
+.covwrap{overflow-x:auto}
+table.cov{width:100%;border-collapse:separate;border-spacing:0}
+table.cov th,table.cov td{position:static!important;box-shadow:none!important;background:#fff!important;border-bottom:1px solid var(--hair)}
+table.cov tr:hover td{background:#FCFCFD!important}
+table.cov th{padding:9px 4px 8px;border-bottom:1px solid var(--line);vertical-align:bottom;text-transform:none;letter-spacing:0}
+table.cov th.cn{text-align:left;padding-left:16px;font-size:11px;letter-spacing:.05em;text-transform:uppercase}
+table.cov th.mh{text-align:center;min-width:52px}
+.mn{display:block;font-size:12px;font-weight:700;color:var(--ink-2)}
+.mb{display:block;height:4px;width:30px;margin:4px auto 3px;background:var(--hair);border-radius:99px;overflow:hidden}
+.mb i{display:block;height:100%;background:#10B981;border-radius:99px}
+.mc{display:block;font-size:10.5px;font-weight:600;color:var(--mute)}
+table.cov th.mh.cur{background:var(--accent-2)!important}
+table.cov th.mh.cur .mn{color:var(--accent-ink)}
+table.cov td.cc{text-align:center;padding:6px 4px}
+table.cov td.cc.cur{background:#FFFBF5!important}
+table.cov td.cn{padding:7px 10px 7px 16px;white-space:nowrap}
+table.cov td.cn b{display:block;font-size:13px;color:var(--ink);font-weight:600}
+table.cov td.cn small{display:block;font-size:11px;color:var(--mute);font-weight:400}
+table.cov tr.cg td{background:var(--surface)!important;padding:6px 16px;border-bottom:1px solid var(--line)}
+table.cov tr.cg td span{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+table.cov tr.cg td em{float:right;font-style:normal;font-size:11px;font-weight:700;color:#047857}
+/* ท้ายหน้าต่าง */
+.impfoot{margin-top:12px}
+.mgmt{background:#fff;border:1px solid var(--line);border-radius:12px;padding:0 14px}
+.mgmt summary{cursor:pointer;padding:10px 0;font-size:12.5px;font-weight:700;color:var(--ink-2);list-style:none}
+.mgmt summary::-webkit-details-marker{display:none}
+.mgmt summary::before{content:"▸";display:inline-block;margin-right:8px;color:var(--mute);transition:.15s}
+.mgmt[open] summary::before{transform:rotate(90deg)}
+.mgmt .months{margin:0 0 8px}
+.mgmt .row{margin:0 0 12px}
+.fnote{font-size:11.5px;color:var(--mute);margin:10px 2px 0;line-height:1.55}
 /* ป้ายบนปุ่ม */
 .nbadge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;margin-left:6px;border-radius:999px;
   background:var(--bad);color:#fff;font-size:11px;font-weight:800;line-height:1}
-@media (max-width:900px){ .impgrid{grid-template-columns:minmax(0,1fr)} .box.wide{padding:16px} .missbox ul{grid-template-columns:1fr} }
+@media (max-width:1000px){ .impstats{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:900px){ .impgrid{grid-template-columns:minmax(0,1fr)} .box.wide.imp{padding:16px} }
 
 </style>
 </head>
@@ -861,27 +900,35 @@ table.cov th.c.cur{color:var(--accent-ink)}
   <span><button id="pPrev">‹ ก่อนหน้า</button> <span id="pCount"></span> <button id="pNext">ถัดไป ›</button> <button id="pExit">ออก (Esc)</button></span>
 </div>
 
-<div class="modal" id="importModal"><div class="box wide">
-  <div class="imphd"><div><h2>นำเข้าข้อมูล</h2>
-    <p>ลากไฟล์มาวาง ระบบจะดูเองว่าเป็นไฟล์ชนิดไหน แล้วเติมเฉพาะส่วนที่ไฟล์นั้นมี ส่วนอื่นคงไว้เหมือนเดิม</p></div>
+<div class="modal" id="importModal"><div class="box wide imp">
+  <div class="imphd">
+    <div><h2>นำเข้าข้อมูล</h2>
+      <p>ลากไฟล์มาวาง ระบบดูเองว่าเป็นไฟล์ชนิดไหน แล้วเติมเฉพาะส่วนที่ไฟล์นั้นมี ส่วนอื่นคงไว้เหมือนเดิม</p></div>
     <button class="btn" id="closeModal">ปิด</button></div>
+  <div class="impstats" id="impStats"></div>
   <div class="impgrid">
     <div class="impL">
-      <label class="drop" id="drop"><b>ลากไฟล์ .xlsx / .xlsb มาวางที่นี่</b><small>หรือแตะเพื่อเลือกไฟล์</small><input type="file" id="file" accept=".xlsx,.xls,.xlsb"></label>
+      <label class="drop" id="drop"><span class="dico">⤒</span><b>ลากไฟล์ .xlsx / .xlsb มาวางที่นี่</b><small>หรือแตะเพื่อเลือกไฟล์</small><input type="file" id="file" accept=".xlsx,.xls,.xlsb"></label>
       <div class="fmt"><span>Daily Sale</span><span>แบบฟอร์มส่งยอดขาย</span><span>PL</span><span>CEM</span><span>OSS</span><span>ไฟล์ข้อมูลเว็บ</span></div>
       <div class="msg" id="msg"></div>
+      <div id="impMiss"></div>
       <div class="imph">นำเข้าล่าสุด<button class="lnk" id="logClear">ล้างประวัติ</button></div>
       <div id="impLog"></div>
     </div>
     <div class="impR">
-      <div class="imph">ข้อมูลในระบบ<span class="hint">✓ มีครบ · ตัวเลข = จำนวนสาขาที่มี · ✕ ยังขาด · ชี้ที่ช่องเพื่อดูรายละเอียด</span></div>
-      <div id="impCov"></div>
-      <div id="impMiss"></div>
-      <div class="imph" style="margin-top:16px">เดือนที่มีข้อมูล<span class="hint">กด × เพื่อลบเดือน</span></div>
-      <div class="months" id="monthList"></div>
-      <div class="row"><button class="btn" data-x="data" id="tplBtn">⤓ ดาวน์โหลดไฟล์ข้อมูลปัจจุบัน (ใช้เป็นแบบฟอร์ม)</button></div>
-      <div class="note" style="margin-top:12px">ข้อมูลที่นำเข้าและประวัติ เก็บไว้ในเบราว์เซอร์ของเครื่องนี้เท่านั้น
-        คนอื่นที่เปิดลิงก์จะเห็นข้อมูลตั้งต้นที่ฝังในเว็บ และเมื่อผู้ดูแลอัปเดตข้อมูลชุดใหม่ขึ้นเว็บ ข้อมูลที่นำเข้าเองในเครื่องนี้จะถูกแทนที่</div>
+      <div class="covcard">
+        <div class="covhd"><b>ข้อมูลในระบบ</b>
+          <span class="lgd"><i class="dk ok">✓</i>มีครบ<i class="dk part">1/59</i>มีบางสาขา<i class="dk miss">✕</i>ยังขาด<i class="dk open"></i>เดือนนี้ยังไม่ปิด</span></div>
+        <div id="impCov"></div>
+      </div>
+      <div class="impfoot">
+        <details class="mgmt"><summary>จัดการเดือนที่มีข้อมูล</summary>
+          <div class="months" id="monthList"></div>
+          <div class="row"><button class="btn small" data-x="data" id="tplBtn">⤓ ดาวน์โหลดไฟล์ข้อมูลปัจจุบัน (ใช้เป็นแบบฟอร์ม)</button></div>
+        </details>
+        <p class="fnote">ⓘ ข้อมูลที่นำเข้าและประวัติเก็บในเบราว์เซอร์ของเครื่องนี้เท่านั้น คนอื่นที่เปิดลิงก์จะเห็นข้อมูลตั้งต้นที่ฝังในเว็บ
+          และเมื่อผู้ดูแลอัปเดตข้อมูลชุดใหม่ ข้อมูลที่นำเข้าเองในเครื่องนี้จะถูกแทนที่</p>
+      </div>
     </div>
   </div>
 </div></div>
@@ -2852,38 +2899,56 @@ function covCols(){ const now=new Date(), nowM=now.getFullYear()===YEAR?now.getM
 function covCell(t,m,nowM){ const v=t.f(m), exp=t.exp?t.exp(m):null;
   if(v===true) return {st:'ok',txt:'✓',tip:'มีข้อมูล'};
   if(typeof v==='number'&&v>0){ const full=!exp||v>=exp*0.8;
-    return {st:full?'ok':'part',txt:String(v),tip:`มี ${v}${exp?' จาก '+exp:''} สาขา`}; }
+    return {st:full?'ok':'part',txt:full||!exp?String(v):v+'/'+exp,tip:`มี ${v}${exp?' จาก '+exp:''} สาขา`}; }
   if(m===nowM) return {st:'open',txt:'·',tip:'เดือนนี้ยังไม่ปิด'};
   return {st:'miss',txt:'✕',tip:'ยังไม่มีข้อมูล'}; }
 
 function renderImportPanel(){
   const cv=$('#impCov'); if(!cv) return;
   const {nowM,cols}=covCols(), T=covTypes();
+  const done=cols.filter(m=>m<nowM);                         // เดือนที่ปิดแล้ว ใช้คิดความครบ
+  const cell=(t,m)=>covCell(t,m,nowM);
+  const okN=(list,ms)=>list.reduce((a,t)=>a+ms.filter(m=>cell(t,m).st==='ok').length,0);
+  const allN=T.length*done.length, okAll=okN(T,done), pctAll=allN?Math.round(okAll/allN*100):0;
+  /* ---- ตารางแบบจุด ---- */
+  const chip=c=>c.st==='ok'?'<i class="dk ok">✓</i>':c.st==='part'?`<i class="dk part">${c.txt}</i>`:c.st==='miss'?'<i class="dk miss">✕</i>':'<i class="dk open"></i>';
+  const monHead=cols.map(m=>{ const n=T.filter(t=>cell(t,m).st==='ok').length, p=Math.round(n/T.length*100);
+    return `<th class="mh${m===curM?' cur':''}${m===nowM?' now':''}"><span class="mn">${MONTH_TH[m-1]}</span>
+      <span class="mb"><i style="width:${m===nowM&&!n?0:p}%"></i></span><span class="mc">${m===nowM&&!n?'ยังไม่ปิด':n+'/'+T.length}</span></th>`; }).join('');
   let g0='', rows='';
-  T.forEach(t=>{ if(t.g!==g0){ g0=t.g; rows+=`<tr class="cg"><td colspan="${cols.length+2}">${g0}</td></tr>`; }
-    rows+=`<tr><td class="cn">${t.name}${t.fixed?' <span class="fx">ฝังในเว็บ</span>':''}</td>
-      ${cols.map(m=>{ const c=covCell(t,m,nowM); return `<td class="c ${c.st}${m===curM?' cur':''}" title="${t.name} ${label(m)}: ${c.tip}">${c.txt}</td>`; }).join('')}
-      <td class="cs">${t.src}</td></tr>`; });
-  cv.innerHTML=`<div class="covwrap"><table class="cov"><tr><th>ข้อมูล</th>${cols.map(m=>`<th class="c${m===curM?' cur':''}">${MONTH_TH[m-1]}${m===nowM?'<small>เดือนนี้</small>':''}</th>`).join('')}<th>นำเข้าจากไฟล์</th></tr>${rows}</table></div>`;
-  /* ---- ยังขาดอะไร (เดือนที่กำลังดูอยู่) ---- */
-  const miss=T.map(t=>({t,c:covCell(t,curM,nowM)})).filter(x=>x.c.st==='miss'||x.c.st==='part'||x.c.st==='open');
-  const total=T.reduce((a,t)=>a+cols.filter(m=>m<nowM&&covCell(t,m,nowM).st==='miss').length,0);
+  T.forEach(t=>{ if(t.g!==g0){ g0=t.g; const G=T.filter(x=>x.g===g0), gp=G.length*done.length?Math.round(okN(G,done)/(G.length*done.length)*100):0;
+      rows+=`<tr class="cg"><td colspan="${cols.length+1}"><span>${g0}</span><em>ครบ ${gp}%</em></td></tr>`; }
+    rows+=`<tr><td class="cn"><b>${t.name}</b><small>${t.fixed?'ฝังในเว็บ · ผู้ดูแลอัปเดตให้':t.src}</small></td>
+      ${cols.map(m=>{ const c=cell(t,m); return `<td class="cc${m===curM?' cur':''}" title="${t.name} ${label(m)}: ${c.tip}">${chip(c)}</td>`; }).join('')}</tr>`; });
+  cv.innerHTML=`<div class="covwrap"><table class="cov"><tr><th class="cn">ข้อมูล</th>${monHead}</tr>${rows}</table></div>`;
+  /* ---- ต้องนำเข้าต่อ (เดือนที่กำลังดู) ---- */
+  const miss=T.map(t=>({t,c:cell(t,curM)})).filter(x=>x.c.st!=='ok');
   $('#impMiss').innerHTML=miss.length
-    ? `<div class="missbox"><div class="mh">${label(curM)} ยังขาด ${miss.length} รายการ<span>ทั้งปีขาดรวม ${total} ช่อง (ไม่นับเดือนนี้)</span></div>
-        <ul>${miss.map(x=>`<li class="${x.c.st}"><b>${x.t.name}</b><span>${x.c.st==='part'?x.c.tip:(x.c.st==='open'?'เดือนนี้ยังไม่ปิด':'ยังไม่มี')}</span>
-          <em>${x.t.fixed?'รอผู้ดูแลอัปเดตไฟล์เว็บ':'ใช้ '+x.t.src}</em></li>`).join('')}</ul></div>`
-    : `<div class="missbox okbox"><div class="mh">${label(curM)} ข้อมูลครบทุกชนิด</div></div>`;
+    ? `<div class="todo"><div class="th"><b>ต้องนำเข้าต่อ · ${label(curM)}</b><span>${miss.length} รายการ</span></div>
+        ${miss.map(x=>`<div class="ti ${x.c.st}${x.t.fixed?' fixed':''}"><i class="dk ${x.c.st}">${x.c.st==='part'?x.c.txt:(x.c.st==='miss'?'✕':'')}</i>
+          <div><b>${x.t.name}</b><small>${x.c.st==='part'?x.c.tip:(x.c.st==='open'?'เดือนนี้ยังไม่ปิด':'ยังไม่มีข้อมูล')}</small></div>
+          <span class="src">${x.t.fixed?'ผู้ดูแลอัปเดตให้':x.t.src.replace(/ หรือ .*/,'')}</span></div>`).join('')}</div>`
+    : `<div class="todo okall"><div class="th"><b>${label(curM)} ข้อมูลครบทุกชนิดแล้ว</b></div></div>`;
   /* ---- นำเข้าล่าสุด ---- */
   const L=getLog(), base=dataVTime();
-  $('#impLog').innerHTML=(L.length?L.map(e=>`<div class="lg ${e.ok?'ok':'err'}">
-      <div class="li">${e.ok?'✓':'!'}</div>
+  $('#impLog').innerHTML=L.length?L.map(e=>`<div class="lg ${e.ok?'ok':'err'}">
+      <i class="li">${e.ok?'✓':'!'}</i>
       <div class="lb"><div class="lf" title="${e.file}">${e.file}</div>
-        <div class="lm"><span class="lk">${e.kind}</span>${e.months&&e.months.length?' · '+monRange(e.months):''}</div>
-        ${e.ok?'':`<div class="le">${e.msg}</div>`}
-        <div class="lt">${thTime(e.t)} · ${ago(e.t)}</div></div></div>`).join('')
-      :'<div class="lgnone">ยังไม่เคยนำเข้าไฟล์จากเครื่องนี้</div>')
-    +(base?`<div class="lg base"><div class="li">◆</div><div class="lb"><div class="lf">ข้อมูลตั้งต้นที่ฝังในเว็บ</div>
-        <div class="lm"><span class="lk">ผู้ดูแลอัปเดต</span> · ${monRange(MONTHLY.map(r=>r.m))}</div><div class="lt">${thTime(base)}</div></div></div>`:'');
+        <div class="lm"><span class="lk">${e.kind}</span>${e.months&&e.months.length?' · '+monRange(e.months):''}<span class="lt">${ago(e.t)}</span></div>
+        ${e.ok?'':`<div class="le">${e.msg}</div>`}</div></div>`).join('')
+    :'<div class="lgnone">ยังไม่เคยนำเข้าไฟล์จากเครื่องนี้</div>';
+  /* ---- แถบสรุปด้านบน ---- */
+  const last=L[0], mk=miss.filter(x=>!x.t.fixed).length;
+  $('#impStats').innerHTML=`
+    <div class="is"><span class="il">ข้อมูลครบ</span><span class="iv">${pctAll}%</span>
+      <span class="ibar"><i style="width:${pctAll}%"></i></span><span class="isub">${okAll} จาก ${allN} ช่อง · ม.ค. ถึง ${MONTH_TH[Math.max(1,nowM-1)-1]}</span></div>
+    <div class="is ${mk?'warn':'good'}"><span class="il">${label(curM)} ยังขาด</span><span class="iv">${miss.length}<small> รายการ</small></span>
+      <span class="isub">${miss.length?miss.map(x=>x.t.name).join(' · '):'ครบทุกชนิด'}</span></div>
+    <div class="is"><span class="il">นำเข้าล่าสุด</span><span class="iv sm">${last?last.file:'ยังไม่มี'}</span>
+      <span class="isub">${last?(last.ok?'สำเร็จ':'ไม่สำเร็จ')+' · '+thTime(last.t):'จากเครื่องนี้'}</span></div>
+    <div class="is"><span class="il">ข้อมูลตั้งต้นในเว็บ</span><span class="iv sm">${base?thTime(base).replace(' · ',' '):'—'}</span>
+      <span class="isub">${monRange(MONTHLY.map(r=>r.m))} · ผู้ดูแลอัปเดต</span></div>`;
+  const ml=$('#monthList'); if(ml){ const sm=ml.closest('details').querySelector('summary'); sm.textContent='จัดการเดือนที่มีข้อมูล ('+MONTHLY.length+' เดือน)'; }
 }
 /* ป้ายตัวเลขบนปุ่มนำเข้า = จำนวนชนิดข้อมูลที่ยังขาดของเดือนที่ดูอยู่ (ไม่นับชนิดที่ผู้ดูแลอัปเดตให้) */
 function importBadge(){ const b=$('#importBtn'); if(!b) return;
