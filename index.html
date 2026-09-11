@@ -731,6 +731,73 @@ tr.rowhide{display:none}
 body.present .panel{padding:14px 18px 14px;border-radius:14px}
 @media (max-width:820px){ .panel{padding:11px 12px 10px;border-radius:10px} }
 
+
+/* ============ ศูนย์นำเข้าข้อมูล ============ */
+.box.wide{max-width:1120px;padding:20px 22px}
+.imphd{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:14px}
+.imphd p{margin:4px 0 0}
+.impgrid{display:grid;grid-template-columns:340px minmax(0,1fr);gap:20px;align-items:start}
+.impgrid>*{min-width:0}
+.impL .drop{margin:0 0 10px;padding:22px 16px;display:flex;flex-direction:column;gap:4px;align-items:center}
+.impL .drop b{color:var(--ink-2);font-size:14px}
+.impL .drop small{font-size:12px;color:var(--mute)}
+.fmt{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.fmt span{font-size:11.5px;background:var(--hair);color:var(--ink-2);border-radius:999px;padding:3px 9px;font-weight:600}
+.imph{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:14px 0 8px;font-size:12px;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+.imph .hint{font-weight:500;letter-spacing:0;text-transform:none}
+.impR > .imph:first-child,.impL > .imph:first-child{margin-top:0}
+.lnk{margin-left:auto;border:0;background:transparent;color:var(--mute);font:inherit;font-size:11.5px;font-weight:600;
+  text-transform:none;letter-spacing:0;cursor:pointer;text-decoration:underline}
+.lnk:hover{color:var(--bad)}
+/* ประวัติ */
+#impLog{display:flex;flex-direction:column;gap:6px;max-height:520px;overflow:auto}
+.lg{display:flex;gap:10px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:#fff}
+.lg .li{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:12px;font-weight:800;flex:0 0 auto;
+  background:var(--good-2);color:var(--good)}
+.lg.err{border-color:#FECDD3;background:var(--bad-2)} .lg.err .li{background:var(--bad);color:#fff}
+.lg.base{background:var(--surface);border-style:dashed} .lg.base .li{background:var(--accent-2);color:var(--accent)}
+.lb{min-width:0;flex:1}
+.lf{font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lm{font-size:12px;color:var(--ink-2);margin-top:1px}
+.lk{font-weight:700;color:var(--accent-ink)}
+.le{font-size:12px;color:var(--bad);margin-top:3px;line-height:1.45}
+.lt{font-size:11.5px;color:var(--mute);margin-top:2px}
+.lgnone{font-size:12.5px;color:var(--mute);padding:12px;border:1px dashed var(--line);border-radius:10px;text-align:center}
+/* ตารางความครบ */
+.covwrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
+table.cov{font-size:12.5px;width:100%}
+table.cov th{padding:7px 6px;font-size:11px;background:var(--surface);position:static;box-shadow:none}
+table.cov th.c{text-align:center;min-width:38px}
+table.cov th small{display:block;font-size:9.5px;font-weight:600;color:var(--accent-ink);letter-spacing:0;text-transform:none}
+table.cov td{padding:5px 6px;font-size:12.5px;position:static;box-shadow:none}
+table.cov td.cn{white-space:nowrap;font-weight:600;color:var(--ink)}
+table.cov td.cs{font-size:11.5px;color:var(--mute);white-space:nowrap}
+table.cov tr.cg td{background:var(--hair)!important;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mute);padding:4px 8px}
+table.cov td.c{text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+table.cov td.c.ok{background:#E7F8F1;color:#047857}
+table.cov td.c.part{background:#FEF3C7;color:#B45309}
+table.cov td.c.miss{background:#FFE4E6;color:#E11D48}
+table.cov td.c.open{background:#F8FAFC;color:var(--faint)}
+table.cov td.c.cur,table.cov th.c.cur{box-shadow:inset 2px 0 0 var(--accent),inset -2px 0 0 var(--accent)}
+table.cov th.c.cur{color:var(--accent-ink)}
+.fx{font-size:10px;font-weight:700;background:var(--hair);color:var(--mute);border-radius:999px;padding:1px 6px;margin-left:4px}
+/* ยังขาด */
+.missbox{margin-top:12px;border:1px solid #FECDD3;background:#FFF7F8;border-radius:10px;padding:11px 13px}
+.missbox.okbox{border-color:#A7F3D0;background:var(--good-2)}
+.missbox .mh{font-size:13.5px;font-weight:700;color:var(--ink);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.missbox .mh span{font-size:12px;font-weight:500;color:var(--mute)}
+.missbox ul{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px}
+.missbox li{background:#fff;border:1px solid var(--line);border-left:3px solid var(--bad);border-radius:8px;padding:7px 10px;font-size:12.5px;line-height:1.45}
+.missbox li.part{border-left-color:var(--amber)} .missbox li.open{border-left-color:var(--faint)}
+.missbox li b{display:block;color:var(--ink)}
+.missbox li span{color:var(--ink-2)}
+.missbox li em{display:block;font-style:normal;font-size:11.5px;color:var(--accent-ink);font-weight:600}
+/* ป้ายบนปุ่ม */
+.nbadge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;margin-left:6px;border-radius:999px;
+  background:var(--bad);color:#fff;font-size:11px;font-weight:800;line-height:1}
+@media (max-width:900px){ .impgrid{grid-template-columns:minmax(0,1fr)} .box.wide{padding:16px} .missbox ul{grid-template-columns:1fr} }
+
 </style>
 </head>
 <body>
@@ -794,15 +861,29 @@ body.present .panel{padding:14px 18px 14px;border-radius:14px}
   <span><button id="pPrev">‹ ก่อนหน้า</button> <span id="pCount"></span> <button id="pNext">ถัดไป ›</button> <button id="pExit">ออก (Esc)</button></span>
 </div>
 
-<div class="modal" id="importModal"><div class="box">
-  <h2>นำเข้าข้อมูล</h2>
-  <p>รองรับ 2 แบบ — <b>ไฟล์ Daily Sale</b> (ไฟล์ปฏิบัติการรายเดือน .xlsb/.xlsx) ระบบจะอ่านยอดขาย/สาขา/Delivery ให้เอง · หรือ <b>ไฟล์ข้อมูล</b> ที่ดาวน์โหลดจากหน้านี้ (ใช้กรอก CEM/OSS และรายละเอียดที่ไฟล์ Daily Sale ไม่มี) — ค่าที่ไฟล์ใหม่ไม่มี จะคงของเดิมไว้</p>
-  <label class="drop" id="drop">ลากไฟล์ .xlsx / .xlsb มาวางที่นี่ หรือแตะเพื่อเลือกไฟล์<input type="file" id="file" accept=".xlsx,.xls,.xlsb"></label>
-  <div class="msg" id="msg"></div>
-  <div class="row"><button class="btn" data-x="data" id="tplBtn">⤓ ดาวน์โหลดไฟล์ข้อมูลปัจจุบัน (ใช้เป็นแบบฟอร์ม)</button></div>
-  <p style="margin-top:16px">เดือนที่มีข้อมูล (กด × เพื่อลบเดือน)</p>
-  <div class="months" id="monthList"></div>
-  <div class="row" style="justify-content:flex-end"><button class="btn" id="closeModal">ปิด</button></div>
+<div class="modal" id="importModal"><div class="box wide">
+  <div class="imphd"><div><h2>นำเข้าข้อมูล</h2>
+    <p>ลากไฟล์มาวาง ระบบจะดูเองว่าเป็นไฟล์ชนิดไหน แล้วเติมเฉพาะส่วนที่ไฟล์นั้นมี ส่วนอื่นคงไว้เหมือนเดิม</p></div>
+    <button class="btn" id="closeModal">ปิด</button></div>
+  <div class="impgrid">
+    <div class="impL">
+      <label class="drop" id="drop"><b>ลากไฟล์ .xlsx / .xlsb มาวางที่นี่</b><small>หรือแตะเพื่อเลือกไฟล์</small><input type="file" id="file" accept=".xlsx,.xls,.xlsb"></label>
+      <div class="fmt"><span>Daily Sale</span><span>แบบฟอร์มส่งยอดขาย</span><span>PL</span><span>CEM</span><span>OSS</span><span>ไฟล์ข้อมูลเว็บ</span></div>
+      <div class="msg" id="msg"></div>
+      <div class="imph">นำเข้าล่าสุด<button class="lnk" id="logClear">ล้างประวัติ</button></div>
+      <div id="impLog"></div>
+    </div>
+    <div class="impR">
+      <div class="imph">ข้อมูลในระบบ<span class="hint">✓ มีครบ · ตัวเลข = จำนวนสาขาที่มี · ✕ ยังขาด · ชี้ที่ช่องเพื่อดูรายละเอียด</span></div>
+      <div id="impCov"></div>
+      <div id="impMiss"></div>
+      <div class="imph" style="margin-top:16px">เดือนที่มีข้อมูล<span class="hint">กด × เพื่อลบเดือน</span></div>
+      <div class="months" id="monthList"></div>
+      <div class="row"><button class="btn" data-x="data" id="tplBtn">⤓ ดาวน์โหลดไฟล์ข้อมูลปัจจุบัน (ใช้เป็นแบบฟอร์ม)</button></div>
+      <div class="note" style="margin-top:12px">ข้อมูลที่นำเข้าและประวัติ เก็บไว้ในเบราว์เซอร์ของเครื่องนี้เท่านั้น
+        คนอื่นที่เปิดลิงก์จะเห็นข้อมูลตั้งต้นที่ฝังในเว็บ และเมื่อผู้ดูแลอัปเดตข้อมูลชุดใหม่ขึ้นเว็บ ข้อมูลที่นำเข้าเองในเครื่องนี้จะถูกแทนที่</div>
+    </div>
+  </div>
 </div></div>
 
 <script>
@@ -2027,7 +2108,7 @@ function build(m){
   const vis=allEls.filter(x=>!x.classList.contains('ghide'));
   vis.forEach((x,i)=>{const h=x.querySelector('.bar h2'); if(h) h.dataset.n=i+1;});
   $('#hsub').textContent=label(m);
-  frameBlocks(); renderNav(allEls,vis); capTables(); bindFind();;
+  frameBlocks(); renderNav(allEls,vis); capTables(); bindFind(); importBadge();;
   if(presOn){ const ss=slides(); const i=presKeep?ss.findIndex(x=>x.id===presKeep.id):-1;
     showSlide(i>=0?i:0); if(i>=0&&ss[i]) ss[i].scrollTop=presKeep.top; }
   else slideIdx=0;
@@ -2716,11 +2797,105 @@ function mergeDetail(det){
       }
       cur[k]=v; }); });
 }
+/* ========================= ศูนย์นำเข้าข้อมูล: ประวัติ + ความครบของข้อมูล ========================= */
+let IMP=null;                               // ไฟล์ที่กำลังนำเข้าอยู่ (ชื่อ ชนิด เดือน)
+const LOG_KEY='sf-kpi-log';
+function getLog(){ try{ return JSON.parse(localStorage.getItem(LOG_KEY))||[]; }catch(e){ return []; } }
+function logImport(e){ const L=getLog(); L.unshift(e); try{ localStorage.setItem(LOG_KEY,JSON.stringify(L.slice(0,20))); }catch(err){} }
+/* ใช้แทน showMsg ภายใน importFile: แสดงผล + บันทึกประวัติ + วาดแผงใหม่ */
+function finish(t,c){ showMsg(t,c);
+  if(IMP){ logImport({t:new Date().toISOString(),file:IMP.file,size:IMP.size,
+      kind:IMP.kind||(c==='ok'?'ไฟล์ข้อมูลเว็บ':'ไม่รู้จักไฟล์'),
+      months:c==='ok'?(IMP.months||[curM]):[],ok:c==='ok',msg:String(t).slice(0,240)}); IMP=null; }
+  renderImportPanel(); importBadge(); }
+function thTime(iso){ const d=new Date(iso);
+  return d.getDate()+' '+MONTH_TH[d.getMonth()]+' '+d.getFullYear()+' · '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+' น.'; }
+function ago(iso){ const s=(Date.now()-new Date(iso))/1000;
+  if(s<60) return 'เมื่อสักครู่'; if(s<3600) return Math.floor(s/60)+' นาทีที่แล้ว';
+  if(s<86400) return Math.floor(s/3600)+' ชั่วโมงที่แล้ว'; return Math.floor(s/86400)+' วันที่แล้ว'; }
+function monRange(ms){ const a=[...new Set(ms||[])].filter(Boolean).sort((x,y)=>x-y); if(!a.length) return '';
+  const parts=[]; let st=a[0],pv=a[0];
+  for(let i=1;i<=a.length;i++){ const v=a[i]; if(v===pv+1){ pv=v; continue; }
+    parts.push(st===pv?MONTH_TH[st-1]:MONTH_TH[st-1]+' ถึง '+MONTH_TH[pv-1]); st=pv=v; }
+  return parts.join(', '); }
+/* เวลาของข้อมูลชุดที่ฝังในเว็บ (DATA_V = ปีเดือนวันชั่วโมงนาที เวลาสากล) */
+function dataVTime(){ const v=String(DATA_V||''); if(!/^\d{12}$/.test(v)) return null;
+  return new Date(Date.UTC(+v.slice(0,4),+v.slice(4,6)-1,+v.slice(6,8),+v.slice(8,10),+v.slice(10,12))).toISOString(); }
+
+/* ---- ชนิดข้อมูลที่ตรวจความครบ: คืนค่า true (มี), ตัวเลข (จำนวนสาขาที่มี) หรือ 0/false (ขาด) ---- */
+function covTypes(){
+  const D=m=>DETAIL[m]||{}, R=m=>MONTHLY.find(x=>x.m===m)||{}, F=EXTRA&&EXTRA.pnlFull, K=m=>PL_MONKEY[m-1];
+  const nBr=m=>(D(m).stores&&D(m).stores.now)||59;
+  return [
+    {g:'ยอดขาย',name:'ยอดขายรวม',src:'Daily Sale หรือ แบบฟอร์มส่งยอดขาย',f:m=>R(m).sales!=null},
+    {g:'ยอดขาย',name:'แผน (Budget)',src:'แบบฟอร์มส่งยอดขาย',f:m=>R(m).budget!=null},
+    {g:'ยอดขาย',name:'ยอดปีก่อน',src:'Daily Sale',f:m=>R(m).ly!=null},
+    {g:'ยอดขาย',name:'%SSSG',src:'Daily Sale',f:m=>R(m).sssg!=null},
+    {g:'ยอดขาย',name:'Delivery แยก Platform',src:'Daily Sale หรือ แบบฟอร์มส่งยอดขาย',f:m=>!!(D(m).delivery&&(D(m).delivery.platforms||[]).length)},
+    {g:'ยอดขาย',name:'บิล · เช็คเฉลี่ย · ลูกค้า',src:'แบบฟอร์มส่งยอดขาย',f:m=>!!D(m).trans},
+    {g:'ยอดขาย',name:'ยอดรายสาขา',src:'แบบฟอร์มส่งยอดขาย',exp:nBr,
+      f:m=>Math.max((D(m).branchRows||[]).length,(D(m).planBranches||[]).length)},
+    {g:'ยอดขาย',name:'ยอดรายสาขา 2 ปี',src:'ฝังในเว็บ (ผู้ดูแลอัปเดตให้)',fixed:1,exp:nBr,
+      f:m=>(EXTRA.branchYears||[]).filter(b=>b.m&&b.m[m]&&b.m[m].ty).length},
+    {g:'COL / COS · P&L',name:'งบกำไรขาดทุน',src:'ไฟล์ PL',f:m=>!!((F&&F.actual&&F.actual[K(m)])||D(m).pl)},
+    {g:'COL / COS · P&L',name:'กำไรรายสาขา',src:'ไฟล์ PL (ชีต SUM)',exp:nBr,
+      f:m=>Math.max((D(m).plBranches||[]).length,F&&F.branch?Object.values(F.branch).filter(b=>b&&b[K(m)]).length:0)},
+    {g:'CEM · OSS',name:'CEM',src:'ไฟล์ CEM',exp:nBr,
+      f:m=>{ const n=Object.keys(D(m).cemStores||{}).length; if(n) return n;
+             const y=(EXTRA.cemStoreYears||[]).filter(s=>typeof (s.y2026||[])[m-1]==='number').length; return y||(D(m).cem?true:0); }},
+    {g:'CEM · OSS',name:'OSS',src:'ไฟล์ OSS (1 ไฟล์ ต่อ 1 สาขา)',exp:nBr,
+      f:m=>Object.keys(D(m).ossStores||{}).length||(D(m).oss?true:0)},
+  ];
+}
+function covCols(){ const now=new Date(), nowM=now.getFullYear()===YEAR?now.getMonth()+1:(now.getFullYear()>YEAR?12:1);
+  const last=Math.max(nowM,...MONTHLY.map(r=>r.m),1); return {nowM,cols:Array.from({length:Math.min(12,last)},(_,i)=>i+1)}; }
+function covCell(t,m,nowM){ const v=t.f(m), exp=t.exp?t.exp(m):null;
+  if(v===true) return {st:'ok',txt:'✓',tip:'มีข้อมูล'};
+  if(typeof v==='number'&&v>0){ const full=!exp||v>=exp*0.8;
+    return {st:full?'ok':'part',txt:String(v),tip:`มี ${v}${exp?' จาก '+exp:''} สาขา`}; }
+  if(m===nowM) return {st:'open',txt:'·',tip:'เดือนนี้ยังไม่ปิด'};
+  return {st:'miss',txt:'✕',tip:'ยังไม่มีข้อมูล'}; }
+
+function renderImportPanel(){
+  const cv=$('#impCov'); if(!cv) return;
+  const {nowM,cols}=covCols(), T=covTypes();
+  let g0='', rows='';
+  T.forEach(t=>{ if(t.g!==g0){ g0=t.g; rows+=`<tr class="cg"><td colspan="${cols.length+2}">${g0}</td></tr>`; }
+    rows+=`<tr><td class="cn">${t.name}${t.fixed?' <span class="fx">ฝังในเว็บ</span>':''}</td>
+      ${cols.map(m=>{ const c=covCell(t,m,nowM); return `<td class="c ${c.st}${m===curM?' cur':''}" title="${t.name} ${label(m)}: ${c.tip}">${c.txt}</td>`; }).join('')}
+      <td class="cs">${t.src}</td></tr>`; });
+  cv.innerHTML=`<div class="covwrap"><table class="cov"><tr><th>ข้อมูล</th>${cols.map(m=>`<th class="c${m===curM?' cur':''}">${MONTH_TH[m-1]}${m===nowM?'<small>เดือนนี้</small>':''}</th>`).join('')}<th>นำเข้าจากไฟล์</th></tr>${rows}</table></div>`;
+  /* ---- ยังขาดอะไร (เดือนที่กำลังดูอยู่) ---- */
+  const miss=T.map(t=>({t,c:covCell(t,curM,nowM)})).filter(x=>x.c.st==='miss'||x.c.st==='part'||x.c.st==='open');
+  const total=T.reduce((a,t)=>a+cols.filter(m=>m<nowM&&covCell(t,m,nowM).st==='miss').length,0);
+  $('#impMiss').innerHTML=miss.length
+    ? `<div class="missbox"><div class="mh">${label(curM)} ยังขาด ${miss.length} รายการ<span>ทั้งปีขาดรวม ${total} ช่อง (ไม่นับเดือนนี้)</span></div>
+        <ul>${miss.map(x=>`<li class="${x.c.st}"><b>${x.t.name}</b><span>${x.c.st==='part'?x.c.tip:(x.c.st==='open'?'เดือนนี้ยังไม่ปิด':'ยังไม่มี')}</span>
+          <em>${x.t.fixed?'รอผู้ดูแลอัปเดตไฟล์เว็บ':'ใช้ '+x.t.src}</em></li>`).join('')}</ul></div>`
+    : `<div class="missbox okbox"><div class="mh">${label(curM)} ข้อมูลครบทุกชนิด</div></div>`;
+  /* ---- นำเข้าล่าสุด ---- */
+  const L=getLog(), base=dataVTime();
+  $('#impLog').innerHTML=(L.length?L.map(e=>`<div class="lg ${e.ok?'ok':'err'}">
+      <div class="li">${e.ok?'✓':'!'}</div>
+      <div class="lb"><div class="lf" title="${e.file}">${e.file}</div>
+        <div class="lm"><span class="lk">${e.kind}</span>${e.months&&e.months.length?' · '+monRange(e.months):''}</div>
+        ${e.ok?'':`<div class="le">${e.msg}</div>`}
+        <div class="lt">${thTime(e.t)} · ${ago(e.t)}</div></div></div>`).join('')
+      :'<div class="lgnone">ยังไม่เคยนำเข้าไฟล์จากเครื่องนี้</div>')
+    +(base?`<div class="lg base"><div class="li">◆</div><div class="lb"><div class="lf">ข้อมูลตั้งต้นที่ฝังในเว็บ</div>
+        <div class="lm"><span class="lk">ผู้ดูแลอัปเดต</span> · ${monRange(MONTHLY.map(r=>r.m))}</div><div class="lt">${thTime(base)}</div></div></div>`:'');
+}
+/* ป้ายตัวเลขบนปุ่มนำเข้า = จำนวนชนิดข้อมูลที่ยังขาดของเดือนที่ดูอยู่ (ไม่นับชนิดที่ผู้ดูแลอัปเดตให้) */
+function importBadge(){ const b=$('#importBtn'); if(!b) return;
+  const {nowM}=covCols(); const n=covTypes().filter(t=>!t.fixed).map(t=>covCell(t,curM,nowM).st).filter(s=>s==='miss'||s==='part').length;
+  b.innerHTML='⤒ นำเข้าข้อมูล'+(n?`<span class="nbadge" title="${label(curM)} ยังขาด ${n} ชนิดข้อมูล">${n}</span>`:''); }
+
 function showMsg(t,c){const el=$('#msg');el.textContent=t;el.className='msg '+c;}
 async function importFile(file){
+  IMP={file:file.name,size:file.size,kind:null,months:null};
   try{
     const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
-    if(isCEMWb(wb)){         // ไฟล์ CEM (ผลสำรวจลูกค้า ทุกสาขา)
+    if(isCEMWb(wb)){ IMP.kind='CEM';         // ไฟล์ CEM (ผลสำรวจลูกค้า ทุกสาขา)
       const R=parseCEM(wb);
       if(!R.stores) throw new Error((R.warn||['อ่านไฟล์ CEM ไม่ได้']).join('; '));
       const m=(R.ym&&R.ym.m)||curM; const d=DETAIL[m]=DETAIL[m]||{};
@@ -2730,10 +2905,10 @@ async function importFile(file){
       d.cem.low=Object.values(d.cemStores).slice().sort((a,b)=>a.score-b.score).slice(0,5).map(x=>[x.name,x.score]);
       if(!MONTHLY.some(r=>r.m===m)) MONTHLY.push({m,sales:null,ly:null,budget:null,sssgSales:null,sssg:null,mom:null});
       MONTHLY.sort((a,b)=>a.m-b.m); curM=m; await saveState();
-      showMsg(`นำเข้า CEM สำเร็จ: ${label(m)} · ${R.stores.length} สาขา · เฉลี่ย ${d.cem.avgNow}% (ดีเยี่ยม ${d.cem.distNow[0]} · ปานกลาง ${d.cem.distNow[1]} · ต้องปรับปรุง ${d.cem.distNow[2]})`,'ok');
+      finish(`นำเข้า CEM สำเร็จ: ${label(m)} · ${R.stores.length} สาขา · เฉลี่ย ${d.cem.avgNow}% (ดีเยี่ยม ${d.cem.distNow[0]} · ปานกลาง ${d.cem.distNow[1]} · ต้องปรับปรุง ${d.cem.distNow[2]})`,'ok');
       return;
     }
-    if(isOSSWb(wb)){         // ไฟล์ OSS (ใบตรวจ 1 สาขา)
+    if(isOSSWb(wb)){ IMP.kind='OSS';         // ไฟล์ OSS (ใบตรวจ 1 สาขา)
       const R=parseOSS(wb);
       if(R.code==null) throw new Error((R.warn||['อ่านไฟล์ OSS ไม่ได้']).join('; '));
       const m=(R.ym&&R.ym.m)||curM; const d=DETAIL[m]=DETAIL[m]||{};
@@ -2748,59 +2923,60 @@ async function importFile(file){
         d.oss.low=d.oss.branches.slice(0,5).map(b=>[b[0],b[1]]); }
       if(!MONTHLY.some(r=>r.m===m)) MONTHLY.push({m,sales:null,ly:null,budget:null,sssgSales:null,sssg:null,mom:null});
       MONTHLY.sort((a,b)=>a.m-b.m); curM=m; await saveState();
-      showMsg(`นำเข้า OSS สำเร็จ: ${R.name} (${R.code}) ${R.score}% · ${label(m)} — สะสมแล้ว ${Object.keys(d.ossStores).length} สาขา เฉลี่ย ${d.oss.avgNow}% · ลากไฟล์สาขาอื่นมาเพิ่มได้เรื่อยๆ`,'ok');
+      finish(`นำเข้า OSS สำเร็จ: ${R.name} (${R.code}) ${R.score}% · ${label(m)} — สะสมแล้ว ${Object.keys(d.ossStores).length} สาขา เฉลี่ย ${d.oss.avgNow}% · ลากไฟล์สาขาอื่นมาเพิ่มได้เรื่อยๆ`,'ok');
       return;
     }
-    if(isSalesFormWb(wb)){   // ไฟล์ "แบบฟอร์มส่งยอดขาย" (รายสาขา รายเดือน)
+    if(isSalesFormWb(wb)){ IMP.kind='แบบฟอร์มส่งยอดขาย';   // ไฟล์ "แบบฟอร์มส่งยอดขาย" (รายสาขา รายเดือน)
       const {mon,det,months,partial,warn}=parseSalesForm(wb);
-      if(!months.length) throw new Error('อ่านชีตรายเดือนในแบบฟอร์มส่งยอดขายไม่ได้');
+      if(!months.length) throw new Error('อ่านชีตรายเดือนในแบบฟอร์มส่งยอดขายไม่ได้'); IMP.months=months;
       const kept=mergeMonthly(Object.values(mon),{keepBudget:true}); mergeDetail(det);
       curM=months[months.length-1]; await saveState();
-      showMsg('นำเข้าแบบฟอร์มส่งยอดขายสำเร็จ: '+months.map(m=>MONTH_TH[m-1]).join(', ')+' · เดือนหลัก '+label(curM)
+      finish('นำเข้าแบบฟอร์มส่งยอดขายสำเร็จ: '+months.map(m=>MONTH_TH[m-1]).join(', ')+' · เดือนหลัก '+label(curM)
         +(partial&&partial.length?' — ข้ามเดือนที่ยังเก็บข้อมูลไม่ครบ: '+partial.map(m=>MONTH_TH[m-1]).join(', '):'')
         +(kept.length?' — คง Budget เดิมไว้: '+kept.join(', '):'')
         +(warn.length?' ['+warn.join('; ')+']':''),'ok');
       return;
     }
-    if(isPLWb(wb)){          // ไฟล์ P&L (งบกำไรขาดทุน)
+    if(isPLWb(wb)){ IMP.kind='งบกำไรขาดทุน (PL)';          // ไฟล์ P&L (งบกำไรขาดทุน)
       const {det,warn}=parsePL(wb);
-      const ms=Object.keys(det).map(Number).sort((a,b)=>a-b);
+      const ms=Object.keys(det).map(Number).sort((a,b)=>a-b); IMP.months=ms;
       if(!ms.length) throw new Error('อ่านงบกำไรขาดทุนจากไฟล์นี้ไม่ได้'+(warn.length?' ('+warn.join('; ')+')':''));
       mergeDetail(det); if(!MONTHLY.some(r=>r.m===curM)) curM=ms[ms.length-1];
       await saveState();
-      showMsg('นำเข้างบกำไรขาดทุน (P&L) สำเร็จ: '+ms.map(m=>MONTH_TH[m-1]).join(', ')+' — เพิ่มหัวข้อ "กำไร-ต้นทุน" ให้แล้ว','ok');
+      finish('นำเข้างบกำไรขาดทุน (P&L) สำเร็จ: '+ms.map(m=>MONTH_TH[m-1]).join(', ')+' — เพิ่มหัวข้อ "กำไร-ต้นทุน" ให้แล้ว','ok');
       return;
     }
-    if(isDailySaleWb(wb)){   // ไฟล์ Daily Sale (ไฟล์ปฏิบัติการรายเดือน)
+    if(isDailySaleWb(wb)){ IMP.kind='Daily Sale';   // ไฟล์ Daily Sale (ไฟล์ปฏิบัติการรายเดือน)
       const {mon,det,fileM,warn}=parseDailySale(wb);
-      const list=Object.values(mon); if(!list.length) throw new Error('อ่านยอดขายจากไฟล์ Daily Sale ไม่ได้');
+      const list=Object.values(mon); if(!list.length) throw new Error('อ่านยอดขายจากไฟล์ Daily Sale ไม่ได้'); IMP.months=list.map(r=>r.m);
       mergeMonthly(list,{keepBudget:true}); mergeDetail(det);
       curM=fileM||list[list.length-1].m; await saveState();
       const miss=[]; const d=DETAIL[curM]||{};
       if(!d.delivery) miss.push('Delivery แยก Platform (ชีตรายวันของเดือนนี้ยังว่าง)');
       if(!d.cem&&!d.oss) miss.push('CEM/OSS (ไม่มีในไฟล์นี้ — ใช้แบบฟอร์มเดิม)');
-      showMsg('นำเข้าไฟล์ Daily Sale สำเร็จ: อัปเดต '+list.map(r=>MONTH_TH[r.m-1]).join(', ')+' · เดือนหลัก '+label(curM)+
+      finish('นำเข้าไฟล์ Daily Sale สำเร็จ: อัปเดต '+list.map(r=>MONTH_TH[r.m-1]).join(', ')+' · เดือนหลัก '+label(curM)+
         (miss.length?' — ยังไม่มี: '+miss.join(' / '):'')+(warn.length?' ['+warn.join('; ')+']':''),'ok');
       return;
     }
     const S={}; wb.SheetNames.forEach(n=>S[n]=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:null}));
     if(!S[SHEETS.monthly]) throw new Error('ไม่พบชีต "Monthly" และไม่ใช่ไฟล์ Daily Sale — ใช้ไฟล์ข้อมูลที่ดาวน์โหลดจากหน้านี้เป็นแบบฟอร์ม');
     const {mon,det}=fromRows(S); const ms=Object.keys(mon).map(Number);
-    if(!ms.length) throw new Error('ชีต Monthly ไม่มีแถวข้อมูล');
+    if(!ms.length) throw new Error('ชีต Monthly ไม่มีแถวข้อมูล'); IMP.kind='ไฟล์ข้อมูลเว็บ'; IMP.months=ms;
     MONTHLY=MONTHLY.filter(r=>!ms.includes(r.m)).concat(Object.values(mon)).sort((a,b)=>a.m-b.m);
     ms.forEach(m=>{ DETAIL[m]=det[m]||{}; });
     curM=ms[ms.length-1]; await saveState();
-    showMsg('นำเข้าสำเร็จ: '+ms.map(label).join(', '),'ok');
-  }catch(e){ showMsg('นำเข้าไม่สำเร็จ: '+e.message,'err'); }
+    finish('นำเข้าสำเร็จ: '+ms.map(label).join(', '),'ok');
+  }catch(e){ finish('นำเข้าไม่สำเร็จ: '+e.message,'err'); }
 }
-$('#importBtn').onclick=()=>{showMsg('','');$('#importModal').classList.add('open');};
+$('#importBtn').onclick=()=>{showMsg('','');renderImportPanel();$('#importModal').classList.add('open');};
+$('#logClear').onclick=()=>{ if(!confirm('ล้างประวัติการนำเข้าในเครื่องนี้?')) return; try{localStorage.removeItem(LOG_KEY)}catch(e){} renderImportPanel(); };
 $('#closeModal').onclick=()=>$('#importModal').classList.remove('open');
 $('#importModal').onclick=e=>{if(e.target.id==='importModal')$('#importModal').classList.remove('open');};
 $('#file').onchange=e=>{if(e.target.files[0])importFile(e.target.files[0]);e.target.value='';};
 const drop=$('#drop'); ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));
 ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over');}));
 drop.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)importFile(f);});
-$('#monthList').onclick=async e=>{const m=+e.target.dataset.del; if(!m) return; if(!confirm('ลบข้อมูล '+label(m)+' ?')) return; MONTHLY=MONTHLY.filter(r=>r.m!==m); delete DETAIL[m]; if(!MONTHLY.length){MONTHLY=JSON.parse(JSON.stringify(DEFAULT_MONTHLY));DETAIL=JSON.parse(JSON.stringify(DEFAULT_DETAIL));} curM=null; await saveState(); showMsg('ลบ '+label(m)+' แล้ว','ok');};
+$('#monthList').onclick=async e=>{const m=+e.target.dataset.del; if(!m) return; setTimeout(()=>{renderImportPanel();importBadge();},0); if(!confirm('ลบข้อมูล '+label(m)+' ?')) return; MONTHLY=MONTHLY.filter(r=>r.m!==m); delete DETAIL[m]; if(!MONTHLY.length){MONTHLY=JSON.parse(JSON.stringify(DEFAULT_MONTHLY));DETAIL=JSON.parse(JSON.stringify(DEFAULT_DETAIL));} curM=null; await saveState(); showMsg('ลบ '+label(m)+' แล้ว','ok');};
 
 /* ========================= export ========================= */
 async function saveFile(filename,data){
