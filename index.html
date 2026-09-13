@@ -906,6 +906,61 @@ body.present .ovstats b{font-size:20px}
 body.present #overview .ovbottom .panel{overflow:hidden}
 body.present #overview .ovbottom .chart{max-height:330px}
 body.present #overview .headline{flex:0 0 auto}
+
+/* ============ การ์ด KPI หน้าแรก (โครงเดียวกันทุกใบ) ============ */
+.kgrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.kc{grid-column:span 1;display:flex;flex-direction:column;gap:6px;background:#fff;border:1px solid rgba(226,232,240,.8);
+  border-left:4px solid var(--accent);border-radius:12px;box-shadow:var(--sh);padding:13px 15px 12px;min-width:0}
+.kc.wide{grid-column:span 2}
+.kh{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 8px}
+.kl{font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);line-height:1.3}
+.kp{font-size:11px;font-weight:600;color:var(--mute);background:var(--hair);border-radius:999px;padding:1px 8px;white-space:nowrap}
+.kv{font-size:30px;font-weight:800;letter-spacing:-.02em;color:var(--ink);line-height:1.1;font-variant-numeric:tabular-nums}
+.kv small{font-size:15px;font-weight:700;color:var(--mute);letter-spacing:0}
+.kv.pos{color:var(--good)} .kv.neg{color:var(--bad)}
+.kx{flex:1;display:flex;flex-direction:column;justify-content:center;min-height:44px}
+.kf{font-size:11.5px;color:var(--mute);display:flex;align-items:center;flex-wrap:wrap;gap:5px;padding-top:7px;border-top:1px solid var(--hair)}
+.kf .pill{font-size:11px;padding:1px 7px}
+.ksep{width:1px;height:12px;background:var(--line);margin:0 4px}
+/* แท่งเทียบ */
+.kbars{display:flex;flex-direction:column;gap:5px}
+.kb{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:7px;font-size:11px}
+.kbl{color:var(--ink-2);font-weight:600}
+.kbt{height:8px;background:var(--hair);border-radius:99px;overflow:hidden}
+.kbt i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.kbv{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.kb.dim .kbl,.kb.dim .kbv{color:var(--faint);font-weight:600}
+.kb.dim .kbt i{background:#CBD5E1}
+/* แถบยอดแยกช่องทาง */
+.kstack{display:flex;height:10px;border-radius:99px;overflow:hidden;gap:2px}
+.kstack span{background:var(--accent)} .kstack span.dim{background:#CBD5E1}
+.klegend{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;font-size:11.5px;color:var(--mute)}
+.klegend span{display:flex;align-items:center;gap:5px}
+.klegend i{width:8px;height:8px;border-radius:2px;background:var(--accent)}
+.klegend b{font-size:14px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.klegend .dim i{background:#CBD5E1} .klegend .dim b{color:var(--mute)}
+/* ความคืบหน้าเทียบแผน */
+.kprog{display:flex;flex-direction:column;gap:4px}
+.kpt{height:10px;background:var(--hair);border-radius:99px;overflow:hidden;position:relative}
+.kpt i{display:block;height:100%;border-radius:99px}
+.kpt i.ok{background:var(--good)} .kpt i.bad{background:var(--bad)}
+.kpl{display:flex;justify-content:space-between;font-size:11px;color:var(--mute)}
+.kpl b{color:var(--ink)}
+@media (max-width:1200px){ .kgrid{grid-template-columns:repeat(3,minmax(0,1fr))} .kc.wide{grid-column:span 2} }
+@media (max-width:700px){ .kgrid{grid-template-columns:repeat(2,minmax(0,1fr))} .kc.wide{grid-column:span 2} }
+/* โหมดพรีเซนต์ */
+body.present #overview .kgrid{gap:16px}
+body.present .kc{padding:18px 20px 16px;gap:10px}
+body.present .kl{font-size:15px} body.present .kp{font-size:13px;padding:2px 10px}
+body.present .kv{font-size:46px} body.present .kv small{font-size:22px}
+body.present .kx{min-height:64px}
+body.present .kb{font-size:14px;grid-template-columns:48px minmax(0,1fr) auto;gap:10px}
+body.present .kbt{height:11px}
+body.present .kstack{height:14px}
+body.present .klegend{font-size:14px} body.present .klegend b{font-size:19px}
+body.present .kpt{height:14px} body.present .kpl{font-size:14px}
+body.present .kf{font-size:14px;padding-top:10px} body.present .kf .pill{font-size:13px}
+
 </style>
 </head>
 <body>
@@ -2138,18 +2193,48 @@ function build(m){
     const storesLy = (d.stores&&d.stores.ly) || ((EXTRA.branchYears||[]).filter(b=>b.m&&b.m[m]&&b.m[m].ly>0).length||null);
     out.push(sec('overview','Monthly KPI — '+MONTH_EN_FULL[m-1]+' '+YEAR+' · Santa Fe',subLine,`
       <div class="headline"><span class="hlnum">฿${cur.sales.toFixed(1)}M</span><span class="hltxt">${hlBits.join(' · ')}</span></div>
-      <div class="cards slide">
-        ${kcard('🏪',`สาขาที่มียอด<br>${label(m)}`, storesNow!=null?storesNow+' สาขา':'—',
-           '', '', storesLy!=null?`<div class="lyline">ปีก่อน <b>${storesLy}</b> สาขา</div>`:'')}
-        ${kcard('💰',`Total Sales<br>${label(m)}`,`฿${cur.sales.toFixed(1)}M`, cmpLine, '', splitRow)}
-        ${kcard('🎯',`vs Budget<br>${label(m)}`, cur.budget!=null?sgn(vb):'—',
-           cur.budget!=null?`Budget ${cur.budget.toFixed(1)}M · ${vb>=0?'เกิน':'ขาด'} ${Math.abs(cur.sales-cur.budget).toFixed(1)}M`:'ยังไม่ได้ใส่แผนเดือนนี้',
-           cur.budget!=null?cls(vb):'')}
-        ${kcard('↕️',`MoM<br>${m>1?MONTH_TH[m-2]:'—'} → ${MONTH_TH[m-1]}`, sgn(cur.mom),
-           cur.equalDays?'เทียบช่วงวันเท่ากัน (1–30)':'เทียบเดือนก่อนหน้า', cls(cur.mom??0))}
-        ${kcard('📈','Same Store<br>Sales Growth', sgn(cur.sssg),
-           d.stores&&d.stores.sameStore?`${d.stores.sameStore} สาขา Same Store`:'เทียบเดือนเดียวกันปีก่อน', cls(cur.sssg))}
-      </div>
+      ${(()=>{
+        const M1=v=>v==null?'—':v.toFixed(1)+'M', M2=v=>v==null?'—':v.toFixed(2)+'M';
+        /* แท่งเทียบแนวนอน 2 แถว: แถวที่ dim = ค่าอ้างอิง (ปีก่อน/เดือนก่อน) สีเทา */
+        const bars=list=>{ const mx=Math.max(...list.map(r=>r.v||0))||1;
+          return `<div class="kbars">${list.map(r=>`<div class="kb${r.dim?' dim':''}"><span class="kbl">${r.l}</span>
+            <span class="kbt"><i style="width:${Math.max(2,(r.v||0)/mx*100).toFixed(1)}%"></i></span><span class="kbv">${r.t}</span></div>`).join('')}</div>`; };
+        const card=(o)=>`<div class="kc${o.wide?' wide':''}">
+          <div class="kh"><span class="kl">${o.l}</span><span class="kp">${o.p}</span></div>
+          <div class="kv ${o.cl||''}">${o.v}${o.u?`<small>${o.u}</small>`:''}</div>
+          <div class="kx">${o.x||''}</div>
+          <div class="kf">${o.f||''}</div></div>`;
+        const prevRow=MONTHLY.find(r=>r.m===m-1), prevSales=prevRow&&prevRow.sales!=null?prevRow.sales:null;
+        const ach=cur.budget?cur.sales/cur.budget*100:null;
+        const ssTy=cur.sssgSales, ssLy=(cur.sssgSales!=null&&cur.sssg!=null)?cur.sssgSales/(1+cur.sssg/100):null;
+        const dStores=(storesNow!=null&&storesLy!=null)?storesNow-storesLy:null;
+        const cnt=v=>v==null?'':`<span class="pill ${v>=0?'pos':'neg'}">${v>0?'+':''}${v} สาขา</span>`;
+
+        const c1=card({l:'สาขาที่มียอด',p:label(m),v:storesNow!=null?storesNow:'—',u:' สาขา',
+          x:storesLy!=null?bars([{l:String(YEAR),v:storesNow,t:storesNow},{l:String(YEAR-1),v:storesLy,t:storesLy,dim:1}]):'',
+          f:dStores!=null?`${cnt(dStores)} เทียบปีก่อน`:'ยังไม่มีจำนวนสาขาปีก่อน'});
+
+        const stack=(inStore!=null&&deliv!=null)?`<div class="kstack">
+            <span style="flex:${inStore}"></span><span class="dim" style="flex:${deliv}"></span></div>
+          <div class="klegend"><span><i></i><b>${M2(inStore)}</b> ทานในร้าน + ห่อกลับ</span>
+            <span class="dim"><i></i><b>${M2(deliv)}</b> เดลิเวอรี่ ${(deliv/cur.sales*100).toFixed(1)}%</span></div>`:'';
+        const c2=card({wide:1,l:'Total Sales',p:label(m),v:`฿${cur.sales.toFixed(1)}M`,x:stack,
+          f:[cur.ly!=null?`ปีก่อน ${M1(cur.ly)} ${pill(yoy)}`:'', cur.mom!=null?`เดือนก่อน ${M1(prevSales)} ${pill(cur.mom)}`:''].filter(Boolean).join('<span class="ksep"></span>')});
+
+        const prog=ach==null?'':`<div class="kprog"><div class="kpt"><i class="${ach>=100?'ok':'bad'}" style="width:${Math.min(100,ach).toFixed(1)}%"></i></div>
+            <div class="kpl"><span>ทำได้ <b>${ach.toFixed(1)}%</b> ของแผน</span><span>100%</span></div></div>`;
+        const c3=card({l:'vs Budget',p:label(m),v:cur.budget!=null?sgn(vb):'—',cl:cur.budget!=null?cls(vb):'',x:prog,
+          f:cur.budget!=null?`Actual ${M1(cur.sales)} · Budget ${M1(cur.budget)} · ${vb>=0?'เกิน':'ขาด'} ${Math.abs(cur.sales-cur.budget).toFixed(1)}M`:'ยังไม่ได้ใส่แผนเดือนนี้'});
+
+        const c4=card({l:'MoM',p:`${m>1?MONTH_TH[m-2]:'—'} → ${MONTH_TH[m-1]}`,v:sgn(cur.mom),cl:cls(cur.mom??0),
+          x:prevSales!=null?bars([{l:MONTH_TH[m-1],v:cur.sales,t:M1(cur.sales)},{l:MONTH_TH[m-2],v:prevSales,t:M1(prevSales),dim:1}]):'',
+          f:cur.equalDays?'เทียบช่วงวันเท่ากัน (1–30)':'เทียบเดือนก่อนหน้า'});
+
+        const c5=card({l:'Same Store Sales Growth',p:label(m),v:sgn(cur.sssg),cl:cls(cur.sssg),
+          x:(ssTy!=null&&ssLy!=null)?bars([{l:String(YEAR),v:ssTy,t:M1(ssTy)},{l:String(YEAR-1),v:ssLy,t:M1(ssLy),dim:1}]):'',
+          f:d.stores&&d.stores.sameStore?`${d.stores.sameStore} สาขา Same Store`:'เทียบเดือนเดียวกันปีก่อน'});
+        return `<div class="kgrid">${c1}${c2}${c3}${c4}${c5}</div>`;
+      })()}
       ${ovBottom(m,rows,ch,d)}`));
   }
 
