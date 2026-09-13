@@ -858,6 +858,54 @@ body.present #overview .k .bd{padding:16px 16px 16px}
 body.present #overview .k .ic{width:34px;height:34px;font-size:17px;right:12px;top:12px}
 body.present #overview .split b{font-size:19px} body.present #overview .split i{font-size:12px}
 body.present #overview .split{gap:10px;margin:4px 0 6px}
+/* ---- หน้า Monthly KPI: แถวล่าง ---- */
+.ovbottom{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px;margin-top:14px}
+.ovbottom .panel{margin:0;display:flex;flex-direction:column;justify-content:center}
+.mixbar{display:flex;height:34px;border-radius:9px;overflow:hidden;gap:2px;margin:2px 0 10px}
+.mixbar span{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;
+  line-height:1.2;min-width:0;overflow:hidden;white-space:nowrap}
+.mixbar span b{font-size:10.5px;font-weight:600;opacity:.9}
+.mnums{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;font-size:12px;color:var(--mute)}
+.mnums b{font-size:16px;font-weight:800;color:var(--ink);margin-right:4px;font-variant-numeric:tabular-nums}
+.mnums .grey b{color:var(--mute)}
+.mrows{display:flex;flex-direction:column;gap:6px}
+.mrow{display:grid;grid-template-columns:74px minmax(0,1fr) auto;align-items:center;gap:9px;font-size:12.5px}
+.mlab{color:var(--ink-2);font-weight:600}
+.mbar{height:7px;background:var(--hair);border-radius:99px;overflow:hidden}
+.mbar i{display:block;height:100%;border-radius:99px}
+.mval{font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
+.mval em{font-style:normal;font-size:11px;color:var(--mute);margin-left:6px}
+.ovstats{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;padding-top:10px;border-top:1px solid var(--hair);font-size:12px;color:var(--mute)}
+.ovstats b{display:block;font-size:17px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+/* สาขาเด่น/ต้องดูแล ในหน้าแรก */
+.ph2{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mute);margin:2px 0 5px}
+.ovtop2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px;padding-top:10px;border-top:1px solid var(--hair)}
+.ovlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.ovlist li{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--ink-2)}
+.ovlist .bn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ovlist .bv{font-weight:700;font-variant-numeric:tabular-nums}
+.ovlist .bv.pos{color:var(--good)} .ovlist .bv.neg{color:var(--bad)}
+body.present .ph2{font-size:14px}
+body.present .ovlist li{font-size:16px}
+body.present .ovtop2{gap:22px;margin-top:16px;padding-top:12px}
+@media (max-width:900px){ .ovbottom{grid-template-columns:1fr} }
+/* โหมดพรีเซนต์: ให้แถวล่างยืดเต็มจอ */
+body.present #overview .body{display:flex;flex-direction:column;gap:14px;justify-content:center}
+body.present #overview .cards{flex:0 0 auto}
+body.present #overview .ovbottom{flex:0 1 auto;min-height:0;margin-top:0;gap:18px}
+body.present #overview .ovbottom .panel{padding:16px 20px;justify-content:flex-start}
+body.present #overview .ph{font-size:15px}
+body.present .mixbar{height:48px;gap:3px}
+body.present .mixbar span{font-size:17px} body.present .mixbar span b{font-size:14px}
+body.present .mnums{font-size:15px;gap:20px} body.present .mnums b{font-size:22px}
+body.present .mrow{font-size:15px;grid-template-columns:92px minmax(0,1fr) auto;gap:10px}
+body.present .mbar{height:10px}
+body.present .mval em{font-size:15px}
+body.present .ovstats{font-size:14px;gap:22px;margin-top:12px;padding-top:10px}
+body.present .ovstats b{font-size:20px}
+body.present #overview .ovbottom .panel{overflow:hidden}
+body.present #overview .ovbottom .chart{max-height:330px}
+body.present #overview .headline{flex:0 0 auto}
 </style>
 </head>
 <body>
@@ -2006,6 +2054,36 @@ function syncPnl(){
   const last=Math.max(0,...K.map((k,i)=>actual[k]?i+1:0));
   EXTRA.pnlFull=Object.assign({},B,{actual,branch,months:K.slice(0,last),__merged:1});
 }
+/* แถวล่างของหน้า Monthly KPI: แนวโน้มยอดขาย + สัดส่วนที่มาของยอด (ทำให้สไลด์ไม่โล่ง) */
+function ovBottom(m,rows,ch,d){
+  const t=d.trans, M2=v=>(v/1e6).toFixed(2)+'M';
+  const seg=(name,v,color)=>{ if(!v) return ''; const p=v/ch.sales*100;
+    return `<span title="${name} ${p.toFixed(1)}%" style="flex:${v};background:${color}">${p>=7?`<b>${name}</b>${p.toFixed(1)}%`:''}</span>`; };
+  const prow=(name,v,color)=>{ const p=ch.deli?v/ch.deli*100:0;
+    return `<div class="mrow"><span class="mlab">${name}</span><span class="mbar"><i style="width:${p.toFixed(1)}%;background:${color}"></i></span>
+      <span class="mval">${M2(v)}<em>${p.toFixed(1)}%</em></span></div>`; };
+  const mix = ch ? `<div class="mixbar">
+      ${seg('ทานในร้าน',ch.dine,'var(--chart-1)')}${seg('ห่อกลับ',ch.take,'#93C5FD')}${seg('เดลิเวอรี่',ch.deli,'var(--chart-2)')}
+    </div>
+    <div class="mnums"><span><b>${M2(ch.dine+ch.take)}</b> ทานในร้าน + ห่อกลับ</span><span class="grey"><b>${M2(ch.deli)}</b> เดลิเวอรี่</span></div>
+    <div class="mrows">${prow('Grab',ch.grab,'var(--chart-1)')}${prow('Line Man',ch.lm,'var(--chart-2)')}${prow('Shopee Food',ch.sp,'var(--chart-3)')}</div>`
+    : '<div class="empty">ยังไม่มียอดแยกช่องทางของเดือนนี้</div>';
+  const stats = t ? `<div class="ovstats">
+      <span><b>${fmtN(t.trans[1])}</b> บิล</span><span><b>฿${t.ticket[1]}</b> เช็คเฉลี่ย</span>
+      ${t.customer?`<span><b>${fmtN(t.customer[1])}</b> ลูกค้า</span>`:''}
+      ${t.custAvg?`<span><b>${(+t.custAvg[1]).toFixed(2)}</b> ลูกค้า/บิล</span>`:''}</div>` : '';
+  /* สาขาเด่น / ต้องดูแล ของเดือนนี้ (ดูจากยอดขายเทียบเดือนก่อน) */
+  const br=filtZone((d.branchRows||[]).filter(b=>b.sales>0&&b.mom!=null)).slice().sort((a,b)=>b.mom-a.mom);
+  const liB=(arr,cl)=>arr.map(b=>`<li><span class="bn">${b.name}</span><span class="bv ${cl}">${sgn(b.mom)}</span></li>`).join('');
+  const top = br.length>=6 ? `<div class="ovtop2"><div><div class="ph2">โตสูงสุด</div><ol class="ovlist">${liB(br.slice(0,3),'pos')}</ol></div>
+      <div><div class="ph2">ต้องดูแล</div><ol class="ovlist">${liB(br.slice(-3).reverse(),'neg')}</ol></div></div>` : '';
+  const sg = rows.filter(r=>r.sssg!=null).length>1
+    ? `<div class="ph2" style="margin-top:10px">%SSSG รายเดือน</div>${sssgBars(rows)}` : '';
+  return `<div class="ovbottom">
+    <div class="panel"><div class="ph">Sales vs Budget vs Last Year · Jan to ${MONTH_EN[m-1]}</div>${lineChart(rows)}${sg}</div>
+    <div class="panel"><div class="ph">Sales Mix · ${label(m)}</div>${mix}${stats}${top}</div>
+  </div>`;
+}
 /* ยอดขายแยกช่องทางของเดือนหนึ่ง รวมจากรายสาขา (ทานในร้าน · ห่อกลับ · เดลิเวอรี่) */
 function chanSum(mm,list){
   const rows=list||((DETAIL[mm]||{}).branchRows||[]);
@@ -2072,7 +2150,8 @@ function build(m){
            cur.equalDays?'เทียบช่วงวันเท่ากัน (1–30)':'เทียบเดือนก่อนหน้า', cls(cur.mom??0))}
         ${kcard('📈','Same Store<br>Sales Growth', sgn(cur.sssg),
            d.stores&&d.stores.sameStore?`${d.stores.sameStore} สาขา Same Store`:'เทียบเดือนเดียวกันปีก่อน', cls(cur.sssg))}
-      </div>`));
+      </div>
+      ${ovBottom(m,rows,ch,d)}`));
   }
 
   // 2 monthly
