@@ -1523,7 +1523,7 @@ function sssgSection(m,rows){
 
 /* ========================= Delivery รายเดือน แยก Platform ========================= */
 const DELS={lm:false,ly:false};
-const PLATS=['Grab','Line Man','Shopee Food'], PLAT_COL=['#2563EB','#EAB308','#EC4899'];   // Grab น้ำเงิน · Line Man เหลือง · Shopee Food ชมพู
+const PLATS=['Grab','Line Man','Shopee Food'], PLAT_COL=['#166534','#22C55E','#EE4D2D'];   // Grab เขียวเข้ม · Line Man เขียวสว่าง · Shopee Food ส้ม (สีแบรนด์)
 const platKey=n=>String(n||'').toLowerCase().replace(/[\s_\-]/g,'').replace('shopeefood','shopee');
 function platVal(mm,n,k){ const dd=DETAIL[mm]&&DETAIL[mm].delivery; const p=dd&&(dd.platforms||[]).find(x=>platKey(x.name)===platKey(n)); return p&&p[k]!=null?p[k]:null; }
 function platLY(mm,n){ const arr=EXTRA.deliveryMonths&&EXTRA.deliveryMonths[`${YEAR}-${String(mm).padStart(2,'0')}`]; const p=arr&&arr.find(x=>platKey(x.platform)===platKey(n)); return p&&p.ly!=null?p.ly:null; }
