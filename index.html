@@ -968,7 +968,7 @@ body.present .kf{font-size:14px;padding-top:10px} body.present .kf .pill{font-si
 
 /* คำอธิบายเส้นของกราฟยอดขายรายเดือน */
 .lcleg i.ln{width:18px;height:3px;border-radius:2px;vertical-align:middle}
-.lcleg i.dash{background:repeating-linear-gradient(90deg,#94A3B8 0 6px,transparent 6px 10px)}
+.lcleg i.dash{background:repeating-linear-gradient(90deg,#38BDF8 0 6px,transparent 6px 10px)}
 .lcleg .hint{margin-left:auto}
 /* ---- tooltip ของกราฟ ---- */
 .tip{position:fixed;z-index:200;pointer-events:none;background:#0F172A;color:#fff;font-size:12.5px;line-height:1.5;
@@ -1239,23 +1239,23 @@ function lineChart(rows){
     return d; };
   const ptsOf=k=>rows.map((r,i)=>r[k]==null?null:[x(i),y(r[k])]).filter(Boolean);
   const S=ptsOf('sales'), LY=ptsOf('ly'), BU=ptsOf('budget');
-  let g=`<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2563EB" stop-opacity=".20"/><stop offset="1" stop-color="#2563EB" stop-opacity="0"/></linearGradient></defs>`;
+  let g=`<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D9822D" stop-opacity=".22"/><stop offset="1" stop-color="#D9822D" stop-opacity="0"/></linearGradient></defs>`;
   for(let v=lo;v<=hi;v+=5) g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#EEF2F6" ${v===lo?'':'stroke-dasharray="3 5"'}/>
     <text x="${L-12}" y="${y(v)+4}" font-size="11.5" fill="#94A3B8" text-anchor="end">${v}M</text>`;
   const ci=rows.length-1;
   g+=`<line x1="${x(ci)}" x2="${x(ci)}" y1="${T-10}" y2="${H-B}" stroke="#CBD5E1" stroke-dasharray="4 4"/>`;
   if(S.length>1) g+=`<path d="${curve(S)} L${S[S.length-1][0]},${H-B} L${S[0][0]},${H-B} Z" fill="url(#${id})"/>`;
-  if(BU.length>1) g+=`<path d="${curve(BU)}" fill="none" stroke="#94A3B8" stroke-width="2" stroke-dasharray="7 6" stroke-linecap="round"/>`;
-  if(LY.length>1) g+=`<path d="${curve(LY)}" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-linecap="round" opacity=".9"/>`;
-  if(S.length>1) g+=`<path d="${curve(S)}" fill="none" stroke="#2563EB" stroke-width="3.4" stroke-linecap="round"/>`;
+  if(BU.length>1) g+=`<path d="${curve(BU)}" fill="none" stroke="#38BDF8" stroke-width="2.2" stroke-dasharray="7 6" stroke-linecap="round"/>`;
+  if(LY.length>1) g+=`<path d="${curve(LY)}" fill="none" stroke="#A3AEBB" stroke-width="2.6" stroke-linecap="round"/>`;
+  if(S.length>1) g+=`<path d="${curve(S)}" fill="none" stroke="#D9822D" stroke-width="3.4" stroke-linecap="round"/>`;
   rows.forEach((r,i)=>{
     const tip=`${MONTH_TH[r.m-1]} · Sales ${r.sales!=null?r.sales.toFixed(1)+'M':'—'} · Last year ${r.ly!=null?r.ly.toFixed(1)+'M':'—'} · Budget ${r.budget!=null?r.budget.toFixed(1)+'M':'—'}`;
-    if(r.budget!=null) g+=`<circle cx="${x(i)}" cy="${y(r.budget)}" r="3" fill="#94A3B8"/>`;
-    if(r.ly!=null) g+=`<circle cx="${x(i)}" cy="${y(r.ly)}" r="3.4" fill="#F59E0B"/>`;
+    if(r.budget!=null) g+=`<circle cx="${x(i)}" cy="${y(r.budget)}" r="3" fill="#38BDF8"/>`;
+    if(r.ly!=null) g+=`<circle cx="${x(i)}" cy="${y(r.ly)}" r="3.4" fill="#A3AEBB"/>`;
     if(r.sales!=null){ const now=i===ci, above=[r.ly,r.budget].some(v=>v!=null&&v>r.sales&&y(v)>y(r.sales)-26);
-      g+=`<g><title>${tip}</title>${now?`<circle cx="${x(i)}" cy="${y(r.sales)}" r="11" fill="#2563EB" opacity=".15"/>`:''}
-        <circle cx="${x(i)}" cy="${y(r.sales)}" r="${now?6:4.6}" fill="${now?'#2563EB':'#fff'}" stroke="#2563EB" stroke-width="2.6"/>
-        <text x="${x(i)}" y="${above?y(r.sales)+24:y(r.sales)-13}" font-size="${now?13.5:12}" font-weight="${now?800:700}" fill="#1D4ED8" text-anchor="middle"
+      g+=`<g><title>${tip}</title>${now?`<circle cx="${x(i)}" cy="${y(r.sales)}" r="11" fill="#D9822D" opacity=".18"/>`:''}
+        <circle cx="${x(i)}" cy="${y(r.sales)}" r="${now?6:4.6}" fill="${now?'#D9822D':'#fff'}" stroke="#D9822D" stroke-width="2.6"/>
+        <text x="${x(i)}" y="${above?y(r.sales)+24:y(r.sales)-13}" font-size="${now?13.5:12}" font-weight="${now?800:700}" fill="#B45F16" text-anchor="middle"
           stroke="#fff" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${r.sales.toFixed(1)}</text></g>`; }
     g+=`<text x="${x(i)}" y="${H-16}" font-size="12.5" fill="${i===ci?'#0F172A':'#64748B'}" font-weight="${i===ci?700:400}" text-anchor="middle">${MONTH_TH[r.m-1]}</text>`;
   });
@@ -1266,7 +1266,7 @@ function lineChart(rows){
     if(r.budget!=null) t.push(`Budget ${r.budget.toFixed(2)}M${r.sales!=null?' ('+sgn(pct(r.budget,r.sales))+')':''}`);
     g+=`<rect class="hz" x="${Math.max(L-20,x(i)-colW/2)}" y="${T-12}" width="${colW}" height="${H-B-T+12}" fill="transparent" data-tip="${t.join('\n')}"/>`; });
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Sales vs last year vs budget">${g}</svg>
-  <div class="legend lcleg"><span><i class="ln" style="background:#2563EB"></i>Sales ${YEAR}</span><span><i class="ln" style="background:#F59E0B"></i>Last year ${YEAR-1}</span><span><i class="ln dash"></i>Budget ${YEAR}</span><span class="hint">ชี้ที่จุดเพื่อดูตัวเลขทั้ง 3 เส้น</span></div>`;
+  <div class="legend lcleg"><span><i class="ln" style="background:#D9822D"></i>Sales ${YEAR}</span><span><i class="ln" style="background:#A3AEBB"></i>Last year ${YEAR-1}</span><span><i class="ln dash"></i>Budget ${YEAR}</span><span class="hint">ชี้ที่จุดเพื่อดูตัวเลขทั้ง 3 เส้น</span></div>`;
 }
 function barPairs(items,unit='M'){ // items: [{name,prev,now}]
   const W=1180,H=215,L=44,R=12,T=18,B=34; const max=Math.max(...items.flatMap(i=>[i.prev,i.now]))*1.15;
