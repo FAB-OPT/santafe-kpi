@@ -1060,6 +1060,39 @@ body.present .smph b em{font-size:13px}
 .klegend .dine i{background:#D9822D} .klegend .take i{background:#7C5CFC} .klegend .dim i{background:#0F9488}
 .klegend .dim b{color:var(--ink)}
 .smph .smdot{background:#0F9488}
+/* ============ Monthly KPI: หัวเรื่องชัด ลดกล่องซ้อน ============ */
+.ovh{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:2px 0 10px}
+.ovh h3,.phx h3{margin:0;font-size:17px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.ovh span,.phx p{margin:0;font-size:12.5px;color:var(--mute)}
+.phx{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin:0 0 12px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.phx p{margin-top:2px}
+.phx b{font-size:16px;font-weight:800;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ovbottom{margin-top:18px}
+/* ชื่อการ์ด: ตัวหนาสีเข้ม ไม่ใช่ตัวพิมพ์ใหญ่สีเทา */
+.kl{text-transform:none;letter-spacing:0;font-size:14px;font-weight:700;color:var(--ink)}
+.csl{text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.cblh{text-transform:none;letter-spacing:0;font-size:13px;font-weight:700;color:var(--ink)}
+.smh{font-size:12.5px}
+/* หัวข้อย่อยในกรอบ */
+.smsub,.smph{display:flex;justify-content:space-between;align-items:baseline;text-transform:none;letter-spacing:0;
+  font-size:13px;font-weight:700;color:var(--ink);margin:0 0 6px}
+.smph .smdot{display:none}
+.smph b{font-size:13px} .smph b em{font-size:11.5px}
+/* ลดกล่องซ้อน: การ์ดข้างในไม่มีกรอบ ส่วนแพลตฟอร์มไม่มีกรอบ teal */
+.smt{border-color:transparent!important}
+.smplat{border:0;border-top:1px solid var(--line);border-radius:0;background:none;padding:12px 0 0;margin-top:14px}
+.smpr{border:0;background:var(--surface)}
+.cst{border-color:transparent}
+.cblists{border-top-color:var(--line)}
+/* โหมดพรีเซนต์ */
+body.present .ovh h3,body.present .phx h3{font-size:24px}
+body.present .ovh span,body.present .phx p{font-size:15px}
+body.present .phx b{font-size:20px}
+body.present .kl{font-size:17px}
+body.present .csl{font-size:15px}
+body.present .cblh{font-size:15px}
+body.present .smsub,body.present .smph{font-size:16px}
+body.present .ovh{margin-bottom:12px}
 </style>
 </head>
 <body>
@@ -2271,7 +2304,7 @@ function ovBottom(m,rows,ch,d){
             <div class="smh"><i style="background:${o.c}"></i>${o.n}</div>
             <div class="smpv"><b>${M2(ch[o.k])}</b><em style="color:#0B6E66">${ps(o.k)}</em></div>
             <div class="smc">${chP?vsPrev(chP[o.k],ch[o.k]):''}</div></div>`).join('')}</div></div>`;
-    mix=bar+`<div class="smtiles">${tiles}</div>`+plat;
+    mix=`<div class="smsub">Channels</div>`+bar+`<div class="smtiles">${tiles}</div>`+plat;
   }
 
   /* ---- Customers ---- */
@@ -2297,8 +2330,8 @@ function ovBottom(m,rows,ch,d){
       <div><div class="cblh"><span class="dot neg"></span>Needs attention <em>vs ${prevTH}</em></div><ol class="cbl">${bot.map((b,i)=>row(b,i,'neg')).join('')}</ol></div></div>`;
   }
   return `<div class="ovbottom">
-    <div class="panel"><div class="ph">Sales Mix · ${label(m)}${ch?`<span class="phv">${bahtM(ch.sales/1e6)} บาท</span>`:''}</div>${mix}</div>
-    <div class="panel"><div class="ph">Customers & Branches · ${label(m)}</div>${stats}${lists}</div>
+    <div class="panel"><div class="phx"><div><h3>Sales Mix</h3><p>ยอดขาย ${label(m)} มาจากช่องทางไหน เทียบ ${prevTH}</p></div>${ch?`<b>${bahtM(ch.sales/1e6)} บาท</b>`:''}</div>${mix}</div>
+    <div class="panel"><div class="phx"><div><h3>Customers &amp; Branches</h3><p>จำนวนบิล เช็คเฉลี่ย ลูกค้า และสาขาที่ขึ้นลงมากสุด เทียบ ${prevTH}</p></div></div>${stats}${lists}</div>
   </div>`;
 }
 /* ยอดขายแยกช่องทางของเดือนหนึ่ง รวมจากรายสาขา (Dine in · Takeaway · Delivery) */
@@ -2362,7 +2395,7 @@ function build(m){
           return `<div class="kbars">${list.map(r=>`<div class="kb${r.dim?' dim':''}" data-tip="${r.l}\n${r.t}"><span class="kbl">${r.l}</span>
             <span class="kbt"><i style="width:${Math.max(2,(r.v||0)/mx*100).toFixed(1)}%"></i></span><span class="kbv">${r.t}</span></div>`).join('')}</div>`; };
         const card=(o)=>`<div class="kc${o.wide?' wide':''}">
-          <div class="kh"><span class="kl">${o.l}</span><span class="kp">${o.p}</span></div>
+          <div class="kh"><span class="kl">${o.l}</span>${o.keepP?`<span class="kp">${o.p}</span>`:''}</div>
           <div class="kv ${o.cl||''}">${o.v}${o.u?`<small>${o.u}</small>`:''}</div>
           ${o.d?`<div class="kd ${o.d.v>=0?'pos':'neg'}">${o.d.v>=0?'▲ +':'▼ −'}${Math.abs(o.d.v).toFixed(2)}M <span>${o.d.t}</span></div>`:''}
           <div class="kx">${o.x||''}</div>
@@ -2393,7 +2426,7 @@ function build(m){
         const c3=card({l:'vs Budget',p:label(m),v:cur.budget!=null?sgn(vb):'—',cl:cur.budget!=null?cls(vb):'',x:prog,
           f:cur.budget!=null?`Actual ${M1(cur.sales)} · Budget ${M1(cur.budget)} · ${vb>=0?'เกิน':'ขาด'} ${Math.abs(cur.sales-cur.budget).toFixed(1)}M`:'ยังไม่ได้ใส่แผนเดือนนี้'});
 
-        const c4=card({l:'MoM',p:`${m>1?MONTH_TH[m-2]:'—'} → ${MONTH_TH[m-1]}`,v:sgn(cur.mom),cl:cls(cur.mom??0),
+        const c4=card({keepP:1,l:'MoM',p:`${m>1?MONTH_TH[m-2]:'—'} → ${MONTH_TH[m-1]}`,v:sgn(cur.mom),cl:cls(cur.mom??0),
           d:prevSales!=null?{v:cur.sales-prevSales,t:'vs '+MONTH_TH[m-2]}:null,
           x:prevSales!=null?bars([{l:MONTH_TH[m-1],v:cur.sales,t:M2(cur.sales)},{l:MONTH_TH[m-2],v:prevSales,t:M2(prevSales),dim:1}]):'',
           f:cur.equalDays?'เทียบช่วงวันเท่ากัน (1–30)':'เทียบเดือนก่อนหน้า'});
@@ -2402,7 +2435,8 @@ function build(m){
           d:(ssTy!=null&&ssLy!=null)?{v:ssTy-ssLy,t:'vs '+(YEAR-1)}:null,
           x:(ssTy!=null&&ssLy!=null)?bars([{l:String(YEAR),v:ssTy,t:M2(ssTy)},{l:String(YEAR-1),v:ssLy,t:M2(ssLy),dim:1}]):'',
           f:d.stores&&d.stores.sameStore?`${d.stores.sameStore} สาขา Same Store`:'เทียบเดือนเดียวกันปีก่อน'});
-        return `<div class="kgrid">${c1}${c2}${c3}${c4}${c5}</div>`;
+        return `<div class="ovh"><h3>Sales Overview</h3><span>${label(m)} · เทียบแผน เดือนก่อน และปีก่อน</span></div>
+          <div class="kgrid">${c1}${c2}${c3}${c4}${c5}</div>`;
       })()}
       ${ovBottom(m,rows,ch,d)}`));
   }
