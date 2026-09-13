@@ -970,6 +970,19 @@ body.present .kf{font-size:14px;padding-top:10px} body.present .kf .pill{font-si
 .lcleg i.ln{width:18px;height:3px;border-radius:2px;vertical-align:middle}
 .lcleg i.dash{background:repeating-linear-gradient(90deg,#94A3B8 0 6px,transparent 6px 10px)}
 .lcleg .hint{margin-left:auto}
+/* ---- tooltip ของกราฟ ---- */
+.tip{position:fixed;z-index:200;pointer-events:none;background:#0F172A;color:#fff;font-size:12.5px;line-height:1.5;
+  padding:7px 11px;border-radius:9px;box-shadow:0 10px 28px -10px rgba(15,23,42,.55);max-width:300px;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.tip[hidden]{display:none}
+.tip b{display:block;font-weight:700;margin-bottom:1px;color:#fff}
+.tip div{color:#CBD5E1}
+svg rect.hz{fill:transparent;cursor:crosshair}
+svg rect.hz:hover{fill:rgba(37,99,235,.06)}
+svg [data-tip]:not(.hz):hover{opacity:.82}
+.kstack span[data-tip]:hover,.mixbar span[data-tip]:hover{filter:brightness(1.08)}
+.kb[data-tip],.mrow[data-tip],.kprog[data-tip]{cursor:default}
+body.present .tip{font-size:16px;padding:10px 14px;max-width:420px}
 </style>
 </head>
 <body>
@@ -1134,6 +1147,12 @@ function lineChart(rows){
           stroke="#fff" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${r.sales.toFixed(1)}</text></g>`; }
     g+=`<text x="${x(i)}" y="${H-16}" font-size="12.5" fill="${i===ci?'#0F172A':'#64748B'}" font-weight="${i===ci?700:400}" text-anchor="middle">${MONTH_TH[r.m-1]}</text>`;
   });
+  const colW=(W-L-R)/Math.max(1,rows.length-1);
+  rows.forEach((r,i)=>{ const t=[`${MONTH_TH[r.m-1]} ${YEAR}`];
+    if(r.sales!=null) t.push(`Sales ${r.sales.toFixed(2)}M`);
+    if(r.ly!=null) t.push(`Last year ${r.ly.toFixed(2)}M${r.sales!=null?' ('+sgn(pct(r.ly,r.sales))+')':''}`);
+    if(r.budget!=null) t.push(`Budget ${r.budget.toFixed(2)}M${r.sales!=null?' ('+sgn(pct(r.budget,r.sales))+')':''}`);
+    g+=`<rect class="hz" x="${Math.max(L-20,x(i)-colW/2)}" y="${T-12}" width="${colW}" height="${H-B-T+12}" fill="transparent" data-tip="${t.join('\n')}"/>`; });
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Sales vs last year vs budget">${g}</svg>
   <div class="legend lcleg"><span><i class="ln" style="background:#2563EB"></i>Sales ${YEAR}</span><span><i class="ln" style="background:#F59E0B"></i>Last year ${YEAR-1}</span><span><i class="ln dash"></i>Budget ${YEAR}</span><span class="hint">ชี้ที่จุดเพื่อดูตัวเลขทั้ง 3 เส้น</span></div>`;
 }
@@ -1143,8 +1162,8 @@ function barPairs(items,unit='M'){ // items: [{name,prev,now}]
   const y=v=>T+(H-T-B)*(1-v/max);
   let s=`<line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="var(--line)"/>`;
   items.forEach((it,i)=>{ const cx=L+gw*(i+.5);
-    s+=`<rect x="${cx-bw-3}" y="${y(it.prev)}" width="${bw}" height="${H-B-y(it.prev)}" fill="var(--chart-soft)" rx="3"/>
-        <rect x="${cx+3}" y="${y(it.now)}" width="${bw}" height="${H-B-y(it.now)}" fill="var(--chart-1)" rx="3"/>
+    s+=`<rect x="${cx-bw-3}" y="${y(it.prev)}" width="${bw}" height="${H-B-y(it.prev)}" fill="var(--chart-soft)" rx="3" data-tip="${it.name}\nเดือนก่อน ${it.prev.toFixed(2)}${unit}"/>
+        <rect x="${cx+3}" y="${y(it.now)}" width="${bw}" height="${H-B-y(it.now)}" fill="var(--chart-1)" rx="3" data-tip="${it.name}\nเดือนนี้ ${it.now.toFixed(2)}${unit}\nเทียบเดือนก่อน ${sgn(pct(it.prev,it.now))}"/>
         <text x="${cx-bw/2-3}" y="${y(it.prev)-6}" font-size="11.5" text-anchor="middle" fill="var(--mute)">${it.prev.toFixed(2)}${unit}</text>
         <text x="${cx+bw/2+3}" y="${y(it.now)-6}" font-size="11.5" font-weight="600" text-anchor="middle" fill="var(--ink)">${it.now.toFixed(2)}${unit}</text>
         <text x="${cx}" y="${H-12}" font-size="13" text-anchor="middle" fill="var(--ink)">${it.name}</text>`; });
@@ -1156,7 +1175,7 @@ function sssgBars(rows,opt={}){
   const y=v=>T+(H-T-B)*(1-(v+mx)/(2*mx)); const y0=y(0);
   let s=`<line x1="${L}" x2="${W-R}" y1="${y0}" y2="${y0}" stroke="var(--mute)"/>`;
   rows.forEach((r,i)=>{ if(r.sssg==null) return; const cx=L+gw*(i+.5), yy=y(r.sssg), h=Math.abs(yy-y0), pos=r.sssg>=0, sel=opt.pick===r.m;
-    s+=`<g class="clk" data-m="${r.m}"><title>${MONTH_TH[r.m-1]}: ${sgn(r.sssg)}</title><rect x="${cx-bw/2}" y="${pos?yy:y0}" width="${bw}" height="${h}" fill="${pos?'var(--good)':'var(--bad)'}" rx="3" ${sel?'stroke="var(--ink)" stroke-width="2.5"':''}/>
+    s+=`<g class="clk" data-m="${r.m}"><title>${MONTH_TH[r.m-1]} ${YEAR} · SSSG ${sgn(r.sssg)}${r.sssgSales!=null?' · Same store sales '+r.sssgSales.toFixed(2)+'M':''}</title><rect x="${cx-bw/2}" y="${pos?yy:y0}" width="${bw}" height="${h}" fill="${pos?'var(--good)':'var(--bad)'}" rx="3" ${sel?'stroke="var(--ink)" stroke-width="2.5"':''}/>
         <text x="${cx}" y="${pos?yy-6:(yy+14>H-24?y0-5:yy+14)}" font-size="12" font-weight="600" text-anchor="middle" fill="${pos?'var(--good)':'var(--bad)'}">${sgn(r.sssg)}</text>
         <text x="${cx}" y="${H-8}" font-size="12" text-anchor="middle" fill="var(--mute)" font-weight="${sel?700:400}">${MONTH_TH[r.m-1]}</text></g>`; });
   return `<svg class="chart gsssg" viewBox="0 0 ${W} ${H}">${s}</svg>`;
@@ -1209,7 +1228,7 @@ function costStack(rows){
   rows.forEach((r,i)=>{ const cx=L+gw*(i+.5); let acc=0;
     seg.forEach(([nm,k,c])=>{ const val=r.revenue?Math.max(0,(r[k]||0)/r.revenue*100):0; if(val<=0) return;
       const y1=y(acc+val), y2=y(acc);
-      g+=`<rect x="${cx-bw/2}" y="${y1}" width="${bw}" height="${Math.max(0,y2-y1)}" fill="${c}"/>`;
+      g+=`<rect x="${cx-bw/2}" y="${y1}" width="${bw}" height="${Math.max(0,y2-y1)}" fill="${c}" data-tip="${MONTH_TH[r.m-1]} · ${nm}\n${val.toFixed(1)}% ของรายได้${Math.abs(r[k]||0)>1000?'\n'+bahtM((r[k]||0)/1e6)+' บาท':''}"/>`;
       if(val>=7) g+=`<text x="${cx}" y="${(y1+y2)/2+4}" font-size="11" font-weight="600" fill="#fff" text-anchor="middle">${val.toFixed(0)}</text>`;
       acc+=val; });
     g+=`<text x="${cx}" y="${H-10}" font-size="12" fill="var(--mute)" text-anchor="middle">${MONTH_TH[r.m-1]}</text>`; });
@@ -1224,7 +1243,7 @@ function histo(vals,edges,labels){
   const mx=Math.max(...cnt,1), y=v=>T+(H-T-B)*(1-v/mx);
   let g=`<line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="var(--line)"/>`;
   cnt.forEach((n,i)=>{ const cx=L+gw*(i+.5), c=i<2?'var(--bad)':(i<3?'var(--amber)':'var(--good)');
-    g+=`<rect x="${cx-bw/2}" y="${y(n)}" width="${bw}" height="${H-B-y(n)}" fill="${c}" rx="4"/>
+    g+=`<rect x="${cx-bw/2}" y="${y(n)}" width="${bw}" height="${Math.max(2,H-B-y(n))}" fill="${c}" rx="4" data-tip="%กำไร ${labels[i]}\n${n} สาขา · ${vals.length?(n/vals.length*100).toFixed(0):0}% ของสาขาทั้งหมด"/>
         <text x="${cx}" y="${y(n)-6}" font-size="12.5" font-weight="600" fill="var(--ink)" text-anchor="middle">${n}</text>
         <text x="${cx}" y="${H-14}" font-size="11.5" fill="var(--mute)" text-anchor="middle">${labels[i]}</text>`; });
   return `<svg class="chart" viewBox="0 0 ${W} ${H}">${g}</svg>`;
@@ -1245,6 +1264,10 @@ function branchLine(hist){
   g+=line('plan','var(--chart-3)',true)+line('sales','var(--accent)');
   g+=rows.map((h,i)=>`<text x="${x(i)}" y="${H-10}" font-size="11.5" fill="var(--mute)" text-anchor="middle">${MONTH_TH[h.m-1]}</text>
      <text x="${x(i)}" y="${y(h.r.sales)-9}" font-size="11" font-weight="600" fill="var(--accent-ink)" text-anchor="middle">${(h.r.sales/1e6).toFixed(2)}</text>`).join('');
+  const colW=(W-L-R)/Math.max(1,rows.length-1);
+  rows.forEach((h,i)=>{ const t=[`${MONTH_TH[h.m-1]} ${YEAR}`,`ยอดขาย ${bahtM(h.r.sales/1e6)} บาท`];
+    if(h.r.plan>0) t.push(`แผน ${bahtM(h.r.plan/1e6)} บาท (ทำได้ ${(h.r.sales/h.r.plan*100).toFixed(1)}%)`);
+    g+=`<rect class="hz" x="${x(i)-colW/2}" y="${T}" width="${colW}" height="${H-B-T}" fill="transparent" data-tip="${t.join('\n')}"/>`; });
   return `<svg class="chart" viewBox="0 0 ${W} ${H}">${g}</svg>
     <div class="legend"><span><i style="background:var(--accent)"></i>ยอดขายจริง</span><span><i style="background:var(--chart-3)"></i>แผน</span></div>`;
 }
@@ -1372,7 +1395,7 @@ function groupBars(groups,series,opt={}){
     series.forEach((sr,si)=>{ const v=sr.vals[gi]; if(v==null) return; const x=x0+bw*si+1, yy=y(v), w=bw-2;
       const fill=(sr.colors&&sr.colors[gi])||sr.color||'var(--chart-1)';
       const sel=opt.sel&&opt.sel.g===gi&&opt.sel.k===(sr.key||String(si));
-      s+=`<g class="clk" data-g="${gi}" data-k="${sr.key||si}"><title>${g.name} · ${sr.name}: ${fmt(v)}</title>
+      s+=`<g class="clk" data-g="${gi}" data-k="${sr.key||si}"><title>${g.name} · ${sr.name}: ${(opt.tipFmt||fmt)(v)}</title>
         <rect x="${x}" y="${yy}" width="${w}" height="${Math.max(0,H-B-yy)}" fill="${fill}" fill-opacity="${sr.op||1}" rx="3" ${sel?'stroke="var(--ink)" stroke-width="2.5"':''}/>
         ${showVal?`<text x="${x+w/2}" y="${yy-5}" font-size="${n>3?10.5:11.5}" text-anchor="middle" fill="${sr.op?'var(--mute)':'var(--ink)'}" font-weight="${sr.op?400:600}">${fmt(v)}</text>`:''}</g>`; });
     s+=`<text x="${cx}" y="${H-11}" font-size="12.5" text-anchor="middle" fill="var(--ink)">${g.name}</text>`; });
@@ -1448,7 +1471,7 @@ function deliverySection(m,d){
     if(DELS.ly) series.push({key:'ly'+i,name:n+' ปีก่อน',color:PLAT_COL[i],op:.3,vals:months.map(mm=>platLY(mm,n))});
     if(DELS.lm) series.push({key:'lm'+i,name:n+' เดือนก่อน',color:PLAT_COL[i],op:.55,vals:months.map(mm=>platLM(mm,n))});
     series.push({key:'c'+i,name:n,color:PLAT_COL[i],vals:months.map(mm=>platVal(mm,n,'now'))}); });
-  const chart=groupBars(months.map(mm=>({name:MONTH_TH[mm-1]+(mm===m?' ★':'')})),series,{fmt:v=>v.toFixed(2),bw:40});
+  const chart=groupBars(months.map(mm=>({name:MONTH_TH[mm-1]+(mm===m?' ★':'')})),series,{fmt:v=>v.toFixed(2),tipFmt:v=>v.toFixed(2)+'M',bw:40});
   const bar=`<div class="plbar"><span class="hint">รายเดือน · แต่ละเดือนมี 3 แท่ง (Grab · Line Man · Shopee) หน่วยล้านบาท</span>
     <label><input type="checkbox" id="dlLM" ${DELS.lm?'checked':''}> เทียบเดือนก่อน</label>
     <label><input type="checkbox" id="dlLY" ${DELS.ly?'checked':''} ${lyMonths.length?'':'disabled'}> เทียบปีก่อน (เดือนเดียวกัน)${!lyMonths.length?' <span class="hint">(ไม่มีข้อมูล)</span>':(lyMonths.length<months.length?` <span class="hint">มีข้อมูลปีก่อนถึง ${MONTH_TH[lyMonths[lyMonths.length-1]-1]}</span>`:'')}</label></div>`;
@@ -1491,7 +1514,7 @@ function transSection(m,d){
   let charts='';
   if(chn.length){ const groups=chn.map(c=>({name:c.name})), selG=chn.findIndex(c=>c.key===sel.key);
     const mk=(k,f)=>groupBars(groups,[{key:'prev',name:'เดือนก่อน',color:'var(--chart-soft)',vals:chn.map(c=>c[k][0])},{key:'now',name:'เดือนนี้',color:'var(--chart-1)',vals:chn.map(c=>c[k][1])}],
-      {w:580,h:210,fmt:f,attr:`data-chs="${chn.map(c=>c.key).join('|')}"`,sel:selG>=0?{g:selG,k:'now'}:null});
+      {w:580,h:210,fmt:f,tipFmt:k==='trans'?(v=>fmtN(Math.round(v))+' บิล'):(v=>'฿'+Math.round(v)),attr:`data-chs="${chn.map(c=>c.key).join('|')}"`,sel:selG>=0?{g:selG,k:'now'}:null});
     charts=`<div class="two"><div><h3>จำนวนบิลรายช่องทาง (พันบิล)</h3>${mk('trans',v=>(v/1000).toFixed(1))}</div><div><h3>ค่าเฉลี่ยต่อบิลรายช่องทาง (฿)</h3>${mk('ticket',v=>v)}</div></div>`
       +legendOf([{name:'เดือนก่อน',color:'var(--chart-soft)'},{name:'เดือนนี้',color:'var(--chart-1)'}])+`<div class="hint" style="margin-top:4px">คลิกแท่ง หรือปุ่มช่องทางด้านบน เพื่อดูตัวเลขของช่องทางนั้น</div>`; }
   // ตารางรายช่องทาง: บิล · เช็คเฉลี่ย · ลูกค้า · ลูกค้า/บิล · ยอดขาย
@@ -1509,8 +1532,8 @@ function transSection(m,d){
     const av=k=>{const a=rows.map(r=>r.v[k]).filter(v=>v!=null); return a.length?a.reduce((x,y)=>x+y,0)/a.length:null;};
     const row=(l,v,hi)=>`<tr class="${hi?'hi':''}"><td>${l}</td>${c2(v.trans,x=>fmtN(Math.round(x)))}${c2(v.ticket,x=>'฿'+Math.round(x))}${c2(v.customer,x=>fmtN(Math.round(x)))}${c2(v.custAvg,x=>(+x).toFixed(2))}${c2(v.trans!=null&&v.ticket!=null?v.trans*v.ticket/1e6:null,x=>x.toFixed(2)+'M')}</tr>`;
     trend=`<div class="grp" style="margin-top:18px">รายเดือน · ${sel.name} · ค่าเฉลี่ย ${rows.length} เดือน</div>
-      <div class="two"><div>${groupBars(rows.map(r=>({name:MONTH_TH[r.m-1]})),[{key:'tr',name:'บิล',color:'var(--chart-1)',vals:rows.map(r=>r.v.trans)}],{w:580,h:180,fmt:v=>(v/1000).toFixed(1)+'K'})}<div class="hint">จำนวนบิล (พันบิล)</div></div>
-      <div>${groupBars(rows.map(r=>({name:MONTH_TH[r.m-1]})),[{key:'tk',name:'เช็คเฉลี่ย',color:'var(--chart-2)',vals:rows.map(r=>r.v.ticket)}],{w:580,h:180,fmt:v=>'฿'+Math.round(v)})}<div class="hint">ค่าเฉลี่ยต่อบิล (฿)</div></div></div>
+      <div class="two"><div>${groupBars(rows.map(r=>({name:MONTH_TH[r.m-1]})),[{key:'tr',name:'บิล',color:'var(--chart-1)',vals:rows.map(r=>r.v.trans)}],{w:580,h:180,fmt:v=>(v/1000).toFixed(1)+'K',tipFmt:v=>fmtN(Math.round(v))+' บิล'})}<div class="hint">จำนวนบิล (พันบิล)</div></div>
+      <div>${groupBars(rows.map(r=>({name:MONTH_TH[r.m-1]})),[{key:'tk',name:'เช็คเฉลี่ย',color:'var(--chart-2)',vals:rows.map(r=>r.v.ticket)}],{w:580,h:180,fmt:v=>'฿'+Math.round(v),tipFmt:v=>'฿'+Math.round(v)+' ต่อบิล'})}<div class="hint">ค่าเฉลี่ยต่อบิล (฿)</div></div></div>
       <div class="scroll" style="margin-top:10px"><table><tr><th>เดือน</th><th class="n">บิล</th><th class="n">เช็คเฉลี่ย</th><th class="n">ลูกค้า</th><th class="n">ลูกค้า/บิล</th><th class="n">ยอดขาย ≈</th></tr>
       ${rows.map(r=>row((r.m===m?'★ ':'')+MONTH_TH[r.m-1],r.v,r.m===m)).join('')}
       ${row('<b>ค่าเฉลี่ย</b>',{trans:av('trans'),ticket:av('ticket'),customer:av('customer'),custAvg:av('custAvg')},false)}</table></div>`;
@@ -1660,6 +1683,9 @@ function lineSeries(labels, series, opt={}){
       if(sr.label) s+=`<text x="${x(i)}" y="${y(v)-10}" font-size="11.5" font-weight="600" fill="${sr.color}" text-anchor="middle">${fmt(v)}</text>`; });
   });
   labels.forEach((l,i)=>{ s+=`<text x="${x(i)}" y="${H-11}" font-size="12" fill="var(--mute)" text-anchor="middle">${l}</text>`; });
+  const colW=(W-L-R)/Math.max(1,labels.length-1);
+  labels.forEach((l,i)=>{ const tf=opt.tipFmt||fmt; const t=[l].concat(series.map(sr=>`${sr.name}: ${sr.vals[i]==null?'—':tf(sr.vals[i])}`));
+    s+=`<rect class="hz" x="${x(i)-colW/2}" y="${T-8}" width="${colW}" height="${H-B-T+8}" fill="transparent" data-tip="${t.join('\n')}"/>`; });
   return `<svg class="chart" viewBox="0 0 ${W} ${H}">${s}</svg>`;
 }
 const SERIES_COL=['#2563EB','#D9822D','#10B981','#8B5CF6','#F43F5E','#0EA5E9','#84CC16','#A16207','#EC4899','#14B8A6'];
@@ -1770,7 +1796,7 @@ function groupSection(id,title,keyOf,labelName,STATE,ctlId){
   const bars=groupBars(rows.map(r=>({name:r.name})),[
       {key:'ly',name:'ปีก่อน',color:'var(--chart-soft)',vals:rows.map(r=>+(r.ly/1e6).toFixed(2))},
       {key:'ty',name:label(m),colors:rows.map(r=>r.g==null?'var(--chart-3)':(r.g>=0?'var(--good)':'var(--bad)')),vals:rows.map(r=>+(r.ty/1e6).toFixed(2))}],
-    {h:225,fmt:v=>v.toFixed(1),bw:34,sel:null});
+    {h:225,fmt:v=>v.toFixed(1),tipFmt:v=>v.toFixed(2)+'M',bw:34,sel:null});
   const tbl=`<div class="scroll" style="margin-top:12px"><table><tr><th>#</th><th>${labelName}</th><th class="n">สาขา</th><th class="n">ยอด ${MONTH_TH[m-1]}</th><th class="n">ปีก่อน</th><th class="n">YoY</th><th class="n">สะสม ม.ค.–${MONTH_TH[m-1]}</th><th class="n">YoY สะสม</th></tr>
     ${rows.map((r,i)=>`<tr class="clk ${STATE.pick===r.name?'sel':''}" data-gp="${r.name}"><td>${i+1}</td><td>${r.name}</td><td class="n">${r.act}/${r.n}</td>
       <td class="n">${M2(r.ty)}</td><td class="n">${M2(r.ly)}</td><td class="n">${r.g==null?'—':pill(r.g)}</td>
@@ -1781,7 +1807,7 @@ function groupSection(id,title,keyOf,labelName,STATE,ctlId){
     const ser=[{name:'ปีก่อน',color:'var(--chart-3)',dash:1,vals:months.map(x=>+(sumMonth(gmap[sel],x).ly/1e6).toFixed(2))},
                {name:YEAR,color:'var(--chart-1)',label:1,vals:months.map(x=>+(sumMonth(gmap[sel],x).ty/1e6).toFixed(2))}];
     panel=`<div class="pick"><div class="pickhd"><h4>${labelName} ${sel} · ${list.length} สาขา</h4><button class="btn small" data-gpclose>ปิด</button></div>
-      ${lineSeries(months.map(x=>MONTH_TH[x-1]),ser,{h:210,fmt:v=>v.toFixed(1)+'M'})}
+      ${lineSeries(months.map(x=>MONTH_TH[x-1]),ser,{h:210,fmt:v=>v.toFixed(1)+'M',tipFmt:v=>v.toFixed(2)+'M'})}
       <div class="legend"><span><i style="background:var(--chart-3)"></i>ปีก่อน</span><span><i style="background:var(--chart-1)"></i>${YEAR}</span></div>
       <div class="scroll" style="margin-top:10px"><table><tr><th>#</th><th>สาขา</th><th>โซน</th><th class="n">ยอด ${MONTH_TH[m-1]}</th><th class="n">ปีก่อน</th><th class="n">YoY</th></tr>
       ${list.map((b,i)=>`<tr class="clk" data-ssbr="${b.code}"><td>${i+1}</td><td>${b.code} ${b.name}</td><td>${b.zone||''}</td><td class="n">${M2(b.ty)}</td><td class="n">${M2(b.ly)}</td><td class="n">${b.g==null?'—':pill(b.g)}</td></tr>`).join('')}</table></div></div>`; }
@@ -1814,7 +1840,7 @@ function zoneSection(){
     .sort((a,b)=>(a.g==null?9e9:a.g)-(b.g==null?9e9:b.g));
   const ser=zones.map((z,i)=>({name:z,color:SERIES_COL[i%SERIES_COL.length],
     vals:months.map(x=>+(sumMonth(gmap[z],x).ty/1e6).toFixed(2))}));
-  const chart=lineSeries(months.map(x=>MONTH_TH[x-1]),ser,{h:250,fmt:v=>v.toFixed(0)+'M'});
+  const chart=lineSeries(months.map(x=>MONTH_TH[x-1]),ser,{h:250,fmt:v=>v.toFixed(0)+'M',tipFmt:v=>v.toFixed(2)+'M'});
   const leg=`<div class="legend">${zones.map((z,i)=>`<span><i style="background:${SERIES_COL[i%SERIES_COL.length]}"></i>${z}</span>`).join('')}</div>`;
   const tbl=`<div class="scroll" style="margin-top:12px"><table><tr><th>#</th><th>โซน</th><th class="n">สาขา</th><th class="n">ยอด ${MONTH_TH[m-1]}</th><th class="n">ปีก่อน</th><th class="n">YoY</th><th class="n">สะสม ม.ค.–${MONTH_TH[m-1]}</th><th class="n">YoY สะสม</th></tr>
     ${rows.map((r,i)=>`<tr class="clk ${ZON.pick===r.z?'sel':''} ${FILT.zone===r.z?'hi':''}" data-zn="${r.z}"><td>${i+1}</td><td>${r.z}</td><td class="n">${r.act}/${r.n}</td>
@@ -1890,8 +1916,8 @@ function gpTrend(){
              {name:'กำไรสุทธิ',color:'var(--bad)',vals:mons.map(o=>+g(o,iNet).toFixed(2))}];
   const labels=mons.map(o=>MONTH_TH[o.m-1]);
   const pctRow=(t,i,cl)=>`<tr><td>${t}</td>${mons.map(o=>`<td class="n ${cl?cls(g(o,i)):''}">${bahtM(g(o,i))}<span class="tiny">${(g(o,i)/g(o,iRev)*100).toFixed(1)}%</span></td>`).join('')}</tr>`;
-  return `<div class="two"><div><h3>รายได้รวม &amp; กำไรขั้นต้น</h3>${lineSeries(labels,ser.slice(0,2),{w:580,h:230,fmt:v=>v.toFixed(0)+'M'})}</div>
-    <div><h3>กำไรจากการดำเนินงาน &amp; กำไรสุทธิ</h3>${lineSeries(labels,ser.slice(2).map(x=>({...x,label:1})),{w:580,h:230,zero:true,fmt:v=>v.toFixed(1)+'M'})}</div></div>`
+  return `<div class="two"><div><h3>รายได้รวม &amp; กำไรขั้นต้น</h3>${lineSeries(labels,ser.slice(0,2),{w:580,h:230,fmt:v=>v.toFixed(0)+'M',tipFmt:v=>bahtM(v)+' บาท'})}</div>
+    <div><h3>กำไรจากการดำเนินงาน &amp; กำไรสุทธิ</h3>${lineSeries(labels,ser.slice(2).map(x=>({...x,label:1})),{w:580,h:230,zero:true,fmt:v=>v.toFixed(1)+'M',tipFmt:v=>bahtM(v)+' บาท'})}</div></div>`
     +`<div class="legend">${ser.map(s=>`<span><i style="background:${s.color}"></i>${s.name}</span>`).join('')}</div>
     <div class="scroll" style="margin-top:14px"><table><tr><th>รายการ</th>${labels.map(l=>`<th class="n">${l}</th>`).join('')}</tr>
       <tr><td>รายได้รวม</td>${mons.map(o=>`<td class="n"><b>${bahtM(g(o,iRev))}</b></td>`).join('')}</tr>
@@ -1976,8 +2002,8 @@ function cosSection(){
              {name:'%COL ค่าแรง',color:'var(--chart-1)',label:1,vals:mons.map(o=>+P(F.actual[o.k]).col.toFixed(1))}];
   const serP=[{name:'Prime cost',color:'var(--bad)',label:1,vals:mons.map(o=>+prime(P(F.actual[o.k])).toFixed(1))}];
   if(F.ly&&mons.filter(o=>F.ly[o.k]).length>1) serP.push({name:'Prime ปีก่อน',color:'var(--chart-3)',dash:1,vals:mons.map(o=>F.ly[o.k]?+prime(P(F.ly[o.k])).toFixed(1):null)});
-  const charts=`<div class="two"><div><h3>%COS และ %COL รายเดือน</h3>${lineSeries(labels,ser,{w:580,h:230,fmt:v=>v.toFixed(0)+'%'})}</div>
-    <div><h3>Prime cost (COS+COL) รายเดือน</h3>${lineSeries(labels,serP,{w:580,h:230,fmt:v=>v.toFixed(0)+'%'})}</div></div>
+  const charts=`<div class="two"><div><h3>%COS และ %COL รายเดือน</h3>${lineSeries(labels,ser,{w:580,h:230,fmt:v=>v.toFixed(0)+'%',tipFmt:v=>v.toFixed(1)+'%'})}</div>
+    <div><h3>Prime cost (COS+COL) รายเดือน</h3>${lineSeries(labels,serP,{w:580,h:230,fmt:v=>v.toFixed(0)+'%',tipFmt:v=>v.toFixed(1)+'%'})}</div></div>
     <div class="legend">${ser.concat(serP).map(s=>`<span><i style="background:${s.color};opacity:${s.dash?.6:1}"></i>${s.name}</span>`).join('')}</div>`;
   /* รายสาขา */
   const brName=c=>(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].name)||c;
@@ -2143,9 +2169,9 @@ function syncPnl(){
 function ovBottom(m,rows,ch,d){
   const t=d.trans, M2=v=>(v/1e6).toFixed(2)+'M';
   const seg=(name,v,color)=>{ if(!v) return ''; const p=v/ch.sales*100;
-    return `<span title="${name} ${p.toFixed(1)}%" style="flex:${v};background:${color}">${p>=7?`<b>${name}</b>${p.toFixed(1)}%`:''}</span>`; };
+    return `<span data-tip="${name}\n${M2(v)} · ${p.toFixed(1)}% ของยอดขาย" style="flex:${v};background:${color}">${p>=7?`<b>${name}</b>${p.toFixed(1)}%`:''}</span>`; };
   const prow=(name,v,color)=>{ const p=ch.deli?v/ch.deli*100:0;
-    return `<div class="mrow"><span class="mlab">${name}</span><span class="mbar"><i style="width:${p.toFixed(1)}%;background:${color}"></i></span>
+    return `<div class="mrow" data-tip="${name}\n${M2(v)} · ${p.toFixed(1)}% ของ Delivery"><span class="mlab">${name}</span><span class="mbar"><i style="width:${p.toFixed(1)}%;background:${color}"></i></span>
       <span class="mval">${M2(v)}<em>${p.toFixed(1)}%</em></span></div>`; };
   const mix = ch ? `<div class="mixbar">
       ${seg('Dine in',ch.dine,'var(--chart-1)')}${seg('Takeaway',ch.take,'#93C5FD')}${seg('Delivery',ch.deli,'var(--chart-2)')}
@@ -2227,7 +2253,7 @@ function build(m){
         const M1=v=>v==null?'—':v.toFixed(1)+'M', M2=v=>v==null?'—':v.toFixed(2)+'M';
         /* แท่งเทียบแนวนอน 2 แถว: แถวที่ dim = ค่าอ้างอิง (ปีก่อน/เดือนก่อน) สีเทา */
         const bars=list=>{ const mx=Math.max(...list.map(r=>r.v||0))||1;
-          return `<div class="kbars">${list.map(r=>`<div class="kb${r.dim?' dim':''}"><span class="kbl">${r.l}</span>
+          return `<div class="kbars">${list.map(r=>`<div class="kb${r.dim?' dim':''}" data-tip="${r.l}\n${r.t}"><span class="kbl">${r.l}</span>
             <span class="kbt"><i style="width:${Math.max(2,(r.v||0)/mx*100).toFixed(1)}%"></i></span><span class="kbv">${r.t}</span></div>`).join('')}</div>`; };
         const card=(o)=>`<div class="kc${o.wide?' wide':''}">
           <div class="kh"><span class="kl">${o.l}</span><span class="kp">${o.p}</span></div>
@@ -2251,12 +2277,12 @@ function build(m){
         const segs=split3
           ? [{c:'dine',v:ch.dine/1e6,n:'Dine in'},{c:'take',v:ch.take/1e6,n:'Takeaway'},{c:'dim',v:ch.deli/1e6,n:'Delivery'}]
           : (inStore!=null&&deliv!=null?[{c:'dine',v:inStore,n:'Dine in + Takeaway'},{c:'dim',v:deliv,n:'Delivery'}]:[]);
-        const stack=segs.length?`<div class="kstack">${segs.map(g=>`<span class="${g.c}" style="flex:${g.v}"></span>`).join('')}</div>
+        const stack=segs.length?`<div class="kstack">${segs.map(g=>`<span class="${g.c}" style="flex:${g.v}" data-tip="${g.n}\n${M2(g.v)} · ${pc3(g.v)} ของยอดขาย"></span>`).join('')}</div>
           <div class="klegend">${segs.map(g=>`<span class="${g.c}"><i></i><b>${M2(g.v)}</b> ${g.n} ${pc3(g.v)}</span>`).join('')}</div>`:'';
         const c2=card({wide:1,l:'Total Sales',p:label(m),v:`฿${cur.sales.toFixed(1)}M`,x:stack,
           f:[cur.ly!=null?`ปีก่อน ${M1(cur.ly)} ${pill(yoy)}`:'', cur.mom!=null?`เดือนก่อน ${M1(prevSales)} ${pill(cur.mom)}`:''].filter(Boolean).join('<span class="ksep"></span>')});
 
-        const prog=ach==null?'':`<div class="kprog"><div class="kpt"><i class="${ach>=100?'ok':'bad'}" style="width:${Math.min(100,ach).toFixed(1)}%"></i></div>
+        const prog=ach==null?'':`<div class="kprog" data-tip="ทำได้ ${ach.toFixed(1)}% ของแผน\nActual ${M2(cur.sales)} · Budget ${M2(cur.budget)}"><div class="kpt"><i class="${ach>=100?'ok':'bad'}" style="width:${Math.min(100,ach).toFixed(1)}%"></i></div>
             <div class="kpl"><span>ทำได้ <b>${ach.toFixed(1)}%</b> ของแผน</span><span>100%</span></div></div>`;
         const c3=card({l:'vs Budget',p:label(m),v:cur.budget!=null?sgn(vb):'—',cl:cur.budget!=null?cls(vb):'',x:prog,
           f:cur.budget!=null?`Actual ${M1(cur.sales)} · Budget ${M1(cur.budget)} · ${vb>=0?'เกิน':'ขาด'} ${Math.abs(cur.sales-cur.budget).toFixed(1)}M`:'ยังไม่ได้ใส่แผนเดือนนี้'});
@@ -2593,6 +2619,33 @@ document.addEventListener('keydown',e=>{
 document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&document.body.classList.contains('present'))exitPresent();});
 // แตะซ้าย/ขวาของจอเพื่อเลื่อนสไลด์ (มือถือ)
 document.addEventListener('click',e=>{if(!document.body.classList.contains('present')||e.target.closest('.pctl,a,button,select,input,label,textarea,.clk,.chip,.plbar,.pick,.find,.morebar'))return;const w=window.innerWidth;if(e.clientX>w*0.7)showSlide(slideIdx+1);else if(e.clientX<w*0.3)showSlide(slideIdx-1);});
+
+/* ========================= tooltip ของกราฟ (ใช้ทั้งเว็บ) =========================
+   ใส่ data-tip="บรรทัดแรกตัวหนา\nบรรทัดถัดไป" ที่ส่วนไหนของกราฟก็ได้ ชี้เมาส์หรือแตะแล้วขึ้นกล่องบอกยอด */
+(function(){
+  const tip=document.createElement('div'); tip.className='tip'; tip.hidden=true; document.body.appendChild(tip);
+  let cur=null;
+  const show=(el,x,y)=>{ const t=el.getAttribute('data-tip'); if(!t) return;
+    if(cur!==el){ cur=el; tip.innerHTML=t.split('\n').map((l,i)=>i?`<div>${l}</div>`:`<b>${l}</b>`).join(''); }
+    tip.hidden=false;
+    const r=tip.getBoundingClientRect(), pad=14;
+    let left=x+pad, top=y-r.height-pad;
+    if(left+r.width>innerWidth-8) left=x-r.width-pad;
+    if(top<8) top=y+pad;
+    tip.style.left=Math.max(8,left)+'px'; tip.style.top=top+'px'; };
+  const hide=()=>{ cur=null; tip.hidden=true; };
+  document.addEventListener('mousemove',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]');
+    if(el) show(el,e.clientX,e.clientY); else if(cur) hide(); });
+  document.addEventListener('mouseleave',hide);
+  document.addEventListener('scroll',hide,true);
+  document.addEventListener('touchstart',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]');
+    if(el){ const t=e.touches[0]; show(el,t.clientX,t.clientY); } else hide(); },{passive:true});
+})();
+function tipify(root){
+  (root||document).querySelectorAll('svg title').forEach(t=>{ const p=t.parentNode;
+    if(p&&!p.hasAttribute('data-tip')) p.setAttribute('data-tip',t.textContent.replace(/ · /g,'\n')); t.remove(); });
+}
+new MutationObserver(()=>tipify($('#main'))).observe($('#main'),{childList:true,subtree:true});
 
 /* ========================= storage (db → localStorage) ========================= */
 let db=null, dbDoc=null, saving=false;
