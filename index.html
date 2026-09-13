@@ -1055,6 +1055,11 @@ body.present #overview .headline{margin-top:0}
 body.present .smplat{padding:14px 16px 16px}
 body.present .smpr{padding:11px 14px 11px 16px}
 body.present .smph b em{font-size:13px}
+/* ---- สีช่องทางชุดเดียวกันทั้งเว็บ: Dine in ส้ม · Takeaway ม่วง · Delivery teal ---- */
+.kstack span.dine{background:#D9822D} .kstack span.take{background:#7C5CFC} .kstack span.dim{background:#0F9488}
+.klegend .dine i{background:#D9822D} .klegend .take i{background:#7C5CFC} .klegend .dim i{background:#0F9488}
+.klegend .dim b{color:var(--ink)}
+.smph .smdot{background:#0F9488}
 </style>
 </head>
 <body>
@@ -1518,7 +1523,7 @@ function sssgSection(m,rows){
 
 /* ========================= Delivery รายเดือน แยก Platform ========================= */
 const DELS={lm:false,ly:false};
-const PLATS=['Grab','Line Man','Shopee Food'], PLAT_COL=['var(--chart-1)','var(--chart-2)','var(--chart-3)'];
+const PLATS=['Grab','Line Man','Shopee Food'], PLAT_COL=['#2563EB','#EAB308','#EC4899'];   // Grab น้ำเงิน · Line Man เหลือง · Shopee Food ชมพู
 const platKey=n=>String(n||'').toLowerCase().replace(/[\s_\-]/g,'').replace('shopeefood','shopee');
 function platVal(mm,n,k){ const dd=DETAIL[mm]&&DETAIL[mm].delivery; const p=dd&&(dd.platforms||[]).find(x=>platKey(x.name)===platKey(n)); return p&&p[k]!=null?p[k]:null; }
 function platLY(mm,n){ const arr=EXTRA.deliveryMonths&&EXTRA.deliveryMonths[`${YEAR}-${String(mm).padStart(2,'0')}`]; const p=arr&&arr.find(x=>platKey(x.platform)===platKey(n)); return p&&p.ly!=null?p.ly:null; }
@@ -2246,10 +2251,10 @@ function ovBottom(m,rows,ch,d){
   /* ---- Sales Mix ---- */
   let mix='<div class="empty">ยังไม่มียอดแยกช่องทางของเดือนนี้</div>';
   if(ch){
-    /* ช่องทาง: หน้าร้านใช้ส้มแบรนด์ (ตรงกับการ์ด Total Sales) · Delivery ใช้ teal ตัดกับส้ม */
+    /* ช่องทาง: สีต่างกันชัด ใช้ชุดเดียวกับการ์ด Total Sales */
     const C=[{k:'dine',n:'Dine in',c:'#D9822D',bg:'#FFF5EB',bd:'#F7DDC2',tx:'#B45F16'},
-             {k:'take',n:'Takeaway',c:'#F2B880',bg:'#FFF9F2',bd:'#F9E7D2',tx:'#C0772F'},
-             {k:'deli',n:'Delivery',c:'#0F8B80',bg:'#EEF8F6',bd:'#CBEAE5',tx:'#0B6E66'}];
+             {k:'take',n:'Takeaway',c:'#7C5CFC',bg:'#F5F3FF',bd:'#DDD6FE',tx:'#6D28D9'},
+             {k:'deli',n:'Delivery',c:'#0F9488',bg:'#EEF8F6',bd:'#CBEAE5',tx:'#0B6E66'}];
     const share=k=>(ch[k]/ch.sales*100).toFixed(1)+'%';
     const tiles=C.map(o=>`<div class="smt" style="background:${o.bg};border-color:${o.bd};box-shadow:inset 0 3px 0 ${o.c}" data-tip="${o.n}\n${M2(ch[o.k])} · ${share(o.k)} ของยอดขาย${chP?'\n'+MONTH_TH[m-2]+' '+M2(chP[o.k]):''}">
         <div class="smh"><i style="background:${o.c}"></i>${o.n}</div>
@@ -2257,7 +2262,7 @@ function ovBottom(m,rows,ch,d){
         <div class="sms"><b style="color:${o.tx}">${share(o.k)}</b> ของยอดขาย</div>
         <div class="smc">${chP?vsPrev(chP[o.k],ch[o.k]):''}</div></div>`).join('');
     const bar=`<div class="smbar">${C.map(o=>`<span style="flex:${ch[o.k]};background:${o.c}" data-tip="${o.n}\n${M2(ch[o.k])} · ${share(o.k)} ของยอดขาย"></span>`).join('')}</div>`;
-    const PL=[{k:'grab',n:'Grab',c:'#0B6E66'},{k:'lm',n:'Line Man',c:'#2BB3A3'},{k:'sp',n:'Shopee Food',c:'#8FDCD1'}];
+    const PL=[{k:'grab',n:'Grab',c:PLAT_COL[0]},{k:'lm',n:'Line Man',c:PLAT_COL[1]},{k:'sp',n:'Shopee Food',c:PLAT_COL[2]}];
     const ps=k=>ch.deli?(ch[k]/ch.deli*100).toFixed(1)+'%':'—';
     const plat=`<div class="smplat">
         <div class="smph"><span><i class="smdot"></i>Delivery by platform</span><b>${M2(ch.deli)} <em>${share('deli')} ของยอดขาย</em></b></div>
