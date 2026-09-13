@@ -983,6 +983,60 @@ svg [data-tip]:not(.hz):hover{opacity:.82}
 .kstack span[data-tip]:hover,.mixbar span[data-tip]:hover{filter:brightness(1.08)}
 .kb[data-tip],.mrow[data-tip],.kprog[data-tip]{cursor:default}
 body.present .tip{font-size:16px;padding:10px 14px;max-width:420px}
+/* ============ หน้า Monthly KPI: 2 กรอบล่าง (แบบใหม่) ============ */
+.ph .phv{margin-left:auto;font-size:12px;font-weight:700;color:var(--ink);letter-spacing:0;text-transform:none;font-variant-numeric:tabular-nums}
+.ovbottom .panel{justify-content:flex-start}
+.smbar{display:flex;height:12px;border-radius:99px;overflow:hidden;gap:2px;margin:2px 0 12px}
+.smbar.thin{height:8px;margin:6px 0 10px}
+.smbar span{min-width:3px}
+.smtiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.smt,.cst{background:var(--surface);border:1px solid var(--hair);border-radius:10px;padding:9px 11px;min-width:0}
+.smh{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.smh i{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
+.smv{font-size:20px;font-weight:800;color:var(--ink);letter-spacing:-.01em;font-variant-numeric:tabular-nums;margin:2px 0 0}
+.sms{font-size:11.5px;color:var(--mute)} .sms b{color:var(--ink-2)}
+.smc{display:flex;align-items:center;gap:5px;margin-top:4px;min-height:18px;flex-wrap:wrap}
+.smc .pill{font-size:10.5px;padding:0 6px}
+.smc .vs{font-size:10.5px;color:var(--faint)}
+.smplat{margin-top:12px;padding-top:10px;border-top:1px solid var(--hair)}
+.smph{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--mute)}
+.smph b{font-size:13px;color:var(--ink);letter-spacing:0;font-variant-numeric:tabular-nums}
+.smprows{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.smpr{min-width:0}
+.smpv{display:flex;align-items:baseline;gap:6px;margin-top:2px}
+.smpv b{font-size:16px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.smpv em{font-style:normal;font-size:11.5px;color:var(--mute)}
+.cstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.csl{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--mute);line-height:1.3}
+.csv{font-size:20px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;margin-top:2px}
+.cblists{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:12px;padding-top:10px;border-top:1px solid var(--hair)}
+.cblh{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);margin-bottom:6px}
+.cblh em{font-style:normal;font-weight:500;color:var(--faint);text-transform:none;letter-spacing:0}
+.cblh .dot{width:8px;height:8px;border-radius:50%} .cblh .dot.pos{background:var(--good)} .cblh .dot.neg{background:var(--bad)}
+.cbl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.cbl li{display:grid;grid-template-columns:18px minmax(0,1fr) minmax(28px,64px) 48px;align-items:center;gap:7px;font-size:12.5px}
+@media (max-width:1500px){ .cbl li{grid-template-columns:18px minmax(0,1fr) 36px 46px} }
+.cbl .bi{width:18px;height:18px;border-radius:6px;background:var(--hair);color:var(--mute);font-size:10.5px;font-weight:700;display:grid;place-items:center}
+.cbl .bnm{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cbl .bbar{height:6px;background:var(--hair);border-radius:99px;overflow:hidden}
+.cbl .bbar i{display:block;height:100%;border-radius:99px} .cbl .bbar i.pos{background:var(--good)} .cbl .bbar i.neg{background:var(--bad)}
+.cbl .bv{text-align:right;font-weight:700;font-variant-numeric:tabular-nums} .cbl .bv.pos{color:var(--good)} .cbl .bv.neg{color:var(--bad)}
+#overview .headline{margin-top:14px}
+@media (max-width:1100px){ .cstats{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:700px){ .smtiles,.smprows{grid-template-columns:1fr 1fr 1fr} .cblists{grid-template-columns:1fr} }
+/* โหมดพรีเซนต์ */
+body.present .smbar{height:16px} body.present .smbar.thin{height:10px}
+body.present .smh,body.present .csl{font-size:14px}
+body.present .smv,body.present .csv{font-size:28px}
+body.present .sms{font-size:13.5px} body.present .smpv b{font-size:22px} body.present .smpv em{font-size:14px}
+body.present .smc .pill{font-size:13px;padding:1px 8px} body.present .smc .vs{font-size:13px}
+body.present .smph{font-size:13px} body.present .smph b{font-size:17px} body.present .ph .phv{font-size:16px}
+body.present .smt,body.present .cst{padding:12px 14px}
+body.present .cblh{font-size:13px}
+body.present .cbl li{font-size:16px;grid-template-columns:24px minmax(0,1fr) 110px 70px;gap:12px}
+body.present .cbl .bi{width:24px;height:24px;font-size:13px}
+body.present .cbl .bbar{height:9px}
+body.present #overview .headline{margin-top:0}
 </style>
 </head>
 <body>
@@ -2165,33 +2219,60 @@ function syncPnl(){
   const last=Math.max(0,...K.map((k,i)=>actual[k]?i+1:0));
   EXTRA.pnlFull=Object.assign({},B,{actual,branch,months:K.slice(0,last),__merged:1});
 }
-/* แถวล่างของหน้า Monthly KPI: แนวโน้มยอดขาย + สัดส่วนที่มาของยอด (ทำให้สไลด์ไม่โล่ง) */
+/* แถวล่างของหน้า Monthly KPI: Sales Mix (ช่องทาง + แพลตฟอร์ม) และ Customers & Branches */
 function ovBottom(m,rows,ch,d){
-  const t=d.trans, M2=v=>(v/1e6).toFixed(2)+'M';
-  const seg=(name,v,color)=>{ if(!v) return ''; const p=v/ch.sales*100;
-    return `<span data-tip="${name}\n${M2(v)} · ${p.toFixed(1)}% ของยอดขาย" style="flex:${v};background:${color}">${p>=7?`<b>${name}</b>${p.toFixed(1)}%`:''}</span>`; };
-  const prow=(name,v,color)=>{ const p=ch.deli?v/ch.deli*100:0;
-    return `<div class="mrow" data-tip="${name}\n${M2(v)} · ${p.toFixed(1)}% ของ Delivery"><span class="mlab">${name}</span><span class="mbar"><i style="width:${p.toFixed(1)}%;background:${color}"></i></span>
-      <span class="mval">${M2(v)}<em>${p.toFixed(1)}%</em></span></div>`; };
-  const mix = ch ? `<div class="mixbar">
-      ${seg('Dine in',ch.dine,'var(--chart-1)')}${seg('Takeaway',ch.take,'#93C5FD')}${seg('Delivery',ch.deli,'var(--chart-2)')}
-    </div>
-    <div class="mnums"><span><b>${M2(ch.dine)}</b> Dine in</span><span><b>${M2(ch.take)}</b> Takeaway</span><span class="grey"><b>${M2(ch.deli)}</b> Delivery</span></div>
-    <div class="mrows">${prow('Grab',ch.grab,'var(--chart-1)')}${prow('Line Man',ch.lm,'var(--chart-2)')}${prow('Shopee Food',ch.sp,'var(--chart-3)')}</div>`
-    : '<div class="empty">ยังไม่มียอดแยกช่องทางของเดือนนี้</div>';
-  const stats = t ? `<div class="ovstats">
-      <span><b>${fmtN(t.trans[1])}</b> บิล</span><span><b>฿${t.ticket[1]}</b> เช็คเฉลี่ย</span>
-      ${t.customer?`<span><b>${fmtN(t.customer[1])}</b> ลูกค้า</span>`:''}
-      ${t.custAvg?`<span><b>${(+t.custAvg[1]).toFixed(2)}</b> ลูกค้า/บิล</span>`:''}</div>` : '';
-  /* สาขาเด่น / ต้องดูแล ของเดือนนี้ (ดูจากยอดขายเทียบเดือนก่อน) */
+  const t=d.trans, M2=v=>(v/1e6).toFixed(2)+'M', prevTH=m>1?MONTH_TH[m-2]:'';
+  const chP=chanSum(m-1);
+  const vsPrev=(prev,now)=>(prev&&now!=null)?`${pill(pct(prev,now))}<span class="vs">vs ${prevTH}</span>`:'';
+
+  /* ---- Sales Mix ---- */
+  let mix='<div class="empty">ยังไม่มียอดแยกช่องทางของเดือนนี้</div>';
+  if(ch){
+    const C=[{k:'dine',n:'Dine in',c:'#2563EB'},{k:'take',n:'Takeaway',c:'#93C5FD'},{k:'deli',n:'Delivery',c:'#F59E0B'}];
+    const share=k=>(ch[k]/ch.sales*100).toFixed(1)+'%';
+    const tiles=C.map(o=>`<div class="smt" data-tip="${o.n}\n${M2(ch[o.k])} · ${share(o.k)} ของยอดขาย${chP?'\n'+MONTH_TH[m-2]+' '+M2(chP[o.k]):''}">
+        <div class="smh"><i style="background:${o.c}"></i>${o.n}</div>
+        <div class="smv">${M2(ch[o.k])}</div>
+        <div class="sms"><b>${share(o.k)}</b> ของยอดขาย</div>
+        <div class="smc">${chP?vsPrev(chP[o.k],ch[o.k]):''}</div></div>`).join('');
+    const bar=`<div class="smbar">${C.map(o=>`<span style="flex:${ch[o.k]};background:${o.c}" data-tip="${o.n}\n${M2(ch[o.k])} · ${share(o.k)} ของยอดขาย"></span>`).join('')}</div>`;
+    const PL=[{k:'grab',n:'Grab',c:'#D97706'},{k:'lm',n:'Line Man',c:'#F59E0B'},{k:'sp',n:'Shopee Food',c:'#FCD34D'}];
+    const ps=k=>ch.deli?(ch[k]/ch.deli*100).toFixed(1)+'%':'—';
+    const plat=`<div class="smplat">
+        <div class="smph"><span>Delivery by platform</span><b>${M2(ch.deli)}</b></div>
+        <div class="smbar thin">${PL.map(o=>`<span style="flex:${ch[o.k]||0.0001};background:${o.c}" data-tip="${o.n}\n${M2(ch[o.k])} · ${ps(o.k)} ของ Delivery"></span>`).join('')}</div>
+        <div class="smprows">${PL.map(o=>`<div class="smpr" data-tip="${o.n}\n${M2(ch[o.k])} · ${ps(o.k)} ของ Delivery${chP?'\n'+MONTH_TH[m-2]+' '+M2(chP[o.k]):''}">
+            <div class="smh"><i style="background:${o.c}"></i>${o.n}</div>
+            <div class="smpv"><b>${M2(ch[o.k])}</b><em>${ps(o.k)}</em></div>
+            <div class="smc">${chP?vsPrev(chP[o.k],ch[o.k]):''}</div></div>`).join('')}</div></div>`;
+    mix=bar+`<div class="smtiles">${tiles}</div>`+plat;
+  }
+
+  /* ---- Customers ---- */
+  const cst=(l,now,prev,f)=>`<div class="cst" data-tip="${l}\n${label(m)} ${f(now)}${prev!=null?'\n'+MONTH_TH[m-2]+' '+f(prev):''}">
+      <div class="csl">${l}</div><div class="csv">${f(now)}</div><div class="smc">${prev!=null?vsPrev(prev,now):''}</div></div>`;
+  const stats = t ? `<div class="cstats">
+      ${cst('Bills',t.trans[1],t.trans[0],v=>fmtN(v))}
+      ${cst('Avg ticket',t.ticket[1],t.ticket[0],v=>'฿'+fmtN(Math.round(v)))}
+      ${t.customer?cst('Customers',t.customer[1],t.customer[0],v=>fmtN(v)):''}
+      ${t.custAvg?cst('Customers / bill',+t.custAvg[1],+t.custAvg[0],v=>(+v).toFixed(2)):''}</div>` : '';
+
+  /* ---- Branches: โตสูงสุด / ต้องดูแล เทียบเดือนก่อน ---- */
   const br=filtZone((d.branchRows||[]).filter(b=>b.sales>0&&b.mom!=null)).slice().sort((a,b)=>b.mom-a.mom);
-  const liB=(arr,cl)=>arr.map(b=>`<li><span class="bn">${b.name}</span><span class="bv ${cl}">${sgn(b.mom)}</span></li>`).join('');
-  const top = br.length>=6 ? `<div class="ovtop2"><div><div class="ph2">โตสูงสุด</div><ol class="ovlist">${liB(br.slice(0,3),'pos')}</ol></div>
-      <div><div class="ph2">ต้องดูแล</div><ol class="ovlist">${liB(br.slice(-3).reverse(),'neg')}</ol></div></div>` : '';
-  /* ไม่ใส่กราฟยอดขาย/%SSSG ที่นี่ เพราะมีเป็นหัวข้อของตัวเองอยู่แล้ว */
+  let lists='';
+  if(br.length>=6){
+    const top=br.slice(0,3), bot=br.slice(-3).reverse(), mx=Math.max(...top.concat(bot).map(b=>Math.abs(b.mom)),1);
+    const row=(b,i,cl)=>`<li data-tip="${b.code} ${b.name}\nยอดขาย ${bahtM(b.sales/1e6)} บาท\nเทียบ ${prevTH} ${sgn(b.mom)}">
+        <span class="bi">${i+1}</span><span class="bnm">${b.name}</span>
+        <span class="bbar"><i class="${cl}" style="width:${(Math.abs(b.mom)/mx*100).toFixed(1)}%"></i></span>
+        <span class="bv ${cl}">${sgn(b.mom)}</span></li>`;
+    lists=`<div class="cblists">
+      <div><div class="cblh"><span class="dot pos"></span>Top growth <em>vs ${prevTH}</em></div><ol class="cbl">${top.map((b,i)=>row(b,i,'pos')).join('')}</ol></div>
+      <div><div class="cblh"><span class="dot neg"></span>Needs attention <em>vs ${prevTH}</em></div><ol class="cbl">${bot.map((b,i)=>row(b,i,'neg')).join('')}</ol></div></div>`;
+  }
   return `<div class="ovbottom">
-    <div class="panel"><div class="ph">Sales Mix · ${label(m)}</div>${mix}</div>
-    <div class="panel"><div class="ph">Customers & Branches · ${label(m)}</div>${stats}${top}</div>
+    <div class="panel"><div class="ph">Sales Mix · ${label(m)}${ch?`<span class="phv">${bahtM(ch.sales/1e6)} บาท</span>`:''}</div>${mix}</div>
+    <div class="panel"><div class="ph">Customers & Branches · ${label(m)}</div>${stats}${lists}</div>
   </div>`;
 }
 /* ยอดขายแยกช่องทางของเดือนหนึ่ง รวมจากรายสาขา (Dine in · Takeaway · Delivery) */
@@ -2248,7 +2329,6 @@ function build(m){
     /* จำนวนสาขาปีก่อน: ใช้ของแบบฟอร์มก่อน ถ้าไม่มีนับจากยอดรายสาขา 2 ปี */
     const storesLy = (d.stores&&d.stores.ly) || ((EXTRA.branchYears||[]).filter(b=>b.m&&b.m[m]&&b.m[m].ly>0).length||null);
     out.push(sec('overview','Monthly KPI — '+MONTH_EN_FULL[m-1]+' '+YEAR+' · Santa Fe',subLine,`
-      <div class="headline"><span class="hlnum">฿${cur.sales.toFixed(1)}M</span><span class="hltxt">${hlBits.join(' · ')}</span></div>
       ${(()=>{
         const M1=v=>v==null?'—':v.toFixed(1)+'M', M2=v=>v==null?'—':v.toFixed(2)+'M';
         /* แท่งเทียบแนวนอน 2 แถว: แถวที่ dim = ค่าอ้างอิง (ปีก่อน/เดือนก่อน) สีเทา */
@@ -2298,7 +2378,9 @@ function build(m){
           f:d.stores&&d.stores.sameStore?`${d.stores.sameStore} สาขา Same Store`:'เทียบเดือนเดียวกันปีก่อน'});
         return `<div class="kgrid">${c1}${c2}${c3}${c4}${c5}</div>`;
       })()}
-      ${ovBottom(m,rows,ch,d)}`));
+      ${ovBottom(m,rows,ch,d)}
+      <div class="headline"><span class="hlnum">฿${cur.sales.toFixed(1)}M</span><span class="hltxt">${hlBits.join(' · ')}</span></div>
+      `));
   }
 
   // 2 monthly
