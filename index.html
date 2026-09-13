@@ -859,7 +859,7 @@ body.present #overview .k .ic{width:34px;height:34px;font-size:17px;right:12px;t
 body.present #overview .split b{font-size:19px} body.present #overview .split i{font-size:12px}
 body.present #overview .split{gap:10px;margin:4px 0 6px}
 /* ---- หน้า Monthly KPI: แถวล่าง ---- */
-.ovbottom{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px;margin-top:14px}
+.ovbottom{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
 .ovbottom .panel{margin:0;display:flex;flex-direction:column;justify-content:center}
 .mixbar{display:flex;height:34px;border-radius:9px;overflow:hidden;gap:2px;margin:2px 0 10px}
 .mixbar span{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;
@@ -875,7 +875,7 @@ body.present #overview .split{gap:10px;margin:4px 0 6px}
 .mbar i{display:block;height:100%;border-radius:99px}
 .mval{font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
 .mval em{font-style:normal;font-size:11px;color:var(--mute);margin-left:6px}
-.ovstats{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;padding-top:10px;border-top:1px solid var(--hair);font-size:12px;color:var(--mute)}
+.ovstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;font-size:12px;color:var(--mute)}
 .ovstats b{display:block;font-size:17px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
 /* สาขาเด่น/ต้องดูแล ในหน้าแรก */
 .ph2{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mute);margin:2px 0 5px}
@@ -2077,11 +2077,10 @@ function ovBottom(m,rows,ch,d){
   const liB=(arr,cl)=>arr.map(b=>`<li><span class="bn">${b.name}</span><span class="bv ${cl}">${sgn(b.mom)}</span></li>`).join('');
   const top = br.length>=6 ? `<div class="ovtop2"><div><div class="ph2">โตสูงสุด</div><ol class="ovlist">${liB(br.slice(0,3),'pos')}</ol></div>
       <div><div class="ph2">ต้องดูแล</div><ol class="ovlist">${liB(br.slice(-3).reverse(),'neg')}</ol></div></div>` : '';
-  const sg = rows.filter(r=>r.sssg!=null).length>1
-    ? `<div class="ph2" style="margin-top:10px">%SSSG รายเดือน</div>${sssgBars(rows)}` : '';
+  /* ไม่ใส่กราฟยอดขาย/%SSSG ที่นี่ เพราะมีเป็นหัวข้อของตัวเองอยู่แล้ว */
   return `<div class="ovbottom">
-    <div class="panel"><div class="ph">Sales vs Budget vs Last Year · Jan to ${MONTH_EN[m-1]}</div>${lineChart(rows)}${sg}</div>
-    <div class="panel"><div class="ph">Sales Mix · ${label(m)}</div>${mix}${stats}${top}</div>
+    <div class="panel"><div class="ph">Sales Mix · ${label(m)}</div>${mix}</div>
+    <div class="panel"><div class="ph">Customers & Branches · ${label(m)}</div>${stats}${top}</div>
   </div>`;
 }
 /* ยอดขายแยกช่องทางของเดือนหนึ่ง รวมจากรายสาขา (ทานในร้าน · ห่อกลับ · เดลิเวอรี่) */
