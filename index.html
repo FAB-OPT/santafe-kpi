@@ -924,7 +924,10 @@ body.present #overview .headline{flex:0 0 auto}
 .ksep{width:1px;height:12px;background:var(--line);margin:0 4px}
 /* แท่งเทียบ */
 .kbars{display:flex;flex-direction:column;gap:5px}
-.kb{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:7px;font-size:11px}
+.kb{display:grid;grid-template-columns:auto auto;grid-template-areas:'l v' 't t';justify-content:space-between;align-items:center;gap:2px 8px;font-size:11px}
+.kbl{grid-area:l} .kbv{grid-area:v} .kbt{grid-area:t}
+.kd{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:-2px}
+.kd.pos{color:var(--good)} .kd.neg{color:var(--bad)} .kd span{font-weight:500;color:var(--mute)}
 .kbl{color:var(--ink-2);font-weight:600}
 .kbt{height:8px;background:var(--hair);border-radius:99px;overflow:hidden}
 .kbt i{display:block;height:100%;background:var(--accent);border-radius:99px}
@@ -954,13 +957,18 @@ body.present .kc{padding:18px 20px 16px;gap:10px}
 body.present .kl{font-size:15px} body.present .kp{font-size:13px;padding:2px 10px}
 body.present .kv{font-size:46px} body.present .kv small{font-size:22px}
 body.present .kx{min-height:64px}
-body.present .kb{font-size:14px;grid-template-columns:48px minmax(0,1fr) auto;gap:10px}
+body.present .kb{font-size:14px;gap:3px 10px}
+body.present .kd{font-size:17px}
 body.present .kbt{height:11px}
 body.present .kstack{height:14px}
 body.present .klegend{font-size:14px} body.present .klegend b{font-size:19px}
 body.present .kpt{height:14px} body.present .kpl{font-size:14px}
 body.present .kf{font-size:14px;padding-top:10px} body.present .kf .pill{font-size:13px}
 
+/* คำอธิบายเส้นของกราฟยอดขายรายเดือน */
+.lcleg i.ln{width:18px;height:3px;border-radius:2px;vertical-align:middle}
+.lcleg i.dash{background:repeating-linear-gradient(90deg,#94A3B8 0 6px,transparent 6px 10px)}
+.lcleg .hint{margin-left:auto}
 </style>
 </head>
 <body>
@@ -1091,21 +1099,42 @@ const label = m => MONTH_TH[m-1]+' '+YEAR;
 
 /* ========================= charts (SVG) ========================= */
 function lineChart(rows){
-  const W=1180,H=250,L=52,R=18,T=14,B=36;
+  const W=1180,H=290,L=56,R=26,T=34,B=44, id='lc'+(lineChart.n=(lineChart.n||0)+1);
   const ys=rows.flatMap(r=>[r.sales,r.ly,r.budget]).filter(v=>v!=null);
+  if(!ys.length) return '';
   const lo=Math.floor(Math.min(...ys)/5)*5-5, hi=Math.ceil(Math.max(...ys)/5)*5+5;
   const x=i=>L+(W-L-R)*(rows.length===1?0.5:i/(rows.length-1));
   const y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
-  const path=(k,color,dash)=>{ const pts=rows.map((r,i)=>({i,v:r[k]})).filter(p=>p.v!=null);
-    if(!pts.length) return '';
-    return `<path d="${pts.map((p,n)=>(n?'L':'M')+x(p.i)+','+y(p.v)).join(' ')}" fill="none" stroke="${color}" stroke-width="2.5" ${dash?'stroke-dasharray="6 5"':''} stroke-linejoin="round"/>`+
-      pts.map(p=>`<circle cx="${x(p.i)}" cy="${y(p.v)}" r="4" fill="var(--card)" stroke="${color}" stroke-width="2.5"/>`).join(''); };
-  let grid='';
-  for(let v=lo;v<=hi;v+=5) grid+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-8}" y="${y(v)+4}" font-size="11" fill="var(--mute)" text-anchor="end">${v}M</text>`;
-  const xl=rows.map((r,i)=>`<text x="${x(i)}" y="${H-12}" font-size="12" fill="var(--mute)" text-anchor="middle">${MONTH_TH[r.m-1]}</text>`).join('');
-  const vals=rows.filter(r=>r.sales!=null).map(r=>{const i=rows.indexOf(r);return `<text x="${x(i)}" y="${y(r.sales)-10}" font-size="11.5" font-weight="600" fill="var(--accent-ink)" text-anchor="middle">${r.sales.toFixed(1)}</text>`;}).join('');
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="ยอดขายรายเดือน">${grid}${path('budget','var(--chart-3)',true)}${path('ly','var(--chart-2)')}${path('sales','var(--chart-1)')}${vals}${xl}</svg>
-  <div class="legend"><span><i style="background:var(--chart-1)"></i>ยอดขาย 2026</span><span><i style="background:var(--chart-2)"></i>ปีก่อน 2025</span><span><i style="background:var(--chart-3)"></i>Budget 2026</span></div>`;
+  /* เส้นโค้งนุ่มผ่านทุกจุด (Catmull-Rom) */
+  const curve=pts=>{ if(pts.length<2) return pts.length?`M${pts[0][0]},${pts[0][1]}`:'';
+    let d=`M${pts[0][0]},${pts[0][1]}`;
+    for(let i=0;i<pts.length-1;i++){ const p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||p2, k=.17;
+      d+=` C${p1[0]+(p2[0]-p0[0])*k},${p1[1]+(p2[1]-p0[1])*k} ${p2[0]-(p3[0]-p1[0])*k},${p2[1]-(p3[1]-p1[1])*k} ${p2[0]},${p2[1]}`; }
+    return d; };
+  const ptsOf=k=>rows.map((r,i)=>r[k]==null?null:[x(i),y(r[k])]).filter(Boolean);
+  const S=ptsOf('sales'), LY=ptsOf('ly'), BU=ptsOf('budget');
+  let g=`<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2563EB" stop-opacity=".20"/><stop offset="1" stop-color="#2563EB" stop-opacity="0"/></linearGradient></defs>`;
+  for(let v=lo;v<=hi;v+=5) g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#EEF2F6" ${v===lo?'':'stroke-dasharray="3 5"'}/>
+    <text x="${L-12}" y="${y(v)+4}" font-size="11.5" fill="#94A3B8" text-anchor="end">${v}M</text>`;
+  const ci=rows.length-1;
+  g+=`<line x1="${x(ci)}" x2="${x(ci)}" y1="${T-10}" y2="${H-B}" stroke="#CBD5E1" stroke-dasharray="4 4"/>`;
+  if(S.length>1) g+=`<path d="${curve(S)} L${S[S.length-1][0]},${H-B} L${S[0][0]},${H-B} Z" fill="url(#${id})"/>`;
+  if(BU.length>1) g+=`<path d="${curve(BU)}" fill="none" stroke="#94A3B8" stroke-width="2" stroke-dasharray="7 6" stroke-linecap="round"/>`;
+  if(LY.length>1) g+=`<path d="${curve(LY)}" fill="none" stroke="#F59E0B" stroke-width="2.4" stroke-linecap="round" opacity=".9"/>`;
+  if(S.length>1) g+=`<path d="${curve(S)}" fill="none" stroke="#2563EB" stroke-width="3.4" stroke-linecap="round"/>`;
+  rows.forEach((r,i)=>{
+    const tip=`${MONTH_TH[r.m-1]} · Sales ${r.sales!=null?r.sales.toFixed(1)+'M':'—'} · Last year ${r.ly!=null?r.ly.toFixed(1)+'M':'—'} · Budget ${r.budget!=null?r.budget.toFixed(1)+'M':'—'}`;
+    if(r.budget!=null) g+=`<circle cx="${x(i)}" cy="${y(r.budget)}" r="3" fill="#94A3B8"/>`;
+    if(r.ly!=null) g+=`<circle cx="${x(i)}" cy="${y(r.ly)}" r="3.4" fill="#F59E0B"/>`;
+    if(r.sales!=null){ const now=i===ci, above=[r.ly,r.budget].some(v=>v!=null&&v>r.sales&&y(v)>y(r.sales)-26);
+      g+=`<g><title>${tip}</title>${now?`<circle cx="${x(i)}" cy="${y(r.sales)}" r="11" fill="#2563EB" opacity=".15"/>`:''}
+        <circle cx="${x(i)}" cy="${y(r.sales)}" r="${now?6:4.6}" fill="${now?'#2563EB':'#fff'}" stroke="#2563EB" stroke-width="2.6"/>
+        <text x="${x(i)}" y="${above?y(r.sales)+24:y(r.sales)-13}" font-size="${now?13.5:12}" font-weight="${now?800:700}" fill="#1D4ED8" text-anchor="middle"
+          stroke="#fff" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${r.sales.toFixed(1)}</text></g>`; }
+    g+=`<text x="${x(i)}" y="${H-16}" font-size="12.5" fill="${i===ci?'#0F172A':'#64748B'}" font-weight="${i===ci?700:400}" text-anchor="middle">${MONTH_TH[r.m-1]}</text>`;
+  });
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Sales vs last year vs budget">${g}</svg>
+  <div class="legend lcleg"><span><i class="ln" style="background:#2563EB"></i>Sales ${YEAR}</span><span><i class="ln" style="background:#F59E0B"></i>Last year ${YEAR-1}</span><span><i class="ln dash"></i>Budget ${YEAR}</span><span class="hint">ชี้ที่จุดเพื่อดูตัวเลขทั้ง 3 เส้น</span></div>`;
 }
 function barPairs(items,unit='M'){ // items: [{name,prev,now}]
   const W=1180,H=215,L=44,R=12,T=18,B=34; const max=Math.max(...items.flatMap(i=>[i.prev,i.now]))*1.15;
@@ -1686,7 +1715,7 @@ const BSL={sort:'sales'};
 function branchSalesSection(m){
   const rows=filtZone((DETAIL[m]||{}).branchRows||[]).filter(b=>b.sales>0);
   if(!rows.length) return null;
-  const has=rows.some(b=>b.dine!=null||b.take!=null);   // ไฟล์บางเดือนไม่มียอดแยกทานในร้าน/ห่อกลับ
+  const has=rows.some(b=>b.dine!=null||b.take!=null);   // ไฟล์บางเดือนไม่มียอดแยกDine in/Takeaway
   const zoneOf=c=>(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone)||'';
   const T=chanSum(m,rows);
   const pc=(v,t)=>(v==null||!t)?'':((v/t*100).toFixed(1)+'%');
@@ -1695,16 +1724,16 @@ function branchSalesSection(m){
   const list=rows.slice().sort(S[BSL.sort]||S.sales);
   const bar=`<div class="plbar"><label>เรียงตาม <select id="bsSort">
       <option value="sales" ${BSL.sort==='sales'?'selected':''}>ยอดขายรวม</option>
-      <option value="dine" ${BSL.sort==='dine'?'selected':''}>ทานในร้าน</option>
-      <option value="take" ${BSL.sort==='take'?'selected':''}>ห่อกลับ</option>
-      <option value="deli" ${BSL.sort==='deli'?'selected':''}>เดลิเวอรี่</option>
-      <option value="delipc" ${BSL.sort==='delipc'?'selected':''}>%เดลิเวอรี่</option></select></label>
+      <option value="dine" ${BSL.sort==='dine'?'selected':''}>Dine in</option>
+      <option value="take" ${BSL.sort==='take'?'selected':''}>Takeaway</option>
+      <option value="deli" ${BSL.sort==='deli'?'selected':''}>Delivery</option>
+      <option value="delipc" ${BSL.sort==='delipc'?'selected':''}>%Delivery</option></select></label>
     <span class="hint">ยอดจากแบบฟอร์มส่งยอดขาย หน่วยบาท · คลิกแถวเพื่อดูรายละเอียดสาขานั้น</span></div>`;
   const strip=T?`<div class="strip">
     <div class="st"><div class="l">ยอดขายรวม ${label(m)}</div><div class="v">${baht(T.sales)}</div><div class="s">${T.n} สาขา</div></div>
-    ${has?`<div class="st"><div class="l">ทานในร้าน</div><div class="v">${baht(T.dine)}</div><div class="s">${pc(T.dine,T.sales)} ของยอดขาย</div></div>
-    <div class="st"><div class="l">ห่อกลับ</div><div class="v">${baht(T.take)}</div><div class="s">${pc(T.take,T.sales)} ของยอดขาย</div></div>`:''}
-    <div class="st"><div class="l">เดลิเวอรี่</div><div class="v">${baht(T.deli)}</div><div class="s">${pc(T.deli,T.sales)} · Grab ${baht(T.grab)} · LM ${baht(T.lm)} · Shopee ${baht(T.sp)}</div></div>
+    ${has?`<div class="st"><div class="l">Dine in</div><div class="v">${baht(T.dine)}</div><div class="s">${pc(T.dine,T.sales)} ของยอดขาย</div></div>
+    <div class="st"><div class="l">Takeaway</div><div class="v">${baht(T.take)}</div><div class="s">${pc(T.take,T.sales)} ของยอดขาย</div></div>`:''}
+    <div class="st"><div class="l">Delivery</div><div class="v">${baht(T.deli)}</div><div class="s">${pc(T.deli,T.sales)} · Grab ${baht(T.grab)} · LM ${baht(T.lm)} · Shopee ${baht(T.sp)}</div></div>
   </div>`:'';
   const row=b=>`<tr class="clk" data-ssbr="${b.code}"><td>${b.code} ${b.name}<span class="tiny">${zoneOf(b.code)}</span></td>
     <td class="n"><b>${baht(b.sales)}</b></td>
@@ -1712,15 +1741,15 @@ function branchSalesSection(m){
     <td class="n">${baht(b.take)}<span class="tiny">${pc(b.take,b.sales)}</span></td>`:''}
     <td class="n">${baht(b.grab)}</td><td class="n">${baht(b.lm)}</td><td class="n">${baht(b.sp)}</td>
     <td class="n"><b>${baht(b.deli)}</b><span class="tiny">${pc(b.deli,b.sales)}</span></td></tr>`;
-  const tbl=`<div class="scroll"><table><tr><th>สาขา</th><th class="n">ยอดขายรวม</th>${has?'<th class="n">ทานในร้าน</th><th class="n">ห่อกลับ</th>':''}
-      <th class="n">Grab</th><th class="n">Line Man</th><th class="n">Shopee</th><th class="n">รวมเดลิเวอรี่</th></tr>
+  const tbl=`<div class="scroll"><table><tr><th>สาขา</th><th class="n">ยอดขายรวม</th>${has?'<th class="n">Dine in</th><th class="n">Takeaway</th>':''}
+      <th class="n">Grab</th><th class="n">Line Man</th><th class="n">Shopee</th><th class="n">Total Delivery</th></tr>
     ${T?`<tr class="hi"><td><b>รวมทุกสาขา</b><span class="tiny">${T.n} สาขา</span></td><td class="n"><b>${baht(T.sales)}</b></td>
       ${has?`<td class="n">${baht(T.dine)}<span class="tiny">${pc(T.dine,T.sales)}</span></td><td class="n">${baht(T.take)}<span class="tiny">${pc(T.take,T.sales)}</span></td>`:''}
       <td class="n">${baht(T.grab)}</td><td class="n">${baht(T.lm)}</td><td class="n">${baht(T.sp)}</td>
       <td class="n"><b>${baht(T.deli)}</b><span class="tiny">${pc(T.deli,T.sales)}</span></td></tr>`:''}
     ${list.map(row).join('')}</table></div>`;
   return sec('brsales','Sales by Branch — dine in, take away, delivery',
-    `${label(m)} · ${rows.length} สาขา${FILT.zone!=='all'?' · โซน '+FILT.zone:''}${has?'':' · ไฟล์เดือนนี้ยังไม่มียอดแยกทานในร้าน/ห่อกลับ'}`,
+    `${label(m)} · ${rows.length} สาขา${FILT.zone!=='all'?' · โซน '+FILT.zone:''}${has?'':' · ไฟล์เดือนนี้ยังไม่มียอดแยกDine in/Takeaway'}`,
     bar+strip+tbl);
 }
 /* ========================= สุขภาพกลุ่มห้าง ========================= */
@@ -2118,9 +2147,9 @@ function ovBottom(m,rows,ch,d){
     return `<div class="mrow"><span class="mlab">${name}</span><span class="mbar"><i style="width:${p.toFixed(1)}%;background:${color}"></i></span>
       <span class="mval">${M2(v)}<em>${p.toFixed(1)}%</em></span></div>`; };
   const mix = ch ? `<div class="mixbar">
-      ${seg('ทานในร้าน',ch.dine,'var(--chart-1)')}${seg('ห่อกลับ',ch.take,'#93C5FD')}${seg('เดลิเวอรี่',ch.deli,'var(--chart-2)')}
+      ${seg('Dine in',ch.dine,'var(--chart-1)')}${seg('Takeaway',ch.take,'#93C5FD')}${seg('Delivery',ch.deli,'var(--chart-2)')}
     </div>
-    <div class="mnums"><span><b>${M2(ch.dine+ch.take)}</b> ทานในร้าน + ห่อกลับ</span><span class="grey"><b>${M2(ch.deli)}</b> เดลิเวอรี่</span></div>
+    <div class="mnums"><span><b>${M2(ch.dine+ch.take)}</b> Dine in + Takeaway</span><span class="grey"><b>${M2(ch.deli)}</b> Delivery</span></div>
     <div class="mrows">${prow('Grab',ch.grab,'var(--chart-1)')}${prow('Line Man',ch.lm,'var(--chart-2)')}${prow('Shopee Food',ch.sp,'var(--chart-3)')}</div>`
     : '<div class="empty">ยังไม่มียอดแยกช่องทางของเดือนนี้</div>';
   const stats = t ? `<div class="ovstats">
@@ -2138,7 +2167,7 @@ function ovBottom(m,rows,ch,d){
     <div class="panel"><div class="ph">Customers & Branches · ${label(m)}</div>${stats}${top}</div>
   </div>`;
 }
-/* ยอดขายแยกช่องทางของเดือนหนึ่ง รวมจากรายสาขา (ทานในร้าน · ห่อกลับ · เดลิเวอรี่) */
+/* ยอดขายแยกช่องทางของเดือนหนึ่ง รวมจากรายสาขา (Dine in · Takeaway · Delivery) */
 function chanSum(mm,list){
   const rows=list||((DETAIL[mm]||{}).branchRows||[]);
   if(!rows.length) return null;
@@ -2177,13 +2206,13 @@ function build(m){
       <div class="l">${l}</div><div class="v ${cl||''}">${v}</div>${extra||''}<div class="s">${sub||''}</div></div></div>`;
     const M1=v=>v==null?'—':(v/1e6).toFixed(2)+'M';
     const ch=chanSum(m), chP=chanSum(m-1);
-    /* ยอดขายแยกช่องทาง: ทานในร้าน+ห่อกลับ เป็นก้อนเดียว · เดลิเวอรี่ แยกอีกก้อน (สีเทา) */
+    /* ยอดขายแยกช่องทาง: Dine in+Takeaway เป็นก้อนเดียว · Delivery แยกอีกก้อน (สีเทา) */
     const dl0=(d.delivery&&(d.delivery.platforms||[]).reduce((x,p)=>x+p.now,0))||null;
     const inStore = (ch&&ch.store>0)? ch.store/1e6 : (dl0!=null? cur.sales-dl0 : null);
     const deliv   = ch? ch.deli/1e6  : dl0;
     const splitRow = (inStore==null&&deliv==null) ? '' : `<div class="split">
-      <span><b>${inStore==null?'—':inStore.toFixed(2)+'M'}</b><i>ทานในร้าน + ห่อกลับ</i></span>
-      <span class="grey"><b>${deliv==null?'—':deliv.toFixed(2)+'M'}</b><i>เดลิเวอรี่${deliv!=null&&cur.sales?' · '+(deliv/cur.sales*100).toFixed(1)+'%':''}</i></span></div>`;
+      <span><b>${inStore==null?'—':inStore.toFixed(2)+'M'}</b><i>Dine in + Takeaway</i></span>
+      <span class="grey"><b>${deliv==null?'—':deliv.toFixed(2)+'M'}</b><i>Delivery${deliv!=null&&cur.sales?' · '+(deliv/cur.sales*100).toFixed(1)+'%':''}</i></span></div>`;
     const cmpLine = [
       cur.ly!=null?`ปีก่อน ${cur.ly.toFixed(1)}M <b class="${cls(yoy)}">${sgn(yoy)}</b>`:'',
       cur.mom!=null?`เดือนก่อน ${m>1&&MONTHLY.find(r=>r.m===m-1)&&MONTHLY.find(r=>r.m===m-1).sales!=null?MONTHLY.find(r=>r.m===m-1).sales.toFixed(1)+'M ':''}<b class="${cls(cur.mom)}">${sgn(cur.mom)}</b>`:''
@@ -2202,6 +2231,7 @@ function build(m){
         const card=(o)=>`<div class="kc${o.wide?' wide':''}">
           <div class="kh"><span class="kl">${o.l}</span><span class="kp">${o.p}</span></div>
           <div class="kv ${o.cl||''}">${o.v}${o.u?`<small>${o.u}</small>`:''}</div>
+          ${o.d?`<div class="kd ${o.d.v>=0?'pos':'neg'}">${o.d.v>=0?'▲ +':'▼ −'}${Math.abs(o.d.v).toFixed(2)}M <span>${o.d.t}</span></div>`:''}
           <div class="kx">${o.x||''}</div>
           <div class="kf">${o.f||''}</div></div>`;
         const prevRow=MONTHLY.find(r=>r.m===m-1), prevSales=prevRow&&prevRow.sales!=null?prevRow.sales:null;
@@ -2216,8 +2246,8 @@ function build(m){
 
         const stack=(inStore!=null&&deliv!=null)?`<div class="kstack">
             <span style="flex:${inStore}"></span><span class="dim" style="flex:${deliv}"></span></div>
-          <div class="klegend"><span><i></i><b>${M2(inStore)}</b> ทานในร้าน + ห่อกลับ</span>
-            <span class="dim"><i></i><b>${M2(deliv)}</b> เดลิเวอรี่ ${(deliv/cur.sales*100).toFixed(1)}%</span></div>`:'';
+          <div class="klegend"><span><i></i><b>${M2(inStore)}</b> Dine in + Takeaway ${(inStore/cur.sales*100).toFixed(1)}%</span>
+            <span class="dim"><i></i><b>${M2(deliv)}</b> Delivery ${(deliv/cur.sales*100).toFixed(1)}%</span></div>`:'';
         const c2=card({wide:1,l:'Total Sales',p:label(m),v:`฿${cur.sales.toFixed(1)}M`,x:stack,
           f:[cur.ly!=null?`ปีก่อน ${M1(cur.ly)} ${pill(yoy)}`:'', cur.mom!=null?`เดือนก่อน ${M1(prevSales)} ${pill(cur.mom)}`:''].filter(Boolean).join('<span class="ksep"></span>')});
 
@@ -2227,11 +2257,13 @@ function build(m){
           f:cur.budget!=null?`Actual ${M1(cur.sales)} · Budget ${M1(cur.budget)} · ${vb>=0?'เกิน':'ขาด'} ${Math.abs(cur.sales-cur.budget).toFixed(1)}M`:'ยังไม่ได้ใส่แผนเดือนนี้'});
 
         const c4=card({l:'MoM',p:`${m>1?MONTH_TH[m-2]:'—'} → ${MONTH_TH[m-1]}`,v:sgn(cur.mom),cl:cls(cur.mom??0),
-          x:prevSales!=null?bars([{l:MONTH_TH[m-1],v:cur.sales,t:M1(cur.sales)},{l:MONTH_TH[m-2],v:prevSales,t:M1(prevSales),dim:1}]):'',
+          d:prevSales!=null?{v:cur.sales-prevSales,t:'vs '+MONTH_TH[m-2]}:null,
+          x:prevSales!=null?bars([{l:MONTH_TH[m-1],v:cur.sales,t:M2(cur.sales)},{l:MONTH_TH[m-2],v:prevSales,t:M2(prevSales),dim:1}]):'',
           f:cur.equalDays?'เทียบช่วงวันเท่ากัน (1–30)':'เทียบเดือนก่อนหน้า'});
 
         const c5=card({l:'Same Store Sales Growth',p:label(m),v:sgn(cur.sssg),cl:cls(cur.sssg),
-          x:(ssTy!=null&&ssLy!=null)?bars([{l:String(YEAR),v:ssTy,t:M1(ssTy)},{l:String(YEAR-1),v:ssLy,t:M1(ssLy),dim:1}]):'',
+          d:(ssTy!=null&&ssLy!=null)?{v:ssTy-ssLy,t:'vs '+(YEAR-1)}:null,
+          x:(ssTy!=null&&ssLy!=null)?bars([{l:String(YEAR),v:ssTy,t:M2(ssTy)},{l:String(YEAR-1),v:ssLy,t:M2(ssLy),dim:1}]):'',
           f:d.stores&&d.stores.sameStore?`${d.stores.sameStore} สาขา Same Store`:'เทียบเดือนเดียวกันปีก่อน'});
         return `<div class="kgrid">${c1}${c2}${c3}${c4}${c5}</div>`;
       })()}
