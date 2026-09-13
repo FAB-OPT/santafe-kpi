@@ -1095,6 +1095,8 @@ body.present .smsub,body.present .smph{font-size:16px}
 body.present .ovh{margin-bottom:12px}
 .bar .datachip{align-self:center;font-size:11.5px;font-weight:700;color:#B45309;background:#FEF3C7;border-radius:999px;padding:2px 10px;white-space:nowrap}
 body.present .bar .datachip{font-size:15px;padding:4px 12px}
+/* ไม่แสดงคำอธิบายในแถบเครื่องมือ (ยกเว้นป้ายเหตุผลที่อยู่ในช่องติ๊ก) */
+.plbar > .hint{display:none}
 </style>
 </head>
 <body>
@@ -1455,7 +1457,7 @@ function plSection(m){
   const brs=F.branch?Object.keys(F.branch):[];
   const brName=c=>(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].name)||c;
   const brOpts=brs.filter(c=>FILT.zone==='all'||(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone===FILT.zone))
-    .sort((a,b)=>brName(a).localeCompare(brName(b),'th'));
+    .sort((a,b)=>String(a).localeCompare(String(b)));
   const head=`<div class="plbar">
       <label>สาขา <select id="plBranch"><option value="all">ทั้งบริษัท (Santa Fe)</option>${brOpts.map(c=>`<option value="${c}" ${PLS.branch===c?'selected':''}>${c} ${brName(c)}</option>`).join('')}</select></label>
       <label><input type="checkbox" id="plLM" ${PLS.cmpLM?'checked':''}> เทียบเดือนก่อน</label>
@@ -1522,7 +1524,7 @@ const legendOf=items=>`<div class="legend">${items.map(i=>`<span><i style="backg
 const SSS={branch:'all',pickM:null};
 function sssgOfBranch(b,mm){ const v=b.m&&b.m[mm]; if(!v||!(v.ly>0)||!(v.ty>0)) return null; return +((v.ty/v.ly-1)*100).toFixed(1); }
 function sssgSection(m,rows){
-  const BY=filtZone(EXTRA.branchYears||[]).slice().sort((a,b)=>a.name.localeCompare(b.name,'th'));
+  const BY=filtZone(EXTRA.branchYears||[]).slice().sort((a,b)=>String(a.code).localeCompare(String(b.code)));
   const months=MONTHLY.map(r=>r.m).filter(x=>x<=m);
   const M2=v=>(v/1e6).toFixed(2)+'M';
   const bar=`<div class="plbar"><label>สาขา <select id="ssBranch"><option value="all">${FILT.zone==='all'?'ทั้งบริษัท (Santa Fe)':'ทั้งโซน '+FILT.zone}</option>${BY.map(b=>`<option value="${b.code}" ${SSS.branch===b.code?'selected':''}>${b.code} ${b.name}</option>`).join('')}</select></label>
@@ -2549,8 +2551,7 @@ function build(m){
     out.push(sec('branchdetail','Branch Explorer',`${label(m)} · ${rows.length} สาขา · เลือกสาขาเพื่อดูรายละเอียด`,`
       <div class="brpick">
         <input id="brFind" type="search" placeholder="ค้นหาสาขา…" autocomplete="off">
-        <select id="brSel">${rows.map(b=>`<option value="${b.code}">${b.name}</option>`).join('')}</select>
-        <span class="hint" id="brHint">${rows.length} สาขา</span>
+        <select id="brSel">${rows.slice().sort((a,b)=>String(a.code).localeCompare(String(b.code))).map(b=>`<option value="${b.code}">${b.code} ${b.name}</option>`).join('')}</select>
       </div>
       <div id="brBody"></div>
       <div class="grp" style="margin-top:20px">ทุกสาขา — ${label(m)}</div>
@@ -2621,8 +2622,8 @@ function build(m){
   if(BR_CTX){ const sel=$('#brSel'), find=$('#brFind'), hint=$('#brHint');
     if(sel){ sel.onchange=()=>drawBranch(sel.value); drawBranch(sel.value);
       if(find) find.oninput=()=>{ const q=find.value.trim().toLowerCase();
-        const list=BR_CTX.rows.filter(b=>!q||b.name.toLowerCase().includes(q)||String(b.code).includes(q));
-        sel.innerHTML=list.map(b=>`<option value="${b.code}">${b.name}</option>`).join('');
+        const list=BR_CTX.rows.filter(b=>!q||b.name.toLowerCase().includes(q)||String(b.code).includes(q)).sort((a,b)=>String(a.code).localeCompare(String(b.code)));
+        sel.innerHTML=list.map(b=>`<option value="${b.code}">${b.code} ${b.name}</option>`).join('');
         if(hint) hint.textContent=q?`พบ ${list.length} สาขา`:`${BR_CTX.rows.length} สาขา`;
         if(list.length) drawBranch(sel.value); else $('#brBody').innerHTML='<div class="empty">ไม่พบสาขาที่ค้นหา</div>'; }; } }
   setStick(); requestAnimationFrame(setStick);
