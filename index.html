@@ -1908,7 +1908,7 @@ function groupSection(id,title,keyOf,labelName,STATE,ctlId){
     return {name:nm, n:gmap[nm].length, act:s.n, ty:s.ty, ly:s.ly, g:s.g, ytdT, ytdG:ytdL?((ytdT/ytdL-1)*100):null}; })
     .filter(r=>r.ty>0||r.ly>0).sort((a,b)=>(a.g==null?9e9:a.g)-(b.g==null?9e9:b.g));
   const M2=v=>v==null?'—':(v/1e6).toFixed(2)+'M';
-  const chips=`<div class="chips">${rows.map(r=>`<button class="chip ${STATE.pick===r.name?'on':''}" data-gp="${r.name}">${r.name} ${r.g==null?'':(r.g>=0?'+':'')+r.g.toFixed(1)+'%'}</button>`).join('')}</div>`;
+  const chips=`<div class="chips"><button class="chip ${!STATE.pick||!gmap[STATE.pick]?'on':''}" data-gp="__all">ทุกกลุ่ม</button>${rows.map(r=>`<button class="chip ${STATE.pick===r.name?'on':''}" data-gp="${r.name}">${r.name} ${r.g==null?'':(r.g>=0?'+':'')+r.g.toFixed(1)+'%'}</button>`).join('')}</div>`;
   const sel=STATE.pick&&gmap[STATE.pick]?STATE.pick:null;
   const bars=groupBars(rows.map(r=>({name:r.name})),[
       {key:'ly',name:'ปีก่อน',color:'var(--chart-soft)',vals:rows.map(r=>+(r.ly/1e6).toFixed(2))},
@@ -1918,26 +1918,46 @@ function groupSection(id,title,keyOf,labelName,STATE,ctlId){
     ${rows.map((r,i)=>`<tr class="clk ${STATE.pick===r.name?'sel':''}" data-gp="${r.name}"><td>${i+1}</td><td>${r.name}</td><td class="n">${r.act}/${r.n}</td>
       <td class="n">${M2(r.ty)}</td><td class="n">${M2(r.ly)}</td><td class="n">${r.g==null?'—':pill(r.g)}</td>
       <td class="n">${M2(r.ytdT)}</td><td class="n">${r.ytdG==null?'—':pill(r.ytdG)}</td></tr>`).join('')}</table></div>`;
-  let panel='';
-  if(sel){ const list=gmap[sel].map(b=>{const v=(b.m&&b.m[m])||{}; return {code:b.code,name:b.name,zone:b.zone,mall:b.mall,ty:v.ty||null,ly:v.ly||null,g:(v.ty&&v.ly)?((v.ty/v.ly-1)*100):null};})
+  const sub=`${label(m)}${brNote(m,curM)}`;
+  /* ---- เลือกกลุ่มแล้ว: ทั้งหัวข้อแสดงข้อมูลของกลุ่มนั้น ---- */
+  if(sel){
+    const R=rows.find(r=>r.name===sel)||{};
+    const N=rows.filter(r=>r.g!=null).length, rank=R.g==null?null:rows.filter(r=>r.g!=null&&r.g>R.g).length+1;
+    const list=gmap[sel].map(b=>{ const v=(b.m&&b.m[m])||{}; let yl=0,yt=0;
+        months.forEach(x=>{ const w=b.m&&b.m[x]; if(w){ yl+=w.ly||0; yt+=w.ty||0; } });
+        return {code:b.code,name:b.name,zone:b.zone,ty:v.ty||null,ly:v.ly||null,g:(v.ty&&v.ly)?((v.ty/v.ly-1)*100):null,
+                yt,yg:(yl&&yt)?((yt/yl-1)*100):null}; })
       .sort((a,b)=>(a.g==null?9e9:a.g)-(b.g==null?9e9:b.g));
-    const ser=[{name:'ปีก่อน',color:'var(--chart-3)',dash:1,vals:months.map(x=>+(sumMonth(gmap[sel],x).ly/1e6).toFixed(2))},
-               {name:YEAR,color:'var(--chart-1)',label:1,vals:months.map(x=>+(sumMonth(gmap[sel],x).ty/1e6).toFixed(2))}];
-    panel=`<div class="pick"><div class="pickhd"><h4>${labelName} ${sel} · ${list.length} สาขา</h4><button class="btn small" data-gpclose>ปิด</button></div>
-      ${lineSeries(months.map(x=>MONTH_TH[x-1]),ser,{h:210,fmt:v=>v.toFixed(1)+'M',tipFmt:v=>v.toFixed(2)+'M'})}
-      <div class="legend"><span><i style="background:var(--chart-3)"></i>ปีก่อน</span><span><i style="background:var(--chart-1)"></i>${YEAR}</span></div>
-      <div class="scroll" style="margin-top:10px"><table><tr><th>#</th><th>สาขา</th><th>โซน</th><th class="n">ยอด ${MONTH_TH[m-1]}</th><th class="n">ปีก่อน</th><th class="n">YoY</th></tr>
-      ${list.map((b,i)=>`<tr class="clk" data-ssbr="${b.code}"><td>${i+1}</td><td>${b.code} ${b.name}</td><td>${b.zone||''}</td><td class="n">${M2(b.ty)}</td><td class="n">${M2(b.ly)}</td><td class="n">${b.g==null?'—':pill(b.g)}</td></tr>`).join('')}</table></div></div>`; }
+    const down=list.filter(b=>b.g!=null&&b.g<0).length;
+    const stripSel=`<div class="strip">
+      <div class="st ${R.g==null?'':cls(R.g)}"><div class="l">ยอดขาย ${sel} ${label(m)}</div><div class="v">${M2(R.ty)}</div><div class="s">ปีก่อน ${M2(R.ly)} ${R.g==null?'':pill(R.g)}</div></div>
+      <div class="st ${R.ytdG==null?'':cls(R.ytdG)}"><div class="l">สะสม ม.ค.–${MONTH_TH[m-1]}</div><div class="v">${M2(R.ytdT)}</div><div class="s">${R.ytdG==null?'':pill(R.ytdG)} เทียบปีก่อน</div></div>
+      <div class="st"><div class="l">สาขาที่มียอด</div><div class="v">${R.act} / ${R.n}</div><div class="s">ยอดลด ${down} สาขา</div></div>
+      <div class="st"><div class="l">อันดับ YoY</div><div class="v">${rank==null?'—':rank+' / '+N}</div><div class="s">1 = โตมากสุด</div></div>
+    </div>`;
+    const ser=[{name:String(YEAR-1),color:'#A3AEBB',vals:months.map(x=>+(sumMonth(gmap[sel],x).ly/1e6).toFixed(2))},
+               {name:String(YEAR),color:'#D9822D',label:1,w:3,vals:months.map(x=>+(sumMonth(gmap[sel],x).ty/1e6).toFixed(2))}];
+    const trend=`<div class="grp">ยอดขายรายเดือน ${sel} · ${YEAR} vs ${YEAR-1}</div>`
+      +lineSeries(months.map(x=>MONTH_TH[x-1]),ser,{h:230,fmt:v=>v.toFixed(1)+'M',tipFmt:v=>v.toFixed(2)+'M'})
+      +`<div class="legend"><span><i style="background:#D9822D"></i>${YEAR}</span><span><i style="background:#A3AEBB"></i>${YEAR-1}</span></div>`;
+    const btbl=`<div class="grp">สาขาในกลุ่ม ${sel} · ${list.length} สาขา</div>
+      <div class="scroll"><table><tr><th>สาขา</th><th>โซน</th><th class="n">ยอด ${MONTH_TH[m-1]}</th><th class="n">ปีก่อน</th><th class="n">YoY</th><th class="n">สะสม ม.ค.–${MONTH_TH[m-1]}</th><th class="n">YoY สะสม</th></tr>
+      ${list.map(b=>`<tr class="clk" data-ssbr="${b.code}"><td>${b.code} ${b.name}</td><td>${b.zone||''}</td>
+        <td class="n">${M2(b.ty)}</td><td class="n">${M2(b.ly)}</td><td class="n">${b.g==null?'—':pill(b.g)}</td>
+        <td class="n">${M2(b.yt)}</td><td class="n">${b.yg==null?'—':pill(b.yg)}</td></tr>`).join('')}</table></div>`;
+    return sec(id,title,sub,chips+stripSel+trend+btbl);
+  }
+  /* ---- ยังไม่เลือก: ภาพรวมทุกกลุ่ม ---- */
   const worst=rows[0], best=rows[rows.length-1];
   const strip=`<div class="strip">
     <div class="st neg"><div class="l">${labelName}ที่แย่สุด</div><div class="v">${worst.name}</div><div class="s">${worst.g==null?'':sgn(worst.g)} เทียบปีก่อน · ${worst.act} สาขา</div></div>
     <div class="st pos"><div class="l">${labelName}ที่ดีสุด</div><div class="v">${best.name}</div><div class="s">${best.g==null?'':sgn(best.g)} เทียบปีก่อน · ${best.act} สาขา</div></div>
     <div class="st"><div class="l">${labelName}ที่ยอดลด</div><div class="v">${rows.filter(r=>r.g!=null&&r.g<0).length} / ${rows.filter(r=>r.g!=null).length}</div><div class="s">เทียบเดือนเดียวกันปีก่อน</div></div>
   </div>`;
-  return sec(id,title,`${label(m)} · เรียงจากแย่สุด${FILT.zone!=='all'?' · โซน '+FILT.zone:''}${brNote(m,curM)} · คลิกเพื่อดูสาขาในกลุ่ม`,
+  return sec(id,title,sub,
     chips+strip+`<div class="grp">ยอดขายรายกลุ่ม เทียบปีก่อน (ล้านบาท)</div>`+bars
     +`<div class="legend"><span><i style="background:var(--chart-soft)"></i>ปีก่อน</span><span><i style="background:var(--good)"></i>ปีนี้ โต</span><span><i style="background:var(--bad)"></i>ปีนี้ ลด</span></div>`
-    +tbl+panel);
+    +tbl);
 }
 const ZON={pick:null};
 function mallSection(){ return groupSection('mall','Mall Group Health — which group needs attention',b=>b.mall,'กลุ่มห้าง',MAL); }
@@ -2055,7 +2075,7 @@ function bindExtra2(){
   const on=(sel,fn)=>document.querySelectorAll(sel).forEach(el=>el.onclick=fn.bind(null,el));
   const rk=$('#rkBy'); if(rk) rk.onchange=e=>{RNK.by=e.target.value; r();};
   const rn=$('#rkN'); if(rn) rn.onchange=e=>{RNK.n=+e.target.value; r();};
-  on('#mall [data-gp]',el=>{ const v=el.dataset.gp; MAL.pick=MAL.pick===v?null:v; r(); });
+  on('#mall [data-gp]',el=>{ const v=el.dataset.gp; MAL.pick=(v==='__all'||MAL.pick===v)?null:v; r(); });
   on('#mall [data-gpclose]',()=>{ MAL.pick=null; r(); });
   on('#zone tr[data-zn]',el=>{ const v=el.dataset.zn; ZON.pick=ZON.pick===v?null:v; r(); });
   on('#zone [data-znclose]',()=>{ ZON.pick=null; r(); });
