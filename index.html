@@ -1093,6 +1093,8 @@ body.present .csl{font-size:15px}
 body.present .cblh{font-size:15px}
 body.present .smsub,body.present .smph{font-size:16px}
 body.present .ovh{margin-bottom:12px}
+.bar .datachip{align-self:center;font-size:11.5px;font-weight:700;color:#B45309;background:#FEF3C7;border-radius:999px;padding:2px 10px;white-space:nowrap}
+body.present .bar .datachip{font-size:15px;padding:4px 12px}
 </style>
 </head>
 <body>
@@ -1382,7 +1384,10 @@ function branchLine(hist){
     <div class="legend"><span><i style="background:var(--accent)"></i>ยอดขายจริง</span><span><i style="background:var(--chart-3)"></i>แผน</span></div>`;
 }
 /* ========================= sections ========================= */
-function sec(id,title,sub,body){ return `<section class="slide" id="${id}" data-title="${title}"><div class="bar"><h2>${title}</h2><span class="sub">${sub||''}</span></div><div class="body">${body}</div></section>`; }
+function sec(id,title,sub,body){
+  /* ไม่แสดงคำอธิบายหลังหัวข้อ ยกเว้นกรณีใช้ข้อมูลเดือนอื่นแทนเดือนที่เลือก จะมีป้ายเล็กบอกเดือนของข้อมูล */
+  const fb=String(sub||'').match(/([^\s·()]+ \d{4}) \(เดือนล่าสุดที่มี/);
+  return `<section class="slide" id="${id}" data-title="${title}"><div class="bar"><h2>${title}</h2>${fb?`<span class="datachip">ข้อมูล ${fb[1]}</span>`:''}</div><div class="body">${body}</div></section>`; }
 const EMPTY = t => `<div class="empty">ยังไม่มีข้อมูล${t?' '+t:''} สำหรับเดือนนี้</div>`;
 
 
@@ -2326,12 +2331,12 @@ function ovBottom(m,rows,ch,d){
         <span class="bbar"><i class="${cl}" style="width:${(Math.abs(b.mom)/mx*100).toFixed(1)}%"></i></span>
         <span class="bv ${cl}">${sgn(b.mom)}</span></li>`;
     lists=`<div class="cblists">
-      <div><div class="cblh"><span class="dot pos"></span>Top growth <em>vs ${prevTH}</em></div><ol class="cbl">${top.map((b,i)=>row(b,i,'pos')).join('')}</ol></div>
-      <div><div class="cblh"><span class="dot neg"></span>Needs attention <em>vs ${prevTH}</em></div><ol class="cbl">${bot.map((b,i)=>row(b,i,'neg')).join('')}</ol></div></div>`;
+      <div><div class="cblh"><span class="dot pos"></span>Top growth</div><ol class="cbl">${top.map((b,i)=>row(b,i,'pos')).join('')}</ol></div>
+      <div><div class="cblh"><span class="dot neg"></span>Needs attention</div><ol class="cbl">${bot.map((b,i)=>row(b,i,'neg')).join('')}</ol></div></div>`;
   }
   return `<div class="ovbottom">
-    <div class="panel"><div class="phx"><div><h3>Sales Mix</h3><p>ยอดขาย ${label(m)} มาจากช่องทางไหน เทียบ ${prevTH}</p></div>${ch?`<b>${bahtM(ch.sales/1e6)} บาท</b>`:''}</div>${mix}</div>
-    <div class="panel"><div class="phx"><div><h3>Customers &amp; Branches</h3><p>จำนวนบิล เช็คเฉลี่ย ลูกค้า และสาขาที่ขึ้นลงมากสุด เทียบ ${prevTH}</p></div></div>${stats}${lists}</div>
+    <div class="panel"><div class="phx"><div><h3>Sales Mix</h3></div>${ch?`<b>${bahtM(ch.sales/1e6)} บาท</b>`:''}</div>${mix}</div>
+    <div class="panel"><div class="phx"><div><h3>Customers &amp; Branches</h3></div></div>${stats}${lists}</div>
   </div>`;
 }
 /* ยอดขายแยกช่องทางของเดือนหนึ่ง รวมจากรายสาขา (Dine in · Takeaway · Delivery) */
@@ -2435,7 +2440,7 @@ function build(m){
           d:(ssTy!=null&&ssLy!=null)?{v:ssTy-ssLy,t:'vs '+(YEAR-1)}:null,
           x:(ssTy!=null&&ssLy!=null)?bars([{l:String(YEAR),v:ssTy,t:M2(ssTy)},{l:String(YEAR-1),v:ssLy,t:M2(ssLy),dim:1}]):'',
           f:d.stores&&d.stores.sameStore?`${d.stores.sameStore} สาขา Same Store`:'เทียบเดือนเดียวกันปีก่อน'});
-        return `<div class="ovh"><h3>Sales Overview</h3><span>${label(m)} · เทียบแผน เดือนก่อน และปีก่อน</span></div>
+        return `<div class="ovh"><h3>Sales Overview</h3></div>
           <div class="kgrid">${c1}${c2}${c3}${c4}${c5}</div>`;
       })()}
       ${ovBottom(m,rows,ch,d)}`));
