@@ -1037,6 +1037,24 @@ body.present .cbl li{font-size:16px;grid-template-columns:24px minmax(0,1fr) 110
 body.present .cbl .bi{width:24px;height:24px;font-size:13px}
 body.present .cbl .bbar{height:9px}
 body.present #overview .headline{margin-top:0}
+/* ---- Sales Mix: สีใหม่ ---- */
+.smbar{height:14px;gap:3px;background:transparent}
+.smbar span{border-radius:4px}
+.smbar span:first-child{border-radius:99px 4px 4px 99px} .smbar span:last-child{border-radius:4px 99px 99px 4px}
+.smbar.thin{height:9px}
+.smt{border-width:1px;border-style:solid;padding:11px 12px 10px}
+.smt .smh{color:var(--ink)}
+.smt .smv{font-size:21px}
+.smplat{margin-top:14px;padding:11px 12px 12px;border:1px solid #CBEAE5;border-radius:12px;background:linear-gradient(180deg,#F4FBFA 0%,#FFFFFF 100%)}
+.smph{color:#0B6E66}
+.smph span{display:flex;align-items:center;gap:6px}
+.smph .smdot{width:9px;height:9px;border-radius:3px;background:#0F8B80}
+.smph b em{font-style:normal;font-weight:600;font-size:11px;color:var(--mute);margin-left:4px}
+.smprows{gap:8px}
+.smpr{background:#fff;border:1px solid #E1F2EF;border-radius:9px;padding:8px 10px 8px 12px}
+body.present .smplat{padding:14px 16px 16px}
+body.present .smpr{padding:11px 14px 11px 16px}
+body.present .smph b em{font-size:13px}
 </style>
 </head>
 <body>
@@ -2228,22 +2246,25 @@ function ovBottom(m,rows,ch,d){
   /* ---- Sales Mix ---- */
   let mix='<div class="empty">ยังไม่มียอดแยกช่องทางของเดือนนี้</div>';
   if(ch){
-    const C=[{k:'dine',n:'Dine in',c:'#2563EB'},{k:'take',n:'Takeaway',c:'#93C5FD'},{k:'deli',n:'Delivery',c:'#F59E0B'}];
+    /* ช่องทาง: หน้าร้านใช้ส้มแบรนด์ (ตรงกับการ์ด Total Sales) · Delivery ใช้ teal ตัดกับส้ม */
+    const C=[{k:'dine',n:'Dine in',c:'#D9822D',bg:'#FFF5EB',bd:'#F7DDC2',tx:'#B45F16'},
+             {k:'take',n:'Takeaway',c:'#F2B880',bg:'#FFF9F2',bd:'#F9E7D2',tx:'#C0772F'},
+             {k:'deli',n:'Delivery',c:'#0F8B80',bg:'#EEF8F6',bd:'#CBEAE5',tx:'#0B6E66'}];
     const share=k=>(ch[k]/ch.sales*100).toFixed(1)+'%';
-    const tiles=C.map(o=>`<div class="smt" data-tip="${o.n}\n${M2(ch[o.k])} · ${share(o.k)} ของยอดขาย${chP?'\n'+MONTH_TH[m-2]+' '+M2(chP[o.k]):''}">
+    const tiles=C.map(o=>`<div class="smt" style="background:${o.bg};border-color:${o.bd};box-shadow:inset 0 3px 0 ${o.c}" data-tip="${o.n}\n${M2(ch[o.k])} · ${share(o.k)} ของยอดขาย${chP?'\n'+MONTH_TH[m-2]+' '+M2(chP[o.k]):''}">
         <div class="smh"><i style="background:${o.c}"></i>${o.n}</div>
         <div class="smv">${M2(ch[o.k])}</div>
-        <div class="sms"><b>${share(o.k)}</b> ของยอดขาย</div>
+        <div class="sms"><b style="color:${o.tx}">${share(o.k)}</b> ของยอดขาย</div>
         <div class="smc">${chP?vsPrev(chP[o.k],ch[o.k]):''}</div></div>`).join('');
     const bar=`<div class="smbar">${C.map(o=>`<span style="flex:${ch[o.k]};background:${o.c}" data-tip="${o.n}\n${M2(ch[o.k])} · ${share(o.k)} ของยอดขาย"></span>`).join('')}</div>`;
-    const PL=[{k:'grab',n:'Grab',c:'#D97706'},{k:'lm',n:'Line Man',c:'#F59E0B'},{k:'sp',n:'Shopee Food',c:'#FCD34D'}];
+    const PL=[{k:'grab',n:'Grab',c:'#0B6E66'},{k:'lm',n:'Line Man',c:'#2BB3A3'},{k:'sp',n:'Shopee Food',c:'#8FDCD1'}];
     const ps=k=>ch.deli?(ch[k]/ch.deli*100).toFixed(1)+'%':'—';
     const plat=`<div class="smplat">
-        <div class="smph"><span>Delivery by platform</span><b>${M2(ch.deli)}</b></div>
+        <div class="smph"><span><i class="smdot"></i>Delivery by platform</span><b>${M2(ch.deli)} <em>${share('deli')} ของยอดขาย</em></b></div>
         <div class="smbar thin">${PL.map(o=>`<span style="flex:${ch[o.k]||0.0001};background:${o.c}" data-tip="${o.n}\n${M2(ch[o.k])} · ${ps(o.k)} ของ Delivery"></span>`).join('')}</div>
-        <div class="smprows">${PL.map(o=>`<div class="smpr" data-tip="${o.n}\n${M2(ch[o.k])} · ${ps(o.k)} ของ Delivery${chP?'\n'+MONTH_TH[m-2]+' '+M2(chP[o.k]):''}">
+        <div class="smprows">${PL.map(o=>`<div class="smpr" style="box-shadow:inset 3px 0 0 ${o.c}" data-tip="${o.n}\n${M2(ch[o.k])} · ${ps(o.k)} ของ Delivery${chP?'\n'+MONTH_TH[m-2]+' '+M2(chP[o.k]):''}">
             <div class="smh"><i style="background:${o.c}"></i>${o.n}</div>
-            <div class="smpv"><b>${M2(ch[o.k])}</b><em>${ps(o.k)}</em></div>
+            <div class="smpv"><b>${M2(ch[o.k])}</b><em style="color:#0B6E66">${ps(o.k)}</em></div>
             <div class="smc">${chP?vsPrev(chP[o.k],ch[o.k]):''}</div></div>`).join('')}</div></div>`;
     mix=bar+`<div class="smtiles">${tiles}</div>`+plat;
   }
@@ -2378,9 +2399,7 @@ function build(m){
           f:d.stores&&d.stores.sameStore?`${d.stores.sameStore} สาขา Same Store`:'เทียบเดือนเดียวกันปีก่อน'});
         return `<div class="kgrid">${c1}${c2}${c3}${c4}${c5}</div>`;
       })()}
-      ${ovBottom(m,rows,ch,d)}
-      <div class="headline"><span class="hlnum">฿${cur.sales.toFixed(1)}M</span><span class="hltxt">${hlBits.join(' · ')}</span></div>
-      `));
+      ${ovBottom(m,rows,ch,d)}`));
   }
 
   // 2 monthly
