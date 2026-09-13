@@ -936,11 +936,12 @@ body.present #overview .headline{flex:0 0 auto}
 .kb.dim .kbt i{background:#CBD5E1}
 /* แถบยอดแยกช่องทาง */
 .kstack{display:flex;height:10px;border-radius:99px;overflow:hidden;gap:2px}
-.kstack span{background:var(--accent)} .kstack span.dim{background:#CBD5E1}
+.kstack span{background:var(--accent)} .kstack span.take{background:#F2B880} .kstack span.dim{background:#CBD5E1}
 .klegend{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;font-size:11.5px;color:var(--mute)}
 .klegend span{display:flex;align-items:center;gap:5px}
 .klegend i{width:8px;height:8px;border-radius:2px;background:var(--accent)}
 .klegend b{font-size:14px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.klegend .take i{background:#F2B880}
 .klegend .dim i{background:#CBD5E1} .klegend .dim b{color:var(--mute)}
 /* ความคืบหน้าเทียบแผน */
 .kprog{display:flex;flex-direction:column;gap:4px}
@@ -2149,7 +2150,7 @@ function ovBottom(m,rows,ch,d){
   const mix = ch ? `<div class="mixbar">
       ${seg('Dine in',ch.dine,'var(--chart-1)')}${seg('Takeaway',ch.take,'#93C5FD')}${seg('Delivery',ch.deli,'var(--chart-2)')}
     </div>
-    <div class="mnums"><span><b>${M2(ch.dine+ch.take)}</b> Dine in + Takeaway</span><span class="grey"><b>${M2(ch.deli)}</b> Delivery</span></div>
+    <div class="mnums"><span><b>${M2(ch.dine)}</b> Dine in</span><span><b>${M2(ch.take)}</b> Takeaway</span><span class="grey"><b>${M2(ch.deli)}</b> Delivery</span></div>
     <div class="mrows">${prow('Grab',ch.grab,'var(--chart-1)')}${prow('Line Man',ch.lm,'var(--chart-2)')}${prow('Shopee Food',ch.sp,'var(--chart-3)')}</div>`
     : '<div class="empty">ยังไม่มียอดแยกช่องทางของเดือนนี้</div>';
   const stats = t ? `<div class="ovstats">
@@ -2244,10 +2245,14 @@ function build(m){
           x:storesLy!=null?bars([{l:String(YEAR),v:storesNow,t:storesNow},{l:String(YEAR-1),v:storesLy,t:storesLy,dim:1}]):'',
           f:dStores!=null?`${cnt(dStores)} เทียบปีก่อน`:'ยังไม่มีจำนวนสาขาปีก่อน'});
 
-        const stack=(inStore!=null&&deliv!=null)?`<div class="kstack">
-            <span style="flex:${inStore}"></span><span class="dim" style="flex:${deliv}"></span></div>
-          <div class="klegend"><span><i></i><b>${M2(inStore)}</b> Dine in + Takeaway ${(inStore/cur.sales*100).toFixed(1)}%</span>
-            <span class="dim"><i></i><b>${M2(deliv)}</b> Delivery ${(deliv/cur.sales*100).toFixed(1)}%</span></div>`:'';
+        /* แถบแยกที่มาของยอด: Dine in · Takeaway · Delivery (ถ้าไฟล์เดือนนั้นไม่มียอดแยก ใช้ 2 ช่องแบบเดิม) */
+        const split3=ch&&ch.store>0&&ch.take!=null;
+        const pc3=v=>(v/(split3?ch.sales/1e6:cur.sales)*100).toFixed(1)+'%';   // v เป็นล้านบาท
+        const segs=split3
+          ? [{c:'dine',v:ch.dine/1e6,n:'Dine in'},{c:'take',v:ch.take/1e6,n:'Takeaway'},{c:'dim',v:ch.deli/1e6,n:'Delivery'}]
+          : (inStore!=null&&deliv!=null?[{c:'dine',v:inStore,n:'Dine in + Takeaway'},{c:'dim',v:deliv,n:'Delivery'}]:[]);
+        const stack=segs.length?`<div class="kstack">${segs.map(g=>`<span class="${g.c}" style="flex:${g.v}"></span>`).join('')}</div>
+          <div class="klegend">${segs.map(g=>`<span class="${g.c}"><i></i><b>${M2(g.v)}</b> ${g.n} ${pc3(g.v)}</span>`).join('')}</div>`:'';
         const c2=card({wide:1,l:'Total Sales',p:label(m),v:`฿${cur.sales.toFixed(1)}M`,x:stack,
           f:[cur.ly!=null?`ปีก่อน ${M1(cur.ly)} ${pill(yoy)}`:'', cur.mom!=null?`เดือนก่อน ${M1(prevSales)} ${pill(cur.mom)}`:''].filter(Boolean).join('<span class="ksep"></span>')});
 
