@@ -1454,16 +1454,18 @@ function plSection(m){
   const bn=c=>(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].name)||c;
   const cmpCodes=(PLS.cmp||[]).filter(c=>F.branch&&F.branch[c]&&c!==PLS.branch);
   const cmpMode=cmpCodes.length>0;
-  const ents=cmpMode?[{name:PLS.branch==='all'?'ทั้งบริษัท':PLS.branch+' '+bn(PLS.branch),v:cur}]
-    .concat(cmpCodes.map(c=>({name:c+' '+bn(c),v:plVals(F.branch[c],months)}))):[];
+  const ents=cmpMode?[{name:PLS.branch==='all'?'ทั้งบริษัท':PLS.branch+' '+bn(PLS.branch),v:cur,br:PLS.branch!=='all'}]
+    .concat(cmpCodes.map(c=>({name:c+' '+bn(c),v:plVals(F.branch[c],months),br:true}))):[];
   const pm = months.length===1 ? (lastM>1?[lastM-1]:[]) : months.map(x=>x-months.length).filter(x=>x>=1);
   const prev = !cmpMode && PLS.cmpLM && pm.length ? plVals(src,pm) : null;
   const lyHas = !!(F.ly && months.every(mm=>F.ly[PL_MONKEY[mm-1]]));
   const ly = !cmpMode && PLS.cmpLY&&lyHas ? (PLS.branch==='all' ? plVals(F.ly,months) : null) : null;
   const rev=cur[0]||1, revP=prev?(prev[0]||1):null, revL=ly?(ly[0]||1):null;
-  const fm=v=>v==null?'—':Math.round(v*1e6).toLocaleString('en-US');      // เก็บเป็นล้านบาท แสดงเป็นบาทเต็ม
+  /* เก็บเป็นล้านบาท · ทั้งบริษัทแสดงเป็น M · รายสาขาแสดงเป็น K */
+  const fmOf=br=>v=>v==null?'—':(br?KM(v):MM(v));
+  const fm=fmOf(PLS.branch!=='all');
   const pc=(v,base)=>v==null?'—':(v/base*100).toFixed(1)+'%';
-  const dl=(a,b)=>{ if(a==null||b==null) return '—'; const d=Math.round((a-b)*1e6); return (d>0?'+':'')+d.toLocaleString('en-US'); };
+  const dl=(a,b)=>{ if(a==null||b==null) return '—'; const d=a-b; return (d>0?'+':(d<0?'−':''))+fm(Math.abs(d)); };
   const rowsOut=[];
   const mains=items.filter(x=>x.depth===0);
   const sortKids=(kids)=> PLS.sort==='desc' ? kids.slice().sort((a,b)=>Math.abs(cur[b.index])-Math.abs(cur[a.index])) : kids;
@@ -1481,7 +1483,7 @@ function plSection(m){
         return ents.map((e,j)=>{ if(!e.v) return '<td class="n">—</td>';
           const p=pcts[j]; let c='';
           if(mn.id!=='revenue'&&ok.length>1&&hi!==lo&&p!=null) c=(isProfit?p===hi:p===lo)?'cbest':((isProfit?p===lo:p===hi)?'cworst':'');
-          return `<td class="n ${c}">${fm(e.v[it.index])}<span class="tiny">${p==null?'—':p.toFixed(1)+'%'}</span></td>`; }).join(''); };
+          return `<td class="n ${c}">${fmOf(e.br)(e.v[it.index])}<span class="tiny">${p==null?'—':p.toFixed(1)+'%'}</span></td>`; }).join(''); };
       rowsOut.push(`<tr class="${mn.highlight?'plhl':'plmain'}" data-id="${mn.id}">
         <td>${mn.hasKids?`<button class="pltg" data-tg="${mn.id}" title="พับ/กาง">${open?'▾':'▸'}</button>`:'<span class="pltg-sp"></span>'}${PL_TH[mn.id]||mn.label}${mn.hasKids?` <span class="plkids">(${kids.length})</span>`:''}</td>${cells(mn)}</tr>`);
       if(open) kids.forEach(k=>rowsOut.push(`<tr class="plsub" data-parent="${mn.id}"><td><span class="plsub-in">${PL_TH[k.id]||k.label}</span></td>${cells(k)}</tr>`));
@@ -1522,7 +1524,7 @@ function plSection(m){
     ${head}
     ${cmpMode?`<div class="strip">${ents.map(e=>{ const ni=idx('net').index; if(!e.v) return `<div class="st"><div class="l">${e.name}</div><div class="v">—</div><div class="s">ไม่มีงบช่วงนี้</div></div>`;
         const np=e.v[0]?e.v[ni]/e.v[0]*100:null;
-        return `<div class="st ${np==null?'':cls(np)}"><div class="l">${e.name}</div><div class="v">${np==null?'—':np.toFixed(1)+'%'}</div><div class="s">กำไรสุทธิ ${fm(e.v[ni])} · รายได้ ${fm(e.v[0])}</div></div>`; }).join('')}</div>`
+        return `<div class="st ${np==null?'':cls(np)}"><div class="l">${e.name}</div><div class="v">${np==null?'—':np.toFixed(1)+'%'}</div><div class="s">กำไรสุทธิ ${fmOf(e.br)(e.v[ni])} · รายได้ ${fmOf(e.br)(e.v[0])}</div></div>`; }).join('')}</div>`
     :`<div class="strip">
       ${tile('รายได้รวม',cur[0])}
       ${tile('กำไรขั้นต้น (หลัง COGS)',g('gp1'),cls(g('gp1')))}
