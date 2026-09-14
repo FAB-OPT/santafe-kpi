@@ -1175,6 +1175,10 @@ body.brand-home #presentBtn,body.brand-home .tabbar,body.brand-home .brandsw{dis
 .bh-icw{position:relative;display:inline-flex;flex:0 0 auto}
 .bh-icw i{position:absolute;right:-8px;bottom:-6px;font-style:normal;font-size:11.5px;font-weight:800;letter-spacing:.04em;line-height:1;
   padding:4px 8px;border-radius:999px;background:var(--ink);color:#fff;border:2px solid #fff;box-shadow:0 1px 3px rgba(15,23,42,.25)}
+/* การ์ดเลือกแบรนด์: มีแค่โลโก้และชื่อ อยู่กึ่งกลาง */
+.bh-card{align-items:center;justify-content:center;text-align:center;gap:14px}
+.bh-card .bh-ico{width:104px;height:104px;border-radius:24px}
+@media (max-width:760px){.bh-card{min-height:170px}.bh-card .bh-ico{width:84px;height:84px;border-radius:20px}}
 </style>
 </head>
 <body>
@@ -2772,9 +2776,8 @@ function brandHome(){
   $('#hsub').textContent='';
   $('#main').innerHTML=`<section class="slide" id="brandHome" data-title="เลือกแบรนด์"><div class="body">
     <div class="bh-wrap"><div class="bh-h">เลือกแบรนด์</div><p class="bh-sub">Monthly Performance Review ${YEAR}</p>
-      <div class="bh-grid">${BRANDS.map(b=>`<button type="button" class="bh-card${b.data?'':' off'}" data-brand-go="${b.k}">
-        <span class="bh-top"><span class="bh-icw"><img class="bh-ico" src="${b.ico}" alt="โลโก้ ${b.n}">${b.tag?`<i>${b.tag}</i>`:''}</span><span class="bh-tag">${b.data?'มีข้อมูล':'ยังไม่มีข้อมูล'}</span></span>
-        <span class="bh-name">${b.n}</span><span class="bh-go">เข้าดู ›</span></button>`).join('')}</div></div>
+      <div class="bh-grid">${BRANDS.map(b=>`<button type="button" class="bh-card" data-brand-go="${b.k}">
+        <img class="bh-ico" src="${b.ico}" alt="โลโก้ ${b.n}"><span class="bh-name">${b.n}</span></button>`).join('')}</div></div>
   </div></section>`;
   document.querySelectorAll('[data-brand-go]').forEach(x=>x.onclick=()=>setBrand(x.dataset.brandGo));
   $('#nav').innerHTML=''; const tb=$('#tabbar'); if(tb) tb.innerHTML='';
