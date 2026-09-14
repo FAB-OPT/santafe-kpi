@@ -1107,6 +1107,18 @@ body.present .bar .datachip{font-size:15px;padding:4px 12px}
 .pltable td.cworst{background:#FFF1F2!important;color:#BE123C;font-weight:700}
 .pltable td.cbest .tiny,.pltable td.cworst .tiny{color:inherit;opacity:.85}
 body.present .cmpchip{font-size:15px}
+/* ---- ช่วงเวลา + ลูกค้าและบิลเฉลี่ย ---- */
+.kcov{font-size:11px;color:var(--faint);margin-top:6px}
+.pcov{display:inline-block;margin-left:8px;font-size:11px;font-weight:600;color:#92400E;background:#FEF3C7;border-radius:999px;padding:1px 8px;vertical-align:middle}
+.custiles{margin-bottom:10px}
+.custiles .smt{display:flex;flex-direction:column;gap:6px;padding:12px 14px}
+.cuk{display:flex;align-items:baseline;gap:8px;font-size:12.5px;color:var(--mute);flex-wrap:wrap}
+.cuk span{min-width:62px}
+.cuk b{font-size:19px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.cuk .pill{font-size:10.5px;padding:0 6px}
+.cuk.dim{border-top:1px dashed var(--line);padding-top:6px;margin-top:2px}
+.cuk.dim em{font-style:normal;font-size:11.5px;color:var(--faint)}
+@media (max-width:760px){.custiles{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -1214,7 +1226,7 @@ const MONTH_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','
 const YEAR = 2026;
 // ชื่อย่อที่ใช้ในแถบเมนูด้านบน (หัวข้อเต็มยังอยู่ในแถบหัวข้อของแต่ละส่วน)
 const NAV_SHORT={overview:'Monthly KPI',monthly:'Performance Trend',sssg:'%SSSG by Month',
-  delivery:'Delivery by Platform',decline:'Delivery Declines',trans:'Transactions · Ticket',
+  delivery:'Delivery by Platform',decline:'Delivery Declines',trans:'Bills & Ticket by Channel',customers:'Customers & Avg Ticket',
   cos:'Food & Labor Cost',rank:'Top & Bottom Branches',brsales:'Sales by Branch',mall:'Mall Group Health',zone:'Trade Zone Health',branches:'Branch Watchlist',branchdetail:'Branch Explorer',plan:'Plan Achievement',plbr:'Profit by Branch',pl:'Profit & Loss',cem:'CEM',oss:'OSS'}
 
 // ตารางรายเดือน (ทุกเดือนที่มีข้อมูล) — ใช้กับกราฟและตาราง
@@ -1564,7 +1576,8 @@ const SSS={branch:'all',pickM:null};
 function sssgOfBranch(b,mm){ const v=b.m&&b.m[mm]; if(!v||!(v.ly>0)||!(v.ty>0)) return null; return +((v.ty/v.ly-1)*100).toFixed(1); }
 function sssgSection(m,rows){
   const BY=filtZone(EXTRA.branchYears||[]).slice().sort((a,b)=>String(a.code).localeCompare(String(b.code)));
-  const months=MONTHLY.map(r=>r.m).filter(x=>x<=m);
+  const S=SCP||{}, inScope=S.multi&&S.n>=2;
+  const months=inScope?S.ms.slice():MONTHLY.map(r=>r.m).filter(x=>x<=m);
   const M2=v=>(v/1e6).toFixed(2)+'M';
   const bar=`<div class="plbar"><label>สาขา <select id="ssBranch"><option value="all">${FILT.zone==='all'?'ทั้งบริษัท (Santa Fe)':'ทั้งโซน '+FILT.zone}</option>${BY.map(b=>`<option value="${b.code}" ${SSS.branch===b.code?'selected':''}>${b.code} ${b.name}</option>`).join('')}</select></label>
     ${SSS.branch==='all'?'<span class="hint">คลิกแท่งเดือนในกราฟ เพื่อดู SSSG รายสาขาของเดือนนั้น</span>':'<button class="btn small" id="ssBack">← กลับภาพรวม</button>'}</div>`;
@@ -1585,19 +1598,29 @@ function sssgSection(m,rows){
       ${rb.map(r=>`<tr class="${r.m===m?'hi':''}"><td>${MONTH_TH[r.m-1]}</td><td class="n">${r.ly?M2(r.ly):'—'}</td><td class="n">${r.ty?M2(r.ty):'—'}</td><td class="n ${r.ly&&r.ty?cls(r.ty-r.ly):''}">${r.ly&&r.ty?M2(r.ty-r.ly):'—'}</td><td class="n">${r.sssg!=null?pill(r.sssg):'—'}</td></tr>`).join('')}</table></div>`);
   }
   // ---- ภาพรวม (ทั้งบริษัท หรือเฉพาะโซน) ----
-  let rowsC=rows, subT='Same-store sales growth เทียบเดือนเดียวกันปีก่อน';
+  let rowsC=inScope?rows.filter(r=>S.ms.includes(r.m)):rows, subT='Same-store sales growth เทียบเดือนเดียวกันปีก่อน';
   if(FILT.zone!=='all'){ rowsC=months.map(mm=>{ let ly=0,ty=0,n=0; BY.forEach(x=>{const v=x.m&&x.m[mm]; if(v&&v.ly>0&&v.ty>0){ly+=v.ly;ty+=v.ty;n++;}}); return {m:mm,sssg:n?+((ty/ly-1)*100).toFixed(1):null}; });
     subT=`โซน ${FILT.zone} · คำนวณจากยอดรายสาขาที่มีทั้ง 2 ปี (${BY.length} สาขา)`; }
   let panel='';
-  if(SSS.pickM){ const mm=SSS.pickM;
-    const list=BY.map(x=>({code:x.code,name:x.name,zone:x.zone,ly:x.m[mm]&&x.m[mm].ly,ty:x.m[mm]&&x.m[mm].ty,sssg:sssgOfBranch(x,mm)})).filter(x=>x.sssg!=null).sort((p,q)=>q.sssg-p.sssg);
+  /* คลิกแท่งเดือน = SSSG รายสาขาของเดือนนั้น · โหมดช่วงเวลา = แสดง SSSG รายสาขาของทั้งช่วงให้เลย */
+  const pickL=SSS.pickM?[SSS.pickM]:(S.multi?S.ms:null);
+  if(pickL){ const plab=SSS.pickM?label(SSS.pickM):S.lab, canClose=!!SSS.pickM;
+    const list=BY.map(x=>{ const z=bSum(x,pickL); return {code:x.code,name:x.name,zone:x.zone,ly:z.lyS,ty:z.tyS,sssg:z.g==null?null:+z.g.toFixed(1)}; }).filter(x=>x.sssg!=null).sort((p,q)=>q.sssg-p.sssg);
     const up=list.filter(x=>x.sssg>=0).length;
-    panel=list.length?`<div class="pick"><div class="pickhd"><h4>SSSG รายสาขา · ${label(mm)} · ${list.length} สาขา Same Store (โต <span class="pos">${up}</span> · ลด <span class="neg">${list.length-up}</span>)</h4><button class="btn small" data-ssclose>ปิด</button></div>
+    panel=list.length?`<div class="pick"><div class="pickhd"><h4>SSSG รายสาขา · ${plab} · ${list.length} สาขา Same Store (โต <span class="pos">${up}</span> · ลด <span class="neg">${list.length-up}</span>)</h4>${canClose?'<button class="btn small" data-ssclose>ปิด</button>':''}</div>
       <div class="scroll"><table><tr><th>#</th><th>สาขา</th><th>โซน</th><th class="n">${YEAR-1}</th><th class="n">${YEAR}</th><th class="n">Δ</th><th class="n">SSSG</th></tr>
       ${list.map((x,i)=>`<tr class="clk" data-ssbr="${x.code}"><td>${i+1}</td><td>${x.code} ${x.name}</td><td>${x.zone||''}</td><td class="n">${M2(x.ly)}</td><td class="n">${M2(x.ty)}</td><td class="n ${cls(x.ty-x.ly)}">${M2(x.ty-x.ly)}</td><td class="n">${pill(x.sssg)}</td></tr>`).join('')}</table></div>
       <div class="hint" style="margin-top:8px">คลิกชื่อสาขาเพื่อดู SSSG รายเดือนของสาขานั้น</div></div>`
-      :`<div class="pick"><div class="pickhd"><h4>${label(mm)}</h4><button class="btn small" data-ssclose>ปิด</button></div><div class="empty">ยังไม่มียอดรายสาขาของเดือนนี้</div></div>`; }
-  return sec('sssg','%SSSG by Month — Jan to '+MONTH_EN[m-1]+' '+YEAR,subT,bar+sssgBars(rowsC,{pick:SSS.pickM})+panel);
+      :`<div class="pick"><div class="pickhd"><h4>${plab}</h4>${canClose?'<button class="btn small" data-ssclose>ปิด</button>':''}</div><div class="empty">ยังไม่มียอดรายสาขาของเดือนนี้</div></div>`; }
+  let sstrip='';
+  if(S.multi){ /* สรุปทั้งช่วง: ทั้งบริษัทใช้ตัวเลขจากแบบฟอร์ม · เลือกโซนคิดจากยอดรายสาขาที่มีทั้ง 2 ปี */
+    let g=null, sub2='';
+    if(FILT.zone==='all'&&S.row){ g=S.row.sssg; sub2=S.row.sssgSales!=null?`${S.row.sssgSales.toFixed(2)}M vs ${S.row.sssgLy.toFixed(2)}M ปีก่อน`:(S.row.ssApprox?'เฉลี่ยถ่วงยอดขาย (บางเดือนไม่มียอด Same Store)':''); }
+    else { let t=0,l=0; BY.forEach(x=>{ const z=bSum(x,S.ms); t+=z.tyS; l+=z.lyS; }); g=l?(t/l-1)*100:null; sub2=l?`${M2(t)} vs ${M2(l)} ปีก่อน`:''; }
+    const ok=rowsC.filter(r=>r.sssg!=null), up=ok.filter(r=>r.sssg>=0).length;
+    sstrip=`<div class="strip"><div class="st ${cls(g)}"><div class="l">SSSG รวม ${S.labS}</div><div class="v">${sgn(g)}</div><div class="s">${sub2}</div></div>
+      <div class="st"><div class="l">เดือนที่โต / ลด</div><div class="v"><span class="pos">${up}</span> / <span class="neg">${ok.length-up}</span></div><div class="s">จาก ${ok.length} เดือนในช่วง</div></div></div>`; }
+  return sec('sssg','%SSSG by Month — '+(S.multi?S.titleEn:'Jan to '+MONTH_EN[m-1]+' '+YEAR),subT,bar+sstrip+sssgBars(rowsC,{pick:SSS.pickM})+panel);
 }
 
 /* ========================= Delivery รายเดือน แยก Platform ========================= */
@@ -1610,14 +1633,16 @@ function platLM(mm,n){ const v=platVal(mm-1,n,'now'); if(v!=null) return v; cons
 function deliverySection(m,d){
   const dl=d.delivery, T='Delivery Sales by Platform';
   if(!dl||!(dl.platforms||[]).length) return sec('delivery',T,'',EMPTY('Delivery'));
-  const M=v=>v.toFixed(2)+'M';
-  const tp=dl.platforms.reduce((a,p)=>a+p.prev,0), tn=dl.platforms.reduce((a,p)=>a+p.now,0);
-  const lyTot=PLATS.map(n=>platLY(m,n)), tl=lyTot.every(v=>v!=null)?lyTot.reduce((a,b)=>a+b,0):null;
-  const card=(t,prev,now,ly,tot)=>`<div class="k plat${tot?' tot':''}"><div class="ic">${t}</div><div class="bd"><div class="l">เดือนก่อน ${M(prev)}${ly!=null?' · ปีก่อน '+M(ly):''}</div><div class="v ${cls(pct(prev,now))}">${M(now)}</div><div class="s">${pill(pct(prev,now))} เดือนก่อน${ly!=null?' · '+pill(pct(ly,now))+' ปีก่อน':''}</div></div></div>`;
+  const M=v=>v.toFixed(2)+'M', S=SCP||{}, PV=S.multi?'ช่วงก่อน':'เดือนก่อน';
+  const tp=dl.platforms.some(p=>p.prev==null)?null:dl.platforms.reduce((a,p)=>a+p.prev,0), tn=dl.platforms.reduce((a,p)=>a+p.now,0);
+  const lyOf=n=>{ if(!S.multi) return platLY(m,n); const a=S.ms.map(x=>platLY(x,n)); return a.some(v=>v==null)?null:a.reduce((p,q)=>p+q,0); };
+  const lyTot=PLATS.map(lyOf), tl=lyTot.every(v=>v!=null)?lyTot.reduce((a,b)=>a+b,0):null;
+  const card=(t,prev,now,ly,tot)=>`<div class="k plat${tot?' tot':''}"><div class="ic">${t}</div><div class="bd"><div class="l">${[prev!=null?PV+' '+M(prev):'',ly!=null?'ปีก่อน '+M(ly):''].filter(Boolean).join(' · ')||S.labS}</div><div class="v ${prev!=null?cls(pct(prev,now)):''}">${M(now)}</div><div class="s">${[prev!=null?pill(pct(prev,now))+' '+PV:'',ly!=null?pill(pct(ly,now))+' ปีก่อน':''].filter(Boolean).join(' · ')}</div></div></div>`;
+  const shP=dl.sharePrev, shN=dl.shareNow;
   const cards=`<div class="cards" style="margin-bottom:18px">
     ${card('รวม Delivery',tp,tn,tl,true)}
-    <div class="k plat tot"><div class="ic">สัดส่วนต่อยอดขายรวม</div><div class="bd"><div class="l">เดือนก่อน ${dl.sharePrev.toFixed(1)}%</div><div class="v ${cls(dl.shareNow-dl.sharePrev)}">${dl.shareNow.toFixed(1)}%</div><div class="s">${sgn(dl.shareNow-dl.sharePrev,1,' ppt')} เทียบเดือนก่อน</div></div></div>
-    ${PLATS.map(n=>{const p=dl.platforms.find(x=>platKey(x.name)===platKey(n)); return p?card(n,p.prev,p.now,platLY(m,n),false):'';}).join('')}
+    <div class="k plat tot"><div class="ic">สัดส่วนต่อยอดขายรวม</div><div class="bd"><div class="l">${shP!=null?PV+' '+shP.toFixed(1)+'%':S.labS}</div><div class="v ${shP!=null&&shN!=null?cls(shN-shP):''}">${shN!=null?shN.toFixed(1)+'%':'—'}</div><div class="s">${shP!=null&&shN!=null?sgn(shN-shP,1,' ppt')+' เทียบ'+PV:''}</div></div></div>
+    ${PLATS.map(n=>{const p=dl.platforms.find(x=>platKey(x.name)===platKey(n)); return p?card(n,p.prev,p.now,lyOf(n),false):'';}).join('')}
   </div>`;
   // กราฟรายเดือน: แต่ละเดือน 3 แท่ง (+ แท่งจางของเดือนก่อน / ปีก่อน เมื่อติ๊กเทียบ)
   const sm=scopeMonths();
@@ -1655,9 +1680,11 @@ function transSection(m,d){
   const sel=chs.find(c=>c.key===TRS.ch)||chs[0];
   const chips=`<div class="chips">${chs.map(c=>`<button class="chip ${c.key===sel.key?'on':''}" data-ch="${c.key}">${c.name}</button>`).join('')}</div>`;
   const NA='แบบฟอร์มไม่แยกลูกค้ารายช่องทาง';
-  const st=(l,a,b,f=fmtN,pre='')=>{ if(a==null||b==null) return `<div class="st"><div class="l">${l}</div><div class="v" style="color:var(--faint)">—</div><div class="s">${NA}</div></div>`;
+  const S=SCP||{}, PVn=S.multi?(S.prevLabS||'ช่วงก่อน'):'เดือนก่อน', NWn=S.multi?S.labS:'เดือนนี้';
+  const st=(l,a,b,f=fmtN,pre='')=>{ if(b!=null&&a==null) return `<div class="st"><div class="l">${l}</div><div class="v">${pre}${f(b)}</div><div class="s">ไม่มีช่วงก่อนหน้าให้เทียบ</div></div>`;
+    if(a==null||b==null) return `<div class="st"><div class="l">${l}</div><div class="v" style="color:var(--faint)">—</div><div class="s">${NA}</div></div>`;
     const p=pct(a,b); return `<div class="st ${cls(p)}"><div class="l">${l}</div><div class="v">${sgn(p)}</div><div class="s">${pre}${f(a)} → ${pre}${f(b)}</div></div>`; };
-  const sales=c=>(c.trans&&c.ticket)?[c.trans[0]*c.ticket[0]/1e6,c.trans[1]*c.ticket[1]/1e6]:null;
+  const sales=c=>(c.trans&&c.ticket&&c.trans[1]!=null)?[(c.trans[0]!=null&&c.ticket[0]!=null)?c.trans[0]*c.ticket[0]/1e6:null,c.trans[1]*c.ticket[1]/1e6]:null;
   const strip=`<div class="grp">${sel.name} · ${t.compare}</div><div class="strip">
     ${st('จำนวนบิล (Trans.)',sel.trans[0],sel.trans[1])}
     ${st('ค่าเฉลี่ยต่อบิล (Ticket)',sel.ticket[0],sel.ticket[1],v=>v,'฿')}
@@ -1666,13 +1693,13 @@ function transSection(m,d){
     ${sales(sel)?st('ยอดขาย ≈ บิล × เช็คเฉลี่ย',sales(sel)[0],sales(sel)[1],v=>v.toFixed(2)+'M','฿'):''}
   </div>`;
   // กราฟรายช่องทาง (คลิกแท่งเพื่อเลือกช่องทาง)
-  const chn=chs.slice(1).filter(c=>c.trans&&c.trans[0]>0);
+  const chn=chs.slice(1).filter(c=>c.trans&&c.trans[1]>0);
   let charts='';
   if(chn.length){ const groups=chn.map(c=>({name:c.name})), selG=chn.findIndex(c=>c.key===sel.key);
-    const mk=(k,f)=>groupBars(groups,[{key:'prev',name:'เดือนก่อน',color:'var(--chart-soft)',vals:chn.map(c=>c[k][0])},{key:'now',name:'เดือนนี้',color:'var(--chart-1)',vals:chn.map(c=>c[k][1])}],
+    const mk=(k,f)=>groupBars(groups,[{key:'prev',name:PVn,color:'var(--chart-soft)',vals:chn.map(c=>c[k][0])},{key:'now',name:NWn,color:'var(--chart-1)',vals:chn.map(c=>c[k][1])}],
       {w:580,h:210,fmt:f,tipFmt:k==='trans'?(v=>fmtN(Math.round(v))+' บิล'):(v=>'฿'+Math.round(v)),attr:`data-chs="${chn.map(c=>c.key).join('|')}"`,sel:selG>=0?{g:selG,k:'now'}:null});
     charts=`<div class="two"><div><h3>จำนวนบิลรายช่องทาง (พันบิล)</h3>${mk('trans',v=>(v/1000).toFixed(1))}</div><div><h3>ค่าเฉลี่ยต่อบิลรายช่องทาง (฿)</h3>${mk('ticket',v=>v)}</div></div>`
-      +legendOf([{name:'เดือนก่อน',color:'var(--chart-soft)'},{name:'เดือนนี้',color:'var(--chart-1)'}])+`<div class="hint" style="margin-top:4px">คลิกแท่ง หรือปุ่มช่องทางด้านบน เพื่อดูตัวเลขของช่องทางนั้น</div>`; }
+      +legendOf([{name:PVn,color:'var(--chart-soft)'},{name:NWn,color:'var(--chart-1)'}])+`<div class="hint" style="margin-top:4px">คลิกแท่ง หรือปุ่มช่องทางด้านบน เพื่อดูตัวเลขของช่องทางนั้น</div>`; }
   // ตารางรายช่องทาง: บิล · เช็คเฉลี่ย · ลูกค้า · ลูกค้า/บิล · ยอดขาย
   const pc=(a,b)=>(a==null||b==null)?'<td class="n">—</td>':`<td class="n">${pill(pct(a,b))}</td>`;
   const c2=(v,f=fmtN)=>`<td class="n">${v==null?'—':f(v)}</td>`;
@@ -1680,7 +1707,7 @@ function transSection(m,d){
     ${chs.map(c=>{const s=sales(c); return `<tr class="clk ${c.key===sel.key?'sel':''} ${c.key==='all'?'hi':''}" data-ch="${c.key}"><td>${c.name}</td>${c2(c.trans[0])}${c2(c.trans[1])}${pc(c.trans[0],c.trans[1])}${c2(c.ticket[0],v=>'฿'+v)}${c2(c.ticket[1],v=>'฿'+v)}${pc(c.ticket[0],c.ticket[1])}${c2(c.customer&&c.customer[0])}${c2(c.customer&&c.customer[1])}${pc(c.customer&&c.customer[0],c.customer&&c.customer[1])}${c2(c.custAvg&&c.custAvg[1],v=>(+v).toFixed(2))}${c2(s&&s[1],v=>v.toFixed(2)+'M')}</tr>`;}).join('')}</table></div>
     <div class="hint" style="margin-top:6px">ลูกค้าและลูกค้า/บิล มีเฉพาะยอดรวม (${NA}) · ยอดขาย ≈ จำนวนบิล × เช็คเฉลี่ย</div>`;
   // แนวโน้มรายเดือน + ค่าเฉลี่ย ของช่องทางที่เลือก
-  const hist=MONTHLY.map(r=>r.m).filter(x=>x<=m&&DETAIL[x]&&DETAIL[x].trans);
+  const hist=MONTHLY.map(r=>r.m).filter(x=>x<=m&&DETAIL[x]&&DETAIL[x].trans&&(!(S.multi&&S.n>=2)||S.ms.includes(x)));
   let trend='';
   if(hist.length>1){
     const g=mm=>{const tt=DETAIL[mm].trans; if(sel.key==='all') return {trans:tt.trans[1],ticket:tt.ticket[1],customer:tt.customer&&tt.customer[1],custAvg:tt.custAvg&&tt.custAvg[1]}; const c=(tt.channels||[]).find(x=>x.name===sel.key); return c?{trans:c.trans[1],ticket:c.ticket[1]}:null;};
@@ -1695,6 +1722,70 @@ function transSection(m,d){
       ${row('<b>ค่าเฉลี่ย</b>',{trans:av('trans'),ticket:av('ticket'),customer:av('customer'),custAvg:av('custAvg')},false)}</table></div>`;
   }
   return sec('trans',T,t.compare||'',chips+strip+charts+table+trend+(t.note?`<div class="note">${t.note}</div>`:''));
+}
+
+/* ========================= ลูกค้าและบิลเฉลี่ย (เมนูแยก) =========================
+   ภาพรวม: ลูกค้า · บิล · บิลเฉลี่ย · ลูกค้าต่อบิล · ใช้จ่ายต่อหัว
+   แยกช่องทาง: บิลเฉลี่ย + จำนวนบิล ของ Dine in / Takeaway / Delivery
+   (แบบฟอร์มส่งยอดขายมีจำนวนลูกค้าเฉพาะยอดรวม ไม่แยกช่องทาง จึงไม่ประมาณตัวเลขขึ้นเอง) */
+const CUS_CH=[{k:'Dine In',n:'Dine in',c:'#D9822D',bg:'#FFF5EB',bd:'#F7DDC2',tx:'#B45F16'},
+  {k:'Take away',n:'Takeaway',c:'#7C5CFC',bg:'#F5F3FF',bd:'#DDD6FE',tx:'#6D28D9'},
+  {k:'Delivery',n:'Delivery',c:'#0F9488',bg:'#EEF8F6',bd:'#CBEAE5',tx:'#0B6E66'}];
+const chKey=v=>String(v||'').toLowerCase().replace(/[\s_\-]/g,'');
+function customersSection(m){
+  const S=SCP||{multi:false}, T='Customers & Average Ticket';
+  const now=aggTr(S.multi?S.ms:[m]), prv=S.multi?S.tP:aggTr(m>1?[m-1]:null);
+  if(!now) return sec('customers',T,'',EMPTY('ลูกค้า/บิล'));
+  const PV=S.multi?S.prevLabS:(m>1&&prv?MONTH_TH[m-2]:null), NW=S.multi?S.labS:MONTH_TH[m-1];
+  const fN=v=>v==null?'—':fmtN(Math.round(v)), fB=v=>v==null?'—':'฿'+fmtN(Math.round(v)), f2=v=>v==null?'—':(+v).toFixed(2);
+  const spend=o=>o&&o.customer?o.trans*o.ticket/o.customer:null;
+  const findCh=(o,k)=>o&&o.ch.find(x=>chKey(x.name)===chKey(k));
+  const P=prv||{};
+  const tile=(l,a,b,f,note)=>`<div class="st ${a!=null&&b!=null&&PV?cls(pct(a,b)):''}"><div class="l">${l}</div><div class="v">${f(b)}</div><div class="s">${a!=null&&b!=null&&PV?`${pill(pct(a,b))} vs ${PV} (${f(a)})`:(note||(S.multi?'ไม่มีช่วงก่อนหน้าให้เทียบ':''))}</div></div>`;
+  const strip=`<div class="strip">
+    ${tile('ลูกค้า (Customers)',P.customer,now.customer,fN,now.customer==null?'ไม่มีข้อมูลลูกค้า':'')}
+    ${tile('จำนวนบิล (Bills)',P.trans,now.trans,fN)}
+    ${tile('บิลเฉลี่ย (Avg ticket)',P.ticket,now.ticket,fB)}
+    ${tile('ลูกค้าต่อบิล',P.custAvg,now.custAvg,f2)}
+    ${tile('ใช้จ่ายต่อหัว',spend(prv),spend(now),fB)}
+  </div>`;
+  /* ---- แยกช่องทาง ---- */
+  const totTr=now.ch.reduce((a,c)=>a+(c.trans||0),0);
+  const chTiles=`<div class="grp">แยกช่องทาง · ${NW}${PV?' · % เทียบ '+PV:''}</div><div class="smtiles custiles">${CUS_CH.map(o=>{ const c=findCh(now,o.k), p=findCh(prv,o.k);
+      const sty=`background:${o.bg};border-color:${o.bd};box-shadow:inset 0 3px 0 ${o.c}`;
+      if(!c) return `<div class="smt" style="${sty}"><div class="smh"><i style="background:${o.c}"></i>${o.n}</div><div class="cuk dim"><span>ไม่มีข้อมูล</span></div></div>`;
+      return `<div class="smt" style="${sty}" data-tip="${o.n}\nบิลเฉลี่ย ${fB(c.ticket)}\nจำนวนบิล ${fN(c.trans)}${p?`\n${PV}: ${fB(p.ticket)} · ${fN(p.trans)} บิล`:''}">
+        <div class="smh"><i style="background:${o.c}"></i>${o.n}</div>
+        <div class="cuk"><span>บิลเฉลี่ย</span><b>${fB(c.ticket)}</b>${p&&p.ticket?pill(pct(p.ticket,c.ticket)):''}</div>
+        <div class="cuk"><span>จำนวนบิล</span><b>${fN(c.trans)}</b>${p&&p.trans?pill(pct(p.trans,c.trans)):''}</div>
+        <div class="sms"><b style="color:${o.tx}">${totTr?(c.trans/totTr*100).toFixed(1)+'%':'—'}</b> ของบิลทั้งหมด</div>
+        <div class="cuk dim"><span>ลูกค้า</span><em>แบบฟอร์มไม่แยกช่องทาง</em></div></div>`; }).join('')}</div>
+    <div class="note">จำนวนลูกค้าในแบบฟอร์มส่งยอดขายมีเฉพาะยอดรวมทุกช่องทาง ยังไม่แยก Dine in / Takeaway / Delivery · ถ้าต้องการลูกค้ารายช่องทาง ต้องเพิ่มคอลัมน์ในแบบฟอร์ม</div>`;
+  /* ---- รายเดือน ---- */
+  const tm=(S.multi&&S.n>=2?S.ms:MONTHLY.map(r=>r.m).filter(x=>x<=m)).map(x=>({m:x,v:trOf(x)})).filter(r=>r.v);
+  let trend='';
+  if(tm.length>=2){
+    const labs=tm.map(r=>MONTH_TH[r.m-1]);
+    const cSer=[{name:'ลูกค้า',color:'#D9822D',w:3,label:1,vals:tm.map(r=>r.v.customer)},{name:'บิล',color:'#94A3B8',vals:tm.map(r=>r.v.trans)}];
+    const tSer=[{key:'all',name:'รวม',color:'#334155',vals:tm.map(r=>r.v.ticket)}]
+      .concat(CUS_CH.map(o=>({key:o.k,name:o.n,color:o.c,vals:tm.map(r=>{ const c=findCh(r.v,o.k); return c?c.ticket:null; })})));
+    trend=`<div class="two"><div><h3>ลูกค้าและจำนวนบิล รายเดือน</h3>${lineSeries(labs,cSer,{w:580,h:230,fmt:v=>(v/1000).toFixed(0)+'K',tipFmt:v=>fmtN(Math.round(v))})}${legendOf(cSer)}</div>
+      <div><h3>บิลเฉลี่ยรายเดือน แยกช่องทาง (฿)</h3>${groupBars(labs.map(n=>({name:n})),tSer,{w:580,h:230,fmt:v=>Math.round(v),tipFmt:v=>'฿'+Math.round(v),bw:20,vals:tm.length<=4})}${legendOf(tSer)}</div></div>
+      <div class="grp">รายเดือน</div>
+      <div class="scroll"><table><tr><th>เดือน</th><th class="n">ลูกค้า</th><th class="n">บิล</th><th class="n">ลูกค้า/บิล</th><th class="n">บิลเฉลี่ย รวม</th>${CUS_CH.map(o=>`<th class="n">บิลเฉลี่ย ${o.n}</th>`).join('')}<th class="n">ใช้จ่ายต่อหัว</th></tr>
+      ${tm.map(r=>`<tr class="${r.m===m&&!S.multi?'hi':''}"><td>${r.m===m&&!S.multi?'★ ':''}${MONTH_TH[r.m-1]}</td><td class="n">${fN(r.v.customer)}</td><td class="n">${fN(r.v.trans)}</td><td class="n">${r.v.customer?f2(r.v.customer/r.v.trans):'—'}</td><td class="n"><b>${fB(r.v.ticket)}</b></td>${CUS_CH.map(o=>{ const c=findCh(r.v,o.k); return `<td class="n">${c?fB(c.ticket):'—'}</td>`; }).join('')}<td class="n">${fB(spend(r.v))}</td></tr>`).join('')}
+      ${S.multi?`<tr class="hi"><td><b>รวม ${S.labS}</b></td><td class="n"><b>${fN(now.customer)}</b></td><td class="n"><b>${fN(now.trans)}</b></td><td class="n">${f2(now.custAvg)}</td><td class="n"><b>${fB(now.ticket)}</b></td>${CUS_CH.map(o=>{ const c=findCh(now,o.k); return `<td class="n">${c?fB(c.ticket):'—'}</td>`; }).join('')}<td class="n">${fB(spend(now))}</td></tr>`:''}
+      </table></div>`;
+  }
+  /* ---- รายสาขา ---- */
+  const bRows=filtZone((S.multi?(S.br?S.br.rows:[]):(DETAIL[m]||{}).branchRows)||[]).filter(b=>b.tr>0);
+  const pMap={}; ((S.multi?(S.prevBr?S.prevBr.rows:[]):(DETAIL[m-1]||{}).branchRows)||[]).forEach(b=>pMap[b.code]=b);
+  let btbl='';
+  if(bRows.length){ const list=bRows.slice().sort((a,b)=>(b.cust||0)-(a.cust||0)), hasP=Object.keys(pMap).length>0;
+    btbl=`<div class="grp">รายสาขา · ${S.multi?S.lab:label(m)} · ${list.length} สาขา · เรียงตามจำนวนลูกค้า</div>
+    <div class="scroll"><table><tr><th>#</th><th>สาขา</th><th class="n">ลูกค้า</th>${hasP?`<th class="n">vs ${PV||'ก่อนหน้า'}</th>`:''}<th class="n">บิล</th><th class="n">ลูกค้า/บิล</th><th class="n">บิลเฉลี่ย</th><th class="n">ใช้จ่ายต่อหัว</th></tr>
+    ${list.map((b,i)=>{ const p=pMap[b.code]; return `<tr><td>${i+1}</td><td>${b.code} ${b.name}</td><td class="n"><b>${fN(b.cust||null)}</b></td>${hasP?`<td class="n">${p&&p.cust&&b.cust?pill(pct(p.cust,b.cust)):'—'}</td>`:''}<td class="n">${fN(b.tr)}</td><td class="n">${b.cust?f2(b.cust/b.tr):'—'}</td><td class="n">${fB(b.tk)}</td><td class="n">${b.cust?fB(b.sales/b.cust):'—'}</td></tr>`; }).join('')}</table></div>`; }
+  return sec('customers',T,'',strip+chTiles+trend+btbl);
 }
 
 /* ========================= CEM / OSS: กลุ่มคะแนน · เทียบเดือน/ปีก่อน · เจาะรายสาขา ========================= */
@@ -1862,33 +1953,34 @@ function rankSection(m0){
   const m=brMonth(m0); if(m==null) return null;
   const BY=brOfYear(); if(!BY.length) return null;
   const monthsAll=MONTHLY.map(r=>r.m).filter(x=>x<=m);
-  const rowsOf=mm=>BY.map(b=>{const v=(b.m&&b.m[mm])||{}; const ty=v.ty||null, ly=v.ly||null;
-      return {code:b.code,name:b.name,zone:b.zone,mall:b.mall,ty,ly,g:(ty&&ly)?((ty/ly-1)*100):null};})
-    .filter(r=>r.ty!=null&&r.ty>0);
-  const cur=rowsOf(m); if(!cur.length) return null;
+  const S=SCP||{}, L=S.multi?S.ms.filter(x=>x<=m):[m], LS=S.multi?RNG(L):MONTH_TH[m-1];
+  const rowsOf=mm=>{ const LL=[].concat(mm); return BY.map(b=>{ const z=bSum(b,LL); const ty=z.ty||null, ly=z.ly||null;
+      return {code:b.code,name:b.name,zone:b.zone,mall:b.mall,ty,ly,g:z.g};})
+    .filter(r=>r.ty!=null&&r.ty>0); };
+  const cur=rowsOf(L); if(!cur.length) return null;
   const N=RNK.n;
   const key=RNK.by==='sssg'?'g':'ty';
   const valid=RNK.by==='sssg'?cur.filter(r=>r.g!=null):cur;
   const sorted=valid.slice().sort((a,b)=>b[key]-a[key]);
   const top=sorted.slice(0,N), bot=sorted.slice(-N).reverse();
   /* ติดอันดับกี่เดือนติด (นับย้อนหลังจากเดือนนี้) */
-  const hist=monthsAll.slice(-4);
+  const hist=S.multi?[]:monthsAll.slice(-4);   // จุดติดอันดับรายเดือน ใช้เฉพาะโหมดรายเดือน
   const setsT={}, setsB={};
   hist.forEach(mm=>{ const rr=rowsOf(mm).filter(r=>RNK.by!=='sssg'||r.g!=null).sort((a,b)=>b[key]-a[key]);
     setsT[mm]=new Set(rr.slice(0,N).map(r=>r.code)); setsB[mm]=new Set(rr.slice(-N).map(r=>r.code)); });
   const streak=(code,set)=>hist.filter(mm=>set[mm]&&set[mm].has(code)).length;
   const M2=v=>v==null?'—':(v/1e6).toFixed(2)+'M';
   const dots=(k,tot)=>`<span class="dots" title="ติดอันดับ ${k} จาก ${tot} เดือนล่าสุด">${Array.from({length:tot},(_,i)=>`<i class="${i<k?'on':''}"></i>`).join('')}</span>`;
-  const tbl=(arr,set)=>`<div class="scroll"><table><tr><th>#</th><th>สาขา</th><th class="n">ยอด ${MONTH_TH[m-1]}</th><th class="n">YoY</th><th class="n">ติดอันดับ</th></tr>
+  const tbl=(arr,set)=>`<div class="scroll"><table><tr><th>#</th><th>สาขา</th><th class="n">ยอด ${LS}</th><th class="n">YoY</th>${hist.length?'<th class="n">ติดอันดับ</th>':''}</tr>
     ${arr.map((r,i)=>`<tr class="clk" data-ssbr="${r.code}"><td>${i+1}</td>
       <td>${r.code} ${r.name}<span class="tiny">${r.zone||''}</span></td>
       <td class="n"><b>${M2(r.ty)}</b><span class="tiny">ปีก่อน ${M2(r.ly)}</span></td>
       <td class="n">${r.g==null?'—':pill(r.g)}</td>
-      <td class="n">${dots(streak(r.code,set),hist.length)}</td></tr>`).join('')}</table></div>`;
+      ${hist.length?`<td class="n">${dots(streak(r.code,set),hist.length)}</td>`:''}</tr>`).join('')}</table></div>`;
   const bar=`<div class="plbar"><label>เรียงตาม <select id="rkBy"><option value="sales" ${RNK.by==='sales'?'selected':''}>ยอดขาย</option><option value="sssg" ${RNK.by==='sssg'?'selected':''}>%SSSG (โตเทียบปีก่อน)</option></select></label>
     <label>จำนวน <select id="rkN">${[5,10,15,20].map(n=>`<option value="${n}" ${RNK.n===n?'selected':''}>${n} สาขา</option>`).join('')}</select></label>
     <span class="hint">จุดท้ายแถว = ติดอันดับกี่เดือนจาก ${hist.length} เดือนล่าสุด · คลิกแถวเพื่อดู SSSG รายเดือนของสาขานั้น</span></div>`;
-  return sec('rank','Top & Bottom Branches — sales ranking',`${label(m)} · ${cur.length} สาขาที่มียอด${FILT.zone!=='all'?' · โซน '+FILT.zone:''}${brNote(m,m0)}`,
+  return sec('rank','Top & Bottom Branches — sales ranking',`${S.multi?S.lab:label(m)} · ${cur.length} สาขาที่มียอด${FILT.zone!=='all'?' · โซน '+FILT.zone:''}${S.multi?'':brNote(m,m0)}`,
     bar+`<div class="two"><div><h3 class="g">${RNK.by==='sssg'?'โตสูงสุด':'ยอดสูงสุด'} ${N} สาขา</h3>${tbl(top,setsT)}</div>
     <div><h3 class="r">${RNK.by==='sssg'?'ลดมากสุด':'ยอดต่ำสุด'} ${N} สาขา</h3>${tbl(bot,setsB)}</div></div>`);
 }
@@ -1896,7 +1988,8 @@ function rankSection(m0){
 /* ========================= ยอดขายรายสาขา แยกที่มาของยอด ========================= */
 const BSL={sort:'sales'};
 function branchSalesSection(m){
-  const rows=filtZone((DETAIL[m]||{}).branchRows||[]).filter(b=>b.sales>0);
+  const SC=SCP||{};
+  const rows=filtZone((SC.multi?(SC.br?SC.br.rows:[]):(DETAIL[m]||{}).branchRows)||[]).filter(b=>b.sales>0);
   if(!rows.length) return null;
   const has=rows.some(b=>b.dine!=null||b.take!=null);   // ไฟล์บางเดือนไม่มียอดแยกDine in/Takeaway
   const zoneOf=c=>(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone)||'';
@@ -1913,7 +2006,7 @@ function branchSalesSection(m){
       <option value="delipc" ${BSL.sort==='delipc'?'selected':''}>%Delivery</option></select></label>
     <span class="hint">ยอดจากแบบฟอร์มส่งยอดขาย หน่วยบาท · คลิกแถวเพื่อดูรายละเอียดสาขานั้น</span></div>`;
   const strip=T?`<div class="strip">
-    <div class="st"><div class="l">ยอดขายรวม ${label(m)}</div><div class="v">${baht(T.sales)}</div><div class="s">${T.n} สาขา</div></div>
+    <div class="st"><div class="l">ยอดขายรวม ${SC.multi?SC.lab:label(m)}</div><div class="v">${baht(T.sales)}</div><div class="s">${T.n} สาขา</div></div>
     ${has?`<div class="st"><div class="l">Dine in</div><div class="v">${baht(T.dine)}</div><div class="s">${pc(T.dine,T.sales)} ของยอดขาย</div></div>
     <div class="st"><div class="l">Takeaway</div><div class="v">${baht(T.take)}</div><div class="s">${pc(T.take,T.sales)} ของยอดขาย</div></div>`:''}
     <div class="st"><div class="l">Delivery</div><div class="v">${baht(T.deli)}</div><div class="s">${pc(T.deli,T.sales)} · Grab ${baht(T.grab)} · LM ${baht(T.lm)} · Shopee ${baht(T.sp)}</div></div>
@@ -1939,11 +2032,12 @@ function branchSalesSection(m){
 const MAL={pick:null};
 function groupSection(id,title,keyOf,labelName,STATE,ctlId){
   const BY=brOfYear(); if(!BY.length) return null;
-  const m=brMonth(curM); if(m==null) return null;
+  const S=SCP||{}; const m=brMonth(S.multi?S.last:curM); if(m==null) return null;
   const months=MONTHLY.map(r=>r.m).filter(x=>x<=m);
+  const L=S.multi?S.ms.filter(x=>x<=m):[m], LS=S.multi?RNG(L):MONTH_TH[m-1], LAB=S.multi?S.lab:label(m);
   const gmap={}; BY.forEach(b=>{ const k=keyOf(b)||'อื่นๆ'; (gmap[k]=gmap[k]||[]).push(b); });
   const names=Object.keys(gmap); if(!names.length) return null;
-  const rows=names.map(nm=>{ const s=sumMonth(gmap[nm],m); const ytdL=months.reduce((a,x)=>a+sumMonth(gmap[nm],x).ly,0), ytdT=months.reduce((a,x)=>a+sumMonth(gmap[nm],x).ty,0);
+  const rows=names.map(nm=>{ const s=sumMonths(gmap[nm],L); const ytdL=months.reduce((a,x)=>a+sumMonth(gmap[nm],x).ly,0), ytdT=months.reduce((a,x)=>a+sumMonth(gmap[nm],x).ty,0);
     return {name:nm, n:gmap[nm].length, act:s.n, ty:s.ty, ly:s.ly, g:s.g, ytdT, ytdG:ytdL?((ytdT/ytdL-1)*100):null}; })
     .filter(r=>r.ty>0||r.ly>0).sort((a,b)=>(a.g==null?9e9:a.g)-(b.g==null?9e9:b.g));
   const M2=v=>v==null?'—':(v/1e6).toFixed(2)+'M';
@@ -1951,25 +2045,25 @@ function groupSection(id,title,keyOf,labelName,STATE,ctlId){
   const sel=STATE.pick&&gmap[STATE.pick]?STATE.pick:null;
   const bars=groupBars(rows.map(r=>({name:r.name})),[
       {key:'ly',name:'ปีก่อน',color:'var(--chart-soft)',vals:rows.map(r=>+(r.ly/1e6).toFixed(2))},
-      {key:'ty',name:label(m),colors:rows.map(r=>r.g==null?'var(--chart-3)':(r.g>=0?'var(--good)':'var(--bad)')),vals:rows.map(r=>+(r.ty/1e6).toFixed(2))}],
+      {key:'ty',name:LAB,colors:rows.map(r=>r.g==null?'var(--chart-3)':(r.g>=0?'var(--good)':'var(--bad)')),vals:rows.map(r=>+(r.ty/1e6).toFixed(2))}],
     {h:225,fmt:v=>v.toFixed(1),tipFmt:v=>v.toFixed(2)+'M',bw:34,sel:null});
-  const tbl=`<div class="scroll" style="margin-top:12px"><table><tr><th>#</th><th>${labelName}</th><th class="n">สาขา</th><th class="n">ยอด ${MONTH_TH[m-1]}</th><th class="n">ปีก่อน</th><th class="n">YoY</th><th class="n">สะสม ม.ค.–${MONTH_TH[m-1]}</th><th class="n">YoY สะสม</th></tr>
+  const tbl=`<div class="scroll" style="margin-top:12px"><table><tr><th>#</th><th>${labelName}</th><th class="n">สาขา</th><th class="n">ยอด ${LS}</th><th class="n">ปีก่อน</th><th class="n">YoY</th><th class="n">สะสม ม.ค.–${MONTH_TH[m-1]}</th><th class="n">YoY สะสม</th></tr>
     ${rows.map((r,i)=>`<tr class="clk ${STATE.pick===r.name?'sel':''}" data-gp="${r.name}"><td>${i+1}</td><td>${r.name}</td><td class="n">${r.act}/${r.n}</td>
       <td class="n">${M2(r.ty)}</td><td class="n">${M2(r.ly)}</td><td class="n">${r.g==null?'—':pill(r.g)}</td>
       <td class="n">${M2(r.ytdT)}</td><td class="n">${r.ytdG==null?'—':pill(r.ytdG)}</td></tr>`).join('')}</table></div>`;
-  const sub=`${label(m)}${brNote(m,curM)}`;
+  const sub=S.multi?LAB:`${label(m)}${brNote(m,curM)}`;
   /* ---- เลือกกลุ่มแล้ว: ทั้งหัวข้อแสดงข้อมูลของกลุ่มนั้น ---- */
   if(sel){
     const R=rows.find(r=>r.name===sel)||{};
     const N=rows.filter(r=>r.g!=null).length, rank=R.g==null?null:rows.filter(r=>r.g!=null&&r.g>R.g).length+1;
-    const list=gmap[sel].map(b=>{ const v=(b.m&&b.m[m])||{}; let yl=0,yt=0;
+    const list=gmap[sel].map(b=>{ const v=bSum(b,L); let yl=0,yt=0;
         months.forEach(x=>{ const w=b.m&&b.m[x]; if(w){ yl+=w.ly||0; yt+=w.ty||0; } });
         return {code:b.code,name:b.name,zone:b.zone,ty:v.ty||null,ly:v.ly||null,g:(v.ty&&v.ly)?((v.ty/v.ly-1)*100):null,
                 yt,yg:(yl&&yt)?((yt/yl-1)*100):null}; })
       .sort((a,b)=>(a.g==null?9e9:a.g)-(b.g==null?9e9:b.g));
     const down=list.filter(b=>b.g!=null&&b.g<0).length;
     const stripSel=`<div class="strip">
-      <div class="st ${R.g==null?'':cls(R.g)}"><div class="l">ยอดขาย ${sel} ${label(m)}</div><div class="v">${M2(R.ty)}</div><div class="s">ปีก่อน ${M2(R.ly)} ${R.g==null?'':pill(R.g)}</div></div>
+      <div class="st ${R.g==null?'':cls(R.g)}"><div class="l">ยอดขาย ${sel} ${LAB}</div><div class="v">${M2(R.ty)}</div><div class="s">ปีก่อน ${M2(R.ly)} ${R.g==null?'':pill(R.g)}</div></div>
       <div class="st ${R.ytdG==null?'':cls(R.ytdG)}"><div class="l">สะสม ม.ค.–${MONTH_TH[m-1]}</div><div class="v">${M2(R.ytdT)}</div><div class="s">${R.ytdG==null?'':pill(R.ytdG)} เทียบปีก่อน</div></div>
       <div class="st"><div class="l">สาขาที่มียอด</div><div class="v">${R.act} / ${R.n}</div><div class="s">ยอดลด ${down} สาขา</div></div>
       <div class="st"><div class="l">อันดับ YoY</div><div class="v">${rank==null?'—':rank+' / '+N}</div><div class="s">1 = โตมากสุด</div></div>
@@ -1980,7 +2074,7 @@ function groupSection(id,title,keyOf,labelName,STATE,ctlId){
       +lineSeries(months.map(x=>MONTH_TH[x-1]),ser,{h:230,fmt:v=>v.toFixed(1)+'M',tipFmt:v=>v.toFixed(2)+'M'})
       +`<div class="legend"><span><i style="background:#D9822D"></i>${YEAR}</span><span><i style="background:#A3AEBB"></i>${YEAR-1}</span></div>`;
     const btbl=`<div class="grp">สาขาในกลุ่ม ${sel} · ${list.length} สาขา</div>
-      <div class="scroll"><table><tr><th>สาขา</th><th>โซน</th><th class="n">ยอด ${MONTH_TH[m-1]}</th><th class="n">ปีก่อน</th><th class="n">YoY</th><th class="n">สะสม ม.ค.–${MONTH_TH[m-1]}</th><th class="n">YoY สะสม</th></tr>
+      <div class="scroll"><table><tr><th>สาขา</th><th>โซน</th><th class="n">ยอด ${LS}</th><th class="n">ปีก่อน</th><th class="n">YoY</th><th class="n">สะสม ม.ค.–${MONTH_TH[m-1]}</th><th class="n">YoY สะสม</th></tr>
       ${list.map(b=>`<tr class="clk" data-ssbr="${b.code}"><td>${b.code} ${b.name}</td><td>${b.zone||''}</td>
         <td class="n">${M2(b.ty)}</td><td class="n">${M2(b.ly)}</td><td class="n">${b.g==null?'—':pill(b.g)}</td>
         <td class="n">${M2(b.yt)}</td><td class="n">${b.yg==null?'—':pill(b.yg)}</td></tr>`).join('')}</table></div>`;
@@ -2004,13 +2098,14 @@ function mallSection(){ return groupSection('mall','Mall Group Health — which 
 /* ========================= แนวโน้มรายโซนผู้จัดการเขต ========================= */
 function zoneSection(){
   const BY=(EXTRA.branchYears||[]); if(!BY.length) return null;
-  const m=brMonth(curM); if(m==null) return null;
+  const S=SCP||{}; const m=brMonth(S.multi?S.last:curM); if(m==null) return null;
   const months=MONTHLY.map(r=>r.m).filter(x=>x<=m);
+  const L=S.multi?S.ms.filter(x=>x<=m):[m], LS=S.multi?RNG(L):MONTH_TH[m-1];
   const zones=[...new Set(BY.map(b=>b.zone).filter(Boolean))].sort();
   if(!zones.length) return null;
   const gmap={}; zones.forEach(z=>gmap[z]=BY.filter(b=>b.zone===z));
   const M2=v=>v==null?'—':(v/1e6).toFixed(2)+'M';
-  const rows=zones.map(z=>{ const s=sumMonth(gmap[z],m);
+  const rows=zones.map(z=>{ const s=sumMonths(gmap[z],L);
     const yl=months.reduce((a,x)=>a+sumMonth(gmap[z],x).ly,0), yt=months.reduce((a,x)=>a+sumMonth(gmap[z],x).ty,0);
     return {z,n:gmap[z].length,act:s.n,ty:s.ty,ly:s.ly,g:s.g,ytdT:yt,ytdG:yl?((yt/yl-1)*100):null}; })
     .sort((a,b)=>(a.g==null?9e9:a.g)-(b.g==null?9e9:b.g));
@@ -2018,17 +2113,17 @@ function zoneSection(){
     vals:months.map(x=>+(sumMonth(gmap[z],x).ty/1e6).toFixed(2))}));
   const chart=lineSeries(months.map(x=>MONTH_TH[x-1]),ser,{h:250,fmt:v=>v.toFixed(0)+'M',tipFmt:v=>v.toFixed(2)+'M'});
   const leg=`<div class="legend">${zones.map((z,i)=>`<span><i style="background:${SERIES_COL[i%SERIES_COL.length]}"></i>${z}</span>`).join('')}</div>`;
-  const tbl=`<div class="scroll" style="margin-top:12px"><table><tr><th>#</th><th>โซน</th><th class="n">สาขา</th><th class="n">ยอด ${MONTH_TH[m-1]}</th><th class="n">ปีก่อน</th><th class="n">YoY</th><th class="n">สะสม ม.ค.–${MONTH_TH[m-1]}</th><th class="n">YoY สะสม</th></tr>
+  const tbl=`<div class="scroll" style="margin-top:12px"><table><tr><th>#</th><th>โซน</th><th class="n">สาขา</th><th class="n">ยอด ${LS}</th><th class="n">ปีก่อน</th><th class="n">YoY</th><th class="n">สะสม ม.ค.–${MONTH_TH[m-1]}</th><th class="n">YoY สะสม</th></tr>
     ${rows.map((r,i)=>`<tr class="clk ${ZON.pick===r.z?'sel':''} ${FILT.zone===r.z?'hi':''}" data-zn="${r.z}"><td>${i+1}</td><td>${r.z}</td><td class="n">${r.act}/${r.n}</td>
       <td class="n">${M2(r.ty)}</td><td class="n">${M2(r.ly)}</td><td class="n">${r.g==null?'—':pill(r.g)}</td>
       <td class="n">${M2(r.ytdT)}</td><td class="n">${r.ytdG==null?'—':pill(r.ytdG)}</td></tr>`).join('')}</table></div>`;
   let panel='';
-  if(ZON.pick&&gmap[ZON.pick]){ const list=gmap[ZON.pick].map(b=>{const v=(b.m&&b.m[m])||{};
+  if(ZON.pick&&gmap[ZON.pick]){ const list=gmap[ZON.pick].map(b=>{const v=bSum(b,L);
       return {code:b.code,name:b.name,mall:b.mall,ty:v.ty||null,ly:v.ly||null,g:(v.ty&&v.ly)?((v.ty/v.ly-1)*100):null};})
       .sort((a,b)=>(a.g==null?9e9:a.g)-(b.g==null?9e9:b.g));
     panel=`<div class="pick"><div class="pickhd"><h4>โซน ${ZON.pick} · ${list.length} สาขา</h4>
       <span><button class="btn small" data-zfilter="${ZON.pick}">กรองทั้งหน้าเป็นโซนนี้</button> <button class="btn small" data-znclose>ปิด</button></span></div>
-      <div class="scroll"><table><tr><th>#</th><th>สาขา</th><th>ห้าง</th><th class="n">ยอด ${MONTH_TH[m-1]}</th><th class="n">ปีก่อน</th><th class="n">YoY</th></tr>
+      <div class="scroll"><table><tr><th>#</th><th>สาขา</th><th>ห้าง</th><th class="n">ยอด ${LS}</th><th class="n">ปีก่อน</th><th class="n">YoY</th></tr>
       ${list.map((b,i)=>`<tr class="clk" data-ssbr="${b.code}"><td>${i+1}</td><td>${b.code} ${b.name}</td><td>${b.mall||''}</td><td class="n">${M2(b.ty)}</td><td class="n">${M2(b.ly)}</td><td class="n">${b.g==null?'—':pill(b.g)}</td></tr>`).join('')}</table></div></div>`; }
   const up=rows.filter(r=>r.g!=null&&r.g>=0).length;
   const strip=`<div class="strip">
@@ -2036,7 +2131,7 @@ function zoneSection(){
     <div class="st neg"><div class="l">โซนที่ต้องดูก่อน</div><div class="v">${rows[0].z}</div><div class="s">${rows[0].g==null?'':sgn(rows[0].g)} · ${rows[0].act} สาขา</div></div>
     <div class="st"><div class="l">โซนที่ดีสุด</div><div class="v">${rows[rows.length-1].z}</div><div class="s">${rows[rows.length-1].g==null?'':sgn(rows[rows.length-1].g)}</div></div>
   </div>`;
-  return sec('zone','Trade Zone Health — which zone needs attention',`${label(m)}${brNote(m,curM)} · ${zones.length} โซน · ทุกโซนเสมอ (ไม่ขึ้นกับตัวกรองโซนด้านบน) · คลิกแถวเพื่อดูสาขาในโซน`,
+  return sec('zone','Trade Zone Health — which zone needs attention',`${S.multi?S.lab:label(m)+brNote(m,curM)} · ${zones.length} โซน · ทุกโซนเสมอ (ไม่ขึ้นกับตัวกรองโซนด้านบน) · คลิกแถวเพื่อดูสาขาในโซน`,
     strip+`<div class="grp">ยอดขายรายเดือนของแต่ละโซน (ล้านบาท)</div>`+chart+leg+tbl+panel);
 }
 
@@ -2132,7 +2227,8 @@ const GROUPS=[
   {k:'sales',ic:'📈',name:'ยอดขาย',subs:[
     {cap:'ภาพรวม',ids:['overview','monthly','sssg']},
     {cap:'รายสาขา',ids:['rank','brsales','mall','zone','branches','plan','branchdetail']},
-    {cap:'ช่องทางขาย',ids:['delivery','decline','trans']}]},
+    {cap:'ช่องทางขาย',ids:['delivery','decline']}]},
+  {k:'cust',ic:'👥',name:'ลูกค้า',subs:[{cap:'',ids:['customers','trans']}]},
   {k:'cost',ic:'🍳',name:'COL / COS',subs:[{cap:'',ids:['cos','plbr']}]},
   {k:'pl',ic:'📊',name:'P&L',subs:[{cap:'',ids:['pl']}]},
   {k:'cem',ic:'⭐',name:'CEM',subs:[{cap:'',ids:['cem']}]},
@@ -2153,22 +2249,27 @@ function cosSection(){
   const F=EXTRA&&EXTRA.pnlFull; if(!F||!F.actual) return null;
   const items=plFlat();
   const iRev=items.find(x=>x.id==='revenue').index, iCos=items.find(x=>x.id==='cogs').index, iCol=items.find(x=>x.id==='labor').index;
-  const mons=F.months.map((k,i)=>({k,m:i+1})).filter(o=>o.m<=curM&&F.actual[o.k]);
+  const S=SCP||{}, endM=S.multi?S.last:curM;
+  const mons=F.months.map((k,i)=>({k,m:i+1})).filter(o=>o.m<=endM&&F.actual[o.k]);
   if(!mons.length) return null;
-  const last=mons[mons.length-1], fb=last.m!==curM;
+  const last=mons[mons.length-1], fb=last.m!==endM;
+  /* ช่วงหลายเดือน: รวมงบทุกเดือนในช่วงก่อนคิด % · ช่วงก่อนหน้า/ปีก่อน ใช้ได้เมื่อมีครบทุกเดือน */
+  let inS=S.multi?mons.filter(o=>S.ms.includes(o.m)).map(o=>o.m):[last.m]; if(!inS.length) inS=[last.m];
+  const keysOk=(obj,L)=>!!(obj&&L&&L.length&&L.every(x=>obj[PL_MONKEY[x-1]]));
+  const PVc=S.multi?'ช่วงก่อน':'เดือนก่อน';
   const P=a=>({rev:a[iRev],cos:a[iRev]?a[iCos]/a[iRev]*100:null,col:a[iRev]?a[iCol]/a[iRev]*100:null,
                cosB:a[iCos],colB:a[iCol]});
-  const cur=P(F.actual[last.k]);
-  const prev=mons.length>1?P(F.actual[mons[mons.length-2].k]):null;
-  const ly=(F.ly&&F.ly[last.k])?P(F.ly[last.k]):null;
+  const cur=S.multi?P(plVals(F.actual,inS)):P(F.actual[last.k]);
+  const prev=S.multi?(keysOk(F.actual,S.prevMs)?P(plVals(F.actual,S.prevMs)):null):(mons.length>1?P(F.actual[mons[mons.length-2].k]):null);
+  const ly=S.multi?(keysOk(F.ly,inS)?P(plVals(F.ly,inS)):null):((F.ly&&F.ly[last.k])?P(F.ly[last.k]):null);
   const prime=o=>o&&o.cos!=null&&o.col!=null?o.cos+o.col:null;
   const pp=(a,b)=>(a==null||b==null)?null:a-b;
   /* หมายเหตุ: ยิ่งต่ำยิ่งดี จึงกลับสีของส่วนต่าง */
   const tile=(l,v,now,pv,lv,sub)=>`<div class="st ${v==null?'':(v<=(pv==null?v:pv)?'pos':'neg')}">
     <div class="l">${l}</div><div class="v">${v==null?'—':v.toFixed(1)+'%'}</div>
-    <div class="s">${sub||''}${pv!=null?` · เดือนก่อน ${pv.toFixed(1)}% ${pill(-(pp(v,pv)),1,' ppt')}`:''}${lv!=null?` · ปีก่อน ${lv.toFixed(1)}% ${pill(-(pp(v,lv)),1,' ppt')}`:''}</div></div>`;
+    <div class="s">${sub||''}${pv!=null?` · ${PVc} ${pv.toFixed(1)}% ${pill(-(pp(v,pv)),1,' ppt')}`:''}${lv!=null?` · ปีก่อน ${lv.toFixed(1)}% ${pill(-(pp(v,lv)),1,' ppt')}`:''}</div></div>`;
   const strip=`<div class="strip">
-    <div class="st"><div class="l">รายได้ ${MONTH_TH[last.m-1]}</div><div class="v">${bahtM(cur.rev)}</div><div class="s">ฐานคิดเปอร์เซ็นต์ทั้งหมด</div></div>
+    <div class="st"><div class="l">รายได้ ${S.multi?RNG(inS):MONTH_TH[last.m-1]}</div><div class="v">${bahtM(cur.rev)}</div><div class="s">ฐานคิดเปอร์เซ็นต์ทั้งหมด</div></div>
     ${tile('%COS ต้นทุนอาหาร',cur.cos,cur,prev?prev.cos:null,ly?ly.cos:null,`${bahtM(cur.cosB)} บาท`)}
     ${tile('%COL ค่าแรง',cur.col,cur,prev?prev.col:null,ly?ly.col:null,`${bahtM(cur.colB)} บาท`)}
     ${tile('Prime cost (COS+COL)',prime(cur),cur,prime(prev),prime(ly),`${bahtM(cur.cosB+cur.colB)} บาท`)}
@@ -2184,8 +2285,8 @@ function cosSection(){
   /* รายสาขา */
   const brName=c=>(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].name)||c;
   const codes=Object.keys(F.branch||{}).filter(c=>FILT.zone==='all'||(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone===FILT.zone));
-  const brs=codes.map(c=>{ const a=F.branch[c][last.k]; if(!a||!a[iRev]) return null; const o=P(a);
-      const pa=mons.length>1?F.branch[c][mons[mons.length-2].k]:null; const po=pa&&pa[iRev]?P(pa):null;
+  const brs=codes.map(c=>{ const a=S.multi?plVals(F.branch[c],inS):F.branch[c][last.k]; if(!a||!a[iRev]) return null; const o=P(a);
+      const pa=S.multi?(keysOk(F.branch[c],S.prevMs)?plVals(F.branch[c],S.prevMs):null):(mons.length>1?F.branch[c][mons[mons.length-2].k]:null); const po=pa&&pa[iRev]?P(pa):null;
       return {c,name:brName(c),zone:(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone)||'',...o,prime:o.cos+o.col,
               dCos:po?o.cos-po.cos:null,dCol:po?o.col-po.col:null};})
     .filter(Boolean);
@@ -2208,7 +2309,7 @@ function cosSection(){
       </table></div>`;
   }
   return sec('cos','Food Cost (COS) & Labor Cost (COL)',
-    `${label(last.m)}${fb?' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':''} · ${brs.length} สาขา${FILT.zone!=='all'?' · โซน '+FILT.zone:''} · ยิ่งต่ำยิ่งดี`,
+    `${S.multi?S.lab:label(last.m)}${fb&&!S.multi?' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':''} · ${brs.length} สาขา${FILT.zone!=='all'?' · โซน '+FILT.zone:''} · ยิ่งต่ำยิ่งดี`,
     strip+charts+tbl+`<div class="note">Prime cost = %COS + %COL คือต้นทุนที่ผู้จัดการสาขาคุมได้โดยตรง ป้ายเขียวหมายถึงลดลง (ดีขึ้น) ป้ายแดงหมายถึงเพิ่มขึ้น</div>`);
 }
 
@@ -2304,10 +2405,10 @@ function drawBranch(code){
   const hist=BR_CTX.hist.map(h=>({m:h.m,r:h.rows.find(x=>x.code===code)})).filter(x=>x.r);
   box.innerHTML=`
     <div class="brcards">
-      ${card('ยอดขาย',M(b.sales), b.mom==null?'':'MoM '+sgn(b.mom), b.mom==null?'':cls(b.mom))}
+      ${card('ยอดขาย',M(b.sales), b.mom==null?'':(BR_CTX.momLab||'MoM')+' '+sgn(b.mom), b.mom==null?'':cls(b.mom))}
       ${card('เทียบแผน', b.ach==null?'—':b.ach.toFixed(0)+'%', b.plan?'แผน '+M(b.plan):'', b.ach==null?'':cls(b.ach-100))}
       ${card('Delivery', M(b.deli), b.sales?(b.deli/b.sales*100).toFixed(1)+'% ของยอดสาขา':'')}
-      ${card('จำนวนบิล', fmtN(b.tr), b.trMom==null?'':'MoM '+sgn(b.trMom), b.trMom==null?'':cls(b.trMom))}
+      ${card('จำนวนบิล', fmtN(b.tr), b.trMom==null?'':(BR_CTX.momLab||'MoM')+' '+sgn(b.trMom), b.trMom==null?'':cls(b.trMom))}
       ${card('เช็คเฉลี่ย', b.tk==null?'—':'฿'+b.tk, b.cust?fmtN(b.cust)+' ลูกค้า':'')}
       ${pl?card('%กำไร', pl.gp.toFixed(1)+'%', 'กำไร '+baht(pl.profit)+' บาท', cls(pl.gp)):''}
       ${pl?card('%COS / %COL', pl.cos.toFixed(1)+' / '+pl.col.toFixed(1), 'ต้นทุนอาหาร / ค่าแรง'):''}
@@ -2343,8 +2444,8 @@ function syncPnl(){
 }
 /* แถวล่างของหน้า Monthly KPI: Sales Mix (ช่องทาง + แพลตฟอร์ม) และ Customers & Branches */
 function ovBottom(m,rows,ch,d){
-  const t=d.trans, M2=v=>(v/1e6).toFixed(2)+'M', prevTH=m>1?MONTH_TH[m-2]:'';
-  const chP=chanSum(m-1);
+  const S=SCP||{}, t=d.trans, M2=v=>(v/1e6).toFixed(2)+'M', prevTH=S.multi?(S.prevLabS||''):(m>1?MONTH_TH[m-2]:'');
+  const chP=S.multi?S.chP:chanSum(m-1);
   const vsPrev=(prev,now)=>(prev&&now!=null)?`${pill(pct(prev,now))}<span class="vs">vs ${prevTH}</span>`:'';
 
   /* ---- Sales Mix ---- */
@@ -2355,7 +2456,7 @@ function ovBottom(m,rows,ch,d){
              {k:'take',n:'Takeaway',c:'#7C5CFC',bg:'#F5F3FF',bd:'#DDD6FE',tx:'#6D28D9'},
              {k:'deli',n:'Delivery',c:'#0F9488',bg:'#EEF8F6',bd:'#CBEAE5',tx:'#0B6E66'}];
     const share=k=>(ch[k]/ch.sales*100).toFixed(1)+'%';
-    const tiles=C.map(o=>`<div class="smt" style="background:${o.bg};border-color:${o.bd};box-shadow:inset 0 3px 0 ${o.c}" data-tip="${o.n}\n${M2(ch[o.k])} · ${share(o.k)} ของยอดขาย${chP?'\n'+MONTH_TH[m-2]+' '+M2(chP[o.k]):''}">
+    const tiles=C.map(o=>`<div class="smt" style="background:${o.bg};border-color:${o.bd};box-shadow:inset 0 3px 0 ${o.c}" data-tip="${o.n}\n${M2(ch[o.k])} · ${share(o.k)} ของยอดขาย${chP?'\n'+prevTH+' '+M2(chP[o.k]):''}">
         <div class="smh"><i style="background:${o.c}"></i>${o.n}</div>
         <div class="smv">${M2(ch[o.k])}</div>
         <div class="sms"><b style="color:${o.tx}">${share(o.k)}</b> ของยอดขาย</div>
@@ -2366,7 +2467,7 @@ function ovBottom(m,rows,ch,d){
     const plat=`<div class="smplat">
         <div class="smph"><span><i class="smdot"></i>Delivery by platform</span><b>${M2(ch.deli)} <em>${share('deli')} ของยอดขาย</em></b></div>
         <div class="smbar thin">${PL.map(o=>`<span style="flex:${ch[o.k]||0.0001};background:${o.c}" data-tip="${o.n}\n${M2(ch[o.k])} · ${ps(o.k)} ของ Delivery"></span>`).join('')}</div>
-        <div class="smprows">${PL.map(o=>`<div class="smpr" style="box-shadow:inset 3px 0 0 ${o.c}" data-tip="${o.n}\n${M2(ch[o.k])} · ${ps(o.k)} ของ Delivery${chP?'\n'+MONTH_TH[m-2]+' '+M2(chP[o.k]):''}">
+        <div class="smprows">${PL.map(o=>`<div class="smpr" style="box-shadow:inset 3px 0 0 ${o.c}" data-tip="${o.n}\n${M2(ch[o.k])} · ${ps(o.k)} ของ Delivery${chP?'\n'+prevTH+' '+M2(chP[o.k]):''}">
             <div class="smh"><i style="background:${o.c}"></i>${o.n}</div>
             <div class="smpv"><b>${M2(ch[o.k])}</b><em style="color:#0B6E66">${ps(o.k)}</em></div>
             <div class="smc">${chP?vsPrev(chP[o.k],ch[o.k]):''}</div></div>`).join('')}</div></div>`;
@@ -2374,20 +2475,22 @@ function ovBottom(m,rows,ch,d){
   }
 
   /* ---- Customers ---- */
-  const cst=(l,now,prev,f)=>`<div class="cst" data-tip="${l}\n${label(m)} ${f(now)}${prev!=null?'\n'+MONTH_TH[m-2]+' '+f(prev):''}">
+  const cst=(l,now,prev,f)=>`<div class="cst" data-tip="${l}\n${S.lab||label(m)} ${f(now)}${prev!=null?'\n'+prevTH+' '+f(prev):''}">
       <div class="csl">${l}</div><div class="csv">${f(now)}</div><div class="smc">${prev!=null?vsPrev(prev,now):''}</div></div>`;
   const stats = t ? `<div class="cstats">
       ${cst('Bills',t.trans[1],t.trans[0],v=>fmtN(v))}
       ${cst('Avg ticket',t.ticket[1],t.ticket[0],v=>'฿'+fmtN(Math.round(v)))}
       ${t.customer?cst('Customers',t.customer[1],t.customer[0],v=>fmtN(v)):''}
-      ${t.custAvg?cst('Customers / bill',+t.custAvg[1],+t.custAvg[0],v=>(+v).toFixed(2)):''}</div>` : '';
+      ${t.custAvg?cst('Customers / bill',+t.custAvg[1],t.custAvg[0]==null?null:+t.custAvg[0],v=>(+v).toFixed(2)):''}</div>` : '';
 
   /* ---- Branches: โตสูงสุด / ต้องดูแล เทียบเดือนก่อน ---- */
-  const br=filtZone((d.branchRows||[]).filter(b=>b.sales>0&&b.mom!=null)).slice().sort((a,b)=>b.mom-a.mom);
+  let br=filtZone((d.branchRows||[]).filter(b=>b.sales>0&&b.mom!=null)).slice().sort((a,b)=>b.mom-a.mom), grLab=prevTH;
+  if(S.multi&&!br.length&&EXTRA.branchYears){ grLab=String(YEAR-1);   // ไม่มีช่วงก่อนหน้า → จัดอันดับจากการโตเทียบปีก่อน
+    br=brOfYear().map(b=>{ const x=bSum(b,S.ms); return {code:b.code,name:b.name,sales:x.ty,mom:x.g}; }).filter(b=>b.sales>0&&b.mom!=null).sort((a,b)=>b.mom-a.mom); }
   let lists='';
   if(br.length>=6){
     const top=br.slice(0,3), bot=br.slice(-3).reverse(), mx=Math.max(...top.concat(bot).map(b=>Math.abs(b.mom)),1);
-    const row=(b,i,cl)=>`<li data-tip="${b.code} ${b.name}\nยอดขาย ${bahtM(b.sales/1e6)} บาท\nเทียบ ${prevTH} ${sgn(b.mom)}">
+    const row=(b,i,cl)=>`<li data-tip="${b.code} ${b.name}\nยอดขาย ${bahtM(b.sales/1e6)} บาท\nเทียบ ${grLab} ${sgn(b.mom)}">
         <span class="bi">${i+1}</span><span class="bnm">${b.name}</span>
         <span class="bbar"><i class="${cl}" style="width:${(Math.abs(b.mom)/mx*100).toFixed(1)}%"></i></span>
         <span class="bv ${cl}">${sgn(b.mom)}</span></li>`;
@@ -2396,9 +2499,114 @@ function ovBottom(m,rows,ch,d){
       <div><div class="cblh"><span class="dot neg"></span>Needs attention</div><ol class="cbl">${bot.map((b,i)=>row(b,i,'neg')).join('')}</ol></div></div>`;
   }
   return `<div class="ovbottom">
-    <div class="panel"><div class="phx"><div><h3>Sales Mix</h3></div>${ch?`<b>${bahtM(ch.sales/1e6)} บาท</b>`:''}</div>${mix}</div>
-    <div class="panel"><div class="phx"><div><h3>Customers &amp; Branches</h3></div></div>${stats}${lists}</div>
+    <div class="panel"><div class="phx"><div><h3>Sales Mix</h3>${S.multi&&S.br&&S.br.ms.length<S.n?`<span class="pcov">ข้อมูล ${RNG(S.br.ms)}</span>`:''}</div>${ch?`<b>${bahtM(ch.sales/1e6)} บาท</b>`:''}</div>${mix}</div>
+    <div class="panel"><div class="phx"><div><h3>Customers &amp; Branches</h3>${S.multi&&S.tN&&S.tN.n<S.n?`<span class="pcov">ข้อมูล ${RNG(S.ms.filter(x=>trOf(x)))}</span>`:''}</div></div>${stats}${lists}</div>
   </div>`;
+}
+/* ========================= ขอบเขตช่วงเวลา: รวมตัวเลขหลายเดือน =========================
+   build() สร้าง SCP ครั้งเดียว ทุกหัวข้ออ่านจากตัวนี้ · โหมดรายเดือนใช้ข้อมูลเดิมของเดือนนั้นตรง ๆ
+   ช่วงก่อนหน้า = จำนวนเดือนเท่ากัน (ไตรมาส → ไตรมาสก่อน เดือนตรงกัน · ช่วงเดือน → เลื่อนถอยเท่าความยาวช่วง · ตั้งแต่ต้นปี → ไม่มี) */
+let SCP=null;
+const RNG=list=>!list||!list.length?'':(list.length===1?MONTH_TH[list[0]-1]:MONTH_TH[list[0]-1]+'–'+MONTH_TH[list[list.length-1]-1]);
+const RNG_EN=list=>!list||!list.length?'':(list.length===1?MONTH_EN[list[0]-1]:MONTH_EN[list[0]-1]+'–'+MONTH_EN[list[list.length-1]-1]);
+const grw=(a,b)=>(a>0&&b!=null)?+((b/a-1)*100).toFixed(1):null;
+/* ยอดรายสาขา 2 ปี รวมหลายเดือน: ty/ly รวมตรง ๆ · g = โตเทียบปีก่อนเฉพาะเดือนที่มีทั้ง 2 ปี */
+function bSum(b,L){ let ty=0,ly=0,tyS=0,lyS=0;
+  L.forEach(x=>{ const v=b.m&&b.m[x]; if(!v) return; ty+=v.ty||0; ly+=v.ly||0; if(v.ty>0&&v.ly>0){ tyS+=v.ty; lyS+=v.ly; } });
+  return {ty,ly,tyS,lyS,g:lyS?((tyS/lyS-1)*100):null}; }
+function sumMonths(list,L){ let ly=0,ty=0,n=0,nly=0;
+  list.forEach(b=>{ const s=bSum(b,L); if(s.ty){ty+=s.ty;n++;} if(s.ly){ly+=s.ly;nly++;} });
+  return {ly,ty,n,nly,g:(ly?((ty/ly-1)*100):null)}; }
+/* บิล · ลูกค้า ของเดือนหนึ่ง (เดือนที่ไม่มีไฟล์ ใช้ช่อง "เดือนก่อน" ของไฟล์เดือนถัดไป) */
+function trOf(x){ const pick=(t,i)=>({trans:t.trans[i],ticket:t.ticket[i],customer:t.customer?t.customer[i]:null,
+    ch:(t.channels||[]).map(c=>({name:c.name,trans:c.trans[i],ticket:c.ticket[i]}))});
+  const t=(DETAIL[x]||{}).trans; if(t&&t.trans&&t.trans[1]!=null) return pick(t,1);
+  const nx=(DETAIL[x+1]||{}).trans; if(nx&&nx.trans&&nx.trans[0]!=null) return pick(nx,0);
+  return null; }
+function aggTr(list){ if(!list||!list.length) return null; const vs=list.map(trOf).filter(Boolean); if(!vs.length) return null;
+  const tr=vs.reduce((a,v)=>a+v.trans,0); if(!tr) return null;
+  const cu=vs.every(v=>v.customer!=null)?vs.reduce((a,v)=>a+v.customer,0):null;
+  const names=[...new Set(vs.flatMap(v=>v.ch.map(c=>c.name)))];
+  return {n:vs.length, trans:tr, ticket:vs.reduce((a,v)=>a+v.trans*v.ticket,0)/tr, customer:cu, custAvg:cu!=null?cu/tr:null,
+    ch:names.map(nm=>{ const cs=vs.map(v=>v.ch.find(c=>c.name===nm)).filter(c=>c&&c.trans); const t=cs.reduce((a,c)=>a+c.trans,0);
+      return {name:nm,trans:t,ticket:t?cs.reduce((a,c)=>a+c.trans*c.ticket,0)/t:null}; })}; }
+/* แถวรายเดือนรวมหลายเดือน · SSSG: ถ้าทุกเดือนมียอด Same Store คิดจากยอดจริง ไม่งั้นเฉลี่ยถ่วงด้วยยอดขาย */
+function aggMon(list){ if(!list||!list.length) return null;
+  const rs=list.map(x=>MONTHLY.find(r=>r.m===x)).filter(r=>r&&r.sales!=null); if(!rs.length) return null;
+  const S=k=>rs.reduce((a,r)=>a+(r[k]||0),0), all=k=>rs.every(r=>r[k]!=null);
+  const ex=rs.filter(r=>r.sssgSales!=null&&r.sssg!=null), sw=rs.filter(r=>r.sssg!=null), full=ex.length===rs.length;
+  const ssTy=ex.reduce((a,r)=>a+r.sssgSales,0), ssLy=ex.reduce((a,r)=>a+r.sssgSales/(1+r.sssg/100),0);
+  let sssg=null, ssApprox=false;
+  if(rs.length===1) sssg=rs[0].sssg;
+  else if(full&&ssLy) sssg=(ssTy/ssLy-1)*100;
+  else if(sw.length){ const w=sw.reduce((a,r)=>a+r.sales,0); sssg=sw.reduce((a,r)=>a+r.sssg*r.sales,0)/w; ssApprox=true; }
+  return {m:rs[rs.length-1].m, n:rs.length, sales:S('sales'), ly:all('ly')?S('ly'):null, budget:all('budget')?S('budget'):null,
+    sssgSales:full?ssTy:null, sssgLy:full?ssLy:null, sssg, ssApprox, mom:null}; }
+/* ยอดรายสาขาจากแบบฟอร์ม รวมหลายเดือน */
+function aggBr(list){ const mm=(list||[]).filter(x=>((DETAIL[x]||{}).branchRows||[]).length); if(!mm.length) return null;
+  const by={};
+  mm.forEach(x=>DETAIL[x].branchRows.forEach(b=>{
+    const o=by[b.code]||(by[b.code]={code:b.code,name:b.name,sales:0,plan:0,planSales:0,dine:null,take:null,deli:0,grab:0,lm:0,sp:0,tr:0,cust:0,_tk:0,_tkTr:0,_col:0,_colS:0});
+    o.name=b.name;
+    ['sales','deli','grab','lm','sp','tr','cust'].forEach(k=>o[k]+=b[k]||0);
+    if(b.dine!=null||b.take!=null){ o.dine=(o.dine||0)+(b.dine||0); o.take=(o.take||0)+(b.take||0); }
+    if(b.plan>0){ o.plan+=b.plan; o.planSales+=b.sales||0; }
+    if(b.tk!=null&&b.tr){ o._tk+=b.tk*b.tr; o._tkTr+=b.tr; }
+    if(b.col!=null&&b.sales){ o._col+=b.col*b.sales; o._colS+=b.sales; } }));
+  const rows=Object.values(by).map(o=>Object.assign(o,{ach:o.plan?+(o.planSales/o.plan*100).toFixed(1):null,
+    tk:o._tkTr?Math.round(o._tk/o._tkTr):null, col:o._colS?+(o._col/o._colS).toFixed(1):null, mom:null, trMom:null}));
+  return {rows, ms:mm}; }
+/* กำไรรายสาขา รวมหลายเดือน: %กำไร คิดจากยอดรวม · %COS/%COL ถ่วงด้วยยอดขาย */
+function aggPlb(list){ const mm=(list||[]).filter(x=>((DETAIL[x]||{}).plBranches||[]).length); if(!mm.length) return null; const by={};
+  mm.forEach(x=>DETAIL[x].plBranches.forEach(b=>{ const o=by[b.code]||(by[b.code]={code:b.code,name:b.name,sales:0,profit:0,_c:0,_l:0});
+    o.sales+=b.sales||0; o.profit+=b.profit||0; o._c+=(b.cos||0)*(b.sales||0); o._l+=(b.col||0)*(b.sales||0); }));
+  return {rows:Object.values(by).map(o=>Object.assign(o,{gp:o.sales?o.profit/o.sales*100:0,cos:o.sales?o._c/o.sales:0,col:o.sales?o._l/o.sales:0})), ms:mm}; }
+/* Delivery แยกแพลตฟอร์ม รวมหลายเดือน (ต้องมีครบทุกเดือน) */
+function aggDel(list){ if(!list||!list.length) return null;
+  const vals=PLATS.map(n=>list.map(x=>platVal(x,n,'now')));
+  if(vals.some(v=>v.some(x=>x==null))) return null;
+  return PLATS.map((n,i)=>({name:n,now:vals[i].reduce((a,b)=>a+b,0)})); }
+function scopeCtx(m){
+  const multi=FILT.mode!=='month';
+  let ms=multi?scopeMonths():[m]; if(!ms.length) ms=[m];
+  const n=ms.length, last=ms[n-1];
+  let prevMs=null;
+  if(!multi) prevMs=m>1?[m-1]:null;
+  else if(FILT.mode==='quarter') prevMs=ms[0]-3>=1?ms.map(x=>x-3):null;
+  else if(FILT.mode==='range') prevMs=ms[0]-n>=1?ms.map(x=>x-n):null;
+  const S={multi, ms, n, last, prevMs,
+    lab: multi?scopeLabel():label(m),
+    labS: multi?RNG(ms):MONTH_TH[m-1],
+    prevLabS: prevMs?RNG(prevMs):null,
+    titleEn: !multi?MONTH_EN_FULL[m-1]+' '+YEAR
+      : FILT.mode==='quarter'?`Q${FILT.q||Math.ceil(last/3)} ${YEAR} (${RNG_EN(ms)})`
+      : FILT.mode==='ytd'?`YTD ${RNG_EN(ms)} ${YEAR}` : `${RNG_EN(ms)} ${YEAR}`};
+  if(!multi) return S;
+  const row=aggMon(ms), prow=aggMon(prevMs);
+  S.prevRow=(row&&prow&&prow.n===row.n)?prow:null;
+  if(row) row.mom=S.prevRow?grw(S.prevRow.sales,row.sales):null;
+  S.row=row;
+  const br=aggBr(ms), pbr=aggBr(prevMs);
+  S.prevBr=(br&&pbr&&pbr.ms.length===br.ms.length)?pbr:null;
+  if(br&&S.prevBr){ const pm={}; S.prevBr.rows.forEach(b=>pm[b.code]=b);
+    br.rows.forEach(b=>{ const p=pm[b.code]; if(p){ b.mom=grw(p.sales,b.sales); b.trMom=grw(p.tr,b.tr); } }); }
+  S.br=br; S.plb=aggPlb(ms);
+  const tN=aggTr(ms), tP0=aggTr(prevMs), tP=(tN&&tP0&&tP0.n===tN.n)?tP0:null;
+  S.tN=tN; S.tP=tP;
+  if(tN){ const R0=v=>v==null?null:Math.round(v);
+    S.trans={compare:tP?`${S.labS} vs ${S.prevLabS} ${YEAR}`:`${S.labS} ${YEAR}`,
+      trans:[tP?tP.trans:null,tN.trans], ticket:[tP?R0(tP.ticket):null,R0(tN.ticket)],
+      customer:tN.customer!=null?[tP?tP.customer:null,tN.customer]:null,
+      custAvg:tN.custAvg!=null?[tP&&tP.custAvg!=null?+tP.custAvg.toFixed(2):null,+tN.custAvg.toFixed(2)]:null,
+      channels:tN.ch.map(c=>{ const p=tP&&tP.ch.find(x=>x.name===c.name); return {name:c.name,trans:[p?p.trans:null,c.trans],ticket:[p?R0(p.ticket):null,R0(c.ticket)]}; }),
+      note:`รวม ${tN.n} เดือน${tN.n<n?` (มีข้อมูลบิล ${tN.n} จาก ${n} เดือนในช่วง)`:''}${tP?` · เทียบ ${S.prevLabS}`:' · ไม่มีช่วงก่อนหน้าให้เทียบ'}`}; }
+  const dN=aggDel(ms), dP=aggDel(prevMs), dl=(DETAIL[last]||{}).delivery;
+  if(dN){ const tn=dN.reduce((a,p)=>a+p.now,0), tp=dP?dP.reduce((a,p)=>a+p.now,0):null;
+    S.delivery={compare:dP?`${S.prevLabS} vs ${S.labS} ${YEAR}`:`${S.labS} ${YEAR}`,
+      platforms:dN.map((p,i)=>({name:p.name,now:p.now,prev:dP?dP[i].now:null})),
+      shareNow:row&&row.sales?tn/row.sales*100:null, sharePrev:(tp!=null&&S.prevRow&&S.prevRow.sales)?tp/S.prevRow.sales*100:null,
+      topDecline:dl?dl.topDecline:[], lineManDecline:dl?dl.lineManDecline:[], note:''}; }
+  return S;
 }
 /* ยอดขายแยกช่องทางของเดือนหนึ่ง รวมจากรายสาขา (Dine in · Takeaway · Delivery) */
 function chanSum(mm,list){
@@ -2415,9 +2623,14 @@ function build(m){
   const presOn=document.body.classList.contains('present');
   const presCur=presOn?slides()[slideIdx]:null;
   const presKeep=presCur?{id:presCur.id,top:presCur.scrollTop}:null;
+  SCP=scopeCtx(m); const S=SCP; if(S.multi) m=S.last;
   const rows = MONTHLY.filter(r=>r.m<=m);
-  const cur = MONTHLY.find(r=>r.m===m);
-  const d = DETAIL[m]||{};
+  const rowsS = S.multi ? MONTHLY.filter(r=>S.ms.includes(r.m)) : rows;
+  const cur = S.multi ? S.row : MONTHLY.find(r=>r.m===m);
+  const d0 = DETAIL[m]||{};
+  /* ช่วงหลายเดือน: ข้อมูลที่รวมได้ใช้ค่ารวม · ที่รวมไม่ได้ (CEM/OSS/Watchlist) ใช้เดือนล่าสุดในช่วง */
+  const d = S.multi ? Object.assign({},d0,{branchRows:S.br?S.br.rows:[], trans:S.trans||null, delivery:S.delivery||null,
+    plBranches:S.plb?S.plb.rows:[], planBranches:null}) : d0;
   const out=[];
 
   // 1 overview
@@ -2438,7 +2651,8 @@ function build(m){
     const kcard=(ic,l,v,sub,cl,extra)=>`<div class="k"><div class="ic">${ic}</div><div class="bd">
       <div class="l">${l}</div><div class="v ${cl||''}">${v}</div>${extra||''}<div class="s">${sub||''}</div></div></div>`;
     const M1=v=>v==null?'—':(v/1e6).toFixed(2)+'M';
-    const ch=chanSum(m), chP=chanSum(m-1);
+    const ch=S.multi?(S.br?chanSum(null,S.br.rows):null):chanSum(m), chP=S.multi?(S.prevBr?chanSum(null,S.prevBr.rows):null):chanSum(m-1);
+    S.ch=ch; S.chP=chP;
     /* ยอดขายแยกช่องทาง: Dine in+Takeaway เป็นก้อนเดียว · Delivery แยกอีกก้อน (สีเทา) */
     const dl0=(d.delivery&&(d.delivery.platforms||[]).reduce((x,p)=>x+p.now,0))||null;
     const inStore = (ch&&ch.store>0)? ch.store/1e6 : (dl0!=null? cur.sales-dl0 : null);
@@ -2453,7 +2667,7 @@ function build(m){
     const storesNow = d.stores?d.stores.now:null;
     /* จำนวนสาขาปีก่อน: ใช้ของแบบฟอร์มก่อน ถ้าไม่มีนับจากยอดรายสาขา 2 ปี */
     const storesLy = (d.stores&&d.stores.ly) || ((EXTRA.branchYears||[]).filter(b=>b.m&&b.m[m]&&b.m[m].ly>0).length||null);
-    out.push(sec('overview','Monthly KPI — '+MONTH_EN_FULL[m-1]+' '+YEAR+' · Santa Fe',subLine,`
+    out.push(sec('overview',(S.multi?'Sales KPI — ':'Monthly KPI — ')+S.titleEn+' · Santa Fe',subLine,`
       ${(()=>{
         const M1=v=>v==null?'—':v.toFixed(1)+'M', M2=v=>v==null?'—':v.toFixed(2)+'M';
         /* แท่งเทียบแนวนอน 2 แถว: แถวที่ dim = ค่าอ้างอิง (ปีก่อน/เดือนก่อน) สีเทา */
@@ -2466,9 +2680,10 @@ function build(m){
           ${o.d?`<div class="kd ${o.d.v>=0?'pos':'neg'}">${o.d.v>=0?'▲ +':'▼ −'}${Math.abs(o.d.v).toFixed(2)}M <span>${o.d.t}</span></div>`:''}
           <div class="kx">${o.x||''}</div>
           <div class="kf">${o.f||''}</div></div>`;
-        const prevRow=MONTHLY.find(r=>r.m===m-1), prevSales=prevRow&&prevRow.sales!=null?prevRow.sales:null;
+        const prevRow=S.multi?S.prevRow:MONTHLY.find(r=>r.m===m-1), prevSales=prevRow&&prevRow.sales!=null?prevRow.sales:null;
+        const PVL=S.multi?S.prevLabS:MONTH_TH[m-2];
         const ach=cur.budget?cur.sales/cur.budget*100:null;
-        const ssTy=cur.sssgSales, ssLy=(cur.sssgSales!=null&&cur.sssg!=null)?cur.sssgSales/(1+cur.sssg/100):null;
+        const ssTy=cur.sssgSales, ssLy=cur.sssgLy!=null?cur.sssgLy:((cur.sssgSales!=null&&cur.sssg!=null)?cur.sssgSales/(1+cur.sssg/100):null);
         const dStores=(storesNow!=null&&storesLy!=null)?storesNow-storesLy:null;
         const cnt=v=>v==null?'':`<span class="pill ${v>=0?'pos':'neg'}">${v>0?'+':''}${v} สาขา</span>`;
 
@@ -2484,23 +2699,30 @@ function build(m){
           : (inStore!=null&&deliv!=null?[{c:'dine',v:inStore,n:'Dine in + Takeaway'},{c:'dim',v:deliv,n:'Delivery'}]:[]);
         const stack=segs.length?`<div class="kstack">${segs.map(g=>`<span class="${g.c}" style="flex:${g.v}" data-tip="${g.n}\n${M2(g.v)} · ${pc3(g.v)} ของยอดขาย"></span>`).join('')}</div>
           <div class="klegend">${segs.map(g=>`<span class="${g.c}"><i></i><b>${M2(g.v)}</b> ${g.n} ${pc3(g.v)}</span>`).join('')}</div>`:'';
-        const c2=card({wide:1,l:'Total Sales',p:label(m),v:`฿${cur.sales.toFixed(1)}M`,x:stack,
-          f:[cur.ly!=null?`ปีก่อน ${M1(cur.ly)} ${pill(yoy)}`:'', cur.mom!=null?`เดือนก่อน ${M1(prevSales)} ${pill(cur.mom)}`:''].filter(Boolean).join('<span class="ksep"></span>')});
+        const cov=S.multi&&S.br&&S.br.ms.length<S.n?`<div class="kcov">แยกช่องทางจากยอดรายสาขา ${RNG(S.br.ms)} (${S.br.ms.length} จาก ${S.n} เดือน)</div>`:'';
+        const c2=card({wide:1,l:'Total Sales',p:S.lab,v:`฿${cur.sales.toFixed(1)}M`,x:stack+cov,
+          f:[cur.ly!=null?`ปีก่อน ${M1(cur.ly)} ${pill(yoy)}`:'', cur.mom!=null&&prevSales!=null?`${S.multi?'ช่วงก่อน':'เดือนก่อน'} ${M1(prevSales)} ${pill(cur.mom)}`:''].filter(Boolean).join('<span class="ksep"></span>')});
 
         const prog=ach==null?'':`<div class="kprog" data-tip="ทำได้ ${ach.toFixed(1)}% ของแผน\nActual ${M2(cur.sales)} · Budget ${M2(cur.budget)}"><div class="kpt"><i class="${ach>=100?'ok':'bad'}" style="width:${Math.min(100,ach).toFixed(1)}%"></i></div>
             <div class="kpl"><span>ทำได้ <b>${ach.toFixed(1)}%</b> ของแผน</span><span>100%</span></div></div>`;
         const c3=card({l:'vs Budget',p:label(m),v:cur.budget!=null?sgn(vb):'—',cl:cur.budget!=null?cls(vb):'',x:prog,
           f:cur.budget!=null?`Actual ${M1(cur.sales)} · Budget ${M1(cur.budget)} · ${vb>=0?'เกิน':'ขาด'} ${Math.abs(cur.sales-cur.budget).toFixed(1)}M`:'ยังไม่ได้ใส่แผนเดือนนี้'});
 
-        const c4=card({keepP:1,l:'MoM',p:`${m>1?MONTH_TH[m-2]:'—'} → ${MONTH_TH[m-1]}`,v:sgn(cur.mom),cl:cls(cur.mom??0),
-          d:prevSales!=null?{v:cur.sales-prevSales,t:'vs '+MONTH_TH[m-2]}:null,
-          x:prevSales!=null?bars([{l:MONTH_TH[m-1],v:cur.sales,t:M2(cur.sales)},{l:MONTH_TH[m-2],v:prevSales,t:M2(prevSales),dim:1}]):'',
-          f:cur.equalDays?'เทียบช่วงวันเท่ากัน (1–30)':'เทียบเดือนก่อนหน้า'});
+        /* ตั้งแต่ต้นปี (ไม่มีช่วงก่อนหน้า) → การ์ดนี้เปลี่ยนเป็นเทียบปีก่อนแทน */
+        const c4=(S.multi&&prevSales==null)
+          ? card({keepP:1,l:'YoY',p:`${YEAR-1} → ${YEAR}`,v:cur.ly!=null?sgn(yoy):'—',cl:cur.ly!=null?cls(yoy):'',
+              d:cur.ly!=null?{v:cur.sales-cur.ly,t:'vs '+(YEAR-1)}:null,
+              x:cur.ly!=null?bars([{l:String(YEAR),v:cur.sales,t:M2(cur.sales)},{l:String(YEAR-1),v:cur.ly,t:M2(cur.ly),dim:1}]):'',
+              f:'เทียบช่วงเดียวกันปีก่อน'})
+          : card({keepP:1,l:S.multi?'vs Prior Period':'MoM',p:`${PVL||'—'} → ${S.labS}`,v:sgn(cur.mom),cl:cls(cur.mom??0),
+              d:prevSales!=null?{v:cur.sales-prevSales,t:'vs '+PVL}:null,
+              x:prevSales!=null?bars([{l:S.labS,v:cur.sales,t:M2(cur.sales)},{l:PVL,v:prevSales,t:M2(prevSales),dim:1}]):'',
+              f:S.multi?`เทียบ ${S.n} เดือนก่อนหน้า`:(cur.equalDays?'เทียบช่วงวันเท่ากัน (1–30)':'เทียบเดือนก่อนหน้า')});
 
         const c5=card({l:'Same Store Sales Growth',p:label(m),v:sgn(cur.sssg),cl:cls(cur.sssg),
           d:(ssTy!=null&&ssLy!=null)?{v:ssTy-ssLy,t:'vs '+(YEAR-1)}:null,
           x:(ssTy!=null&&ssLy!=null)?bars([{l:String(YEAR),v:ssTy,t:M2(ssTy)},{l:String(YEAR-1),v:ssLy,t:M2(ssLy),dim:1}]):'',
-          f:d.stores&&d.stores.sameStore?`${d.stores.sameStore} สาขา Same Store`:'เทียบเดือนเดียวกันปีก่อน'});
+          f:S.multi?(cur.ssApprox?'เฉลี่ยถ่วงยอดขาย (บางเดือนไม่มียอด Same Store)':`รวม ${S.n} เดือน เทียบปีก่อน`):(d.stores&&d.stores.sameStore?`${d.stores.sameStore} สาขา Same Store`:'เทียบเดือนเดียวกันปีก่อน')});
         return `<div class="ovh"><h3>Sales Overview</h3></div>
           <div class="kgrid">${c1}${c2}${c3}${c4}${c5}</div>`;
       })()}
@@ -2509,12 +2731,13 @@ function build(m){
 
   // 2 monthly
   const gpv = MON.tab==='gp' ? gpTrend() : null;
-  out.push(sec('monthly','Performance Trend — Jan to '+MONTH_EN[m-1]+' '+YEAR, gpv?'รายได้ / กำไรขั้นต้น / OP / กำไรสุทธิ (จากงบกำไรขาดทุน)':'Total / Budget / SSSG / MoM',`
+  out.push(sec('monthly','Performance Trend — '+(S.multi?S.titleEn:'Jan to '+MONTH_EN[m-1]+' '+YEAR), gpv?'รายได้ / กำไรขั้นต้น / OP / กำไรสุทธิ (จากงบกำไรขาดทุน)':'Total / Budget / SSSG / MoM',`
     ${monthlyTabs()}
-    ${gpv||lineChart(rows)}
+    ${gpv||lineChart(S.multi&&S.n>=2?rowsS:rows)}
     ${gpv?'':`<div class="scroll" style="margin-top:18px"><table>
       <tr><th>เดือน</th><th class="n">Total Sales 2026</th><th class="n">Total Sales 2025</th><th class="n">YoY</th><th class="n">Budget 2026</th><th class="n">vs Budget</th><th class="n">SSSG Sales</th><th class="n">SSSG %</th><th class="n">MoM %</th></tr>
-      ${rows.map(r=>`<tr class="${r.m===m?'hi':''}"><td>${r.m===m?'★ ':''}${MONTH_TH[r.m-1]}</td><td class="n">${fmtM(r.sales)}</td><td class="n">${fmtM(r.ly)}</td><td class="n ${cls(pct(r.ly,r.sales))}">${sgn(pct(r.ly,r.sales))}</td><td class="n">${fmtM(r.budget)}</td><td class="n ${cls(pct(r.budget,r.sales))}">${sgn(pct(r.budget,r.sales))}</td><td class="n">${fmtM(r.sssgSales)}</td><td class="n ${cls(r.sssg)}">${sgn(r.sssg)}</td><td class="n ${cls(r.mom??0)}">${sgn(r.mom)}</td></tr>`).join('')}
+      ${rowsS.map(r=>`<tr class="${r.m===m&&!S.multi?'hi':''}"><td>${r.m===m&&!S.multi?'★ ':''}${MONTH_TH[r.m-1]}</td><td class="n">${fmtM(r.sales)}</td><td class="n">${fmtM(r.ly)}</td><td class="n ${cls(pct(r.ly,r.sales))}">${sgn(pct(r.ly,r.sales))}</td><td class="n">${fmtM(r.budget)}</td><td class="n ${cls(pct(r.budget,r.sales))}">${sgn(pct(r.budget,r.sales))}</td><td class="n">${fmtM(r.sssgSales)}</td><td class="n ${cls(r.sssg)}">${sgn(r.sssg)}</td><td class="n ${cls(r.mom??0)}">${sgn(r.mom)}</td></tr>`).join('')}
+      ${S.multi&&S.row?(r=>`<tr class="hi"><td><b>รวม ${S.labS}</b></td><td class="n"><b>${fmtM(r.sales)}</b></td><td class="n">${fmtM(r.ly)}</td><td class="n ${cls(pct(r.ly,r.sales))}">${sgn(pct(r.ly,r.sales))}</td><td class="n">${fmtM(r.budget)}</td><td class="n ${cls(pct(r.budget,r.sales))}">${sgn(pct(r.budget,r.sales))}</td><td class="n">${fmtM(r.sssgSales)}</td><td class="n ${cls(r.sssg)}">${sgn(r.sssg)}</td><td class="n ${cls(r.mom??0)}">${sgn(r.mom)}</td></tr>`)(S.row):''}
     </table></div>`}`));
 
   // 3 SSSG trend
@@ -2529,7 +2752,7 @@ function build(m){
   }
 
   // 4 delivery
-  const dl=d.delivery;
+  const dl=d0.delivery;
   out.push(deliverySection(m,d));
 
   // 5 delivery decliners
@@ -2543,6 +2766,7 @@ function build(m){
   // 6 trans / ticket
   const t=d.trans;
   out.push(transSection(m,d));
+  out.push(customersSection(m));
 
   // 7 branches good vs bad
   const b=d.branches;
@@ -2554,13 +2778,13 @@ function build(m){
 
   // 8-9 CEM / OSS
   // 7.1 ทำได้ตามแผนรายสาขา (จากแบบฟอร์มส่งยอดขาย)
-  const pb=filtZone(d.planBranches);
+  const pb=filtZone(S.multi?(S.br?S.br.rows.filter(b=>b.plan>0).map(b=>({code:b.code,name:b.name,plan:b.plan,sales:b.planSales,ach:b.ach})):[]):d.planBranches);
   if(pb && pb.length){
     const tot=pb.reduce((a,b)=>a+b.sales,0), totP=pb.reduce((a,b)=>a+b.plan,0);
     const srt=pb.slice().sort((a,b)=>b.ach-a.ach);
     const mxA=Math.max(...pb.map(b=>b.ach));
     const li=(arr)=>`<ol class="rank">${arr.map((b,i)=>`<li><span class="num">${i+1}</span><span>${b.name}</span><span class="track"><i style="width:${Math.max(2,Math.min(100,b.ach/mxA*100))}%"></i></span><span class="sc ${b.ach>=100?'pos':'neg'}">${b.ach.toFixed(0)}%</span><span style="font-size:12.5px;color:var(--mute)">${(b.sales/1e6).toFixed(2)}M / แผน ${(b.plan/1e6).toFixed(2)}M</span></li>`).join('')}</ol>`;
-    out.push(sec('plan','Plan Achievement by Branch',`${label(m)} · ${pb.length} สาขา`,`
+    out.push(sec('plan','Plan Achievement by Branch',`${S.lab} · ${pb.length} สาขา`,`
       <div class="strip">
         <div class="st ${cls(tot/totP*100-100)}"><div class="l">ทั้งเครือข่าย</div><div class="v">${(tot/totP*100).toFixed(1)}%</div><div class="s">${(tot/1e6).toFixed(2)}M จากแผน ${(totP/1e6).toFixed(2)}M</div></div>
         <div class="st pos"><div class="l">ทำได้ตามแผน (≥100%)</div><div class="v">${pb.filter(b=>b.ach>=100).length}</div><div class="s">จาก ${pb.length} สาขา</div></div>
@@ -2577,18 +2801,18 @@ function build(m){
       if(dd.plBranches&&dd.plBranches.length){ plb=dd.plBranches; plbM=k; break; } }
   }
   if(plb && plb.length){
-    const MIN=200000;                       // กันสาขาที่ปิด/ยอดเกือบศูนย์ ทำให้ %กำไร เพี้ยน
+    const MIN=200000*(S.multi?S.n:1);       // กันสาขาที่ปิด/ยอดเกือบศูนย์ ทำให้ %กำไร เพี้ยน
     const rank=plb.filter(b=>b.sales>=MIN), skipped=plb.length-rank.length;
     const srt=rank.slice().sort((a,b)=>b.gp-a.gp);
     const t=(arr)=>`<div class="scroll"><table><tr><th>สาขา</th><th class="n">ยอดขาย (บาท)</th><th class="n">กำไร (บาท)</th><th class="n">%กำไร</th><th class="n">%COS</th><th class="n">%COL</th></tr>
       ${arr.map(b=>`<tr><td>${b.name}</td><td class="n">${baht(b.sales)}</td><td class="n ${cls(b.profit)}">${baht(b.profit)}</td><td class="n ${cls(b.gp)}">${b.gp.toFixed(1)}%</td><td class="n">${b.cos.toFixed(1)}%</td><td class="n">${b.col.toFixed(1)}%</td></tr>`).join('')}</table></div>`;
     const loss=plb.filter(b=>b.profit<0);
-    out.push(sec('plbr','Profit by Branch',`${label(plbM)}${plbM!==m?' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':''} · ${rank.length} สาขา · เรียงตาม %กำไร${skipped?` (ไม่รวม ${skipped} สาขาที่ยอดต่ำกว่า 0.2M)`:''}`,`
+    out.push(sec('plbr','Profit by Branch',`${S.multi?S.lab:label(plbM)}${plbM!==m&&!S.multi?' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':''} · ${rank.length} สาขา · เรียงตาม %กำไร${skipped?` (ไม่รวม ${skipped} สาขาที่ยอดต่ำกว่า 0.2M)`:''}`,`
       <div class="strip">
         <div class="st pos"><div class="l">สาขาที่กำไร</div><div class="v">${plb.length-loss.length}</div><div class="s">จาก ${plb.length} สาขา</div></div>
         <div class="st neg"><div class="l">สาขาที่ขาดทุน</div><div class="v">${loss.length}</div><div class="s">รวม ${baht(loss.reduce((a,b)=>a+b.profit,0))} บาท</div></div>
-        <div class="st"><div class="l">%COS เฉลี่ย</div><div class="v">${(plb.reduce((a,b)=>a+b.cos,0)/plb.length).toFixed(1)}%</div><div class="s">ต้นทุนอาหาร</div></div>
-        <div class="st"><div class="l">%COL เฉลี่ย</div><div class="v">${(plb.reduce((a,b)=>a+b.col,0)/plb.length).toFixed(1)}%</div><div class="s">ค่าแรง</div></div>
+        <div class="st"><div class="l">%COS เฉลี่ย</div><div class="v">${((rank.length?rank:plb).reduce((a,b)=>a+b.cos,0)/(rank.length?rank:plb).length).toFixed(1)}%</div><div class="s">ต้นทุนอาหาร</div></div>
+        <div class="st"><div class="l">%COL เฉลี่ย</div><div class="v">${((rank.length?rank:plb).reduce((a,b)=>a+b.col,0)/(rank.length?rank:plb).length).toFixed(1)}%</div><div class="s">ค่าแรง</div></div>
       </div>
       <div class="grp">การกระจาย %กำไร (จำนวนสาขา)</div>
       ${histo(rank.map(b=>b.gp),[-10,0,5,10,15,1e9],['ขาดทุน>10%','ขาดทุน 0-10%','0-5%','5-10%','10-15%','>15%'])}
@@ -2605,15 +2829,15 @@ function build(m){
     Object.entries(d.ossStores||{}).forEach(([c,v])=>ossMap[c]=v);
     const rows=brRows.slice().sort((a,b)=>b.sales-a.sales);
     const hist=MONTHLY.filter(r=>r.m<=m).map(r=>({m:r.m,rows:(DETAIL[r.m]||{}).branchRows||[]})).filter(x=>x.rows.length);
-    BR_CTX={m,rows,plMap,cemMap,ossMap,hist};
+    BR_CTX={m,rows,plMap,cemMap,ossMap,hist,momLab:S.multi?'vs ช่วงก่อน':'MoM'};
     const totS=rows.reduce((a,b)=>a+b.sales,0);
-    out.push(sec('branchdetail','Branch Explorer',`${label(m)} · ${rows.length} สาขา · เลือกสาขาเพื่อดูรายละเอียด`,`
+    out.push(sec('branchdetail','Branch Explorer',`${S.lab} · ${rows.length} สาขา · เลือกสาขาเพื่อดูรายละเอียด`,`
       <div class="brpick">
         <input id="brFind" type="search" placeholder="ค้นหาสาขา…" autocomplete="off">
         <select id="brSel">${rows.slice().sort((a,b)=>String(a.code).localeCompare(String(b.code))).map(b=>`<option value="${b.code}">${b.code} ${b.name}</option>`).join('')}</select>
       </div>
       <div id="brBody"></div>
-      <div class="grp" style="margin-top:20px">ทุกสาขา — ${label(m)}</div>
+      <div class="grp" style="margin-top:20px">ทุกสาขา — ${S.lab}</div>
       <div class="scroll"><table>
         <tr><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">%สัดส่วน</th><th class="n">%แผน</th><th class="n">MoM</th><th class="n">Delivery</th><th class="n">%Deli</th><th class="n">บิล</th><th class="n">เช็คเฉลี่ย</th><th class="n">%กำไร</th><th class="n">CEM</th><th class="n">OSS</th></tr>
         ${rows.map(b=>{const pl=plMap[b.code],ce=cemMap[b.code],os=ossMap[b.code];
@@ -2693,7 +2917,13 @@ function build(m){
   allEls.forEach(x=>{ const g=SEC_GROUP[x.id]||'sales'; x.dataset.g=g; x.classList.toggle('ghide', GRP!=='all'&&g!==GRP); });
   const vis=allEls.filter(x=>!x.classList.contains('ghide'));
   vis.forEach((x,i)=>{const h=x.querySelector('.bar h2'); if(h) h.dataset.n=i+1;});
-  $('#hsub').textContent=label(m);
+  $('#hsub').textContent=S.lab;
+  /* ป้ายบอกเดือนของข้อมูล: หัวข้อที่รวมหลายเดือนไม่ได้ ใช้เดือนล่าสุดในช่วง · หัวข้อที่ข้อมูลไม่ครบทุกเดือนในช่วง บอกเดือนที่มี */
+  if(S.multi){ const chip=(id,t)=>{ const b=mainEl.querySelector('#'+id+' .bar'); if(b&&!b.querySelector('.datachip')) b.insertAdjacentHTML('beforeend',`<span class="datachip">${t}</span>`); };
+    ['decline','branches','cem','oss'].forEach(id=>chip(id,'ข้อมูล '+label(S.last)));
+    const bm=brMonth(S.last); if(bm!=null&&bm<S.last) ['rank','mall','zone'].forEach(id=>chip(id,'ข้อมูล '+RNG(S.ms.filter(x=>x<=bm))));
+    if(S.br&&S.br.ms.length<S.n) ['brsales','plan','branchdetail'].forEach(id=>chip(id,'ข้อมูล '+RNG(S.br.ms)));
+    if(S.tN&&S.tN.n<S.n){ const tm=S.ms.filter(x=>trOf(x)); ['trans','customers'].forEach(id=>chip(id,'ข้อมูล '+RNG(tm))); } }
   frameBlocks(); renderNav(allEls,vis); capTables(); bindFind(); importBadge();;
   if(presOn){ const ss=slides(); const i=presKeep?ss.findIndex(x=>x.id===presKeep.id):-1;
     showSlide(i>=0?i:0); if(i>=0&&ss[i]) ss[i].scrollTop=presKeep.top; }
@@ -2787,6 +3017,9 @@ function refreshMonths(){
   if(!months.includes(curM)) curM=months[months.length-1];
   $('#monthList').innerHTML=months.map(m=>`<span>${label(m)}<button data-del="${m}" title="ลบเดือนนี้">×</button></span>`).join('')||'<span>ยังไม่มีข้อมูล</span>';
 }
+function defaultMonth(){ const now=new Date(), y=now.getFullYear();
+  const done=y>YEAR?12:(y<YEAR?0:now.getMonth());   // getMonth() ของเดือน ก.ย. = 8 → ส.ค. คือเดือนล่าสุดที่ปิดครบ
+  const ok=months.filter(x=>x<=done); return ok.length?ok[ok.length-1]:months[months.length-1]; }
 function setMonth(m){curM=m;sel.value=m;$('#prevM').disabled=months.indexOf(m)<=0;$('#nextM').disabled=months.indexOf(m)===months.length-1;build(m);try{localStorage.setItem('sf-kpi-month',m)}catch(e){}}
 sel.onchange=e=>setMonth(+e.target.value);
 $('#prevM').onclick=()=>setMonth(months[months.indexOf(curM)-1]);
@@ -2870,9 +3103,8 @@ async function boot(){
   if(local && local.v && DATA_V && local.v===DATA_V){ MONTHLY=local.monthly; DETAIL=local.detail||{}; }
   else if(local){ try{localStorage.removeItem('sf-kpi-data')}catch(e){} }
   refreshMonths();
-  // เปิดหน้ามาให้เป็นเดือนปัจจุบันเสมอ (ถ้ายังไม่มีข้อมูลเดือนนี้ ใช้เดือนล่าสุดที่มี)
-  const nowM=new Date().getMonth()+1;
-  setMonth(months.includes(nowM)?nowM:months[months.length-1]);
+  // เปิดหน้ามาที่เดือนที่ปิดครบแล้ว (เดือนก่อนหน้าเดือนปัจจุบัน) · ถ้าเดือนนั้นยังไม่มีข้อมูล ใช้เดือนล่าสุดก่อนหน้านั้น
+  setMonth(defaultMonth());
   renderFilters(); bindFilters();
   if(!window.claude) return;
   db=await claude.use('db'); if(!db) return;
