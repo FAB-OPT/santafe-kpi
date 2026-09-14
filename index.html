@@ -3300,9 +3300,19 @@ new MutationObserver(()=>tipify($('#main'))).observe($('#main'),{childList:true,
 
 /* ========================= storage (db → localStorage) ========================= */
 let db=null, dbDoc=null, saving=false;
-function applyState(s){ if(!s||!Array.isArray(s.monthly)||!s.monthly.length) return; MONTHLY=s.monthly; DETAIL=s.detail||{}; refreshMonths(); setMonth(curM); if(s.updatedAt) $('#status').textContent='อัปเดต '+new Date(s.updatedAt).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'}); }
+/* ยอดรายสาขา 2 ปีที่นำเข้าจากเครื่องนี้: รวมเข้ากับชุดที่ฝังในเว็บ (ตัวเลขจากไฟล์ชนะ)
+   เดือนที่ไฟล์ยังไม่มียอดปีนี้ ยังใช้ยอดที่เติมจากแบบฟอร์มส่งยอดขายเหมือนเดิม */
+let BY_IMPORT=null;
+function applyBY(list){ if(!Array.isArray(list)||!list.length) return; BY_IMPORT=list;
+  const BY=EXTRA.branchYears=EXTRA.branchYears||[], idx={}; BY.forEach(b=>idx[String(b.code)]=b);
+  list.forEach(n=>{ let b=idx[n.code];
+    if(!b){ b={code:n.code,name:n.name,zone:n.zone,mall:n.mall,m:{}}; BY.push(b); idx[n.code]=b; }
+    if(n.name) b.name=n.name; if(n.zone) b.zone=n.zone; if(n.mall) b.mall=n.mall; delete b.fromForm; b.m=b.m||{};
+    Object.entries(n.m||{}).forEach(([mm,v])=>{ const o=b.m[mm]||(b.m[mm]={});
+      if(v.ly!=null) o.ly=v.ly; if(v.ty!=null){ o.ty=v.ty; delete o.src; } }); }); }
+function applyState(s){ if(!s||!Array.isArray(s.monthly)||!s.monthly.length) return; MONTHLY=s.monthly; DETAIL=s.detail||{}; if(s.by) applyBY(s.by); refreshMonths(); setMonth(curM); if(s.updatedAt) $('#status').textContent='อัปเดต '+new Date(s.updatedAt).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'}); }
 async function saveState(){
-  const s={monthly:MONTHLY, detail:DETAIL, v:DATA_V, updatedAt:new Date().toISOString()};
+  const s={monthly:MONTHLY, detail:DETAIL, by:BY_IMPORT||undefined, v:DATA_V, updatedAt:new Date().toISOString()};
   try{localStorage.setItem('sf-kpi-data',JSON.stringify(s))}catch(e){}
   if(dbDoc){ saving=true; try{ await dbDoc.set(s); }catch(e){ console.warn(e); showMsg('บันทึกขึ้นระบบไม่สำเร็จ (เก็บไว้ในเครื่องนี้แล้ว): '+(e.message||e.code),'err'); } saving=false; }
   applyState(s);
@@ -3313,7 +3323,7 @@ async function boot(){
   let local=null; try{local=JSON.parse(localStorage.getItem('sf-kpi-data'))}catch(e){}
   // ข้อมูลที่ค้างในเครื่องจะใช้ได้ก็ต่อเมื่อเป็นข้อมูลชุดเดียวกับที่ฝังมาในไฟล์
   // (ไฟล์ใหม่ = เวอร์ชันใหม่ → ทิ้งของเก่า ไม่งั้นจะเห็นข้อมูลเก่าค้างตลอด)
-  if(local && local.v && DATA_V && local.v===DATA_V){ MONTHLY=local.monthly; DETAIL=local.detail||{}; }
+  if(local && local.v && DATA_V && local.v===DATA_V){ MONTHLY=local.monthly; DETAIL=local.detail||{}; if(local.by) applyBY(local.by); }
   else if(local){ try{localStorage.removeItem('sf-kpi-data')}catch(e){} }
   refreshMonths();
   // เปิดหน้ามาที่เดือนที่ปิดครบแล้ว (เดือนก่อนหน้าเดือนปัจจุบัน) · ถ้าเดือนนั้นยังไม่มีข้อมูล ใช้เดือนล่าสุดก่อนหน้านั้น
@@ -3796,6 +3806,37 @@ function parsePL(wb){
   return {det,warn,year};
 }
 
+/* ===== ตัวอ่านไฟล์ยอดรายสาขา 2 ปี (Sales 2025_2026 · ชีต Santa Fe) =====
+   แถวหัว: ST · Branch · … · Location 2 (กลุ่มห้าง) · … · BZM แล้วเดือนละ 3 คอลัมน์ (ปีก่อน · ปีนี้ · YoY) */
+function isSales2YWb(wb){
+  const k=wb.SheetNames.find(n=>/^santa\s*fe$/i.test(n.trim())); if(!k) return false;
+  const rs=XLSX.utils.sheet_to_json(wb.Sheets[k],{header:1,defval:null,range:'A1:Z6'});
+  return rs.some(r=>r&&r.some(v=>typeof v==='string'&&v.trim()==='ST')&&r.some(v=>typeof v==='string'&&v.trim()==='BZM'));
+}
+function parseSales2Y(wb){
+  const k=wb.SheetNames.find(n=>/^santa\s*fe$/i.test(n.trim()));
+  const rs=XLSX.utils.sheet_to_json(wb.Sheets[k],{header:1,defval:null});
+  const hi=rs.findIndex(r=>r&&r.some(v=>typeof v==='string'&&v.trim()==='ST')&&r.some(v=>typeof v==='string'&&v.trim()==='BZM'));
+  const warn=[]; if(hi<0) return {list:[],warn:['ไม่พบแถวหัวตาราง (ST / BZM)']};
+  const H=rs[hi], col=t=>H.findIndex(v=>typeof v==='string'&&v.trim()===t);
+  const cST=col('ST'), cName=col('Branch'), cMall=col('Location 2'), cZone=col('BZM');
+  /* คอลัมน์แรกของ ม.ค. = ตัวเลขปี (ปีก่อน) ถัดจาก BZM */
+  const c0=H.findIndex((v,i)=>i>cZone&&typeof v==='number'&&v>2000);
+  if(c0<0) return {list:[],warn:['ไม่พบคอลัมน์ปีของเดือนมกราคม']};
+  const lyYear=H[c0], tyYear=H[c0+1];
+  const N=v=>typeof v==='number'&&isFinite(v)&&v>0?Math.round(v):null;
+  const list=[], months=new Set();
+  for(let i=hi+1;i<rs.length;i++){ const r=rs[i]||[];
+    const code=r[cST]==null?'':String(r[cST]).trim(); if(!/^50\d{2}$/.test(code)) continue;
+    const m={};
+    for(let mm=1;mm<=12;mm++){ const ly=N(r[c0+3*(mm-1)]), ty=N(r[c0+3*(mm-1)+1]);
+      if(ly!=null||ty!=null){ m[mm]={ly,ty}; if(ty!=null) months.add(mm); } }
+    list.push({code, name:String(r[cName]||code).replace(/\s+/g,' ').trim(), zone:r[cZone]==null?'':String(r[cZone]).trim(),
+      mall:r[cMall]==null?'':String(r[cMall]).trim(), m});
+  }
+  return {list, lyYear, tyYear, months:[...months].sort((a,b)=>a-b), warn};
+}
+
 /* ===== ตัวอ่านไฟล์ CEM (ผลสำรวจลูกค้า ทุกสาขาในเดือนเดียว) ===== */
 function isCEMWb(wb){ return wb.SheetNames.some(n=>/^Survey Questions/i.test(n.trim())); }
 function parseCEM(wb){
@@ -3961,7 +4002,7 @@ function covTypes(){
     {g:'ยอดขาย',name:'บิล · เช็คเฉลี่ย · ลูกค้า',src:'แบบฟอร์มส่งยอดขาย',f:m=>!!D(m).trans},
     {g:'ยอดขาย',name:'ยอดรายสาขา',src:'แบบฟอร์มส่งยอดขาย',exp:nBr,
       f:m=>Math.max((D(m).branchRows||[]).length,(D(m).planBranches||[]).length)},
-    {g:'ยอดขาย',name:'ยอดรายสาขา 2 ปี',src:'ฝังในเว็บ (ผู้ดูแลอัปเดตให้)',fixed:1,exp:nBr,
+    {g:'ยอดขาย',name:'ยอดรายสาขา 2 ปี',src:'ไฟล์ Sales 2025_2026 (เดือนที่ไฟล์ยังไม่มี ใช้แบบฟอร์มส่งยอดขาย)',fixed:1,exp:nBr,
       f:m=>(EXTRA.branchYears||[]).filter(b=>b.m&&b.m[m]&&b.m[m].ty).length},
     {g:'COL / COS · P&L',name:'งบกำไรขาดทุน',src:'ไฟล์ PL',f:m=>!!((F&&F.actual&&F.actual[K(m)])||D(m).pl)},
     {g:'COL / COS · P&L',name:'กำไรรายสาขา',src:'ไฟล์ PL (ชีต SUM)',exp:nBr,
@@ -4039,6 +4080,16 @@ async function importFile(file){
   IMP={file:file.name,size:file.size,kind:null,months:null};
   try{
     const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+    if(isSales2YWb(wb)){ IMP.kind='ยอดรายสาขา 2 ปี';     // ไฟล์ Sales 2025_2026 (ชีต Santa Fe)
+      const R=parseSales2Y(wb);
+      if(R.tyYear&&R.tyYear!==YEAR) throw new Error(`ไฟล์นี้เป็นยอดปี ${R.tyYear} เทียบ ${R.lyYear} — ระบบใช้ปี ${YEAR} เทียบ ${YEAR-1}`);
+      if(!R.list.length) throw new Error('ไม่พบแถวสาขา (รหัส 50xx) ในชีต Santa Fe'+(R.warn.length?' ('+R.warn.join('; ')+')':''));
+      IMP.months=R.months; applyBY(R.list); await saveState();
+      const lastTy=R.months.length?R.months[R.months.length-1]:null, after=MONTHLY.map(r=>r.m).filter(x=>lastTy==null||x>lastTy);
+      finish('นำเข้ายอดรายสาขา 2 ปีสำเร็จ: '+R.list.length+' สาขา · ยอดปี '+YEAR+' '+(R.months.length?monRange(R.months):'ยังไม่มี')+' · ปีก่อน ม.ค.–ธ.ค. '+(YEAR-1)
+        +(after.length?' — '+monRange(after)+' ยังไม่มีในไฟล์ ใช้ยอดจากแบบฟอร์มส่งยอดขายแทน':'')+(R.warn.length?' ['+R.warn.join('; ')+']':''),'ok');
+      return;
+    }
     if(isCEMWb(wb)){ IMP.kind='CEM';         // ไฟล์ CEM (ผลสำรวจลูกค้า ทุกสาขา)
       const R=parseCEM(wb);
       if(!R.stores) throw new Error((R.warn||['อ่านไฟล์ CEM ไม่ได้']).join('; '));
