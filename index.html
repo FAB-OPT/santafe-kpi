@@ -1199,6 +1199,17 @@ body.present .secfull{display:none}
 .brm-act [hidden]{display:none}
 @media (max-width:620px){.pg-list{grid-template-columns:1fr}}
 @media print{.secfull{display:none}}
+/* ---- แถบบน: เมนู ⋯ ---- */
+#exportBtn{position:relative;min-width:44px;font-size:22px;font-weight:900;line-height:1;letter-spacing:.02em;color:var(--ink);padding-top:0;padding-bottom:4px}
+#moreBadge{position:absolute;top:-9px;right:-9px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--bad);color:#fff;
+  font-size:11px;font-weight:700;line-height:18px;letter-spacing:0;border:2px solid #fff;box-sizing:content-box}
+#exportDd{min-width:280px}
+#exportDd #importBtn{font-weight:700;color:var(--ink)}
+#exportDd #importBtn .nbadge{margin-left:6px}
+#exportDd .ddcap{font-size:11.5px;font-weight:700;color:var(--faint);padding:10px 12px 4px;border-top:1px solid var(--hair);margin-top:4px}
+#exportDd #uiSize{display:block;width:calc(100% - 16px);margin:2px 8px 6px;padding:7px 8px;border:1px solid var(--line);border-radius:9px;
+  background:#fff;color:var(--ink);color-scheme:light;font:inherit;font-size:13.5px;cursor:pointer}
+#exportDd #uiSize option{background:#fff;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -1238,17 +1249,19 @@ body.present .secfull{display:none}
   </div>
   <div class="find"><input id="secFind" type="search" placeholder="ค้นหาหัวข้อ" autocomplete="off" aria-label="ค้นหาหัวข้อ">
     <div class="findlist" id="findList"></div></div>
-  <div class="menu"><button class="btn" id="exportBtn">⤓ ดึงรายงาน</button>
+  <div class="menu"><button class="btn" id="exportBtn" aria-haspopup="true" aria-label="เมนูเพิ่มเติม: นำเข้าข้อมูล ดึงรายงาน ขนาด" title="นำเข้าข้อมูล · ดึงรายงาน · ขนาด">⋯<span id="moreBadge" hidden></span></button>
     <div class="dd" id="exportDd">
+      <button id="importBtn">⤒ นำเข้าข้อมูล</button>
+      <div class="ddcap">ดึงรายงาน</div>
       <button data-x="print">พิมพ์ / บันทึก PDF (เดือนนี้)</button>
       <button data-x="report">Excel รายงานเดือนนี้</button>
       <button data-x="data">Excel ไฟล์ข้อมูลทุกเดือน (แก้แล้วนำเข้าได้)</button>
+      <div class="ddcap">ขนาดการแสดงผล</div>
+      <select id="uiSize" title="ขนาดตัวอักษร/กรอบ" aria-label="ขนาดการแสดงผล">
+        <option value="0.8">ขนาด 80%</option><option value="0.9">ขนาด 90%</option>
+        <option value="1" selected>ขนาด 100%</option><option value="1.1">ขนาด 110%</option>
+      </select>
     </div></div>
-  <select id="uiSize" class="btn" title="ขนาดตัวอักษร/กรอบ" aria-label="ขนาดการแสดงผล">
-    <option value="0.8">ขนาด 80%</option><option value="0.9">ขนาด 90%</option>
-    <option value="1" selected>ขนาด 100%</option><option value="1.1">ขนาด 110%</option>
-  </select>
-  <button class="btn" id="importBtn">⤒ นำเข้าข้อมูล</button>
   <button class="btn primary" id="presentBtn">▶ โหมดพรีเซนต์</button>
 </header>
 
@@ -4288,6 +4301,7 @@ function reportSheets(m){
   return S;
 }
 document.addEventListener('click',e=>{
+  if(e.target.closest('#exportDd select')) return;
   const b=e.target.closest('[data-x]'); if(!b){ $('#exportDd').classList.remove('open'); return; }
   const x=b.dataset.x; $('#exportDd').classList.remove('open');
   if(x==='print'){ window.print(); }
@@ -4295,6 +4309,9 @@ document.addEventListener('click',e=>{
   else if(x==='data'){ saveFile(`SantaFe_KPI_data_${YEAR}.xlsx`, wbFromSheets(toRows())); }
 });
 $('#exportBtn').onclick=e=>{e.stopPropagation();$('#exportDd').classList.toggle('open');};
+{ const _badge=importBadge; importBadge=function(){ _badge();
+    const n=document.querySelector('#importBtn .nbadge'), mb=$('#moreBadge'); if(!mb) return;
+    mb.textContent=n?n.textContent:''; mb.hidden=!n; }; }
 </script>
 </body>
 </html>
