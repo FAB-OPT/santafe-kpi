@@ -1242,6 +1242,11 @@ const fmtM = v => v==null ? '—' : v.toFixed(1)+'M';
 const fmtN = v => v.toLocaleString('en-US');
 const bahtM = v => v==null ? '—' : Math.round(v*1e6).toLocaleString('en-US');   // ค่าในหน่วยล้านบาท → บาทเต็ม
 const baht  = v => v==null ? '—' : Math.round(v).toLocaleString('en-US');       // ค่าในหน่วยบาท → บาทเต็ม
+/* หน่วยแสดงผล: ภาพรวม = M · รายสาขา = K */
+const MB = v => v==null||isNaN(v) ? '—' : (v/1e6).toFixed(2)+'M';                       // บาท → M
+const MM = v => v==null||isNaN(v) ? '—' : (+v).toFixed(2)+'M';                          // ล้านบาท → M
+const KB = v => v==null||isNaN(v) ? '—' : Math.round(v/1e3).toLocaleString('en-US')+'K'; // บาท → K
+const KM = v => v==null||isNaN(v) ? '—' : Math.round(v*1e3).toLocaleString('en-US')+'K'; // ล้านบาท → K
 const pct = (a,b) => (a==null||b==null||!a) ? null : (b-a)/a*100;
 const sgn = (v,d=1,suffix='%') => v==null ? '—' : (v>0?'+':'')+v.toFixed(d)+suffix;
 const pill = (v,d=1,suffix='%') => v==null ? '<span class="pill">—</span>' : `<span class="pill ${v>=0?'pos':'neg'}">${sgn(v,d,suffix)}</span>`;
@@ -1365,7 +1370,7 @@ function costStack(rows){
   rows.forEach((r,i)=>{ const cx=L+gw*(i+.5); let acc=0;
     seg.forEach(([nm,k,c])=>{ const val=r.revenue?Math.max(0,(r[k]||0)/r.revenue*100):0; if(val<=0) return;
       const y1=y(acc+val), y2=y(acc);
-      g+=`<rect x="${cx-bw/2}" y="${y1}" width="${bw}" height="${Math.max(0,y2-y1)}" fill="${c}" data-tip="${MONTH_TH[r.m-1]} · ${nm}\n${val.toFixed(1)}% ของรายได้${Math.abs(r[k]||0)>1000?'\n'+bahtM((r[k]||0)/1e6)+' บาท':''}"/>`;
+      g+=`<rect x="${cx-bw/2}" y="${y1}" width="${bw}" height="${Math.max(0,y2-y1)}" fill="${c}" data-tip="${MONTH_TH[r.m-1]} · ${nm}\n${val.toFixed(1)}% ของรายได้${Math.abs(r[k]||0)>1000?'\n'+MB(r[k]||0):''}"/>`;
       if(val>=7) g+=`<text x="${cx}" y="${(y1+y2)/2+4}" font-size="11" font-weight="600" fill="#fff" text-anchor="middle">${val.toFixed(0)}</text>`;
       acc+=val; });
     g+=`<text x="${cx}" y="${H-10}" font-size="12" fill="var(--mute)" text-anchor="middle">${MONTH_TH[r.m-1]}</text>`; });
@@ -1394,16 +1399,16 @@ function branchLine(hist){
   const x=i=>L+(W-L-R)*(rows.length===1?0.5:i/(rows.length-1));
   const y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo||1));
   let g='';
-  for(let k=0;k<=3;k++){ const v=lo+(hi-lo)*k/3; g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--hair)"/><text x="${L-6}" y="${y(v)+4}" font-size="10.5" fill="var(--faint)" text-anchor="end">${(v/1e6).toFixed(2)}M</text>`; }
+  for(let k=0;k<=3;k++){ const v=lo+(hi-lo)*k/3; g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--hair)"/><text x="${L-6}" y="${y(v)+4}" font-size="10.5" fill="var(--faint)" text-anchor="end">${KB(v)}</text>`; }
   const line=(k,color,dash)=>{ const pts=rows.map((h,i)=>({i,v:h.r[k]})).filter(o=>o.v>0); if(!pts.length) return '';
     return `<path d="${pts.map((o,n)=>(n?'L':'M')+x(o.i)+','+y(o.v)).join(' ')}" fill="none" stroke="${color}" stroke-width="2.5" ${dash?'stroke-dasharray="6 5"':''}/>`+
       pts.map(o=>`<circle cx="${x(o.i)}" cy="${y(o.v)}" r="3.6" fill="var(--card)" stroke="${color}" stroke-width="2.2"/>`).join(''); };
   g+=line('plan','var(--chart-3)',true)+line('sales','var(--accent)');
   g+=rows.map((h,i)=>`<text x="${x(i)}" y="${H-10}" font-size="11.5" fill="var(--mute)" text-anchor="middle">${MONTH_TH[h.m-1]}</text>
-     <text x="${x(i)}" y="${y(h.r.sales)-9}" font-size="11" font-weight="600" fill="var(--accent-ink)" text-anchor="middle">${(h.r.sales/1e6).toFixed(2)}</text>`).join('');
+     <text x="${x(i)}" y="${y(h.r.sales)-9}" font-size="11" font-weight="600" fill="var(--accent-ink)" text-anchor="middle">${KB(h.r.sales)}</text>`).join('');
   const colW=(W-L-R)/Math.max(1,rows.length-1);
-  rows.forEach((h,i)=>{ const t=[`${MONTH_TH[h.m-1]} ${YEAR}`,`ยอดขาย ${bahtM(h.r.sales/1e6)} บาท`];
-    if(h.r.plan>0) t.push(`แผน ${bahtM(h.r.plan/1e6)} บาท (ทำได้ ${(h.r.sales/h.r.plan*100).toFixed(1)}%)`);
+  rows.forEach((h,i)=>{ const t=[`${MONTH_TH[h.m-1]} ${YEAR}`,`ยอดขาย ${KB(h.r.sales)}`];
+    if(h.r.plan>0) t.push(`แผน ${KB(h.r.plan)} (ทำได้ ${(h.r.sales/h.r.plan*100).toFixed(1)}%)`);
     g+=`<rect class="hz" x="${x(i)-colW/2}" y="${T}" width="${colW}" height="${H-B-T}" fill="transparent" data-tip="${t.join('\n')}"/>`; });
   return `<svg class="chart" viewBox="0 0 ${W} ${H}">${g}</svg>
     <div class="legend"><span><i style="background:var(--accent)"></i>ยอดขายจริง</span><span><i style="background:var(--chart-3)"></i>แผน</span></div>`;
@@ -1579,7 +1584,7 @@ function sssgSection(m,rows){
   const BY=filtZone(EXTRA.branchYears||[]).slice().sort((a,b)=>String(a.code).localeCompare(String(b.code)));
   const S=SCP||{}, inScope=S.multi&&S.n>=2;
   const months=inScope?S.ms.slice():MONTHLY.map(r=>r.m).filter(x=>x<=m);
-  const M2=v=>(v/1e6).toFixed(2)+'M';
+  const M2=MB, K2=KB;
   const bar=`<div class="plbar"><label>สาขา <select id="ssBranch"><option value="all">${FILT.zone==='all'?'ทั้งบริษัท (Santa Fe)':'ทั้งโซน '+FILT.zone}</option>${BY.map(b=>`<option value="${b.code}" ${SSS.branch===b.code?'selected':''}>${b.code} ${b.name}</option>`).join('')}</select></label>
     ${SSS.branch==='all'?'<span class="hint">คลิกแท่งเดือนในกราฟ เพื่อดู SSSG รายสาขาของเดือนนั้น</span>':'<button class="btn small" id="ssBack">← กลับภาพรวม</button>'}</div>`;
   const b=SSS.branch!=='all'&&BY.find(x=>x.code===SSS.branch);
@@ -1590,13 +1595,13 @@ function sssgSection(m,rows){
     const meta=BRANCH_META&&BRANCH_META[b.code];
     return sec('sssg','%SSSG by Month — '+b.name,`สาขา ${b.code}${meta&&meta.zone?' · โซน '+meta.zone:''} · เทียบเดือนเดียวกันปีก่อน`,bar+`
       <div class="strip">
-        <div class="st ${cls(ytd)}"><div class="l">SSSG สะสม (${ss.length} เดือนที่มีทั้ง 2 ปี)</div><div class="v">${ytd==null?'—':sgn(ytd)}</div><div class="s">${M2(st)} vs ${M2(sl)} ปีก่อน</div></div>
-        <div class="st ${cls(lastR&&lastR.sssg)}"><div class="l">${label(m)}</div><div class="v">${lastR&&lastR.sssg!=null?sgn(lastR.sssg):'—'}</div><div class="s">${lastR&&lastR.ty?M2(lastR.ty):'ยังไม่มียอดเดือนนี้'}${lastR&&lastR.ly?' vs '+M2(lastR.ly)+' ปีก่อน':''}</div></div>
+        <div class="st ${cls(ytd)}"><div class="l">SSSG สะสม (${ss.length} เดือนที่มีทั้ง 2 ปี)</div><div class="v">${ytd==null?'—':sgn(ytd)}</div><div class="s">${K2(st)} vs ${K2(sl)} ปีก่อน</div></div>
+        <div class="st ${cls(lastR&&lastR.sssg)}"><div class="l">${label(m)}</div><div class="v">${lastR&&lastR.sssg!=null?sgn(lastR.sssg):'—'}</div><div class="s">${lastR&&lastR.ty?K2(lastR.ty):'ยังไม่มียอดเดือนนี้'}${lastR&&lastR.ly?' vs '+K2(lastR.ly)+' ปีก่อน':''}</div></div>
         <div class="st"><div class="l">เดือนที่โต / ลด</div><div class="v"><span class="pos">${up}</span> / <span class="neg">${ss.length-up}</span></div><div class="s">จาก ${ss.length} เดือน</div></div>
       </div>
       ${ss.length?sssgBars(ss):'<div class="empty">สาขานี้ยังไม่มีเดือนที่เทียบปีก่อนได้</div>'}
       <div class="scroll" style="margin-top:14px"><table><tr><th>เดือน</th><th class="n">${YEAR-1}</th><th class="n">${YEAR}</th><th class="n">Δ</th><th class="n">SSSG</th></tr>
-      ${rb.map(r=>`<tr class="${r.m===m?'hi':''}"><td>${MONTH_TH[r.m-1]}</td><td class="n">${r.ly?M2(r.ly):'—'}</td><td class="n">${r.ty?M2(r.ty):'—'}</td><td class="n ${r.ly&&r.ty?cls(r.ty-r.ly):''}">${r.ly&&r.ty?M2(r.ty-r.ly):'—'}</td><td class="n">${r.sssg!=null?pill(r.sssg):'—'}</td></tr>`).join('')}</table></div>`);
+      ${rb.map(r=>`<tr class="${r.m===m?'hi':''}"><td>${MONTH_TH[r.m-1]}</td><td class="n">${r.ly?K2(r.ly):'—'}</td><td class="n">${r.ty?K2(r.ty):'—'}</td><td class="n ${r.ly&&r.ty?cls(r.ty-r.ly):''}">${r.ly&&r.ty?K2(r.ty-r.ly):'—'}</td><td class="n">${r.sssg!=null?pill(r.sssg):'—'}</td></tr>`).join('')}</table></div>`);
   }
   // ---- ภาพรวม (ทั้งบริษัท หรือเฉพาะโซน) ----
   let rowsC=inScope?rows.filter(r=>S.ms.includes(r.m)):rows, subT='Same-store sales growth เทียบเดือนเดียวกันปีก่อน';
@@ -1610,7 +1615,7 @@ function sssgSection(m,rows){
     const up=list.filter(x=>x.sssg>=0).length;
     panel=list.length?`<div class="pick"><div class="pickhd"><h4>SSSG รายสาขา · ${plab} · ${list.length} สาขา Same Store (โต <span class="pos">${up}</span> · ลด <span class="neg">${list.length-up}</span>)</h4>${canClose?'<button class="btn small" data-ssclose>ปิด</button>':''}</div>
       <div class="scroll"><table><tr><th>#</th><th>สาขา</th><th>โซน</th><th class="n">${YEAR-1}</th><th class="n">${YEAR}</th><th class="n">Δ</th><th class="n">SSSG</th></tr>
-      ${list.map((x,i)=>`<tr class="clk" data-ssbr="${x.code}"><td>${i+1}</td><td>${x.code} ${x.name}</td><td>${x.zone||''}</td><td class="n">${M2(x.ly)}</td><td class="n">${M2(x.ty)}</td><td class="n ${cls(x.ty-x.ly)}">${M2(x.ty-x.ly)}</td><td class="n">${pill(x.sssg)}</td></tr>`).join('')}</table></div>
+      ${list.map((x,i)=>`<tr class="clk" data-ssbr="${x.code}"><td>${i+1}</td><td>${x.code} ${x.name}</td><td>${x.zone||''}</td><td class="n">${K2(x.ly)}</td><td class="n">${K2(x.ty)}</td><td class="n ${cls(x.ty-x.ly)}">${K2(x.ty-x.ly)}</td><td class="n">${pill(x.sssg)}</td></tr>`).join('')}</table></div>
       <div class="hint" style="margin-top:8px">คลิกชื่อสาขาเพื่อดู SSSG รายเดือนของสาขานั้น</div></div>`
       :`<div class="pick"><div class="pickhd"><h4>${plab}</h4>${canClose?'<button class="btn small" data-ssclose>ปิด</button>':''}</div><div class="empty">ยังไม่มียอดรายสาขาของเดือนนี้</div></div>`; }
   let sstrip='';
@@ -1970,7 +1975,7 @@ function rankSection(m0){
   hist.forEach(mm=>{ const rr=rowsOf(mm).filter(r=>RNK.by!=='sssg'||r.g!=null).sort((a,b)=>b[key]-a[key]);
     setsT[mm]=new Set(rr.slice(0,N).map(r=>r.code)); setsB[mm]=new Set(rr.slice(-N).map(r=>r.code)); });
   const streak=(code,set)=>hist.filter(mm=>set[mm]&&set[mm].has(code)).length;
-  const M2=v=>v==null?'—':(v/1e6).toFixed(2)+'M';
+  const M2=KB;
   const dots=(k,tot)=>`<span class="dots" title="ติดอันดับ ${k} จาก ${tot} เดือนล่าสุด">${Array.from({length:tot},(_,i)=>`<i class="${i<k?'on':''}"></i>`).join('')}</span>`;
   const tbl=(arr,set)=>`<div class="scroll"><table><tr><th>#</th><th>สาขา</th><th class="n">ยอด ${LS}</th><th class="n">YoY</th>${hist.length?'<th class="n">ติดอันดับ</th>':''}</tr>
     ${arr.map((r,i)=>`<tr class="clk" data-ssbr="${r.code}"><td>${i+1}</td>
@@ -2007,23 +2012,23 @@ function branchSalesSection(m){
       <option value="delipc" ${BSL.sort==='delipc'?'selected':''}>%Delivery</option></select></label>
     <span class="hint">ยอดจากแบบฟอร์มส่งยอดขาย หน่วยบาท · คลิกแถวเพื่อดูรายละเอียดสาขานั้น</span></div>`;
   const strip=T?`<div class="strip">
-    <div class="st"><div class="l">ยอดขายรวม ${SC.multi?SC.lab:label(m)}</div><div class="v">${baht(T.sales)}</div><div class="s">${T.n} สาขา</div></div>
-    ${has?`<div class="st"><div class="l">Dine in</div><div class="v">${baht(T.dine)}</div><div class="s">${pc(T.dine,T.sales)} ของยอดขาย</div></div>
-    <div class="st"><div class="l">Takeaway</div><div class="v">${baht(T.take)}</div><div class="s">${pc(T.take,T.sales)} ของยอดขาย</div></div>`:''}
-    <div class="st"><div class="l">Delivery</div><div class="v">${baht(T.deli)}</div><div class="s">${pc(T.deli,T.sales)} · Grab ${baht(T.grab)} · LM ${baht(T.lm)} · Shopee ${baht(T.sp)}</div></div>
+    <div class="st"><div class="l">ยอดขายรวม ${SC.multi?SC.lab:label(m)}</div><div class="v">${MB(T.sales)}</div><div class="s">${T.n} สาขา</div></div>
+    ${has?`<div class="st"><div class="l">Dine in</div><div class="v">${MB(T.dine)}</div><div class="s">${pc(T.dine,T.sales)} ของยอดขาย</div></div>
+    <div class="st"><div class="l">Takeaway</div><div class="v">${MB(T.take)}</div><div class="s">${pc(T.take,T.sales)} ของยอดขาย</div></div>`:''}
+    <div class="st"><div class="l">Delivery</div><div class="v">${MB(T.deli)}</div><div class="s">${pc(T.deli,T.sales)} · Grab ${MB(T.grab)} · LM ${MB(T.lm)} · Shopee ${MB(T.sp)}</div></div>
   </div>`:'';
   const row=b=>`<tr class="clk" data-ssbr="${b.code}"><td>${b.code} ${b.name}<span class="tiny">${zoneOf(b.code)}</span></td>
-    <td class="n"><b>${baht(b.sales)}</b></td>
-    ${has?`<td class="n">${baht(b.dine)}<span class="tiny">${pc(b.dine,b.sales)}</span></td>
-    <td class="n">${baht(b.take)}<span class="tiny">${pc(b.take,b.sales)}</span></td>`:''}
-    <td class="n">${baht(b.grab)}</td><td class="n">${baht(b.lm)}</td><td class="n">${baht(b.sp)}</td>
-    <td class="n"><b>${baht(b.deli)}</b><span class="tiny">${pc(b.deli,b.sales)}</span></td></tr>`;
+    <td class="n"><b>${KB(b.sales)}</b></td>
+    ${has?`<td class="n">${KB(b.dine)}<span class="tiny">${pc(b.dine,b.sales)}</span></td>
+    <td class="n">${KB(b.take)}<span class="tiny">${pc(b.take,b.sales)}</span></td>`:''}
+    <td class="n">${KB(b.grab)}</td><td class="n">${KB(b.lm)}</td><td class="n">${KB(b.sp)}</td>
+    <td class="n"><b>${KB(b.deli)}</b><span class="tiny">${pc(b.deli,b.sales)}</span></td></tr>`;
   const tbl=`<div class="scroll"><table><tr><th>สาขา</th><th class="n">ยอดขายรวม</th>${has?'<th class="n">Dine in</th><th class="n">Takeaway</th>':''}
       <th class="n">Grab</th><th class="n">Line Man</th><th class="n">Shopee</th><th class="n">Total Delivery</th></tr>
-    ${T?`<tr class="hi"><td><b>รวมทุกสาขา</b><span class="tiny">${T.n} สาขา</span></td><td class="n"><b>${baht(T.sales)}</b></td>
-      ${has?`<td class="n">${baht(T.dine)}<span class="tiny">${pc(T.dine,T.sales)}</span></td><td class="n">${baht(T.take)}<span class="tiny">${pc(T.take,T.sales)}</span></td>`:''}
-      <td class="n">${baht(T.grab)}</td><td class="n">${baht(T.lm)}</td><td class="n">${baht(T.sp)}</td>
-      <td class="n"><b>${baht(T.deli)}</b><span class="tiny">${pc(T.deli,T.sales)}</span></td></tr>`:''}
+    ${T?`<tr class="hi"><td><b>รวมทุกสาขา</b><span class="tiny">${T.n} สาขา</span></td><td class="n"><b>${MB(T.sales)}</b></td>
+      ${has?`<td class="n">${MB(T.dine)}<span class="tiny">${pc(T.dine,T.sales)}</span></td><td class="n">${MB(T.take)}<span class="tiny">${pc(T.take,T.sales)}</span></td>`:''}
+      <td class="n">${MB(T.grab)}</td><td class="n">${MB(T.lm)}</td><td class="n">${MB(T.sp)}</td>
+      <td class="n"><b>${MB(T.deli)}</b><span class="tiny">${pc(T.deli,T.sales)}</span></td></tr>`:''}
     ${list.map(row).join('')}</table></div>`;
   return sec('brsales','Sales by Branch — dine in, take away, delivery',
     `${label(m)} · ${rows.length} สาขา${FILT.zone!=='all'?' · โซน '+FILT.zone:''}${has?'':' · ไฟล์เดือนนี้ยังไม่มียอดแยกDine in/Takeaway'}`,
@@ -2077,8 +2082,8 @@ function groupSection(id,title,keyOf,labelName,STATE,ctlId){
     const btbl=`<div class="grp">สาขาในกลุ่ม ${sel} · ${list.length} สาขา</div>
       <div class="scroll"><table><tr><th>สาขา</th><th>โซน</th><th class="n">ยอด ${LS}</th><th class="n">ปีก่อน</th><th class="n">YoY</th><th class="n">สะสม ม.ค.–${MONTH_TH[m-1]}</th><th class="n">YoY สะสม</th></tr>
       ${list.map(b=>`<tr class="clk" data-ssbr="${b.code}"><td>${b.code} ${b.name}</td><td>${b.zone||''}</td>
-        <td class="n">${M2(b.ty)}</td><td class="n">${M2(b.ly)}</td><td class="n">${b.g==null?'—':pill(b.g)}</td>
-        <td class="n">${M2(b.yt)}</td><td class="n">${b.yg==null?'—':pill(b.yg)}</td></tr>`).join('')}</table></div>`;
+        <td class="n">${KB(b.ty)}</td><td class="n">${KB(b.ly)}</td><td class="n">${b.g==null?'—':pill(b.g)}</td>
+        <td class="n">${KB(b.yt)}</td><td class="n">${b.yg==null?'—':pill(b.yg)}</td></tr>`).join('')}</table></div>`;
     return sec(id,title,sub,chips+stripSel+trend+btbl);
   }
   /* ---- ยังไม่เลือก: ภาพรวมทุกกลุ่ม ---- */
@@ -2125,7 +2130,7 @@ function zoneSection(){
     panel=`<div class="pick"><div class="pickhd"><h4>โซน ${ZON.pick} · ${list.length} สาขา</h4>
       <span><button class="btn small" data-zfilter="${ZON.pick}">กรองทั้งหน้าเป็นโซนนี้</button> <button class="btn small" data-znclose>ปิด</button></span></div>
       <div class="scroll"><table><tr><th>#</th><th>สาขา</th><th>ห้าง</th><th class="n">ยอด ${LS}</th><th class="n">ปีก่อน</th><th class="n">YoY</th></tr>
-      ${list.map((b,i)=>`<tr class="clk" data-ssbr="${b.code}"><td>${i+1}</td><td>${b.code} ${b.name}</td><td>${b.mall||''}</td><td class="n">${M2(b.ty)}</td><td class="n">${M2(b.ly)}</td><td class="n">${b.g==null?'—':pill(b.g)}</td></tr>`).join('')}</table></div></div>`; }
+      ${list.map((b,i)=>`<tr class="clk" data-ssbr="${b.code}"><td>${i+1}</td><td>${b.code} ${b.name}</td><td>${b.mall||''}</td><td class="n">${KB(b.ty)}</td><td class="n">${KB(b.ly)}</td><td class="n">${b.g==null?'—':pill(b.g)}</td></tr>`).join('')}</table></div></div>`; }
   const up=rows.filter(r=>r.g!=null&&r.g>=0).length;
   const strip=`<div class="strip">
     <div class="st pos"><div class="l">โซนที่ยอดโต</div><div class="v">${up} / ${rows.filter(r=>r.g!=null).length}</div><div class="s">เทียบเดือนเดียวกันปีก่อน</div></div>
@@ -2148,8 +2153,8 @@ function plMatrix(items){
   const codes=Object.keys(F.branch).filter(c=>FILT.zone==='all'||(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone===FILT.zone));
   if(!codes.length) return '';
   const MET={netPct:{t:'%กำไรสุทธิ',f:(a)=>a[iRev]?a[iNet]/a[iRev]*100:null,fmt:v=>v.toFixed(1)+'%',good:v=>v>=0},
-             net:{t:'กำไรสุทธิ (บาท)',f:a=>a[iNet],fmt:bahtM,good:v=>v>=0},
-             rev:{t:'รายได้ (บาท)',f:a=>a[iRev],fmt:bahtM,good:()=>true},
+             net:{t:'กำไรสุทธิ',f:a=>a[iNet],fmt:KM,good:v=>v>=0},
+             rev:{t:'รายได้',f:a=>a[iRev],fmt:KM,good:()=>true},
              cogsPct:{t:'%ต้นทุนอาหาร',f:a=>a[iRev]?a[iCogs]/a[iRev]*100:null,fmt:v=>v.toFixed(1)+'%',good:v=>v<=36},
              labPct:{t:'%ค่าแรง',f:a=>a[iRev]?a[iLab]/a[iRev]*100:null,fmt:v=>v.toFixed(1)+'%',good:v=>v<=21}};
   const M=MET[PLM.metric]||MET.netPct;
@@ -2187,12 +2192,12 @@ function gpTrend(){
              {name:'กำไรจากการดำเนินงาน',color:'var(--good)',vals:mons.map(o=>+g(o,iOp).toFixed(2))},
              {name:'กำไรสุทธิ',color:'var(--bad)',vals:mons.map(o=>+g(o,iNet).toFixed(2))}];
   const labels=mons.map(o=>MONTH_TH[o.m-1]);
-  const pctRow=(t,i,cl)=>`<tr><td>${t}</td>${mons.map(o=>`<td class="n ${cl?cls(g(o,i)):''}">${bahtM(g(o,i))}<span class="tiny">${(g(o,i)/g(o,iRev)*100).toFixed(1)}%</span></td>`).join('')}</tr>`;
-  return `<div class="two"><div><h3>รายได้รวม &amp; กำไรขั้นต้น</h3>${lineSeries(labels,ser.slice(0,2),{w:580,h:230,fmt:v=>v.toFixed(0)+'M',tipFmt:v=>bahtM(v)+' บาท'})}</div>
-    <div><h3>กำไรจากการดำเนินงาน &amp; กำไรสุทธิ</h3>${lineSeries(labels,ser.slice(2).map(x=>({...x,label:1})),{w:580,h:230,zero:true,fmt:v=>v.toFixed(1)+'M',tipFmt:v=>bahtM(v)+' บาท'})}</div></div>`
+  const pctRow=(t,i,cl)=>`<tr><td>${t}</td>${mons.map(o=>`<td class="n ${cl?cls(g(o,i)):''}">${MM(g(o,i))}<span class="tiny">${(g(o,i)/g(o,iRev)*100).toFixed(1)}%</span></td>`).join('')}</tr>`;
+  return `<div class="two"><div><h3>รายได้รวม &amp; กำไรขั้นต้น</h3>${lineSeries(labels,ser.slice(0,2),{w:580,h:230,fmt:v=>v.toFixed(0)+'M',tipFmt:MM})}</div>
+    <div><h3>กำไรจากการดำเนินงาน &amp; กำไรสุทธิ</h3>${lineSeries(labels,ser.slice(2).map(x=>({...x,label:1})),{w:580,h:230,zero:true,fmt:v=>v.toFixed(1)+'M',tipFmt:MM})}</div></div>`
     +`<div class="legend">${ser.map(s=>`<span><i style="background:${s.color}"></i>${s.name}</span>`).join('')}</div>
     <div class="scroll" style="margin-top:14px"><table><tr><th>รายการ</th>${labels.map(l=>`<th class="n">${l}</th>`).join('')}</tr>
-      <tr><td>รายได้รวม</td>${mons.map(o=>`<td class="n"><b>${bahtM(g(o,iRev))}</b></td>`).join('')}</tr>
+      <tr><td>รายได้รวม</td>${mons.map(o=>`<td class="n"><b>${MM(g(o,iRev))}</b></td>`).join('')}</tr>
       ${pctRow('กำไรขั้นต้น (หลัง COGS)',iGp,1)}${pctRow('กำไรจากการดำเนินงาน (OP)',iOp,1)}${pctRow('กำไรสุทธิ',iNet,1)}
     </table></div><div class="note">ตารางหน่วยบาท · ตัวเลขจากงบกำไรขาดทุนที่นำเข้า (ถึง ${MONTH_TH[mons[mons.length-1].m-1]}) · ตัวเลขเล็ก = สัดส่วนต่อรายได้</div>`;
 }
@@ -2270,10 +2275,10 @@ function cosSection(){
     <div class="l">${l}</div><div class="v">${v==null?'—':v.toFixed(1)+'%'}</div>
     <div class="s">${sub||''}${pv!=null?` · ${PVc} ${pv.toFixed(1)}% ${pill(-(pp(v,pv)),1,' ppt')}`:''}${lv!=null?` · ปีก่อน ${lv.toFixed(1)}% ${pill(-(pp(v,lv)),1,' ppt')}`:''}</div></div>`;
   const strip=`<div class="strip">
-    <div class="st"><div class="l">รายได้ ${S.multi?RNG(inS):MONTH_TH[last.m-1]}</div><div class="v">${bahtM(cur.rev)}</div><div class="s">ฐานคิดเปอร์เซ็นต์ทั้งหมด</div></div>
-    ${tile('%COS ต้นทุนอาหาร',cur.cos,cur,prev?prev.cos:null,ly?ly.cos:null,`${bahtM(cur.cosB)} บาท`)}
-    ${tile('%COL ค่าแรง',cur.col,cur,prev?prev.col:null,ly?ly.col:null,`${bahtM(cur.colB)} บาท`)}
-    ${tile('Prime cost (COS+COL)',prime(cur),cur,prime(prev),prime(ly),`${bahtM(cur.cosB+cur.colB)} บาท`)}
+    <div class="st"><div class="l">รายได้ ${S.multi?RNG(inS):MONTH_TH[last.m-1]}</div><div class="v">${MM(cur.rev)}</div><div class="s">ฐานคิดเปอร์เซ็นต์ทั้งหมด</div></div>
+    ${tile('%COS ต้นทุนอาหาร',cur.cos,cur,prev?prev.cos:null,ly?ly.cos:null,MM(cur.cosB))}
+    ${tile('%COL ค่าแรง',cur.col,cur,prev?prev.col:null,ly?ly.col:null,MM(cur.colB))}
+    ${tile('Prime cost (COS+COL)',prime(cur),cur,prime(prev),prime(ly),MM(cur.cosB+cur.colB))}
   </div>`;
   const labels=mons.map(o=>MONTH_TH[o.m-1]);
   const ser=[{name:'%COS ต้นทุนอาหาร',color:'var(--chart-2)',label:1,vals:mons.map(o=>+P(F.actual[o.k]).cos.toFixed(1))},
@@ -2304,9 +2309,9 @@ function cosSection(){
         <option value="col" ${CST.sort==='col'?'selected':''}>%COL สูงสุด</option>
         <option value="rev" ${CST.sort==='rev'?'selected':''}>รายได้สูงสุด</option></select></label>
       <span class="hint">แดง = สูงกว่าค่าเฉลี่ยบริษัท (COS ${avgC.toFixed(1)}% · COL ${avgL.toFixed(1)}% · Prime ${avgP.toFixed(1)}%) · คลิกสาขาเพื่อดูงบเต็ม</span></div>
-      <div class="scroll"><table><tr><th>#</th><th>สาขา</th><th>โซน</th><th class="n">รายได้ (บาท)</th><th class="n">%COS</th><th class="n">Δ COS</th><th class="n">%COL</th><th class="n">Δ COL</th><th class="n">Prime</th></tr>
+      <div class="scroll"><table><tr><th>#</th><th>สาขา</th><th>โซน</th><th class="n">รายได้</th><th class="n">%COS</th><th class="n">Δ COS</th><th class="n">%COL</th><th class="n">Δ COL</th><th class="n">Prime</th></tr>
       ${list.map((b,i)=>`<tr class="clk" data-plbr="${b.c}"><td>${i+1}</td><td>${b.c} ${b.name}</td><td>${b.zone}</td>
-        <td class="n">${bahtM(b.rev)}</td>${mk(b.cos,avgC)}${dd(b.dCos)}${mk(b.col,avgL)}${dd(b.dCol)}${mk(b.prime,avgP)}</tr>`).join('')}
+        <td class="n">${KM(b.rev)}</td>${mk(b.cos,avgC)}${dd(b.dCos)}${mk(b.col,avgL)}${dd(b.dCol)}${mk(b.prime,avgP)}</tr>`).join('')}
       </table></div>`;
   }
   return sec('cos','Food Cost (COS) & Labor Cost (COL)',
@@ -2401,7 +2406,7 @@ function drawBranch(code){
   if(!BR_CTX) return; const box=$('#brBody'); if(!box) return;
   const b=BR_CTX.rows.find(x=>x.code===code); if(!b){box.innerHTML='';return;}
   const pl=BR_CTX.plMap[code], ce=BR_CTX.cemMap[code], os=BR_CTX.ossMap[code];
-  const M=v=>(v/1e6).toFixed(2)+'M';
+  const M=KB;
   const card=(l,v,s2,cl)=>`<div class="k${cl?' ':''}"><div class="l">${l}</div><div class="v ${cl||''}">${v}</div><div class="s">${s2||''}</div></div>`;
   const hist=BR_CTX.hist.map(h=>({m:h.m,r:h.rows.find(x=>x.code===code)})).filter(x=>x.r);
   box.innerHTML=`
@@ -2411,7 +2416,7 @@ function drawBranch(code){
       ${card('Delivery', M(b.deli), b.sales?(b.deli/b.sales*100).toFixed(1)+'% ของยอดสาขา':'')}
       ${card('จำนวนบิล', fmtN(b.tr), b.trMom==null?'':(BR_CTX.momLab||'MoM')+' '+sgn(b.trMom), b.trMom==null?'':cls(b.trMom))}
       ${card('เช็คเฉลี่ย', b.tk==null?'—':'฿'+b.tk, b.cust?fmtN(b.cust)+' ลูกค้า':'')}
-      ${pl?card('%กำไร', pl.gp.toFixed(1)+'%', 'กำไร '+baht(pl.profit)+' บาท', cls(pl.gp)):''}
+      ${pl?card('%กำไร', pl.gp.toFixed(1)+'%', 'กำไร '+KB(pl.profit), cls(pl.gp)):''}
       ${pl?card('%COS / %COL', pl.cos.toFixed(1)+' / '+pl.col.toFixed(1), 'ต้นทุนอาหาร / ค่าแรง'):''}
       ${ce?card('CEM', ce.score.toFixed(0)+'%', 'ผลสำรวจลูกค้า', ce.score>=92?'pos':'neg'):''}
       ${os?card('OSS', os.score.toFixed(1)+'%', os.date||'ตรวจมาตรฐาน', os.score>=90?'pos':'neg'):''}
@@ -2491,7 +2496,7 @@ function ovBottom(m,rows,ch,d){
   let lists='';
   if(br.length>=6){
     const top=br.slice(0,3), bot=br.slice(-3).reverse(), mx=Math.max(...top.concat(bot).map(b=>Math.abs(b.mom)),1);
-    const row=(b,i,cl)=>`<li data-tip="${b.code} ${b.name}\nยอดขาย ${bahtM(b.sales/1e6)} บาท\nเทียบ ${grLab} ${sgn(b.mom)}">
+    const row=(b,i,cl)=>`<li data-tip="${b.code} ${b.name}\nยอดขาย ${KB(b.sales)}\nเทียบ ${grLab} ${sgn(b.mom)}">
         <span class="bi">${i+1}</span><span class="bnm">${b.name}</span>
         <span class="bbar"><i class="${cl}" style="width:${(Math.abs(b.mom)/mx*100).toFixed(1)}%"></i></span>
         <span class="bv ${cl}">${sgn(b.mom)}</span></li>`;
@@ -2500,7 +2505,7 @@ function ovBottom(m,rows,ch,d){
       <div><div class="cblh"><span class="dot neg"></span>Needs attention</div><ol class="cbl">${bot.map((b,i)=>row(b,i,'neg')).join('')}</ol></div></div>`;
   }
   return `<div class="ovbottom">
-    <div class="panel"><div class="phx"><div><h3>Sales Mix</h3>${S.multi&&S.br&&S.br.ms.length<S.n?`<span class="pcov">ข้อมูล ${RNG(S.br.ms)}</span>`:''}</div>${ch?`<b>${bahtM(ch.sales/1e6)} บาท</b>`:''}</div>${mix}</div>
+    <div class="panel"><div class="phx"><div><h3>Sales Mix</h3>${S.multi&&S.br&&S.br.ms.length<S.n?`<span class="pcov">ข้อมูล ${RNG(S.br.ms)}</span>`:''}</div>${ch?`<b>${MB(ch.sales)}</b>`:''}</div>${mix}</div>
     <div class="panel"><div class="phx"><div><h3>Customers &amp; Branches</h3>${S.multi&&S.tN&&S.tN.n<S.n?`<span class="pcov">ข้อมูล ${RNG(S.ms.filter(x=>trOf(x)))}</span>`:''}</div></div>${stats}${lists}</div>
   </div>`;
 }
@@ -2759,7 +2764,7 @@ function build(m){
 
   // 5 delivery decliners
   const declTable=(arr,h1,h2)=>`<div class="scroll"><table><tr><th>สาขา</th><th class="n">${h1}</th><th class="n">${h2}</th><th class="n">เปลี่ยนแปลง</th><th class="n">%</th></tr>
-    ${arr.map(r=>`<tr><td>${r[0]}</td><td class="n">${fmtN(r[1])}</td><td class="n">${fmtN(r[2])}</td><td class="n neg">${fmtN(r[2]-r[1])}</td><td class="n">${pill(pct(r[1],r[2]))}</td></tr>`).join('')}</table></div>`;
+    ${arr.map(r=>`<tr><td>${r[0]}</td><td class="n">${KB(r[1])}</td><td class="n">${KB(r[2])}</td><td class="n neg">${KB(r[2]-r[1])}</td><td class="n">${pill(pct(r[1],r[2]))}</td></tr>`).join('')}</table></div>`;
   out.push(sec('decline','Biggest Delivery Declines by Branch', dl?dl.compare+' (เรียงตามมูลค่าที่ลดลง)':'', !dl?EMPTY('Delivery'):`
     <div class="two"><div><h3 class="r">รวมทุก Platform</h3>${declTable(dl.topDecline,'Delivery ก่อน','Delivery นี้')}</div>
     <div><h3 class="r">Line Man</h3>${declTable(dl.lineManDecline,'Line Man ก่อน','Line Man นี้')}</div></div>
@@ -2785,7 +2790,7 @@ function build(m){
     const tot=pb.reduce((a,b)=>a+b.sales,0), totP=pb.reduce((a,b)=>a+b.plan,0);
     const srt=pb.slice().sort((a,b)=>b.ach-a.ach);
     const mxA=Math.max(...pb.map(b=>b.ach));
-    const li=(arr)=>`<ol class="rank">${arr.map((b,i)=>`<li><span class="num">${i+1}</span><span>${b.name}</span><span class="track"><i style="width:${Math.max(2,Math.min(100,b.ach/mxA*100))}%"></i></span><span class="sc ${b.ach>=100?'pos':'neg'}">${b.ach.toFixed(0)}%</span><span style="font-size:12.5px;color:var(--mute)">${(b.sales/1e6).toFixed(2)}M / แผน ${(b.plan/1e6).toFixed(2)}M</span></li>`).join('')}</ol>`;
+    const li=(arr)=>`<ol class="rank">${arr.map((b,i)=>`<li><span class="num">${i+1}</span><span>${b.name}</span><span class="track"><i style="width:${Math.max(2,Math.min(100,b.ach/mxA*100))}%"></i></span><span class="sc ${b.ach>=100?'pos':'neg'}">${b.ach.toFixed(0)}%</span><span style="font-size:12.5px;color:var(--mute)">${KB(b.sales)} / แผน ${KB(b.plan)}</span></li>`).join('')}</ol>`;
     out.push(sec('plan','Plan Achievement by Branch',`${S.lab} · ${pb.length} สาขา`,`
       <div class="strip">
         <div class="st ${cls(tot/totP*100-100)}"><div class="l">ทั้งเครือข่าย</div><div class="v">${(tot/totP*100).toFixed(1)}%</div><div class="s">${(tot/1e6).toFixed(2)}M จากแผน ${(totP/1e6).toFixed(2)}M</div></div>
@@ -2806,13 +2811,13 @@ function build(m){
     const MIN=200000*(S.multi?S.n:1);       // กันสาขาที่ปิด/ยอดเกือบศูนย์ ทำให้ %กำไร เพี้ยน
     const rank=plb.filter(b=>b.sales>=MIN), skipped=plb.length-rank.length;
     const srt=rank.slice().sort((a,b)=>b.gp-a.gp);
-    const t=(arr)=>`<div class="scroll"><table><tr><th>สาขา</th><th class="n">ยอดขาย (บาท)</th><th class="n">กำไร (บาท)</th><th class="n">%กำไร</th><th class="n">%COS</th><th class="n">%COL</th></tr>
-      ${arr.map(b=>`<tr><td>${b.name}</td><td class="n">${baht(b.sales)}</td><td class="n ${cls(b.profit)}">${baht(b.profit)}</td><td class="n ${cls(b.gp)}">${b.gp.toFixed(1)}%</td><td class="n">${b.cos.toFixed(1)}%</td><td class="n">${b.col.toFixed(1)}%</td></tr>`).join('')}</table></div>`;
+    const t=(arr)=>`<div class="scroll"><table><tr><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">กำไร</th><th class="n">%กำไร</th><th class="n">%COS</th><th class="n">%COL</th></tr>
+      ${arr.map(b=>`<tr><td>${b.name}</td><td class="n">${KB(b.sales)}</td><td class="n ${cls(b.profit)}">${KB(b.profit)}</td><td class="n ${cls(b.gp)}">${b.gp.toFixed(1)}%</td><td class="n">${b.cos.toFixed(1)}%</td><td class="n">${b.col.toFixed(1)}%</td></tr>`).join('')}</table></div>`;
     const loss=plb.filter(b=>b.profit<0);
     out.push(sec('plbr','Profit by Branch',`${S.multi?S.lab:label(plbM)}${plbM!==m&&!S.multi?' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':''} · ${rank.length} สาขา · เรียงตาม %กำไร${skipped?` (ไม่รวม ${skipped} สาขาที่ยอดต่ำกว่า 0.2M)`:''}`,`
       <div class="strip">
         <div class="st pos"><div class="l">สาขาที่กำไร</div><div class="v">${plb.length-loss.length}</div><div class="s">จาก ${plb.length} สาขา</div></div>
-        <div class="st neg"><div class="l">สาขาที่ขาดทุน</div><div class="v">${loss.length}</div><div class="s">รวม ${baht(loss.reduce((a,b)=>a+b.profit,0))} บาท</div></div>
+        <div class="st neg"><div class="l">สาขาที่ขาดทุน</div><div class="v">${loss.length}</div><div class="s">รวม ${MB(loss.reduce((a,b)=>a+b.profit,0))}</div></div>
         <div class="st"><div class="l">%COS เฉลี่ย</div><div class="v">${((rank.length?rank:plb).reduce((a,b)=>a+b.cos,0)/(rank.length?rank:plb).length).toFixed(1)}%</div><div class="s">ต้นทุนอาหาร</div></div>
         <div class="st"><div class="l">%COL เฉลี่ย</div><div class="v">${((rank.length?rank:plb).reduce((a,b)=>a+b.col,0)/(rank.length?rank:plb).length).toFixed(1)}%</div><div class="s">ค่าแรง</div></div>
       </div>
@@ -2843,10 +2848,10 @@ function build(m){
       <div class="scroll"><table>
         <tr><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">%สัดส่วน</th><th class="n">%แผน</th><th class="n">MoM</th><th class="n">Delivery</th><th class="n">%Deli</th><th class="n">บิล</th><th class="n">เช็คเฉลี่ย</th><th class="n">%กำไร</th><th class="n">CEM</th><th class="n">OSS</th></tr>
         ${rows.map(b=>{const pl=plMap[b.code],ce=cemMap[b.code],os=ossMap[b.code];
-          return `<tr><td>${b.name}</td><td class="n">${(b.sales/1e6).toFixed(2)}M</td><td class="n">${(b.sales/totS*100).toFixed(1)}%</td>
+          return `<tr><td>${b.name}</td><td class="n">${KB(b.sales)}</td><td class="n">${(b.sales/totS*100).toFixed(1)}%</td>
           <td class="n ${b.ach==null?'':cls(b.ach-100)}">${b.ach==null?'—':b.ach.toFixed(0)+'%'}</td>
           <td class="n ${cls(b.mom)}">${sgn(b.mom)}</td>
-          <td class="n">${(b.deli/1e6).toFixed(2)}M</td><td class="n">${b.sales?(b.deli/b.sales*100).toFixed(1)+'%':'—'}</td>
+          <td class="n">${KB(b.deli)}</td><td class="n">${b.sales?(b.deli/b.sales*100).toFixed(1)+'%':'—'}</td>
           <td class="n">${fmtN(b.tr)}</td><td class="n">฿${b.tk==null?'—':b.tk}</td>
           <td class="n ${pl?cls(pl.gp):''}">${pl?pl.gp.toFixed(1)+'%':'—'}</td>
           <td class="n ${ce?(ce.score>=92?'pos':'neg'):''}">${ce?ce.score.toFixed(0)+'%':'—'}</td>
