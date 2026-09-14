@@ -2777,7 +2777,7 @@ function brandHome(){
   $('#main').innerHTML=`<section class="slide" id="brandHome" data-title="เลือกแบรนด์"><div class="body">
     <div class="bh-wrap"><div class="bh-h">เลือกแบรนด์</div><p class="bh-sub">Monthly Performance Review ${YEAR}</p>
       <div class="bh-grid">${BRANDS.map(b=>`<button type="button" class="bh-card" data-brand-go="${b.k}">
-        <img class="bh-ico" src="${b.ico}" alt="โลโก้ ${b.n}"><span class="bh-name">${b.n}</span></button>`).join('')}</div></div>
+        <span class="bh-icw"><img class="bh-ico" src="${b.ico}" alt="โลโก้ ${b.n}">${b.tag?`<i>${b.tag}</i>`:''}</span><span class="bh-name">${b.n}</span></button>`).join('')}</div></div>
   </div></section>`;
   document.querySelectorAll('[data-brand-go]').forEach(x=>x.onclick=()=>setBrand(x.dataset.brandGo));
   $('#nav').innerHTML=''; const tb=$('#tabbar'); if(tb) tb.innerHTML='';
