@@ -1513,8 +1513,8 @@ function plSection(m){
       <label>เทียบกับสาขา <select id="plAdd" ${(PLS.cmp||[]).length>=4?'disabled':''}><option value="">${(PLS.cmp||[]).length>=4?'เทียบได้สูงสุด 4 สาขา':'+ เพิ่มสาขา'}</option>${brOpts.filter(c=>c!==PLS.branch&&!(PLS.cmp||[]).includes(c)).map(c=>`<option value="${c}">${c} ${brName(c)}</option>`).join('')}</select></label>
       ${cmpCodes.map(c=>`<span class="cmpchip">${c} ${brName(c)}<button data-plrm="${c}" title="เอาออก">×</button></span>`).join('')}
       ${cmpMode?'<button class="btn small" id="plCmpClear">ล้างการเทียบ</button>':''}
-      <label><input type="checkbox" id="plLM" ${PLS.cmpLM&&!cmpMode?'checked':''} ${cmpMode?'disabled':''}> เทียบเดือนก่อน</label>
-      <label><input type="checkbox" id="plLY" ${PLS.cmpLY&&lyHas&&!cmpMode?'checked':''} ${!lyHas||cmpMode?'disabled':''}> เทียบปีก่อน (เดือนเดียวกัน)${!lyHas?' <span class="hint">(ไม่มีข้อมูลปีก่อนของเดือนนี้)</span>':''}</label>
+      <label><input type="checkbox" id="plLM" ${PLS.cmpLM&&!cmpMode?'checked':''} ${cmpMode?'disabled':''}> เทียบ${months.length===1?'เดือน':'ช่วง'}ก่อน${pm.length?` (${RNG(pm)} ${YEAR})`:''}</label>
+      <label><input type="checkbox" id="plLY" ${PLS.cmpLY&&lyHas&&!cmpMode?'checked':''} ${!lyHas||cmpMode?'disabled':''}> เทียบปีก่อน (${RNG(months)} ${YEAR-1})${!lyHas?' <span class="hint">(ไม่มีข้อมูลปีก่อนของเดือนนี้)</span>':''}</label>
       <label>หมวดย่อย <select id="plSort"><option value="chart" ${PLS.sort==='chart'?'selected':''}>ตามผังบัญชี</option><option value="desc" ${PLS.sort==='desc'?'selected':''}>มาก → น้อย</option></select></label>
       <button class="btn small" id="plToggleAll">${PLS.showSub?'ซ่อนหมวดย่อยทั้งหมด':'แสดงหมวดย่อยทั้งหมด'}</button>
       <button class="btn small" id="plmToggle">${PLM.on?'ซ่อนตารางสาขา × เดือน':'ตารางสาขา × เดือน'}</button>
@@ -1535,18 +1535,31 @@ function plSection(m){
     </div>`}
     ${chartRows.length>1?`<div class="grp">สัดส่วนต้นทุนต่อรายได้ รายเดือน (%)</div>`+costStack(chartRows.map(r=>({m:r.m,revenue:r.revenue,food:r.food,labor:r.labor,rent:r.rent,admin:r.admin,profit:r.profit}))):''}
     <div class="scroll" style="margin-top:12px"><table class="pltable">
-      ${cmpMode?`<tr><th>รายการ · ${months.length===1?MONTH_TH[lastM-1]:'รวมช่วง'}</th>${ents.map(e=>`<th class="n cmpth">${e.name}</th>`).join('')}</tr>`
-      :`<tr><th>รายการ</th><th class="n">${months.length===1?MONTH_TH[lastM-1]:'รวมช่วง'}</th><th class="n">% รายได้</th>
-      ${prev?`<th class="n">${pm.length===1?MONTH_TH[pm[0]-1]:'ช่วงก่อนหน้า'}</th><th class="n">Δ</th>`:''}
-      ${ly?`<th class="n">ปีก่อน</th><th class="n">Δ</th>`:''}</tr>`}
+      ${cmpMode?`<tr><th>รายการ · ${RNG(months)} ${YEAR}</th>${ents.map(e=>`<th class="n cmpth">${e.name}</th>`).join('')}</tr>`
+      :`<tr><th>รายการ</th><th class="n">${RNG(months)} ${YEAR}</th><th class="n">% รายได้</th>
+      ${prev?`<th class="n">${RNG(pm)} ${YEAR}</th><th class="n">Δ</th>`:''}
+      ${ly?`<th class="n">${RNG(months)} ${YEAR-1}</th><th class="n">Δ</th>`:''}</tr>`}
       ${rowsOut.join('')}
     </table></div>
     ${PLM.on?plMatrix(items):''}
     <div class="note">ตัวเลขเต็มหน่วยบาทจากไฟล์ PL · Δ = ส่วนต่างเป็นบาท${ly?" · ปีก่อนมีความละเอียดถึงหลักพันบาท":""} · สีเขียว/แดงตามทิศทางที่ดี (ต้นทุนลดลง = เขียว, กำไรเพิ่มขึ้น = เขียว) · กดปุ่ม ▸ หน้าหมวดเพื่อพับ/กางรายการย่อย</div>`);
 }
+/* สร้างใหม่เฉพาะหัวข้อ P&L (ไม่ต้องสร้างทุกหัวข้อทั้งหน้า) · คงเลขหัวข้อ หมวด สไลด์ที่เปิด และตำแหน่งเลื่อน */
+function rebuildPL(){
+  const old=document.getElementById('pl'); if(!old){ build(curM); return; }
+  syncPnl(); const html=plSection(curM); if(!html){ build(curM); return; }
+  const tmp=document.createElement('div'); tmp.innerHTML=html; const neu=tmp.firstElementChild;
+  if(!neu){ build(curM); return; }
+  neu.className=old.className; neu.dataset.g=old.dataset.g;
+  const h=neu.querySelector('.bar h2'), oh=old.querySelector('.bar h2'); if(h&&oh&&oh.dataset.n) h.dataset.n=oh.dataset.n;
+  const sc=old.scrollTop, tbl=old.querySelector('.scroll'), tx=tbl?tbl.scrollLeft:0;
+  old.replaceWith(neu); neu.scrollTop=sc;
+  frameBlocks(); capTables(); bindPL(); bindExtra(); bindExtra2();
+  const nt=neu.querySelector('.scroll'); if(nt) nt.scrollLeft=tx;
+}
 function bindPL(){
-  const r=()=>build(curM);
-  const b=$('#plBranch'); if(b) b.onchange=e=>{ PLS.branch=e.target.value; if(PLS.branch!=='all') PLS.cmpLY=false; r(); };
+  const r=()=>rebuildPL();
+  const b=$('#plBranch'); if(b) b.onchange=e=>{ PLS.branch=e.target.value; r(); };
   const lm=$('#plLM'); if(lm) lm.onchange=e=>{ PLS.cmpLM=e.target.checked; r(); };
   const ly=$('#plLY'); if(ly) ly.onchange=e=>{ PLS.cmpLY=e.target.checked; r(); };
   const so=$('#plSort'); if(so) so.onchange=e=>{ PLS.sort=e.target.value; r(); };
@@ -2224,8 +2237,8 @@ function bindExtra2(){
   on('#zone [data-znclose]',()=>{ ZON.pick=null; r(); });
   on('#zone [data-zfilter]',el=>{ FILT.zone=el.dataset.zfilter; const z=$('#fZone'); if(z) z.value=FILT.zone; ZON.pick=null; r(); });
   document.querySelectorAll('[data-mtab]').forEach(b=>b.onclick=()=>{ MON.tab=b.dataset.mtab; r(); });
-  const pm=$('#plmMetric'); if(pm) pm.onchange=e=>{ PLM.metric=e.target.value; r(); };
-  const pt=$('#plmToggle'); if(pt) pt.onclick=()=>{ PLM.on=!PLM.on; r(); };
+  const pm=$('#plmMetric'); if(pm) pm.onchange=e=>{ PLM.metric=e.target.value; rebuildPL(); };
+  const pt=$('#plmToggle'); if(pt) pt.onclick=()=>{ PLM.on=!PLM.on; rebuildPL(); };
   on('tr[data-plbr]',el=>{ PLS.branch=el.dataset.plbr; PLS.cmpLY=false; goSec('pl'); });
   const cs=$('#csSort'); if(cs) cs.onchange=e=>{ CST.sort=e.target.value; r(); };
   const bs=$('#bsSort'); if(bs) bs.onchange=e=>{ BSL.sort=e.target.value; r(); };
@@ -2265,7 +2278,8 @@ function cosSection(){
   /* ช่วงหลายเดือน: รวมงบทุกเดือนในช่วงก่อนคิด % · ช่วงก่อนหน้า/ปีก่อน ใช้ได้เมื่อมีครบทุกเดือน */
   let inS=S.multi?mons.filter(o=>S.ms.includes(o.m)).map(o=>o.m):[last.m]; if(!inS.length) inS=[last.m];
   const keysOk=(obj,L)=>!!(obj&&L&&L.length&&L.every(x=>obj[PL_MONKEY[x-1]]));
-  const PVc=S.multi?'ช่วงก่อน':'เดือนก่อน';
+  const PVc=S.multi?(S.prevMs?RNG(S.prevMs)+' '+YEAR:'ช่วงก่อน'):(mons.length>1?MONTH_TH[mons[mons.length-2].m-1]+' '+YEAR:'เดือนก่อน');
+  const LYc=RNG(inS)+' '+(YEAR-1);
   const P=a=>({rev:a[iRev],cos:a[iRev]?a[iCos]/a[iRev]*100:null,col:a[iRev]?a[iCol]/a[iRev]*100:null,
                cosB:a[iCos],colB:a[iCol]});
   const cur=S.multi?P(plVals(F.actual,inS)):P(F.actual[last.k]);
@@ -2276,7 +2290,7 @@ function cosSection(){
   /* หมายเหตุ: ยิ่งต่ำยิ่งดี จึงกลับสีของส่วนต่าง */
   const tile=(l,v,now,pv,lv,sub)=>`<div class="st ${v==null?'':(v<=(pv==null?v:pv)?'pos':'neg')}">
     <div class="l">${l}</div><div class="v">${v==null?'—':v.toFixed(1)+'%'}</div>
-    <div class="s">${sub||''}${pv!=null?` · ${PVc} ${pv.toFixed(1)}% ${pill(-(pp(v,pv)),1,' ppt')}`:''}${lv!=null?` · ปีก่อน ${lv.toFixed(1)}% ${pill(-(pp(v,lv)),1,' ppt')}`:''}</div></div>`;
+    <div class="s">${sub||''}${pv!=null?` · ${PVc} ${pv.toFixed(1)}% ${pill(-(pp(v,pv)),1,' ppt')}`:''}${lv!=null?` · ${LYc} ${lv.toFixed(1)}% ${pill(-(pp(v,lv)),1,' ppt')}`:''}</div></div>`;
   const strip=`<div class="strip">
     <div class="st"><div class="l">รายได้ ${S.multi?RNG(inS):MONTH_TH[last.m-1]}</div><div class="v">${MM(cur.rev)}</div><div class="s">ฐานคิดเปอร์เซ็นต์ทั้งหมด</div></div>
     ${tile('%COS ต้นทุนอาหาร',cur.cos,cur,prev?prev.cos:null,ly?ly.cos:null,MM(cur.cosB))}
