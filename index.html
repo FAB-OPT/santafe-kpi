@@ -1179,6 +1179,26 @@ body.brand-home #presentBtn,body.brand-home .tabbar,body.brand-home .brandsw{dis
 .bh-card{align-items:center;justify-content:center;text-align:center;gap:14px}
 .bh-card .bh-ico{width:104px;height:104px;border-radius:24px}
 @media (max-width:760px){.bh-card{min-height:170px}.bh-card .bh-ico{width:84px;height:84px;border-radius:20px}}
+/* ---- เลือกเรื่องพรีเซนต์ · เต็มจอ · รายละเอียดสาขา ---- */
+.pres{max-width:660px;width:100%}
+.pg-chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}
+.pg-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-height:52vh;overflow:auto;padding:2px}
+.pg-it{display:flex;align-items:center;gap:9px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;cursor:pointer;font-size:14px;background:#fff;min-height:44px}
+.pg-it:has(input:checked){border-color:var(--accent);background:#FFF7F0}
+.pg-it input{width:18px;height:18px;accent-color:var(--accent);flex:0 0 auto}
+.pg-n{font-size:11.5px;font-weight:700;color:var(--faint);min-width:16px}
+.pg-foot{display:flex;align-items:center;gap:8px;margin-top:14px;flex-wrap:wrap}
+.pg-foot #presCnt{margin-left:auto;font-size:13px;color:var(--mute)}
+#presGo:disabled{opacity:.5;cursor:not-allowed}
+.bar:has(.secfull){display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.secfull{margin-left:auto;border:1px solid var(--line);background:#fff;color:var(--mute);font:inherit;font-size:12.5px;font-weight:600;border-radius:8px;padding:5px 10px;cursor:pointer;white-space:nowrap}
+.secfull:hover{color:var(--accent-ink);border-color:var(--accent)}
+body.present .secfull{display:none}
+.brm{max-width:1100px;width:100%;max-height:90vh;overflow:auto}
+.brm-act{display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 12px}
+.brm-act [hidden]{display:none}
+@media (max-width:620px){.pg-list{grid-template-columns:1fr}}
+@media print{.secfull{display:none}}
 </style>
 </head>
 <body>
@@ -1243,6 +1263,18 @@ body.brand-home #presentBtn,body.brand-home .tabbar,body.brand-home .brandsw{dis
   <span><button id="pPrev">‹ ก่อนหน้า</button> <span id="pCount"></span> <button id="pNext">ถัดไป ›</button> <button id="pExit">ออก (Esc)</button></span>
 </div>
 
+<div class="modal" id="presModal"><div class="box pres" role="dialog" aria-labelledby="presH">
+  <div class="imphd"><div><h2 id="presH">เลือกเรื่องที่จะพรีเซนต์</h2><p>เลือกหมวด แล้วติ๊กหัวข้อที่จะเอาขึ้นสไลด์</p></div><button class="btn" id="presClose">ปิด</button></div>
+  <div class="pg-chips" id="presGroups"></div>
+  <div class="pg-list" id="presList"></div>
+  <div class="pg-foot"><button type="button" class="btn small" id="presAll">เลือกทั้งหมด</button><button type="button" class="btn small" id="presNone">ไม่เลือก</button>
+    <span id="presCnt"></span><button type="button" class="btn primary" id="presGo">▶ เริ่มพรีเซนต์</button></div>
+</div></div>
+<div class="modal" id="brModal"><div class="box wide brm" role="dialog" aria-labelledby="brmTitle">
+  <div class="imphd"><div><h2 id="brmTitle"></h2><p id="brmSub"></p></div><button class="btn" id="brmClose">ปิด</button></div>
+  <div class="brm-act"><button type="button" class="btn small" id="brmSssg">SSSG รายเดือน ›</button><button type="button" class="btn small" id="brmPl">งบ P&amp;L สาขา ›</button><button type="button" class="btn small" id="brmExp">เปิดใน Branch Explorer ›</button></div>
+  <div id="brmBody"></div>
+</div></div>
 <div class="modal" id="importModal"><div class="box wide imp">
   <div class="imphd">
     <div><h2>นำเข้าข้อมูล</h2>
@@ -1619,7 +1651,7 @@ function rebuildPL(){
   const h=neu.querySelector('.bar h2'), oh=old.querySelector('.bar h2'); if(h&&oh&&oh.dataset.n) h.dataset.n=oh.dataset.n;
   const sc=old.scrollTop, tbl=old.querySelector('.scroll'), tx=tbl?tbl.scrollLeft:0;
   old.replaceWith(neu); neu.scrollTop=sc;
-  frameBlocks(); capTables(); bindPL(); bindExtra(); bindExtra2();
+  frameBlocks(); capTables(); bindPL(); bindExtra(); bindExtra2(); addFullBtns([neu]);
   const nt=neu.querySelector('.scroll'); if(nt) nt.scrollLeft=tx;
 }
 function bindPL(){
@@ -1871,7 +1903,7 @@ function customersSection(m){
   if(bRows.length){ const list=bRows.slice().sort((a,b)=>(b.cust||0)-(a.cust||0)), hasP=Object.keys(pMap).length>0;
     btbl=`<div class="grp">รายสาขา · ${S.multi?S.lab:label(m)} · ${list.length} สาขา · เรียงตามจำนวนลูกค้า</div>
     <div class="scroll"><table><tr><th>#</th><th>สาขา</th><th class="n">ลูกค้า</th>${hasP?`<th class="n">vs ${PV||'ก่อนหน้า'}</th>`:''}<th class="n">บิล</th><th class="n">ลูกค้า/บิล</th><th class="n">บิลเฉลี่ย</th><th class="n">ใช้จ่ายต่อหัว</th></tr>
-    ${list.map((b,i)=>{ const p=pMap[b.code]; return `<tr><td>${i+1}</td><td>${b.code} ${b.name}</td><td class="n"><b>${fN(b.cust||null)}</b></td>${hasP?`<td class="n">${p&&p.cust&&b.cust?pill(pct(p.cust,b.cust)):'—'}</td>`:''}<td class="n">${fN(b.tr)}</td><td class="n">${b.cust?f2(b.cust/b.tr):'—'}</td><td class="n">${fB(b.tk)}</td><td class="n">${b.cust?fB(b.sales/b.cust):'—'}</td></tr>`; }).join('')}</table></div>`; }
+    ${list.map((b,i)=>{ const p=pMap[b.code]; return `<tr class="clk" data-ssbr="${b.code}"><td>${i+1}</td><td>${b.code} ${b.name}</td><td class="n"><b>${fN(b.cust||null)}</b></td>${hasP?`<td class="n">${p&&p.cust&&b.cust?pill(pct(p.cust,b.cust)):'—'}</td>`:''}<td class="n">${fN(b.tr)}</td><td class="n">${b.cust?f2(b.cust/b.tr):'—'}</td><td class="n">${fB(b.tk)}</td><td class="n">${b.cust?fB(b.sales/b.cust):'—'}</td></tr>`; }).join('')}</table></div>`; }
   return sec('customers',T,'',strip+chTiles+trend+btbl);
 }
 
@@ -1977,7 +2009,7 @@ function bindExtra(){
   const sk=$('#ssBack'); if(sk) sk.onclick=()=>{SSS.branch='all'; r();};
   on('#sssg .gsssg .clk','onclick',g=>{const mm=+g.dataset.m; SSS.pickM=SSS.pickM===mm?null:mm; r();});
   on('[data-ssclose]','onclick',()=>{SSS.pickM=null; r();});
-  on('tr[data-ssbr]','onclick',t=>{SSS.branch=t.dataset.ssbr; SSS.pickM=null; goSec('sssg');});
+  on('tr[data-ssbr]','onclick',t=>{ if(t.closest('#sssg')){ SSS.branch=t.dataset.ssbr; SSS.pickM=null; goSec('sssg'); } else openBranch(t.dataset.ssbr); });
   // Delivery
   const dm=$('#dlLM'); if(dm) dm.onchange=e=>{DELS.lm=e.target.checked; r();};
   const dy=$('#dlLY'); if(dy) dy.onchange=e=>{DELS.ly=e.target.checked; r();};
@@ -2304,7 +2336,7 @@ function bindExtra2(){
   document.querySelectorAll('[data-mtab]').forEach(b=>b.onclick=()=>{ MON.tab=b.dataset.mtab; r(); });
   const pm=$('#plmMetric'); if(pm) pm.onchange=e=>{ PLM.metric=e.target.value; rebuildPL(); };
   const pt=$('#plmToggle'); if(pt) pt.onclick=()=>{ PLM.on=!PLM.on; rebuildPL(); };
-  on('tr[data-plbr]',el=>{ PLS.branch=el.dataset.plbr; PLS.cmpLY=false; goSec('pl'); });
+  on('tr[data-plbr]',el=>openBranch(el.dataset.plbr));
   const cs=$('#csSort'); if(cs) cs.onchange=e=>{ CST.sort=e.target.value; r(); };
   const bs=$('#bsSort'); if(bs) bs.onchange=e=>{ BSL.sort=e.target.value; r(); };
 }
@@ -2484,8 +2516,8 @@ function renderNav(allEls,vis){
 }
 
 let BR_CTX=null;
-function drawBranch(code){
-  if(!BR_CTX) return; const box=$('#brBody'); if(!box) return;
+function drawBranch(code,target){
+  if(!BR_CTX) return; const box=target||$('#brBody'); if(!box) return;
   const b=BR_CTX.rows.find(x=>x.code===code); if(!b){box.innerHTML='';return;}
   const pl=BR_CTX.plMap[code], ce=BR_CTX.cemMap[code], os=BR_CTX.ossMap[code];
   const M=KB;
@@ -3017,7 +3049,7 @@ function buildMain(m){
     const rank=plb.filter(b=>b.sales>=MIN), skipped=plb.length-rank.length;
     const srt=rank.slice().sort((a,b)=>b.gp-a.gp);
     const t=(arr)=>`<div class="scroll"><table><tr><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">กำไร</th><th class="n">%กำไร</th><th class="n">%COS</th><th class="n">%COL</th></tr>
-      ${arr.map(b=>`<tr><td>${b.name}</td><td class="n">${KB(b.sales)}</td><td class="n ${cls(b.profit)}">${KB(b.profit)}</td><td class="n ${cls(b.gp)}">${b.gp.toFixed(1)}%</td><td class="n">${b.cos.toFixed(1)}%</td><td class="n">${b.col.toFixed(1)}%</td></tr>`).join('')}</table></div>`;
+      ${arr.map(b=>`<tr class="clk" data-ssbr="${b.code}"><td>${b.name}</td><td class="n">${KB(b.sales)}</td><td class="n ${cls(b.profit)}">${KB(b.profit)}</td><td class="n ${cls(b.gp)}">${b.gp.toFixed(1)}%</td><td class="n">${b.cos.toFixed(1)}%</td><td class="n">${b.col.toFixed(1)}%</td></tr>`).join('')}</table></div>`;
     const loss=plb.filter(b=>b.profit<0);
     out.push(sec('plbr','Profit by Branch',`${S.multi?S.lab:label(plbM)}${plbM!==m&&!S.multi?' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':''} · ${rank.length} สาขา · เรียงตาม %กำไร${skipped?` (ไม่รวม ${skipped} สาขาที่ยอดต่ำกว่า 0.2M)`:''}`,`
       <div class="strip">
@@ -3053,7 +3085,7 @@ function buildMain(m){
       <div class="scroll"><table>
         <tr><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">%สัดส่วน</th><th class="n">%แผน</th><th class="n">MoM</th><th class="n">Delivery</th><th class="n">%Deli</th><th class="n">บิล</th><th class="n">เช็คเฉลี่ย</th><th class="n">%กำไร</th><th class="n">CEM</th><th class="n">OSS</th></tr>
         ${rows.map(b=>{const pl=plMap[b.code],ce=cemMap[b.code],os=ossMap[b.code];
-          return `<tr><td>${b.name}</td><td class="n">${KB(b.sales)}</td><td class="n">${(b.sales/totS*100).toFixed(1)}%</td>
+          return `<tr class="clk" data-ssbr="${b.code}"><td>${b.name}</td><td class="n">${KB(b.sales)}</td><td class="n">${(b.sales/totS*100).toFixed(1)}%</td>
           <td class="n ${b.ach==null?'':cls(b.ach-100)}">${b.ach==null?'—':b.ach.toFixed(0)+'%'}</td>
           <td class="n ${cls(b.mom)}">${sgn(b.mom)}</td>
           <td class="n">${KB(b.deli)}</td><td class="n">${b.sales?(b.deli/b.sales*100).toFixed(1)+'%':'—'}</td>
@@ -3129,6 +3161,7 @@ function buildMain(m){
   allEls.forEach(x=>{ const g=SEC_GROUP[x.id]||'sales'; x.dataset.g=g; x.classList.toggle('ghide', GRP!=='all'&&g!==GRP); });
   const vis=allEls.filter(x=>!x.classList.contains('ghide'));
   vis.forEach((x,i)=>{const h=x.querySelector('.bar h2'); if(h) h.dataset.n=i+1;});
+  addFullBtns(allEls);
   $('#hsub').textContent=S.lab;
   /* ป้ายบอกเดือนของข้อมูล: หัวข้อที่รวมหลายเดือนไม่ได้ ใช้เดือนล่าสุดในช่วง · หัวข้อที่ข้อมูลไม่ครบทุกเดือนในช่วง บอกเดือนที่มี */
   if(S.multi){ const chip=(id,t)=>{ const b=mainEl.querySelector('#'+id+' .bar'); if(b&&!b.querySelector('.datachip')) b.insertAdjacentHTML('beforeend',`<span class="datachip">${t}</span>`); };
@@ -3254,15 +3287,62 @@ function observeNav(){ if(io) io.disconnect(); io=new IntersectionObserver(es=>{
 
 /* ========================= present mode ========================= */
 let slideIdx=0;
-function slides(){return [...document.querySelectorAll('section.slide')];}
+/* หัวข้อที่เลือกพรีเซนต์ (null = ทุกหัวข้อ) */
+let PRES_IDS=null, PRES_G=null;
+function slides(){ const all=[...document.querySelectorAll('section.slide')]; if(!PRES_IDS) return all;
+  const s=PRES_IDS.map(id=>all.find(e=>e.id===id)).filter(Boolean); return s.length?s:all; }
 function showSlide(i){const s=slides();slideIdx=Math.max(0,Math.min(s.length-1,i));s.forEach((x,k)=>x.classList.toggle('cur',k===slideIdx));$('#pTitle').textContent=s[slideIdx].dataset.title;$('#pCount').textContent=(slideIdx+1)+' / '+s.length;}
 function enterPresent(){document.body.classList.add('present');showSlide(0);document.documentElement.requestFullscreen?.().catch(()=>{});}
-function exitPresent(){document.body.classList.remove('present');slides().forEach(x=>x.classList.remove('cur'));if(document.fullscreenElement)document.exitFullscreen?.();}
-$('#presentBtn').onclick=enterPresent; $('#pExit').onclick=exitPresent;
+function exitPresent(){document.body.classList.remove('present');document.querySelectorAll('section.slide').forEach(x=>x.classList.remove('cur'));PRES_IDS=null;if(document.fullscreenElement)document.exitFullscreen?.();}
+function startPresent(ids){ PRES_IDS=ids&&ids.length?ids:null; enterPresent(); }
+function presSecs(g){ const els=[...document.querySelectorAll('#main section.slide')];
+  const ids=g==='all'?SEC_ORDER:((GROUPS.find(x=>x.k===g)||{subs:[]}).subs.flatMap(sb=>sb.ids));
+  return ids.map(id=>els.find(e=>e.id===id)).filter(Boolean); }
+function openPresPicker(){ if(!document.querySelector('#main section.slide')) return;
+  PRES_G=GRP||'sales'; renderPresPicker(); $('#presModal').classList.add('open'); }
+function renderPresPicker(){
+  const chips=GROUPS.map(g=>({k:g.k,n:g.ic+' '+g.name})).concat([{k:'all',n:'ทุกหมวด'}]);
+  $('#presGroups').innerHTML=chips.map(c=>`<button type="button" class="chip ${c.k===PRES_G?'on':''}" data-pg="${c.k}">${c.n}</button>`).join('');
+  const secs=presSecs(PRES_G);
+  $('#presList').innerHTML=secs.length?secs.map((e,i)=>`<label class="pg-it"><input type="checkbox" value="${e.id}" checked><span class="pg-n">${i+1}</span><span>${NAV_SHORT[e.id]||e.dataset.title}</span></label>`).join('')
+    :'<div class="empty">หมวดนี้ยังไม่มีหัวข้อ</div>';
+  const cnt=()=>{ const n=document.querySelectorAll('#presList input:checked').length; $('#presCnt').textContent=n+' สไลด์'; $('#presGo').disabled=!n; };
+  document.querySelectorAll('#presGroups [data-pg]').forEach(b=>b.onclick=()=>{ PRES_G=b.dataset.pg; renderPresPicker(); });
+  document.querySelectorAll('#presList input').forEach(x=>x.onchange=cnt);
+  $('#presAll').onclick=()=>{ document.querySelectorAll('#presList input').forEach(x=>x.checked=true); cnt(); };
+  $('#presNone').onclick=()=>{ document.querySelectorAll('#presList input').forEach(x=>x.checked=false); cnt(); };
+  $('#presGo').onclick=()=>{ const ids=[...document.querySelectorAll('#presList input:checked')].map(x=>x.value); if(!ids.length) return;
+    $('#presModal').classList.remove('open'); startPresent(ids); };
+  cnt(); }
+$('#presentBtn').onclick=openPresPicker; $('#pExit').onclick=exitPresent;
+$('#presClose').onclick=()=>$('#presModal').classList.remove('open');
+$('#presModal').onclick=e=>{ if(e.target.id==='presModal') $('#presModal').classList.remove('open'); };
+/* ---- รายละเอียดสาขา (กดชื่อสาขาในตารางไหนก็ได้) ---- */
+function openBranch(code){ code=String(code);
+  const meta=(BRANCH_META&&BRANCH_META[code])||{}, r=BR_CTX&&BR_CTX.rows.find(x=>String(x.code)===code);
+  $('#brmTitle').textContent=code+' '+((r&&r.name)||meta.name||'');
+  $('#brmSub').textContent=[meta.zone?'โซน '+meta.zone:'', (SCP&&SCP.lab)||label(curM)].filter(Boolean).join(' · ');
+  const box=$('#brmBody'); if(r) drawBranch(code,box); else box.innerHTML='<div class="empty">ยังไม่มียอดรายสาขาของสาขานี้ในช่วงที่เลือก</div>';
+  const hasPl=!!(EXTRA.pnlFull&&EXTRA.pnlFull.branch&&EXTRA.pnlFull.branch[code]);
+  $('#brmPl').hidden=!hasPl; $('#brmExp').hidden=!r;
+  $('#brmSssg').onclick=()=>{ closeBranch(); SSS.branch=code; SSS.pickM=null; build(curM); goSec('sssg'); };
+  $('#brmPl').onclick=()=>{ closeBranch(); PLS.branch=code; PLS.cmp=[]; build(curM); goSec('pl'); };
+  $('#brmExp').onclick=()=>{ closeBranch(); goSec('branchdetail'); const sl=$('#brSel'); if(sl){ sl.value=code; drawBranch(code); } };
+  $('#brModal').classList.add('open'); }
+function closeBranch(){ $('#brModal').classList.remove('open'); }
+$('#brmClose').onclick=closeBranch;
+$('#brModal').onclick=e=>{ if(e.target.id==='brModal') closeBranch(); };
+/* ---- ปุ่มขยายเต็มจอบนหัวข้อ ---- */
+function addFullBtns(els){ (els||document.querySelectorAll('#main section.slide')).forEach(x=>{ const bar=x.querySelector('.bar');
+  if(!bar||bar.querySelector('.secfull')) return;
+  const b=document.createElement('button'); b.type='button'; b.className='secfull'; b.title='ขยายหัวข้อนี้เต็มจอ'; b.textContent='⤢ เต็มจอ';
+  b.onclick=()=>startPresent([x.id]); bar.appendChild(b); }); }
 $('#pNext').onclick=()=>showSlide(slideIdx+1); $('#pPrev').onclick=()=>showSlide(slideIdx-1);
 document.addEventListener('keydown',e=>{
   if(e.target.closest&&e.target.closest('input,select,textarea')) return;
-  if(!document.body.classList.contains('present')){ if(e.key==='p'||e.key==='P') enterPresent(); return; }
+  if(!document.body.classList.contains('present')){
+    if(e.key==='Escape'){ $('#presModal').classList.remove('open'); closeBranch(); return; }
+    if((e.key==='p'||e.key==='P')&&!document.querySelector('.modal.open')) openPresPicker(); return; }
   if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();showSlide(slideIdx+1);}
   else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();showSlide(slideIdx-1);}
   else if(e.key==='Escape') exitPresent();
