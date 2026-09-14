@@ -2803,10 +2803,24 @@ function brandEmpty(){
   const go=document.querySelector('[data-brand-go]'); if(go) go.onclick=()=>setBrand('kt');
   setStick();
 }
+/* เติมยอดปีนี้ในตารางยอดรายสาขา 2 ปี จากแบบฟอร์มส่งยอดขาย (เฉพาะเดือนที่ตารางยังไม่มี)
+   ค่าที่เติมมีป้าย src:'form' ถ้านำเข้าแบบฟอร์มใหม่จะเติมซ้ำด้วยตัวเลขล่าสุด แต่ไม่ทับยอดจากไฟล์ยอดรายสาขา 2 ปี */
+function syncBranchYears(){
+  const BY=EXTRA&&EXTRA.branchYears; if(!BY) return;
+  const byCode={}; BY.forEach(b=>byCode[String(b.code)]=b);
+  Object.keys(DETAIL).forEach(k=>{ const mm=+k, rows=(DETAIL[k]||{}).branchRows||[]; if(!rows.length) return;
+    rows.forEach(r=>{ if(!(r.sales>0)) return; const code=String(r.code);
+      let b=byCode[code];
+      if(!b){ const meta=(BRANCH_META&&BRANCH_META[code])||{};
+        b={code, name:r.name||meta.name||code, zone:meta.zone||'', mall:meta.mall||meta.loc2||'Other', m:{}, fromForm:true}; BY.push(b); byCode[code]=b; }
+      b.m=b.m||{}; const v=b.m[mm]||(b.m[mm]={});
+      if(!(v.ty>0)||v.src==='form'){ v.ty=r.sales; v.src='form'; } }); });
+}
 function build(m){
   renderBrands(); document.body.classList.toggle('brand-home', HOME); document.body.classList.toggle('brand-empty', !HOME&&BRAND!=='kt');
   if(HOME) return brandHome();
   if(BRAND!=='kt') return brandEmpty();
+  syncBranchYears();
   if(FILT.zone==='all') return buildMain(m);
   const M0=MONTHLY, D0=DETAIL, z=zoneData();
   MONTHLY=z.mon; DETAIL=z.det;
