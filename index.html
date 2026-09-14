@@ -1068,6 +1068,7 @@ body.present .smph b em{font-size:13px}
 .phx p{margin-top:2px}
 .phx b{font-size:16px;font-weight:800;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
 .ovbottom{margin-top:18px}
+section#salesmix .ovbottom{margin-top:0}
 /* ชื่อการ์ด: ตัวหนาสีเข้ม ไม่ใช่ตัวพิมพ์ใหญ่สีเทา */
 .kl{text-transform:none;letter-spacing:0;font-size:14px;font-weight:700;color:var(--ink)}
 .csl{text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:600;color:var(--ink-2)}
@@ -1225,7 +1226,7 @@ const MONTH_EN_FULL = ['January','February','March','April','May','June','July',
 const MONTH_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const YEAR = 2026;
 // ชื่อย่อที่ใช้ในแถบเมนูด้านบน (หัวข้อเต็มยังอยู่ในแถบหัวข้อของแต่ละส่วน)
-const NAV_SHORT={overview:'Monthly KPI',monthly:'Performance Trend',sssg:'%SSSG by Month',
+const NAV_SHORT={overview:'Monthly KPI',salesmix:'Sales Mix & Customers',monthly:'Performance Trend',sssg:'%SSSG by Month',
   delivery:'Delivery by Platform',decline:'Delivery Declines',trans:'Bills & Ticket by Channel',customers:'Customers & Avg Ticket',
   cos:'Food & Labor Cost',rank:'Top & Bottom Branches',brsales:'Sales by Branch',mall:'Mall Group Health',zone:'Trade Zone Health',branches:'Branch Watchlist',branchdetail:'Branch Explorer',plan:'Plan Achievement',plbr:'Profit by Branch',pl:'Profit & Loss',cem:'CEM',oss:'OSS'}
 
@@ -2225,7 +2226,7 @@ function bindExtra2(){
 /* ========================= หมวดหลัก 5 หมวด ========================= */
 const GROUPS=[
   {k:'sales',ic:'📈',name:'ยอดขาย',subs:[
-    {cap:'ภาพรวม',ids:['overview','monthly','sssg']},
+    {cap:'ภาพรวม',ids:['overview','salesmix','monthly','sssg']},
     {cap:'รายสาขา',ids:['rank','brsales','mall','zone','branches','plan','branchdetail']},
     {cap:'ช่องทางขาย',ids:['delivery','decline']}]},
   {k:'cust',ic:'👥',name:'ลูกค้า',subs:[{cap:'',ids:['customers','trans']}]},
@@ -2725,8 +2726,9 @@ function build(m){
           f:S.multi?(cur.ssApprox?'เฉลี่ยถ่วงยอดขาย (บางเดือนไม่มียอด Same Store)':`รวม ${S.n} เดือน เทียบปีก่อน`):(d.stores&&d.stores.sameStore?`${d.stores.sameStore} สาขา Same Store`:'เทียบเดือนเดียวกันปีก่อน')});
         return `<div class="ovh"><h3>Sales Overview</h3></div>
           <div class="kgrid">${c1}${c2}${c3}${c4}${c5}</div>`;
-      })()}
-      ${ovBottom(m,rows,ch,d)}`));
+      })()}`));
+    /* Sales Mix + Customers & Branches แยกเป็นอีกหน้า */
+    out.push(sec('salesmix','Sales Mix & Customers — '+S.titleEn,'',ovBottom(m,rows,ch,d)));
   }
 
   // 2 monthly
