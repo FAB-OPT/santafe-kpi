@@ -4722,7 +4722,7 @@ function covTypes(){
     {g:'ยอดขาย',name:'ยอดขายรวม',src:'Daily Sale หรือ แบบฟอร์มส่งยอดขาย',f:m=>R(m).sales!=null},
     {g:'ยอดขาย',name:'แผน (Budget)',src:'แบบฟอร์มส่งยอดขาย',f:m=>R(m).budget!=null},
     {g:'ยอดขาย',name:'ยอด LY',src:'Daily Sale',f:m=>R(m).ly!=null},
-    {g:'ยอดขาย',name:'%SSSG',src:'Daily Sale',f:m=>R(m).sssg!=null},
+    {g:'ยอดขาย',name:'%SSSG',src:'Sales 2025_2026 (แถว SSSG)',f:m=>!!(DETAIL[m]||{}).sssgFile},
     {g:'ยอดขาย',name:'Delivery แยก Platform',src:'Daily Sale หรือ แบบฟอร์มส่งยอดขาย',f:m=>!!(D(m).delivery&&(D(m).delivery.platforms||[]).length)},
     {g:'ยอดขาย',name:'บิล · เช็คเฉลี่ย · ลูกค้า',src:'แบบฟอร์มส่งยอดขาย',f:m=>!!D(m).trans},
     {g:'ยอดขาย',name:'ยอดรายสาขา',src:'แบบฟอร์มส่งยอดขาย',exp:nBr,
