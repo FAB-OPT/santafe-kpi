@@ -703,7 +703,12 @@ body:not(.present) .plbar{font-size:13px}
 tr.rowhide{display:none}
 /* ค้นหาสาขาในตาราง: หัวกรอบวางช่องค้นหาชิดขวา · ขณะค้นหาแสดงเฉพาะแถวที่ตรง (รวมแถวที่ถูกย่อ) และซ่อนปุ่มแสดงทั้งหมด */
 .ph:has(.brq),.grp:has(.brq){display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.brqwrap{margin-left:auto}
+.brqwrap{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.brqchips{display:contents}
+.brqchip{font:inherit;font-size:12.5px;font-weight:600;padding:5px 10px;border-radius:999px;border:1px solid #F3C99B;background:#FFF4E8;color:#9A4A0B;cursor:pointer;white-space:nowrap}
+.brqchip b{margin-left:4px;font-weight:800}
+.brqchip:hover{background:#FDE3C6}
+.brqclr{font:inherit;font-size:12.5px;font-weight:600;padding:5px 8px;border:0;background:none;color:var(--mute);cursor:pointer;text-decoration:underline}
 .brq{font:inherit;font-size:13.5px;font-weight:500;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);width:260px;max-width:100%}
 .brq:focus{outline:2px solid var(--accent);outline-offset:1px}
 table.qon tr[data-ssbr]{display:none}
@@ -2120,10 +2125,10 @@ function customersSection(m){
     const tkc=(x,j)=>x&&x[TRK[j]]?x[CK[j]]/x[TRK[j]]:null, ca=x=>x&&x.cust&&x.tr?x.cust/x.tr:null, pb=x=>x&&x.cust?x.sales/x.cust:null;
     const hasCh=list.some(b=>b.trDine||b.trTake||b.trDeli);
     const chHint=hasCh?'':`<div class="hint" style="margin-top:8px">Ticket แยกช่องทางรายสาขา: ข้อมูล ${label(m)} ในเครื่องนี้มีบิลแยกช่องทาง 0 จาก ${list.length} สาขา — นำเข้าไฟล์แบบฟอร์มส่งยอดขายอีกครั้ง แล้วดูข้อความหลังนำเข้าว่า "บิลแยกช่องทางรายสาขา" ได้กี่สาขา</div>`;
-    btbl=`<div class="grp big"><span>รายสาขา</span><span class="brqwrap"><input class="brq" type="search" list="brqList" placeholder="ค้นหาสาขา (ชื่อหรือรหัส)" autocomplete="off"><datalist id="brqList">${list.map(b=>`<option value="${b.code} ${b.name}"></option>`).join('')}</datalist></span></div>
-    <div class="scroll"><table><tr><th>#</th><th>สาขา</th><th class="n">Total Trans</th><th class="n">Ticket Avg.</th>${CUS_CH.map(o=>`<th class="n">Ticket ${o.n}</th>`).join('')}<th class="n">Customers</th><th class="n">Customer Avg.</th><th class="n">Per Bill</th></tr>
+    btbl=`<div class="grp big"><span>รายสาขา</span><span class="brqwrap"><span class="brqchips">${brqChips(list)}</span><input class="brq" type="search" list="brqList" placeholder="ค้นหา/เลือกสาขา (เลือกได้หลายสาขา)" autocomplete="off"><datalist id="brqList">${list.map(b=>`<option value="${b.code} ${b.name}"></option>`).join('')}</datalist></span></div>
+    <div class="scroll"><table class="${list.some(b=>BRQ.has(String(b.code)))?'qon':''}"><tr><th>#</th><th>สาขา</th><th class="n">Total Trans</th><th class="n">Ticket Avg.</th>${CUS_CH.map(o=>`<th class="n">Ticket ${o.n}</th>`).join('')}<th class="n">Customers</th><th class="n">Customer Avg.</th><th class="n">Per Bill</th></tr>
     ${list.map((b,i)=>{ const p=pMap[b.code];
-      return `<tr class="clk" data-ssbr="${b.code}"><td>${i+1}</td><td>${b.code} ${b.name}</td><td class="n">${fN(b.tr)}${vsL(p&&p.tr,b.tr)}</td><td class="n"><b>${fB(b.tk)}</b>${vsL(p&&p.tk,b.tk)}</td>${CUS_CH.map((o,j)=>`<td class="n">${fB(tkc(b,j))}${vsL(tkc(p,j),tkc(b,j))}</td>`).join('')}<td class="n">${fN(b.cust||null)}${vsL(p&&p.cust,b.cust)}</td><td class="n">${ca(b)==null?'—':f2(ca(b))}${vsL(ca(p),ca(b))}</td><td class="n">${fB(pb(b))}${vsL(pb(p),pb(b))}</td></tr>`; }).join('')}</table></div><div class="hint brqnone" hidden>ไม่พบสาขาที่ค้นหา</div>${chHint}`; }
+      return `<tr class="clk${BRQ.has(String(b.code))?' qyes':''}" data-ssbr="${b.code}"><td>${i+1}</td><td>${b.code} ${b.name}</td><td class="n">${fN(b.tr)}${vsL(p&&p.tr,b.tr)}</td><td class="n"><b>${fB(b.tk)}</b>${vsL(p&&p.tk,b.tk)}</td>${CUS_CH.map((o,j)=>`<td class="n">${fB(tkc(b,j))}${vsL(tkc(p,j),tkc(b,j))}</td>`).join('')}<td class="n">${fN(b.cust||null)}${vsL(p&&p.cust,b.cust)}</td><td class="n">${ca(b)==null?'—':f2(ca(b))}${vsL(ca(p),ca(b))}</td><td class="n">${fB(pb(b))}${vsL(pb(p),pb(b))}</td></tr>`; }).join('')}</table></div><div class="hint brqnone" hidden>ไม่พบสาขาที่ค้นหา</div>${chHint}`; }
   return sec('customers',T,'',strip+chTiles+trend+btbl);
 }
 
@@ -2674,14 +2679,37 @@ function capTables(){
     bar.appendChild(btn); wrap.after(bar);
   });
 }
-/* ช่องค้นหาสาขา (.brq): กรองแถว tr[data-ssbr] ของตารางในกรอบเดียวกัน ตามรหัส/ชื่อ · เลือกจากดรอปดาวก็กรองได้ */
+/* ช่องค้นหาสาขา (.brq) เลือกได้หลายสาขา: สาขาที่เลือกเก็บใน BRQ (อยู่ต่อเมื่อเปลี่ยนเดือน) แสดงเป็นป้าย กด × เอาออก
+   ตารางในกรอบเดียวกันแสดงสาขาที่เลือกทั้งหมด + สาขาที่ตรงกับคำที่กำลังพิมพ์ · เลือกจากดรอปดาวหรือกด Enter = เพิ่มสาขา */
+const BRQ=new Set();
+function brqChips(list){ const nm={}; (list||[]).forEach(b=>nm[String(b.code)]=b.name);
+  const cs=[...BRQ].filter(c=>nm[c]!=null);
+  return cs.map(c=>`<button type="button" class="brqchip" data-brqdel="${c}" title="เอาออก">${c} ${nm[c]} <b>×</b></button>`).join('')
+    +(cs.length>1?`<button type="button" class="brqclr" data-brqclr="1">ล้างทั้งหมด</button>`:''); }
+function brqApply(box){ const t=box&&box.querySelector('.scroll > table'); if(!t) return;
+  const inp=box.querySelector('.brq'), q=inp?inp.value.trim().toLowerCase().replace(/\s+/g,' '):'';
+  const list=[]; let n=0, sel=0;
+  t.querySelectorAll('tr[data-ssbr]').forEach(r=>{ const code=r.dataset.ssbr, c=r.cells[1], txt=(c?c.innerText:'').replace(/\s+/g,' ').trim();
+    list.push({code, name:txt.replace(new RegExp('^'+code+'\\s*'),'')});
+    const inSel=BRQ.has(code), hit=inSel||(!!q&&(txt.toLowerCase().includes(q)||q.includes(code)));
+    r.classList.toggle('qyes',hit); if(hit) n++; if(inSel) sel++; });
+  t.classList.toggle('qon',!!q||sel>0);
+  const ch=box.querySelector('.brqchips'); if(ch) ch.innerHTML=brqChips(list);
+  const none=box.querySelector('.brqnone'); if(none) none.hidden=!(q||sel)||n>0; }
+const brqBox=el=>el.closest('.panel')||el.closest('section');
+function brqAdd(inp,code){ BRQ.add(String(code)); inp.value=''; brqApply(brqBox(inp)); }
 document.addEventListener('input',e=>{ const inp=e.target; if(!inp.classList||!inp.classList.contains('brq')) return;
-  const box=inp.closest('.panel')||inp.closest('section'); const t=box&&box.querySelector('.scroll > table'); if(!t) return;
-  const q=inp.value.trim().toLowerCase().replace(/\s+/g,' ');
-  let n=0; t.querySelectorAll('tr[data-ssbr]').forEach(r=>{ const c=r.cells[1]; const txt=(c?c.innerText:r.innerText).toLowerCase().replace(/\s+/g,' ');
-    const hit=!!q&&(txt.includes(q)||q.includes(r.dataset.ssbr)); r.classList.toggle('qyes',hit); if(hit) n++; });
-  t.classList.toggle('qon',!!q);
-  const none=box.querySelector('.brqnone'); if(none) none.hidden=!q||n>0; });
+  /* เลือกจากดรอปดาว: ค่าเท่ากับตัวเลือกพอดี → เพิ่มเป็นสาขาที่เลือก */
+  const v=inp.value.trim(), opt=inp.list&&[...inp.list.options].find(o=>o.value===v);
+  if(opt){ brqAdd(inp,v.split(' ')[0]); return; }
+  brqApply(brqBox(inp)); });
+document.addEventListener('keydown',e=>{ const inp=e.target; if(e.key!=='Enter'||!inp.classList||!inp.classList.contains('brq')) return;
+  const q=inp.value.trim().toLowerCase(); if(!q) return; e.preventDefault();
+  const t=brqBox(inp).querySelector('.scroll > table');
+  const m=t&&[...t.querySelectorAll('tr[data-ssbr]')].filter(r=>!BRQ.has(r.dataset.ssbr)&&r.cells[1]&&(r.cells[1].innerText.toLowerCase().includes(q)||q.includes(r.dataset.ssbr)));
+  if(m&&m.length){ m.forEach(r=>BRQ.add(r.dataset.ssbr)); inp.value=''; brqApply(brqBox(inp)); } });
+document.addEventListener('click',e=>{ const d=e.target.closest&&e.target.closest('[data-brqdel],[data-brqclr]'); if(!d) return;
+  const box=brqBox(d); if(d.dataset.brqclr) BRQ.clear(); else BRQ.delete(d.dataset.brqdel); brqApply(box); });
 function renderNav(allEls,vis){
   const cur=(GRP==='all')
     ? {subs:GROUPS.map(g=>({cap:g.name,ids:g.subs.flatMap(sb=>sb.ids)}))}
