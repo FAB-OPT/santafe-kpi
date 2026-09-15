@@ -2036,11 +2036,20 @@ function customersSection(m){
   let trend='';
   if(tm.length>=2){
     const labs=tm.map(r=>MONTH_TH[r.m-1]);
-    const cSer=[{name:'ลูกค้า',color:'#D9822D',w:3,label:1,vals:tm.map(r=>r.v.customer)},{name:'บิล',color:'#94A3B8',vals:tm.map(r=>r.v.trans)}];
+    /* กราฟเส้นโค้งแบบ Performance Trend + แถวตัวเลขและ % เทียบ LM ใต้กราฟ */
+    const cu=tm.map(r=>r.v.customer||null), trs=tm.map(r=>r.v.trans||null), tks=tm.map(r=>r.v.ticket||null);
+    const K=v=>Math.round(v/1000)+'K', BT=v=>'฿'+Math.round(v);
+    const cChart=ovChart(tm.map((r,i)=>({m:r.m,cu:cu[i],tr:trs[i]})),{k:'cu',name:'ลูกค้า'},[{k:'tr',name:'บิล',c:'#A3AEBB'}],
+      {w:620,h:260,ax:K,fv:K,tip:v=>v==null?'—':fmtN(Math.round(v))});
+    const lmOf=(arr,i)=>i>0&&tm[i-1].m===tm[i].m-1?arr[i-1]:null;
+    const prow=(lab,arr,f,withLM)=>`<span class="rl">${lab}</span>`+arr.map(v=>`<span class="mh">${v==null?'—':f(v)}</span>`).join('')+
+      (withLM?`<span class="rl">vs LM</span>`+arr.map((v,i)=>{ const p=lmOf(arr,i); return `<span>${pill(p&&v?pct(p,v):null)}</span>`; }).join(''):'');
+    const pgrid=body=>`<div class="ovpw"><div class="ovpills" style="--n:${tm.length}"><span></span>${tm.map(r=>`<span class="mh">${MONTH_TH[r.m-1]}</span>`).join('')}${body}</div></div>`;
     const tSer=[{key:'all',name:'รวม',color:'#334155',vals:tm.map(r=>r.v.ticket)}]
       .concat(CUS_CH.map(o=>({key:o.k,name:o.n,color:o.c,vals:tm.map(r=>{ const c=findCh(r.v,o.k); return c?c.ticket:null; })})));
-    trend=`<div class="two"><div><h3>ลูกค้าและจำนวนบิล รายเดือน</h3>${lineSeries(labs,cSer,{w:580,h:230,fmt:v=>(v/1000).toFixed(0)+'K',tipFmt:v=>fmtN(Math.round(v))})}${legendOf(cSer)}</div>
-      <div><h3>บิลเฉลี่ยรายเดือน แยกช่องทาง (฿)</h3>${groupBars(labs.map(n=>({name:n})),tSer,{w:580,h:230,fmt:v=>Math.round(v),tipFmt:v=>'฿'+Math.round(v),bw:20,vals:tm.length<=4})}${legendOf(tSer)}</div></div>
+    trend=`<div class="two"><div><h3>ลูกค้าและจำนวนบิล รายเดือน</h3>${cChart}${pgrid(prow('ลูกค้า',cu,K,1)+prow('บิล',trs,K,1))}</div>
+      <div><h3>บิลเฉลี่ยรายเดือน แยกช่องทาง (฿)</h3>${groupBars(labs.map(n=>({name:n})),tSer,{w:620,h:260,fmt:v=>Math.round(v),tipFmt:BT,bw:14,vals:true})}${legendOf(tSer)}
+        ${pgrid(prow('รวม',tks,BT,1)+CUS_CH.map(o=>prow(o.n,tm.map(r=>{ const c=findCh(r.v,o.k); return c?c.ticket:null; }),BT,0)).join(''))}</div></div>
       <div class="grp">รายเดือน</div>
       <div class="scroll"><table><tr><th>เดือน</th><th class="n">ลูกค้า</th><th class="n">บิล</th><th class="n">ลูกค้า/บิล</th><th class="n">บิลเฉลี่ย รวม</th>${CUS_CH.map(o=>`<th class="n">บิลเฉลี่ย ${o.n}</th>`).join('')}<th class="n">ใช้จ่ายต่อหัว</th></tr>
       ${tm.map(r=>`<tr class="${r.m===m&&!S.multi?'hi':''}"><td>${r.m===m&&!S.multi?'★ ':''}${MONTH_TH[r.m-1]}</td><td class="n">${fN(r.v.customer)}</td><td class="n">${fN(r.v.trans)}</td><td class="n">${r.v.customer?f2(r.v.customer/r.v.trans):'—'}</td><td class="n"><b>${fB(r.v.ticket)}</b></td>${CUS_CH.map(o=>{ const c=findCh(r.v,o.k); return `<td class="n">${c?fB(c.ticket):'—'}</td>`; }).join('')}<td class="n">${fB(spend(r.v))}</td></tr>`).join('')}
@@ -2750,14 +2759,17 @@ function ovTrendData(){
 }
 /* กราฟเส้นโค้งแบบเดียวกับแท็บ Trend: เส้นหลักสีส้มมีพื้นไล่สีและตัวเลขบนจุด · เส้นเทียบสีเทา · แผนเส้นประสีฟ้า
    main = {k,name} · refs = [{k,name,c,dash}] · สเกลแกนปรับตามช่วงค่า (ทั้งบริษัทหลักสิบล้าน · รายสาขาหลักล้าน) */
-function ovChart(rows,main,refs){
-  const W=1180,H=290,L=56,R=26,T=34,B=44, n=rows.length, id='ovc'+(ovChart.n=(ovChart.n||0)+1);
+function ovChart(rows,main,refs,o){
+  /* o (ไม่บังคับ): w,h ขนาดกราฟ · ax ป้ายแกน · fv ตัวเลขบนจุด · tip ตัวเลขในกล่องชี้ (ค่าเริ่มต้นเป็นล้านบาท) */
+  o=o||{};
+  const W=o.w||1180,H=o.h||290,L=56,R=26,T=34,B=44, n=rows.length, id='ovc'+(ovChart.n=(ovChart.n||0)+1);
+  const TIP=o.tip||(v=>v==null?'—':v.toFixed(2)+'M');
   const ys=rows.flatMap(r=>[r[main.k]].concat(refs.map(s=>r[s.k]))).filter(v=>v!=null);
   if(!ys.length) return '<div class="empty">ยังไม่มีข้อมูล</div>';
   const mn=Math.min(...ys), mx=Math.max(...ys), span=Math.max(mx-mn,mx*.08,.01);
-  const step=[.05,.1,.2,.5,1,2,5,10,20,50].find(s=>span/s<=6)||100;
+  const pw=Math.pow(10,Math.floor(Math.log10(span/5))), step=[1,2,5,10].map(x=>x*pw).find(s=>span/s<=6)||10*pw;
   const lo=Math.max(0,Math.floor(mn/step)*step-step), hi=Math.ceil(mx/step)*step+step;
-  const dp=step<.1?2:(step<1?1:0), fv=v=>v>=10?v.toFixed(1):v.toFixed(2);
+  const dp=Math.max(0,-Math.floor(Math.log10(step)+1e-9)), fv=o.fv||(v=>v>=10?v.toFixed(1):v.toFixed(2)), AX=o.ax||(v=>v.toFixed(dp)+'M');
   const x=i=>L+(W-L-R)*(n===1?.5:i/(n-1)), y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
   const curve=pts=>{ if(pts.length<2) return pts.length?`M${pts[0][0]},${pts[0][1]}`:'';
     let d=`M${pts[0][0]},${pts[0][1]}`;
@@ -2767,7 +2779,7 @@ function ovChart(rows,main,refs){
   const pts=k=>rows.map((r,i)=>r[k]==null?null:[x(i),y(r[k])]).filter(Boolean);
   let g=`<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D9822D" stop-opacity=".22"/><stop offset="1" stop-color="#D9822D" stop-opacity="0"/></linearGradient></defs>`;
   for(let v=lo;v<=hi+1e-9;v+=step) g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#EEF2F6" ${Math.abs(v-lo)<1e-9?'':'stroke-dasharray="3 5"'}/>
-    <text x="${L-12}" y="${y(v)+4}" font-size="11.5" fill="#94A3B8" text-anchor="end">${v.toFixed(dp)}M</text>`;
+    <text x="${L-12}" y="${y(v)+4}" font-size="11.5" fill="#94A3B8" text-anchor="end">${AX(v)}</text>`;
   const ci=n-1, MP=pts(main.k);
   g+=`<line x1="${x(ci)}" x2="${x(ci)}" y1="${T-10}" y2="${H-B}" stroke="#CBD5E1" stroke-dasharray="4 4"/>`;
   if(MP.length>1) g+=`<path d="${curve(MP)} L${MP[MP.length-1][0]},${H-B} L${MP[0][0]},${H-B} Z" fill="url(#${id})"/>`;
@@ -2784,8 +2796,8 @@ function ovChart(rows,main,refs){
     g+=`<text x="${x(i)}" y="${H-16}" font-size="12.5" fill="${i===ci?'#0F172A':'#64748B'}" font-weight="${i===ci?700:400}" text-anchor="middle">${MONTH_TH[r.m-1]}</text>`;
   });
   const colW=(W-L-R)/Math.max(1,n-1);
-  rows.forEach((r,i)=>{ const v=r[main.k], t=[`${MONTH_TH[r.m-1]} ${YEAR}`, `${main.name} ${v==null?'—':v.toFixed(2)+'M'}`];
-    refs.forEach(s=>{ const b=r[s.k]; t.push(`${s.name} ${b==null?'—':b.toFixed(2)+'M'}${b!=null&&v!=null?' ('+sgn(pct(b,v))+')':''}`); });
+  rows.forEach((r,i)=>{ const v=r[main.k], t=[`${MONTH_TH[r.m-1]} ${YEAR}`, `${main.name} ${TIP(v)}`];
+    refs.forEach(s=>{ const b=r[s.k]; t.push(`${s.name} ${TIP(b)}${b!=null&&v!=null?' ('+sgn(pct(b,v))+')':''}`); });
     g+=`<rect x="${Math.max(L-20,x(i)-colW/2)}" y="${T-12}" width="${colW}" height="${H-B-T+12}" fill="transparent" data-tip="${t.join('\n')}"/>`; });
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Performance Trend">${g}</svg>
     <div class="legend lcleg"><span><i class="ln" style="background:#D9822D"></i>${main.name}</span>${refs.map(s=>`<span><i class="ln${s.dash?' dash':''}"${s.dash?'':` style="background:${s.c}"`}></i>${s.name}</span>`).join('')}<span class="hint">ชี้ที่เดือนเพื่อดูตัวเลข</span></div>`;
