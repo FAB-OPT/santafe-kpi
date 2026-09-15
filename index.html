@@ -964,8 +964,8 @@ body.present #overview .headline{flex:0 0 auto}
 .ovbig .ovly{font-size:22px;font-weight:700;color:var(--ink-2);margin-left:18px}
 .ovsub{font-size:12.5px;color:var(--mute);margin-top:2px}
 .ovmore{background:none;border:0;padding:0;margin-top:8px;font:inherit;font-size:12.5px;font-weight:700;color:var(--accent);cursor:pointer}
-.ovmore i,.ovchev{display:inline-block;font-style:normal;transition:transform .2s}
-.ovmore.on i,.ovchev.on{transform:rotate(180deg)}
+.ovmore i{display:inline-block;font-style:normal;transition:transform .2s}
+.ovmore.on i{transform:rotate(180deg)}
 .ovmix{min-width:190px}
 .ovmix .klegend{margin-top:8px}
 .ovkpis{display:flex;gap:16px 36px;margin-left:auto;align-items:center;flex-wrap:wrap}
@@ -974,16 +974,13 @@ body.present #overview .headline{flex:0 0 auto}
 .ovk .n{font-size:26px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.2;margin-top:2px}
 .ovk .d{font-size:12px;font-weight:700;margin-top:1px;white-space:nowrap}
 .ovk .d.pos{color:var(--good)} .ovk .d.neg{color:var(--bad)}
-.ovchev{background:none;border:0;cursor:pointer;color:var(--faint);font-size:18px;padding:6px}
 .ovx{margin-top:14px;padding-top:14px;border-top:1px solid var(--hair);display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
 .ovx.one{display:block}
 .ovx[hidden]{display:none}
-.ovbox{background:var(--surface);border-radius:10px;padding:11px 13px;display:flex;flex-direction:column;gap:7px}
-.ovbox .h,.ovcl .h{font-size:10.5px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.05em}
-.ovbrow{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--mute)}
-.ovcl{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px}
-.ovcl .h{width:100%}
-.ovcl span{font-size:12px;background:#FEF2F2;color:var(--bad);border-radius:999px;padding:2px 9px}
+.ovmvh{font-size:13px;font-weight:700;color:var(--ink-2);margin:16px 0 6px}
+.ovmv{display:grid;grid-template-columns:110px 1fr;gap:10px;font-size:13px;padding:3px 0;color:var(--ink)}
+.ovmv b.pos{color:var(--good)} .ovmv b.neg{color:var(--bad)} .ovmv i{color:var(--faint)}
+.ovbt td:nth-child(2){white-space:nowrap}
 .ovth{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .ovth h3{margin:0;font-size:15px;font-weight:700;color:var(--ink)}
 .ovseg{display:inline-flex;background:var(--hair);border-radius:9px;padding:3px;gap:2px;flex-wrap:wrap}
@@ -2742,15 +2739,37 @@ function syncPnl(){
   }
   EXTRA.pnlFull=Object.assign({},B,{actual:actZ,branch,ly:lyZ,branchLY,companyActual:actual,months:K.slice(0,last),__merged:1});
 }
+/* ยอดสาขาเดือน mm ปีนี้ (บาท): ใช้ยอด 2 ปีก่อน ถ้าเดือนนั้นยังไม่มี ใช้ยอดรายสาขาของเดือนนั้น */
+function brTy(b,mm){ const x=(b.m&&b.m[mm])||{}; if(x.ty>0) return x.ty;
+  const r=((DETAIL[mm]||{}).branchRows||[]).find(y=>String(y.code)===String(b.code)); return r&&r.sales>0?r.sales:0; }
+/* สาขาเปิดใหม่ = ไม่มียอดปีก่อนเลย นับเดือนแรกที่มียอด · สาขาปิด = เดือนถัดจากเดือนสุดท้ายที่มียอดปีนี้ (ไม่มียอดปีนี้เลย = ปิดก่อนปีนี้) */
+function storeMoves(m){ const by=brOfYear(), opened={}, closed={}, add=(o,k,x)=>(o[k]=o[k]||[]).push(x);
+  by.forEach(b=>{ const ms=[]; for(let mm=1;mm<=m;mm++) if(brTy(b,mm)>0) ms.push(mm);
+    const lyAny=Object.values(b.m||{}).some(x=>x&&x.ly>0);
+    if(!ms.length){ if(lyAny) add(closed,0,b); return; }
+    if(ms[ms.length-1]<m) add(closed,ms[ms.length-1]+1,b);
+    if(!lyAny) add(opened,ms[0],b); });
+  /* สาขาที่มียอดในแบบฟอร์มรายสาขา แต่ยังไม่อยู่ในไฟล์ยอด 2 ปี */
+  const codes=new Set(by.map(b=>String(b.code))), seen=new Set();
+  for(let mm=1;mm<=m;mm++) filtZone((DETAIL[mm]||{}).branchRows||[]).forEach(r=>{ const c=String(r.code);
+    if(codes.has(c)||seen.has(c)||!(r.sales>0)) return; seen.add(c); add(opened,mm,{code:r.code,name:r.name,note:'ยังไม่อยู่ในไฟล์ยอด 2 ปี'}); });
+  return {opened,closed}; }
+/* SSSG เฉพาะสาขาที่มียอดทั้ง 2 ปีในเดือนนั้น และยังเปิดอยู่เดือนถัดไป (เดือนที่ปิดกลางเดือนไม่นับ) */
+function sssgCalc(mm){ const by=brOfYear(); if(!by.length) return null;
+  const last=Math.max(0,...MONTHLY.filter(r=>r.sales!=null).map(r=>r.m)); let ty=0,ly=0,n=0;
+  by.forEach(b=>{ const t=brTy(b,mm), l=((b.m&&b.m[mm])||{}).ly||0; if(!(t>0&&l>0)) return;
+    if(mm<last&&!(brTy(b,mm+1)>0)) return; ty+=t; ly+=l; n++; });
+  return n?{ty:ty/1e6,ly:ly/1e6,g:(ty/ly-1)*100,n}:null; }
 /* ===== Performance Trend บนหน้ายอดขาย: vs LY · vs Budget · vs LM · ขอบเขต All Stores / Branch / Zone ===== */
 const OVT={mode:'ly',scope:'all',code:'',zone:''};
 function ovTrendData(){
   const S=SCP||{}, last=S.multi?S.last:curM, by=brOfYear(), nm=v=>String(v||'').replace(/\s+/g,'');
   const months=MONTHLY.filter(r=>r.m<=last&&r.sales!=null).map(r=>r.m).sort((a,b)=>a-b);
   const list=OVT.scope==='branch'?by.filter(b=>String(b.code)===String(OVT.code)):(OVT.scope==='zone'?by.filter(b=>b.zone===OVT.zone):null);
-  /* แผนรายสาขาไม่มีรหัส จับคู่ด้วยชื่อ (ตัดช่องว่าง) */
-  const plan=(mm,bs)=>{ const pb=(DETAIL[mm]||{}).planBranches||[]; let t=0,n=0;
-    bs.forEach(b=>{ const p=pb.find(x=>nm(x.name)===nm(b.name)); if(p&&p.plan){ t+=p.plan; n++; } }); return n?t/1e6:null; };
+  /* แผนรายสาขา: ใช้ช่อง plan ของยอดรายสาขา (จับด้วยรหัส) ไม่มีค่อยจับชื่อในตารางแผน (ตัดช่องว่าง) */
+  const plan=(mm,bs)=>{ const dd=DETAIL[mm]||{}, br=dd.branchRows||[], pb=dd.planBranches||[]; let t=0,n=0;
+    bs.forEach(b=>{ const r=br.find(x=>String(x.code)===String(b.code));
+      const p=r&&r.plan?r.plan:(pb.find(x=>nm(x.name)===nm(b.name))||{}).plan; if(p){ t+=p; n++; } }); return n?t/1e6:null; };
   const rows=months.map(mm=>{
     if(!list){ const r=MONTHLY.find(x=>x.m===mm); return {m:mm,a:r.sales,ly:r.ly,bud:r.budget}; }
     let t=0,l=0,ht=0,hl=0; const br=(DETAIL[mm]||{}).branchRows||[];
@@ -2788,20 +2807,39 @@ function ovTrendHtml(){
   const A=rows.map(r=>r.a), R=rows.map(ref), MS=mm=>MONTH_EN[mm-1].slice(0,3);
   const gr=r=>{ const b=ref(r); return (r.a!=null&&b)?(r.a/b-1)*100:null; };
   const pills=`<div class="ovpw"><div class="ovpills" style="--n:${rows.length}"><span></span>${rows.map(r=>`<span class="mh">${MS(r.m)}</span>`).join('')}<span class="rl">${MODES.find(q=>q[0]===OVT.mode)[1]}</span>${rows.map(r=>`<span>${pill(gr(r))}</span>`).join('')}</div></div>`;
-  const note=OVT.scope!=='all'&&OVT.mode==='bud'&&R.every(v=>v==null)?'<div class="note">ขอบเขตนี้ยังไม่มีแผนรายสาขา</div>':'';
+  const miss=OVT.mode==='lm'?[]:rows.filter((r,i)=>R[i]==null).map(r=>MS(r.m));
+  const note=miss.length?`<div class="note">ไม่มี${OVT.mode==='bud'?'แผน':'ยอด LY '}${OVT.scope==='all'?'':'รายสาขา'}ของ ${miss.join(', ')}${OVT.mode==='bud'&&OVT.scope!=='all'?' (แผนรายสาขาในไฟล์ส่งยอดเริ่มเดือน เม.ย.)':''}</div>`:'';
   return head+`<div class="ovcap">${cap}</div><div class="ovchart">${ovLine(rows.map(r=>MS(r.m)+' '+YEAR),A,R,refN)}</div>`+
     `<div class="ovleg"><span><i style="border-color:#2563EB"></i>Actual</span><span><i style="border-color:#94A3B8;border-top-style:dashed"></i>${refN}</span></div>`+pills+note;
 }
+/* ยอดขายรายสาขารายเดือน เรียงตามเดือนล่าสุด · แสดง 10 อันดับ กดดูทั้งหมดได้ */
+const OVB={dir:'top',all:false};
+function ovBrHtml(){
+  const S=SCP||{}, m=S.multi?S.last:curM, by=brOfYear(); if(!by.length) return '';
+  const MS=mm=>MONTH_EN[mm-1].slice(0,3), months=MONTHLY.filter(r=>r.m<=m&&r.sales!=null).map(r=>r.m).sort((a,b)=>a-b);
+  const rows=by.map(b=>{ const v=months.map(mm=>brTy(b,mm)/1e6), has=v.filter(x=>x>0), now=brTy(b,m), ly=((b.m&&b.m[m])||{}).ly||0;
+    return {b,v,now,avg:has.length?has.reduce((a,c)=>a+c,0)/has.length:0,g:ly>0&&now>0?(now/ly-1)*100:null}; }).filter(r=>r.now>0);
+  rows.sort((p,q)=>OVB.dir==='top'?q.now-p.now:p.now-q.now);
+  const shown=OVB.all?rows:rows.slice(0,10), f=v=>v>0?v.toFixed(2):'—';
+  return `<div class="ovth"><h3>Branch detail Sales — ${MS(months[0]||m)} to ${MS(m)} ${YEAR}</h3><span class="ovseg">${[['top','Top 10'],['bot','Bottom 10']].map(([k,t])=>`<button type="button" class="${OVB.dir===k?'on':''}" data-ovbr="${k}">${t}</button>`).join('')}</span></div>
+    <div class="ovsub">เรียงตามยอดขาย ${MONTH_TH[m-1]} ${OVB.dir==='top'?'มาก → น้อย':'น้อย → มาก'} · ล้านบาท · ${rows.length} สาขาที่มียอดเดือนนี้ · กดชื่อสาขาเพื่อดูรายละเอียด</div>
+    <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th><th>Branch</th>${months.map(mm=>`<th class="n">${MS(mm)}</th>`).join('')}<th class="n">Avg</th><th class="n">vs LY ${MS(m)}</th></tr>
+    ${shown.map((r,i)=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td><td>${r.b.code} ${r.b.name}</td>${r.v.map(v=>`<td class="n">${f(v)}</td>`).join('')}<td class="n"><b>${f(r.avg)}</b></td><td class="n">${pill(r.g)}</td></tr>`).join('')}</table></div>
+    ${rows.length>10?`<button type="button" class="ovmore ${OVB.all?'on':''}" data-ovbrall="1">${OVB.all?'แสดงแค่ 10 อันดับ':'ดูทั้งหมด '+rows.length+' สาขา'} <i>⌄</i></button>`:''}`;
+}
 /* วาดใหม่เฉพาะการ์ด · เลือกโซนอยู่ต้องใช้ข้อมูลของโซนเหมือนตอนสร้างหน้า */
-function ovTrendRender(){ const el=document.getElementById('ovTrend'); if(!el) return;
-  if(FILT.zone==='all'){ el.innerHTML=ovTrendHtml(); return; }
+function ovRender(id,fn){ const el=document.getElementById(id); if(!el) return;
+  if(FILT.zone==='all'){ el.innerHTML=fn(); return; }
   const M0=MONTHLY, D0=DETAIL, z=zoneData(); MONTHLY=z.mon; DETAIL=z.det;
-  try{ el.innerHTML=ovTrendHtml(); } finally { MONTHLY=M0; DETAIL=D0; } }
+  try{ el.innerHTML=fn(); } finally { MONTHLY=M0; DETAIL=D0; } }
+const ovTrendRender=()=>ovRender('ovTrend',ovTrendHtml);
 document.addEventListener('click',e=>{
   const x=e.target.closest('[data-ovx]');
   if(x){ const card=x.closest('.ovc'), p=card&&card.querySelector('[data-ovp="'+x.dataset.ovx+'"]'); if(!p) return;
     p.hidden=!p.hidden; card.querySelectorAll('[data-ovx="'+x.dataset.ovx+'"]').forEach(b=>b.classList.toggle('on',!p.hidden)); return; }
   const md=e.target.closest('[data-ovmode]'); if(md){ OVT.mode=md.dataset.ovmode; ovTrendRender(); return; }
+  const bd=e.target.closest('[data-ovbr]'); if(bd){ OVB.dir=bd.dataset.ovbr; OVB.all=false; ovRender('ovBranch',ovBrHtml); return; }
+  if(e.target.closest('[data-ovbrall]')){ OVB.all=!OVB.all; ovRender('ovBranch',ovBrHtml); return; }
   const sc=e.target.closest('[data-ovscope]');
   if(sc){ OVT.scope=sc.dataset.ovscope; const by=brOfYear();
     if(OVT.scope==='branch'&&!by.some(b=>String(b.code)===String(OVT.code))) OVT.code=(by.slice().sort((p,q)=>String(p.code).localeCompare(String(q.code)))[0]||{}).code||'';
@@ -3192,21 +3230,21 @@ function buildMain(m){
         const dlt=(v,t)=>v==null?'<div class="d">—</div>':`<div class="d ${v>=0?'pos':'neg'}">${v>=0?'+'+v.toFixed(1)+'%':'('+Math.abs(v).toFixed(1)+'%)'} ${t}</div>`;
         /* data-kc + .kv ซ่อน: หน้ารวมหัวข้อดึงตัวเลขไปแสดงบนการ์ดหัวข้อ */
         const kpiB=(h,n,v,t,kcL)=>`<div class="ovk"${kcL?` data-kc="${kcL}"`:''}><div class="h">${h}</div><div class="n">${n}</div>${dlt(v,t)}${kcL&&v!=null?`<span class="kv ${cls(v)}" hidden>${sgn(v)}</span>`:''}</div>`;
-        /* จำนวนสาขา: กดดูรายเดือน และสาขาที่ปิด (มียอดเดือนเดียวกันปีก่อน แต่ปีนี้ไม่มียอด) */
-        const byY=brOfYear();
-        const closed=byY.filter(b=>{ const x=b.m&&b.m[m]; return x&&x.ly>0&&!(x.ty>0)&&!((d.branchRows||[]).some(r=>String(r.code)===String(b.code)&&r.sales>0)); });
+        /* จำนวนสาขา: กดดูรายเดือน · สาขาเปิดใหม่ / ปิด แยกตามเดือน */
+        const byY=brOfYear(), MS=mm=>MONTH_EN[mm-1].slice(0,3), OC=storeMoves(m);
         const stM=MONTHLY.filter(r=>r.m<=m&&r.sales!=null).map(r=>{ const dd=DETAIL[r.m]||{};
-          const now=(dd.stores&&dd.stores.now)||byY.filter(b=>b.m&&b.m[r.m]&&b.m[r.m].ty>0).length||null;
+          const now=(dd.stores&&dd.stores.now)||byY.filter(b=>brTy(b,r.m)>0).length||null;
           const ly=(dd.stores&&dd.stores.ly)||byY.filter(b=>b.m&&b.m[r.m]&&b.m[r.m].ly>0).length||null; return {m:r.m,now,ly}; });
-        const MS=mm=>MONTH_EN[mm-1].slice(0,3);
         const stTbl=`<div class="scroll"><table><tr><th></th>${stM.map(r=>`<th class="n">${MS(r.m)}</th>`).join('')}</tr>
           <tr><td>${YEAR}</td>${stM.map(r=>`<td class="n"><b>${r.now??'—'}</b></td>`).join('')}</tr>
           <tr><td>${YEAR-1} (LY)</td>${stM.map(r=>`<td class="n">${r.ly??'—'}</td>`).join('')}</tr></table></div>`;
-        const clList=closed.length?`<div class="ovcl"><div class="h">ปิดแล้ว · มียอด ${MONTH_TH[m-1]} ${YEAR-1} แต่ไม่มียอด ${YEAR} · ${closed.length} สาขา</div>${closed.map(b=>`<span>${b.code} ${b.name}</span>`).join('')}</div>`:'';
+        const mvRows=(o,cl)=>Object.keys(o).map(Number).sort((a,b)=>a-b).map(k=>`<div class="ovmv"><b class="${cl}">${k===0?'Before '+YEAR:MS(k)}</b><span>${o[k].map(x=>`${x.code} ${x.name}${x.note?` <i>(${x.note})</i>`:''}`).join(', ')}</span></div>`).join('');
+        const mv=(Object.keys(OC.opened).length?`<div class="ovmvh">Branches opened, by month</div>${mvRows(OC.opened,'pos')}`:'')+
+          (Object.keys(OC.closed).length?`<div class="ovmvh">Branches closed, by month</div>${mvRows(OC.closed,'neg')}`:'');
         const cStores=`<div class="ovc acc"><div class="ovlab">No. of Stores</div>
           <div class="ovbig">${storesNow??'—'}<small>${YEAR}</small>${storesLy!=null?`<span class="ovly">${storesLy}<small>${YEAR-1} (LY)</small></span>`:''}</div>
-          ${stM.length>1||closed.length?`<button type="button" class="ovmore" data-ovx="st">See ${MS(stM[0]?stM[0].m:m)}–${MS(m)} comparison${closed.length?' & closures':''} <i>⌄</i></button>
-          <div class="ovx one" data-ovp="st" hidden>${stTbl}${clList}</div>`:''}</div>`;
+          ${stM.length>1||mv?`<button type="button" class="ovmore" data-ovx="st">See ${MS(stM[0]?stM[0].m:m)}–${MS(m)} comparison${Object.keys(OC.closed).length?' & closures':''} <i>⌄</i></button>
+          <div class="ovx one" data-ovp="st" hidden>${stTbl}${mv}</div>`:''}</div>`;
 
         /* ยอดแยกช่องทาง: Dine in · Takeaway · Delivery (ไฟล์เดือนที่ไม่มียอดแยก ใช้ 2 ก้อน) · คำอธิบายเรียงลงมา */
         const split3=ch&&ch.store>0&&ch.take!=null;
@@ -3217,9 +3255,9 @@ function buildMain(m){
         const stack=segs.length?`<div class="kstack">${segs.map(g=>`<span class="${g.c}" style="flex:${g.v}" data-tip="${g.n}\n${M2(g.v)} · ${pc3(g.v)} ของยอดขาย"></span>`).join('')}</div>
           <div class="klegend">${segs.map(g=>`<span class="${g.c}"><i></i><b>${M2(g.v)}</b> ${g.n} ${pc3(g.v)}</span>`).join('')}</div>`:'';
         const cov=S.multi&&S.br&&S.br.ms.length<S.n?`<div class="kcov">แยกช่องทางจากยอดรายสาขา ${RNG(S.br.ms)} (${S.br.ms.length} จาก ${S.n} เดือน)</div>`:'';
-        const prog=ach==null?'':`<div class="kprog" data-tip="ทำได้ ${ach.toFixed(1)}% ของแผน\nActual ${M2(BA.s)} · Budget ${M2(BA.b)}"><div class="kpt"><i class="${ach>=100?'ok':'bad'}" style="width:${Math.min(100,ach).toFixed(1)}%"></i></div>
-            <div class="kpl"><span>ทำได้ <b>${ach.toFixed(1)}%</b> ของแผน</span><span>100%</span></div></div>`;
-        const LMn=S.multi?'Prior period':'LM';
+        /* SSSG: รวมเฉพาะสาขาที่มียอดทั้ง 2 ปี ไม่นับสาขาปิด (ไม่มียอดรายสาขา ใช้ตัวเลขจากไฟล์) */
+        const SSC=(()=>{ let ty=0,ly=0,n=0; (S.multi?S.ms:[m]).forEach(mm=>{ const x=sssgCalc(mm); if(x){ ty+=x.ty; ly+=x.ly; n=Math.max(n,x.n); } });
+          return ly?{ty,ly,g:(ty/ly-1)*100,n}:null; })();
         const cSales=`<div class="ovc acc" data-kc="Total Sales"><span class="kv" hidden>฿${cur.sales.toFixed(1)}M</span>
           <div class="ovrow">
             <div><div class="ovlab">Actual Sales${S.multi?' · '+S.lab:''}</div><div class="ovbig">${M1(cur.sales)}</div><div class="ovsub">LY ${M1(cur.ly)}</div></div>
@@ -3227,16 +3265,10 @@ function buildMain(m){
             <div class="ovkpis">
               ${kpiB('YoY',M1(cur.ly),cur.ly!=null?yoy:null,'vs LY')}
               ${kpiB('Budget',BA?M1(BA.b):'—',BA?vbA:null,'vs Budget'+(BA?BA.note:''),'vs Budget')}
-              ${kpiB('SSSG',ssTy!=null?M1(ssTy):'—',cur.sssg,'same-store','Same Store')}
-              <button type="button" class="ovchev" data-ovx="sa" aria-label="ดูรายละเอียดยอดขาย">⌄</button>
+              ${SSC?kpiB('SSSG',M1(SSC.ty),SSC.g,'same-store · '+SSC.n+' สาขา','Same Store'):kpiB('SSSG',ssTy!=null?M1(ssTy):'—',cur.sssg,'same-store','Same Store')}
             </div></div>
-          <div class="ovx" data-ovp="sa" hidden>
-            <div class="ovbox"><div class="h">vs ${LMn} (MoM)</div><div class="ovbrow"><span>${prevSales!=null?LMn+' '+(PVL?PVL+' ':'')+M1(prevSales):'ไม่มียอด '+LMn}</span>${pill(cur.mom)}</div>
-              ${prevSales!=null?bars([{l:S.labS,v:cur.sales,t:M2(cur.sales)},{l:PVL,v:prevSales,t:M2(prevSales),dim:1}]):''}</div>
-            ${BA?`<div class="ovbox"><div class="h">vs Budget</div>${prog}<div class="ovbrow"><span>Actual ${M1(BA.s)} · Budget ${M1(BA.b)}${BA.note}</span></div></div>`:''}
-            ${ssTy!=null&&ssLy!=null?`<div class="ovbox"><div class="h">Same-store sales (SSSG)</div>${bars([{l:String(YEAR),v:ssTy,t:M2(ssTy)},{l:YEAR-1+' (LY)',v:ssLy,t:M2(ssLy),dim:1}])}<div class="ovbrow"><span>${d.stores&&d.stores.sameStore?d.stores.sameStore+' สาขา Same Store':'เทียบเดือนเดียวกัน LY'}</span>${pill(cur.sssg)}</div></div>`:''}
-          </div></div>`;
-        return `<div class="ovstack">${cStores}${cSales}<div class="ovc" id="ovTrend">${ovTrendHtml()}</div></div>`;
+          </div>`;
+        return `<div class="ovstack">${cStores}${cSales}<div class="ovc" id="ovTrend">${ovTrendHtml()}</div><div class="ovc" id="ovBranch">${ovBrHtml()}</div></div>`;
       })()}`));
     /* Sales Mix + Customers & Branches แยกเป็นอีกหน้า */
     out.push(sec('salesmix','Sales Mix & Customers — '+S.titleEn,'',ovBottom(m,rows,ch,d)));
