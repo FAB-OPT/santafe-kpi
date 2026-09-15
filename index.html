@@ -1160,6 +1160,10 @@ body.present .bar .datachip{font-size:15px;padding:4px 12px}
 .pltable td.cbest{background:#ECFDF5!important;color:#047857;font-weight:700}
 .pltable td.cworst{background:#FFF1F2!important;color:#BE123C;font-weight:700}
 .pltable td.cbest .tiny,.pltable td.cworst .tiny{color:inherit;opacity:.85}
+.pltable td.neg{color:var(--bad)}
+.pltable td.neg2{color:#991B1B;font-weight:800;background:#FEE2E2}
+.pltable td.pos{color:var(--good)}
+.pltable td.pos2{color:#065F46;font-weight:800;background:#D1FAE5}
 body.present .cmpchip{font-size:15px}
 /* ---- ช่วงเวลา + ลูกค้าและบิลเฉลี่ย ---- */
 .kcov{font-size:11px;color:var(--faint);margin-top:6px}
@@ -1736,7 +1740,12 @@ function plSection(m){
   /* ช่วงหลายเดือน: แยกคอลัมน์รายเดือน (ยอด · %) ก่อนคอลัมน์รวม เหมือนงบในไฟล์ */
   const split=!cmpMode&&months.length>1;
   const MV=split?months.map(mm=>plVals(src,[mm])):[];
-  const mcells=it=>MV.map(v=>`<td class="n">${v?fm(v[it.index]):'—'}</td><td class="n mute">${v?pc(v[it.index],v[0]||1):'—'}</td>`).join('');
+  /* ติดลบ = แดง · ติดลบเกิน 5% ของรายได้ = แดงเข้ม · บรรทัดกำไรติดบวก = เขียว · เกิน 5% ของรายได้ = เขียวเข้ม
+     (ต้นทุนเป็นบวกเสมอ จึงไม่ใส่สีเขียว) */
+  const PIDS=['gp1','gp2','gp3','op','net-bd','net'];
+  const ncls=(v,base,isP)=>v==null?'':(v<0?((base&&v/base<-0.05)?'neg2':'neg'):((isP&&v>0)?((base&&v/base>0.05)?'pos2':'pos'):''));
+  const mcells=it=>MV.map(v=>{ const x=v?v[it.index]:null, c=v?ncls(x,v[0],PIDS.includes(it.id)):'';
+    return `<td class="n ${c}">${v?fm(x):'—'}</td><td class="n ${c||'mute'}">${v?pc(x,v[0]||1):'—'}</td>`; }).join('');
   const mains=items.filter(x=>x.depth===0);
   const sortKids=(kids)=> PLS.sort==='desc' ? kids.slice().sort((a,b)=>Math.abs(cur[b.index])-Math.abs(cur[a.index])) : kids;
   mains.forEach(mn=>{
@@ -1761,13 +1770,13 @@ function plSection(m){
     }
     rowsOut.push(`<tr class="${mn.highlight?'plhl':'plmain'}" data-id="${mn.id}">
       <td>${mn.hasKids?`<button class="pltg" data-tg="${mn.id}" title="พับ/กาง">${open?'▾':'▸'}</button>`:'<span class="pltg-sp"></span>'}${plLabel(mn)}${mn.hasKids?` <span class="plkids">(${kids.length})</span>`:''}</td>${mcells(mn)}
-      <td class="n ${PROFIT_IDS.includes(mn.id)?cls(val):''}">${fm(val)}</td><td class="n">${pc(val,rev)}</td>
+      <td class="n ${ncls(val,rev,PROFIT_IDS.includes(mn.id))}">${fm(val)}</td><td class="n ${ncls(val,rev,PROFIT_IDS.includes(mn.id))}">${pc(val,rev)}</td>
       ${prev?`<td class="n">${fm(prev[mn.index])}</td><td class="n ${good(Math.round((val-prev[mn.index])*1e6))}">${dl(val,prev[mn.index])}</td>`:''}
       ${ly?`<td class="n">${fm(ly[mn.index])}</td><td class="n ${good(Math.round((val-ly[mn.index])*1e6))}">${dl(val,ly[mn.index])}</td>`:''}
     </tr>`);
     if(open) kids.forEach(k=>{ const v=cur[k.index];
       rowsOut.push(`<tr class="plsub" data-parent="${mn.id}"><td><span class="plsub-in">${plLabel(k)}</span></td>${mcells(k)}
-        <td class="n">${fm(v)}</td><td class="n">${pc(v,rev)}</td>
+        <td class="n ${ncls(v,rev)}">${fm(v)}</td><td class="n ${ncls(v,rev)}">${pc(v,rev)}</td>
         ${prev?`<td class="n">${fm(prev[k.index])}</td><td class="n ${good(Math.round((v-prev[k.index])*1e6))}">${dl(v,prev[k.index])}</td>`:''}
         ${ly?`<td class="n">${fm(ly[k.index])}</td><td class="n ${good(Math.round((v-ly[k.index])*1e6))}">${dl(v,ly[k.index])}</td>`:''}</tr>`); });
   });
