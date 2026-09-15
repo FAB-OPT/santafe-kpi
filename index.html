@@ -1613,7 +1613,7 @@ const EMPTY = t => `<div class="empty">ยังไม่มีข้อมู�
 
 
 /* ========================= P&L ผังบัญชีเต็ม (ข้อ 5) ========================= */
-const PLS={showSub:true, cmpLM:true, cmpLY:false, sort:'chart', branch:'all', open:{}, cmp:[]};
+const PLS={showSub:true, cmpLM:true, cmpLY:false, sort:'chart', branch:'all', open:{}, cmp:[], closed:false};
 const PL_TH={revenue:'รายได้รวม','rev-food':'รายได้อาหารและเครื่องดื่ม','rev-other':'รายได้อื่น',
   cogs:'ต้นทุนขาย (COGS)','cogs-fresh':'วัตถุดิบสด','cogs-semi':'กึ่งสำเร็จรูป','cogs-frozen':'แช่แข็ง','cogs-dry':'ของแห้ง','cogs-bev':'เครื่องดื่มและของหวาน','cogs-misc':'ค่าใช้จ่ายเบ็ดเตล็ด','cogs-pack':'บรรจุภัณฑ์','cogs-finished':'สินค้าสำเร็จรูป','cogs-gas':'แก๊ส','cogs-transport':'ขนส่ง',
   gp1:'กำไรขั้นต้น (หลัง COGS)', labor:'ค่าแรง','labor-mgr':'เงินเดือนผู้จัดการ','labor-staff':'เงินเดือนพนักงาน','labor-edu':'สนับสนุนการศึกษา','labor-bonus':'โบนัส','labor-contrib':'สมทบกองทุน','labor-uniform':'ยูนิฟอร์ม','labor-training':'ฝึกอบรม','labor-welfare':'สวัสดิการ',
@@ -1713,6 +1713,7 @@ function plSection(m){
       ${cmpMode?'<button class="btn small" id="plCmpClear">ล้างการเทียบ</button>':''}
       <label><input type="checkbox" id="plLM" ${PLS.cmpLM&&!cmpMode?'checked':''} ${cmpMode?'disabled':''}> เทียบ${months.length===1?'เดือน':'ช่วง'}ก่อน${pm.length?` (${RNG(pm)} ${YEAR})`:''}</label>
       <label><input type="checkbox" id="plLY" ${PLS.cmpLY&&lyHas&&!cmpMode?'checked':''} ${!lyHas||cmpMode?'disabled':''}> เทียบปีก่อน (${RNG(months)} ${YEAR-1})${!lyHas?' <span class="hint">(ไม่มีข้อมูลปีก่อนของเดือนนี้)</span>':''}</label>
+      ${isJD()&&JD_CLOSED.size?`<label title="สาขาที่ไม่มีงบในเดือนล่าสุดของไฟล์"><input type="checkbox" id="plClosed" ${PLS.closed?'checked':''}> รวมสาขาปิด (${JD_CLOSED.size})</label>`:''}
       <label>หมวดย่อย <select id="plSort"><option value="chart" ${PLS.sort==='chart'?'selected':''}>ตามผังบัญชี</option><option value="desc" ${PLS.sort==='desc'?'selected':''}>มาก → น้อย</option></select></label>
       <button class="btn small" id="plToggleAll">${PLS.showSub?'ซ่อนหมวดย่อยทั้งหมด':'แสดงหมวดย่อยทั้งหมด'}</button>
       <button class="btn small" id="plmToggle">${PLM.on?'ซ่อนตารางสาขา × เดือน':'ตารางสาขา × เดือน'}</button>
@@ -1758,6 +1759,7 @@ function rebuildPL(){
 function bindPL(){
   const r=()=>rebuildPL();
   const b=$('#plBranch'); if(b) b.onchange=e=>{ PLS.branch=e.target.value; r(); };
+  const cl=$('#plClosed'); if(cl) cl.onchange=e=>{ PLS.closed=e.target.checked; build(curM); };   // กระทบภาพรวมและกำไรรายสาขาด้วย
   const lm=$('#plLM'); if(lm) lm.onchange=e=>{ PLS.cmpLM=e.target.checked; r(); };
   const ly=$('#plLY'); if(ly) ly.onchange=e=>{ PLS.cmpLY=e.target.checked; r(); };
   const so=$('#plSort'); if(so) so.onchange=e=>{ PLS.sort=e.target.value; r(); };
@@ -2652,6 +2654,10 @@ function drawBranch(code,target){
 }
 /* ผังบัญชีเต็ม = ข้อมูลที่ฝังในเว็บ + เดือนที่นำเข้าจากไฟล์ PL (เดือนที่นำเข้าชนะ) */
 let PNL_BASE=null;
+/* Jaedang: สาขาปิด = สาขาที่ไม่มีงบในเดือนล่าสุดของไฟล์ · ไม่นับในภาพรวม เว้นแต่ติ๊ก "รวมสาขาปิด" */
+let JD_CLOSED=new Set();
+const isJD=()=>typeof DATA_BRAND!=='undefined'&&DATA_BRAND==='jd';
+const jdOpenB=list=>(isJD()&&!PLS.closed&&JD_CLOSED.size&&list)?list.filter(b=>!JD_CLOSED.has(String(b.code))):list;
 function syncPnl(){
   if(!EXTRA) return;
   if(!PNL_BASE||(EXTRA.pnlFull&&!EXTRA.pnlFull.__merged&&EXTRA.pnlFull!==PNL_BASE)) PNL_BASE=EXTRA.pnlFull||null;
@@ -2667,6 +2673,15 @@ function syncPnl(){
     if(pf.actual) ly[k]=pf.actual;
     Object.entries(pf.branch||{}).forEach(([c,a])=>{ (branchLY[c]=branchLY[c]||{})[k]=a; }); });
   const last=Math.max(0,...K.map((k,i)=>actual[k]?i+1:0));
+  /* Jaedang: ทั้งบริษัท = รวมงบรายสาขา (ไม่รวมสำนักงานใหญ่ · HQ-MENG · BT-ALL · ครัวกลาง ที่อยู่ในยอดชีตปี) */
+  JD_CLOSED=new Set();
+  if(isJD()&&last){ const lk=K[last-1];
+    Object.keys(branch).forEach(c=>{ if(!branch[c][lk]) JD_CLOSED.add(c); });
+    if(!PLS.closed) JD_CLOSED.forEach(c=>delete branch[c]);
+    K.forEach(k=>{ if(!actual[k]) return; let o=null;
+      Object.values(branch).forEach(b=>{ const a=b[k]; if(!a) return; if(!o) o=new Array(a.length).fill(0); a.forEach((v,i)=>o[i]+=(typeof v==='number'?v:0)); });
+      if(o) actual[k]=o.map(v=>+v.toFixed(6)); else delete actual[k]; });
+  }
   /* เลือกโซน: ตัวเลข "ทั้งบริษัท" ของงบ = รวมงบรายสาขาในโซน (ปีนี้และปีก่อน) */
   let actZ=actual, lyZ=ly;
   if(FILT.zone!=='all'){
@@ -2794,7 +2809,7 @@ function aggBr(list){ const mm=(list||[]).filter(x=>((DETAIL[x]||{}).branchRows|
   return {rows, ms:mm}; }
 /* กำไรรายสาขา รวมหลายเดือน: %กำไร คิดจากยอดรวม · %COS/%COL ถ่วงด้วยยอดขาย */
 function aggPlb(list){ const mm=(list||[]).filter(x=>((DETAIL[x]||{}).plBranches||[]).length); if(!mm.length) return null; const by={};
-  mm.forEach(x=>DETAIL[x].plBranches.forEach(b=>{ const o=by[b.code]||(by[b.code]={code:b.code,name:b.name,sales:0,profit:0,_c:0,_l:0});
+  mm.forEach(x=>jdOpenB(DETAIL[x].plBranches).forEach(b=>{ const o=by[b.code]||(by[b.code]={code:b.code,name:b.name,sales:0,profit:0,_c:0,_l:0});
     o.sales+=b.sales||0; o.profit+=b.profit||0; o._c+=(b.cos||0)*(b.sales||0); o._l+=(b.col||0)*(b.sales||0); }));
   return {rows:Object.values(by).map(o=>Object.assign(o,{gp:o.sales?o.profit/o.sales*100:0,cos:o.sales?o._c/o.sales:0,col:o.sales?o._l/o.sales:0})), ms:mm}; }
 /* Delivery แยกแพลตฟอร์ม รวมหลายเดือน (ต้องมีครบทุกเดือน) */
@@ -3165,10 +3180,10 @@ function buildMain(m){
   }
 
   // 7.2 กำไรรายสาขา (จาก P&L ชีต SUM)
-  let plb=filtZone(d.plBranches), plbM=m;
+  let plb=jdOpenB(filtZone(d.plBranches)), plbM=m;
   if(!(plb&&plb.length)){                       // เดือนนี้ยังไม่มีงบรายสาขา → ใช้เดือนล่าสุดที่มี
     for(let k=m-1;k>=1;k--){ const dd=DETAIL[k]||{};
-      if(dd.plBranches&&dd.plBranches.length){ plb=dd.plBranches; plbM=k; break; } }
+      if(dd.plBranches&&dd.plBranches.length){ plb=jdOpenB(dd.plBranches); plbM=k; break; } }
   }
   if(plb && plb.length){
     const MIN=200000*(S.multi?S.n:1);       // กันสาขาที่ปิด/ยอดเกือบศูนย์ ทำให้ %กำไร เพี้ยน
@@ -3177,7 +3192,7 @@ function buildMain(m){
     const t=(arr)=>`<div class="scroll"><table><tr><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">กำไร</th><th class="n">%กำไร</th><th class="n">%COS</th><th class="n">%COL</th></tr>
       ${arr.map(b=>`<tr class="clk" data-ssbr="${b.code}"><td>${b.name}</td><td class="n">${KB(b.sales)}</td><td class="n ${cls(b.profit)}">${KB(b.profit)}</td><td class="n ${cls(b.gp)}">${b.gp.toFixed(1)}%</td><td class="n">${b.cos.toFixed(1)}%</td><td class="n">${b.col.toFixed(1)}%</td></tr>`).join('')}</table></div>`;
     const loss=plb.filter(b=>b.profit<0);
-    out.push(sec('plbr','Profit by Branch',`${S.multi?S.lab:label(plbM)}${plbM!==m&&!S.multi?' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':''} · ${rank.length} สาขา · เรียงตาม %กำไร${skipped?` (ไม่รวม ${skipped} สาขาที่ยอดต่ำกว่า 0.2M)`:''}`,`
+    out.push(sec('plbr','Profit by Branch',`${S.multi?S.lab:label(plbM)}${plbM!==m&&!S.multi?' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':''} · ${rank.length} สาขา${isJD()&&JD_CLOSED.size?(PLS.closed?' (รวมสาขาปิด)':` (ไม่รวมสาขาปิด ${JD_CLOSED.size} สาขา)`):''} · เรียงตาม %กำไร${skipped?` (ไม่รวม ${skipped} สาขาที่ยอดต่ำกว่า 0.2M)`:''}`,`
       <div class="strip">
         <div class="st pos"><div class="l">สาขาที่กำไร</div><div class="v">${plb.length-loss.length}</div><div class="s">จาก ${plb.length} สาขา</div></div>
         <div class="st neg"><div class="l">สาขาที่ขาดทุน</div><div class="v">${loss.length}</div><div class="s">รวม ${MB(loss.reduce((a,b)=>a+b.profit,0))}</div></div>
