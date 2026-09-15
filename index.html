@@ -159,6 +159,9 @@ tr.clk:hover td{background:var(--surface)} tr.sel td{background:var(--accent-2)}
 .pltable tr.plhl td.pos{color:var(--good)} .pltable tr.plhl td.neg{color:var(--bad)}
 .pltable tr.plsub td{color:var(--ink-2)}
 .pltable tr.plsub td:first-child{padding-left:34px}
+/* ตรึงคอลัมน์รายการไว้ตอนเลื่อนดูเดือนไปทางขวา */
+.scroll > table.pltable td:first-child,.scroll > table.pltable th:first-child{position:sticky;left:0;z-index:2;box-shadow:1px 0 0 var(--hair)}
+.scroll > table.pltable tr.plsub td:first-child,.scroll > table.pltable th:first-child{background:#fff}
 .plsub-in{position:relative}
 .plsub-in::before{content:"";position:absolute;left:-14px;top:50%;width:8px;height:1px;background:var(--faint)}
 .pltg{border:0;background:var(--accent);color:#fff;width:18px;height:18px;border-radius:5px;font-size:11px;line-height:1;margin-right:7px;padding:0;vertical-align:middle}
