@@ -1271,6 +1271,8 @@ body.hub #salesmix .ovbottom{grid-template-columns:minmax(0,1fr)}
 body.hub #salesmix .ovbottom > .panel:nth-child(2){display:none}
 .hv-sub{font-size:13px;color:var(--mute);line-height:1.45}
 .hv-sub b.pos{color:var(--good)} .hv-sub b.neg{color:var(--bad)}
+.hv-tile.off{background:var(--surface)}
+.hv-tile.off .hv-v{color:var(--faint)}
 .hv-d{margin-top:auto;padding-top:10px;border-top:1px solid var(--hair);font-size:12px;color:var(--faint)}
 #topicBar{position:sticky;top:var(--stick,64px);z-index:15;margin:0 0 14px;padding:6px 0 0;background:rgba(250,248,245,.94);backdrop-filter:blur(6px)}
 .tb-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -4478,6 +4480,7 @@ function tabsHtml(t,ids){ const btn=id=>'<button type="button" role="tab" aria-s
 function place(html){ const main=$('#main'), sb=main.querySelector('.scopebar');
   if(sb) sb.insertAdjacentHTML('afterend',html); else main.insertAdjacentHTML('afterbegin',html); }
 function hubApply(){
+  if(typeof BRAND!=='undefined'&&BRAND!=='kt'&&!HOME) return emptyApply();
   const main=$('#main'); if(!main||!main.querySelector('section.slide')) return;
   document.body.classList.add('hub');
   ['hubView','topicBar'].forEach(id=>{ const e=document.getElementById(id); if(e) e.remove(); });
@@ -4509,6 +4512,41 @@ function hubApply(){
 function openTopic(k){ TOPIC=k; TSEC=null; try{ history.pushState({hubT:k},''); }catch(e){} hubApply(); window.scrollTo({top:0}); }
 function goHub(){ TOPIC=null; TSEC=null; try{ if(history.state&&history.state.hubT) history.replaceState(null,''); }catch(e){} hubApply(); window.scrollTo({top:0}); }
 addEventListener('popstate',e=>{ if(!document.body.classList.contains('hub')) return; TOPIC=(e.state&&e.state.hubT)||null; hubApply(); window.scrollTo({top:0}); });
+/* ---- แบรนด์ที่ยังไม่มีข้อมูล (Santa Fe FS · Jaedang): โครงเดียวกับ KT ---- */
+const NEED_T={sales:'แบบฟอร์มส่งยอดขาย · Daily Sale',cust:'แบบฟอร์มส่งยอดขาย (บิล · ลูกค้า)',cost:'ไฟล์ P&L ของแบรนด์',quality:'ผลสำรวจ CEM · ผลตรวจ OSS'};
+const NEED_S={sssg:'แบบฟอร์มส่งยอดขาย + ยอดรายสาขา 2 ปี',rank:'ยอดรายสาขา 2 ปี',mall:'ยอดรายสาขา 2 ปี',zone:'ยอดรายสาขา 2 ปี',
+  delivery:'Daily Sale หรือ แบบฟอร์มส่งยอดขาย',decline:'Daily Sale',plan:'แบบฟอร์มส่งยอดขาย (แผนรายสาขา)',
+  customers:'แบบฟอร์มส่งยอดขาย (บิล · ลูกค้า)',trans:'แบบฟอร์มส่งยอดขาย (บิลรายช่องทาง)',
+  pl:'ไฟล์ P&L (ชีตสรุปของแบรนด์)',cos:'ไฟล์ P&L (ต้นทุนอาหาร · ค่าแรง)',plbr:'ไฟล์ P&L (ชีต SUM รายสาขา)',cem:'ไฟล์ผลสำรวจลูกค้า CEM',oss:'ไฟล์ผลตรวจมาตรฐาน OSS'};
+function emptyApply(){
+  const main=$('#main'); if(!main) return;
+  const b=BRANDS.find(x=>x.k===BRAND)||BRANDS[0];
+  document.body.classList.add('hub');
+  $('#hsub').textContent=b.n; $('#nav').innerHTML=''; const tbar=$('#tabbar'); if(tbar) tbar.innerHTML='';
+  const ico='<img class="bh-ico" src="'+b.ico+'" alt="โลโก้ '+b.n+'">';
+  if(!TOPIC){
+    main.innerHTML='<div id="hubView"><div class="hv-head"><div><div class="hv-t">'+b.n+'</div><div class="hv-s">ยังไม่มีข้อมูลในระบบ · เลือกหัวข้อเพื่อดูว่าต้องใช้ข้อมูลอะไร</div></div></div>'
+      +'<div class="hv-grid">'+TOPICS.map(t=>'<button type="button" class="hv-tile off" data-topic="'+t.k+'"><span class="hv-top"><span class="hv-ic">'+t.ic+'</span><span class="hv-n">'+t.n+'</span><span class="hv-go">›</span></span>'
+        +'<span class="hv-l">ยังไม่มีข้อมูล</span><span class="hv-v">—</span><span class="hv-sub">ต้องใช้: '+NEED_T[t.k]+'</span></button>').join('')+'</div></div>';
+    main.querySelectorAll('[data-topic]').forEach(x=>x.onclick=()=>openTopic(x.dataset.topic));
+  } else {
+    const t=TOPICS.find(x=>x.k===TOPIC)||TOPICS[0], ids=t.ids.slice();
+    if(!ids.includes(TSEC)) TSEC=ids[0];
+    const name=TABN[TSEC]||NAV_SHORT[TSEC]||TSEC;
+    main.innerHTML='<div id="topicBar"><div class="tb-row"><button type="button" class="tb-back" data-hub>‹ ภาพรวม</button><span class="tb-ic">'+t.ic+'</span><h1 class="tb-t">'+t.n+'</h1></div>'
+      +(ids.length>1?'<div class="tb-nav">'+segHtml(t,ids)+'<div class="tb-tabs" role="tablist">'+tabsHtml(t,ids)+'</div></div>':'')+'</div>'
+      +'<section class="slide" id="brandEmpty" data-title="'+b.n+' · '+name+'"><div class="body"><div class="bempty">'
+      +'<div class="be-top">'+ico+'<div class="be-h">ยังไม่มีข้อมูล '+name+' ของ '+b.n+'</div></div>'
+      +'<p>ต้องใช้: <b>'+(NEED_S[TSEC]||NEED_T[t.k])+'</b> · ข้อมูลที่มีตอนนี้ทั้งหมดเป็นของ '+BRANDS[0].n+'</p>'
+      +'<button type="button" class="btn primary" data-brand-go="kt">ไปที่ '+BRANDS[0].n+'</button></div></div></section>';
+    const hb=main.querySelector('[data-hub]'); if(hb) hb.onclick=goHub;
+    main.querySelectorAll('[data-tsec]').forEach(x=>x.onclick=()=>{ TSEC=x.dataset.tsec; emptyApply(); window.scrollTo({top:0}); });
+    main.querySelectorAll('[data-tgrp]').forEach(x=>x.onclick=()=>{ const g=t.groups[+x.dataset.tgrp]; if(g){ TSEC=g.ids[0]; emptyApply(); window.scrollTo({top:0}); } });
+    const go=main.querySelector('[data-brand-go]'); if(go) go.onclick=()=>setBrand('kt');
+  }
+  setStick();
+}
+brandEmpty=function(){ emptyApply(); };
 /* ผูกกับตัวสร้างหน้าเดิม */
 const _bm=buildMain; buildMain=function(m){ const r=_bm(m); hubApply(); return r; };
 goSec=function(id){ const t=TOPICS.find(x=>x.ids.includes(id)); if(!t) return; if(!document.getElementById(id)) build(curM);
