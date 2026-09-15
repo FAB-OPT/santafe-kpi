@@ -1337,8 +1337,11 @@ body.hub #salesmix .ovbottom > .panel:nth-child(2){display:none}
 /* % เทียบใต้ตัวเลขในตาราง: เพิ่ม = เขียว · ลด = แดง */
 .tiny.pos,tr.hi .tiny.pos{color:var(--good)} .tiny.neg,tr.hi .tiny.neg{color:var(--bad)}
 /* หน้า Customers: เว้นระยะการ์ดสรุปกับกล่องช่องทาง และบรรทัดใต้ตัวเลข */
-#customers .strip .st .s{margin-top:6px}
-#customers .custiles{margin-top:18px}
+#customers .strip{margin-bottom:6px}
+#customers .strip .st{padding-top:14px;padding-bottom:14px}
+#customers .strip .st .v{margin:6px 0 8px}
+#customers .strip .st .s{margin-top:0;display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;line-height:1.6}
+#customers .custiles{margin-top:22px}
 #customers .stack1{margin:22px 0 18px}
 #customers .custiles .cuk span{min-width:84px}
 .tb-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
