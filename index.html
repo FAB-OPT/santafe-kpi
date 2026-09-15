@@ -2056,7 +2056,7 @@ function customersSection(m){
   let trend='';
   if(tm.length>=2){
     const labs=tm.map(r=>MONTH_TH[r.m-1]);
-    const cSer=[{name:'ลูกค้า',color:'#D9822D',w:3,label:1,vals:tm.map(r=>r.v.customer)},{name:'บิล',color:'#94A3B8',vals:tm.map(r=>r.v.trans)}];
+    const cSer=[{name:'ลูกค้า',color:'#D9822D',w:3,label:1,vals:tm.map(r=>r.v.customer)},{name:'บิล',color:'#94A3B8',label:1,vals:tm.map(r=>r.v.trans)}];
     trend=`<div class="stack1"><div><h3>ลูกค้าและจำนวนบิล รายเดือน</h3>${lineSeries(labs,cSer,{w:1180,h:260,fmt:v=>(v/1000).toFixed(0)+'K',tipFmt:v=>fmtN(Math.round(v))})}${legendOf(cSer)}</div></div>
       <div class="grp big">รายเดือน</div>
       <div class="scroll"><table><tr><th>เดือน</th><th class="n">Total Trans</th><th class="n">Ticket Avg.</th>${CUS_CH.map(o=>`<th class="n">Ticket ${o.n}</th>`).join('')}<th class="n">Customers</th><th class="n">Customer Avg.</th><th class="n">Per Bill</th></tr>
@@ -2076,9 +2076,9 @@ function customersSection(m){
     const hasCh=list.some(b=>b.trDine||b.trTake||b.trDeli);
     const chHint=hasCh?'':'<div class="hint" style="margin-top:8px">Ticket แยกช่องทางรายสาขา: นำเข้าไฟล์แบบฟอร์มส่งยอดขายอีกครั้ง (ข้อมูลที่นำเข้าไว้ก่อนหน้านี้ยังไม่มีจำนวนบิลแยกช่องทางรายสาขา)</div>';
     btbl=`<div class="grp big">รายสาขา</div>
-    <div class="scroll"><table><tr><th>#</th><th>สาขา</th><th class="n">Total Trans</th><th class="n">Ticket Avg.</th>${hasCh?CUS_CH.map(o=>`<th class="n">Ticket ${o.n}</th>`).join(''):''}<th class="n">Customers</th><th class="n">Customer Avg.</th><th class="n">Per Bill</th></tr>
+    <div class="scroll"><table><tr><th>#</th><th>สาขา</th><th class="n">Total Trans</th><th class="n">Ticket Avg.</th>${CUS_CH.map(o=>`<th class="n">Ticket ${o.n}</th>`).join('')}<th class="n">Customers</th><th class="n">Customer Avg.</th><th class="n">Per Bill</th></tr>
     ${list.map((b,i)=>{ const p=pMap[b.code];
-      return `<tr class="clk" data-ssbr="${b.code}"><td>${i+1}</td><td>${b.code} ${b.name}</td><td class="n">${fN(b.tr)}${vsL(p&&p.tr,b.tr)}</td><td class="n"><b>${fB(b.tk)}</b>${vsL(p&&p.tk,b.tk)}</td>${hasCh?CUS_CH.map((o,j)=>`<td class="n">${fB(tkc(b,j))}${vsL(tkc(p,j),tkc(b,j))}</td>`).join(''):''}<td class="n">${fN(b.cust||null)}${vsL(p&&p.cust,b.cust)}</td><td class="n">${ca(b)==null?'—':f2(ca(b))}${vsL(ca(p),ca(b))}</td><td class="n">${fB(pb(b))}${vsL(pb(p),pb(b))}</td></tr>`; }).join('')}</table></div>${chHint}`; }
+      return `<tr class="clk" data-ssbr="${b.code}"><td>${i+1}</td><td>${b.code} ${b.name}</td><td class="n">${fN(b.tr)}${vsL(p&&p.tr,b.tr)}</td><td class="n"><b>${fB(b.tk)}</b>${vsL(p&&p.tk,b.tk)}</td>${CUS_CH.map((o,j)=>`<td class="n">${fB(tkc(b,j))}${vsL(tkc(p,j),tkc(b,j))}</td>`).join('')}<td class="n">${fN(b.cust||null)}${vsL(p&&p.cust,b.cust)}</td><td class="n">${ca(b)==null?'—':f2(ca(b))}${vsL(ca(p),ca(b))}</td><td class="n">${fB(pb(b))}${vsL(pb(p),pb(b))}</td></tr>`; }).join('')}</table></div>${chHint}`; }
   return sec('customers',T,'',strip+chTiles+trend+btbl);
 }
 
@@ -2184,7 +2184,7 @@ function bindExtra(){
   const sk=$('#ssBack'); if(sk) sk.onclick=()=>{SSS.branch='all'; r();};
   on('#sssg .gsssg .clk','onclick',g=>{const mm=+g.dataset.m; SSS.pickM=SSS.pickM===mm?null:mm; r();});
   on('[data-ssclose]','onclick',()=>{SSS.pickM=null; r();});
-  on('tr[data-ssbr]','onclick',t=>{ if(t.closest('#sssg')){ SSS.branch=t.dataset.ssbr; SSS.pickM=null; goSec('sssg'); } else openBranch(t.dataset.ssbr); });
+  on('tr[data-ssbr]','onclick',t=>{ if(t.closest('#sssg')){ SSS.branch=t.dataset.ssbr; SSS.pickM=null; goSec('sssg'); } else openBranch(t.dataset.ssbr, t.closest('#customers')?'cust':''); });
   // Delivery
   const dm=$('#dlLM'); if(dm) dm.onchange=e=>{DELS.lm=e.target.checked; r();};
   const dy=$('#dlLY'); if(dy) dy.onchange=e=>{DELS.ly=e.target.checked; r();};
@@ -3732,11 +3732,40 @@ function drawBranchPop(code,box){
   /* กราฟเต็มความกว้าง (ตัวอักษรในกราฟอ่านได้) · Delivery แถวเดียว 3 แพลตฟอร์ม · ตารางย้อนหลัง */
   box.innerHTML=`<div class="bp"><div class="bp-kpis">${kpis}</div>${trend}${deli}${tbl}</div>`;
 }
-function openBranch(code){ code=String(code);
+/* ป๊อปอัปสาขาเมื่อกดจากหน้า Customers: เฉพาะหัวข้อบิลและลูกค้า (ชุดเดียวกับการ์ดสรุป) เทียบ LM */
+function drawBranchCust(code,box){
+  const hist=MONTHLY.map(r=>r.m).filter(x=>x<=curM).sort((a,b)=>a-b)
+    .map(mm=>({m:mm,r:((DETAIL[mm]||{}).branchRows||[]).find(x=>String(x.code)===code)})).filter(x=>x.r&&x.r.tr>0);
+  const cur=hist.find(h=>h.m===curM)||hist[hist.length-1];
+  if(!cur){ box.innerHTML='<div class="empty">ยังไม่มีบิลและลูกค้าของสาขานี้</div>'; return; }
+  const b=cur.r, pr=(hist.find(h=>h.m===cur.m-1)||{}).r;
+  const tkOf=x=>x&&x.tr?x.sales/x.tr:null, ca=x=>x&&x.cust&&x.tr?x.cust/x.tr:null, pb=x=>x&&x.cust?x.sales/x.cust:null;
+  const fN=v=>v==null?'—':fmtN(Math.round(v)), fB=v=>v==null?'—':'฿'+fmtN(Math.round(v)), f2=v=>v==null?'—':(+v).toFixed(2);
+  const lm=(a,v)=>(a!=null&&v!=null&&a)?`${pill(pct(a,v))}<span>vs LM</span>`:'';
+  const vs=(a,v)=>{ if(a==null||v==null||!a) return ''; const g=pct(a,v); return `<span class="tiny ${Math.abs(g)<0.05?'':cls(g)}">${sgn(g)} vs LM</span>`; };
+  const tile=(l,v,sub)=>`<div class="bp-k"><div class="bp-l">${l}</div><div class="bp-v">${v}</div><div class="bp-s">${sub||''}</div></div>`;
+  const kpis=[tile('Total Trans',fN(b.tr),lm(pr&&pr.tr,b.tr)), tile('Ticket Avg.',fB(tkOf(b)),lm(tkOf(pr),tkOf(b))),
+    tile('Customers',fN(b.cust||null),lm(pr&&pr.cust,b.cust)), tile('Customer Avg.',ca(b)==null?'—':f2(ca(b)),lm(ca(pr),ca(b))),
+    tile('Per Bill',fB(pb(b)),lm(pb(pr),pb(b)))].join('');
+  const CH=[['dine','trDine','Dine in','#D9822D'],['take','trTake','Takeaway','#7C5CFC'],['deli','trDeli','Delivery','#0F9488']];
+  const hasCh=CH.some(c=>b[c[1]]), totTr=CH.reduce((a,c)=>a+(b[c[1]]||0),0);
+  const chBox=CH.map(([k,tk,n,c])=>{ const t=b[tk]||null, tick=t?b[k]/t:null, pt=pr&&pr[tk]||null, ptick=pt?pr[k]/pt:null;
+    return `<div class="bp-k" style="box-shadow:inset 0 3px 0 ${c}"><div class="bp-l">${n}</div>
+      <div class="bp-s">Total Trans <b>${fN(t)}</b> ${lm(pt,t)}</div><div class="bp-s">Ticket Avg. <b>${fB(tick)}</b> ${lm(ptick,tick)}</div>
+      <div class="bp-s">${totTr&&t?(t/totTr*100).toFixed(1)+'% of Total Trans':''}</div></div>`; }).join('');
+  const tbl=`<div class="bp-card"><div class="bp-h"><span>รายเดือน</span></div><div class="scroll"><table>
+    <tr><th>เดือน</th><th class="n">Total Trans</th><th class="n">Ticket Avg.</th><th class="n">Customers</th><th class="n">Customer Avg.</th><th class="n">Per Bill</th></tr>
+    ${hist.map((h,i)=>{ const x=h.r, q=i>0&&hist[i-1].m===h.m-1?hist[i-1].r:null;
+      return `<tr class="${h.m===cur.m?'hi':''}"><td>${MONTH_TH[h.m-1]}</td><td class="n">${fN(x.tr)}${vs(q&&q.tr,x.tr)}</td><td class="n">${fB(tkOf(x))}${vs(tkOf(q),tkOf(x))}</td><td class="n">${fN(x.cust||null)}${vs(q&&q.cust,x.cust)}</td><td class="n">${ca(x)==null?'—':f2(ca(x))}${vs(ca(q),ca(x))}</td><td class="n">${fB(pb(x))}${vs(pb(q),pb(x))}</td></tr>`; }).join('')}
+    </table></div></div>`;
+  box.innerHTML=`<div class="bp"><div class="bp-kpis" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">${kpis}</div>`+
+    (hasCh?`<div class="bp-kpis" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${chBox}</div>`:'<div class="hint">Total Trans / Ticket Avg. แยกช่องทางของสาขา: นำเข้าไฟล์แบบฟอร์มส่งยอดขายอีกครั้ง</div>')+tbl+`</div>`;
+}
+function openBranch(code,mode){ code=String(code);
   const meta=(BRANCH_META&&BRANCH_META[code])||{}, r=BR_CTX&&BR_CTX.rows.find(x=>String(x.code)===code);
   $('#brmTitle').textContent=code+' '+((r&&r.name)||meta.name||'');
   $('#brmSub').textContent=[meta.zone?'โซน '+meta.zone:'', (SCP&&SCP.lab)||label(curM)].filter(Boolean).join(' · ');
-  const box=$('#brmBody'); drawBranchPop(code,box);
+  const box=$('#brmBody'); if(mode==='cust') drawBranchCust(code,box); else drawBranchPop(code,box);
   const hasPl=!!(EXTRA.pnlFull&&EXTRA.pnlFull.branch&&EXTRA.pnlFull.branch[code]);
   $('#brmPl').hidden=!hasPl; $('#brmExp').hidden=!r;
   $('#brmSssg').onclick=()=>{ closeBranch(); SSS.branch=code; SSS.pickM=null; build(curM); goSec('sssg'); };
