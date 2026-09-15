@@ -162,6 +162,11 @@ tr.clk:hover td{background:var(--surface)} tr.sel td{background:var(--accent-2)}
 /* ตรึงคอลัมน์รายการไว้ตอนเลื่อนดูเดือนไปทางขวา */
 .scroll > table.pltable td:first-child,.scroll > table.pltable th:first-child{position:sticky;left:0;z-index:2;box-shadow:1px 0 0 var(--hair)}
 .scroll > table.pltable tr.plsub td:first-child,.scroll > table.pltable th:first-child{background:#fff}
+/* ตาราง P&L เลื่อนในกรอบของตัวเอง: แถวหัว (รายการ · เดือน) ตรึงไว้ด้านบน และแถบเลื่อนแนวนอนอยู่ในจอเสมอ */
+.scroll:has(> table.pltable){max-height:calc(100vh - 190px);overflow:auto}
+.scroll > table.pltable tr:first-child th{position:sticky;top:0;z-index:3;background:#fff;box-shadow:0 1px 0 var(--line)}
+.scroll > table.pltable tr:first-child th:first-child{z-index:4}
+body.present .scroll:has(> table.pltable){max-height:none}
 .plsub-in{position:relative}
 .plsub-in::before{content:"";position:absolute;left:-14px;top:50%;width:8px;height:1px;background:var(--faint)}
 .pltg{border:0;background:var(--accent);color:#fff;width:18px;height:18px;border-radius:5px;font-size:11px;line-height:1;margin-right:7px;padding:0;vertical-align:middle}
