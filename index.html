@@ -3316,7 +3316,7 @@ function buildMain(m){
             <div class="ovkpis">
               ${kpiB('YoY',M1(cur.ly),cur.ly!=null?yoy:null,'vs LY')}
               ${kpiB('Budget',BA?M1(BA.b):'—',BA?vbA:null,'vs Budget'+(BA?BA.note:''),'vs Budget')}
-              ${kpiB('SSSG',ssTy!=null?M1(ssTy):'—',cur.sssg,'same-store','Same Store')}
+              ${kpiB('SSSG',M1(cur.sales),cur.sssg,'same-store','Same Store')}
             </div></div>
           </div>`;
         return `<div class="ovstack">${cStores}${cSales}<div class="ovc" id="ovTrend">${ovTrendHtml()}</div><div class="ovc" id="ovBranch">${ovBrHtml()}</div></div>`;
