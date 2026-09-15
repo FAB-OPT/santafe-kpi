@@ -1237,6 +1237,59 @@ body.present .secfull{display:none}
 #brModal .legend{font-size:12px;margin-top:4px}
 #brModal .bp-card svg.chart{max-height:260px}
 @media (max-width:760px){.bp-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.bp-plats{grid-template-columns:minmax(0,1fr)}}
+
+/* ================= UX ใหม่: หน้ารวมหัวข้อ → หน้าหมวด ================= */
+body.hub #nav, body.hub .tabbar{display:none!important}
+body.hub .wrap{grid-template-columns:minmax(0,1fr);max-width:1320px;margin-left:auto;margin-right:auto}
+body:not(.present) .hhide{display:none!important}
+body.present #hubView, body.present #topicBar{display:none}
+#hubView{padding:6px 0 12px}
+.hv-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:6px 2px 18px}
+.hv-t{font-size:30px;font-weight:800;letter-spacing:-.01em;color:var(--ink);line-height:1.15}
+.hv-s{font-size:14px;color:var(--mute);margin-top:4px}
+.hv-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.tb-nav{display:flex;align-items:flex-end;gap:14px;margin-top:10px;border-bottom:1px solid var(--line)}
+.tb-nav .tb-tabs{margin-top:0;border-bottom:0;flex:1 1 auto;min-width:0}
+.tb-seg{display:inline-flex;align-self:center;flex:0 0 auto;gap:2px;padding:3px;margin:0 0 6px;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
+.tb-seg button{all:unset;box-sizing:border-box;cursor:pointer;padding:6px 14px;border-radius:7px;font-size:13px;font-weight:700;color:var(--mute);white-space:nowrap;min-height:32px}
+.tb-seg button:hover{color:var(--ink)}
+.tb-seg button.on{background:#fff;color:var(--accent-ink);box-shadow:0 1px 2px rgba(15,23,42,.14)}
+.tb-cap{align-self:center;flex:0 0 auto;font-size:11.5px;font-weight:700;color:var(--faint);padding:0 6px 0 14px;margin-left:8px;border-left:1px solid var(--line);white-space:nowrap}
+.tb-cap:first-child{border-left:0;margin-left:0;padding-left:2px}
+.hv-l{font-size:12.5px;color:var(--faint);margin-top:10px}
+.hv-tile{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:6px;padding:18px 18px 14px;min-height:176px;
+  background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 1px 2px rgba(15,23,42,.05);transition:border-color .15s,box-shadow .15s,transform .15s}
+.hv-tile:hover{border-color:var(--accent);box-shadow:0 12px 26px -16px rgba(15,23,42,.35);transform:translateY(-1px)}
+.hv-tile:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hv-top{display:flex;align-items:center;gap:10px}
+.hv-ic{width:34px;height:34px;border-radius:10px;background:var(--surface);display:grid;place-items:center;font-size:18px;flex:0 0 auto}
+.hv-n{font-size:15px;font-weight:700;color:var(--ink)}
+.hv-go{margin-left:auto;font-size:22px;line-height:1;color:var(--faint)}
+.hv-tile:hover .hv-go{color:var(--accent-ink)}
+.hv-v{font-size:32px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;margin-top:0;line-height:1.1;letter-spacing:-.01em}
+body.hub #salesmix .ovbottom{grid-template-columns:minmax(0,1fr)}
+body.hub #salesmix .ovbottom > .panel:nth-child(2){display:none}
+.hv-sub{font-size:13px;color:var(--mute);line-height:1.45}
+.hv-sub b.pos{color:var(--good)} .hv-sub b.neg{color:var(--bad)}
+.hv-d{margin-top:auto;padding-top:10px;border-top:1px solid var(--hair);font-size:12px;color:var(--faint)}
+#topicBar{position:sticky;top:var(--stick,64px);z-index:15;margin:0 0 14px;padding:6px 0 0;background:rgba(250,248,245,.94);backdrop-filter:blur(6px)}
+.tb-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tb-back{all:unset;box-sizing:border-box;cursor:pointer;font-size:14px;font-weight:600;color:var(--ink);padding:7px 12px;border-radius:9px;border:1px solid var(--line);background:#fff;min-height:36px}
+.tb-back:hover{border-color:var(--ink)}
+.tb-ic{font-size:22px}
+.tb-t{font-size:24px;font-weight:800;margin:0;color:var(--ink);letter-spacing:-.01em}
+.tb-pres{margin-left:auto}
+.tb-tabs{display:flex;gap:2px;margin-top:10px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--line)}
+.tb-tabs::-webkit-scrollbar{display:none}
+.tb-tab{all:unset;box-sizing:border-box;cursor:pointer;white-space:nowrap;padding:10px 14px;font-size:14px;font-weight:600;color:var(--mute);border-bottom:3px solid transparent;margin-bottom:-1px;min-height:44px}
+.tb-tab:hover{color:var(--ink)}
+.tb-tab.on{color:var(--accent-ink);border-bottom-color:var(--accent)}
+body.hub section.slide .bar h2[data-n]::before{display:none}
+@media (max-width:1180px){.hv-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:820px){.hv-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px){.tb-nav{flex-direction:column;align-items:stretch;gap:4px}.tb-seg{display:flex;align-self:stretch}.tb-seg button{flex:1 1 0;text-align:center}}
+@media (max-width:560px){.hv-grid{gap:10px}.hv-tile{min-height:138px;padding:14px 14px 12px}.hv-v{font-size:22px}.hv-d{display:none}.hv-t{font-size:22px}.tb-t{font-size:19px}}
+
 </style>
 </head>
 <body>
@@ -4374,6 +4427,96 @@ $('#exportBtn').onclick=e=>{e.stopPropagation();$('#exportDd').classList.toggle(
 { const _badge=importBadge; importBadge=function(){ _badge();
     const n=document.querySelector('#importBtn .nbadge'), mb=$('#moreBadge'); if(!mb) return;
     mb.textContent=n?n.textContent:''; mb.hidden=!n; }; }
+</script>
+<script>
+/* ================= UX ใหม่: หน้ารวมหัวข้อ → หน้าหมวด ================= */
+(function(){
+const TOPICS=[
+  {k:'sales',ic:'📈',n:'ยอดขาย & สาขา',groups:[
+    {cap:'ภาพรวม',ids:['overview','monthly','sssg']},
+    {cap:'สาขา',ids:['rank','plan','mall','zone','brsales','branches','branchdetail']},
+    {cap:'ช่องทางขาย',ids:['salesmix','delivery','decline']}]},
+  {k:'cust',ic:'👥',n:'ลูกค้า',ids:['customers','trans']},
+  {k:'cost',ic:'📊',n:'ต้นทุน & กำไร',ids:['pl','cos','plbr']},
+  {k:'quality',ic:'⭐',n:'คุณภาพร้าน',ids:['cem','oss']}];
+TOPICS.forEach(t=>{ if(t.groups) t.ids=t.groups.flatMap(g=>g.ids); });
+const TABN={overview:'Overview',monthly:'Trend',sssg:'SSSG',salesmix:'Sales Mix',delivery:'Delivery',decline:'Delivery Declines',
+  rank:'Ranking',plan:'Plan',mall:'Mall Group',zone:'Trade Zone',brsales:'Sales by Branch',branches:'Watchlist',branchdetail:'Branch Explorer',
+  customers:'Customers',trans:'Bills by Channel',pl:'P&L',cos:'COS / COL',plbr:'Profit by Branch',cem:'CEM',oss:'OSS'};
+let TOPIC=null, TSEC=null;
+const T=(sel,root)=>{ const e=(root||document).querySelector(sel); return e?e.textContent.replace(/\s+/g,' ').trim():''; };
+const st=(id,i)=>{ const x=document.querySelectorAll('#'+id+' .strip .st')[i]; if(!x) return null;
+  return {l:T('.l',x),v:T('.v',x),s:T('.s',x),tone:x.classList.contains('neg')?'neg':(x.classList.contains('pos')?'pos':'')}; };
+const kc=lab=>{ const k=[...document.querySelectorAll('#overview .kc')].find(x=>T('.kl',x).indexOf(lab)===0); const v=k&&k.querySelector('.kv');
+  return k?{v:T('.kv',k),tone:v&&/neg/.test(v.className)?'neg':(v&&/pos/.test(v.className)?'pos':'')}:null; };
+const B=(t,tone)=>t?'<b class="'+(tone||'')+'">'+t+'</b>':'';
+function tile(t){
+  switch(t.k){
+    case 'sales': { const a=kc('Total Sales'), b=kc('vs Budget'), c=kc('Same Store'), ok=st('plan',1), q=st('plan',2);
+      const l1=[b&&('vs แผน '+B(b.v,b.tone)), c&&('SSSG '+B(c.v,c.tone))].filter(Boolean).join(' · ');
+      const l2=[ok&&('ถึงแผน '+B(ok.v+' สาขา','pos')), q&&('ต่ำกว่าแผน 10%+ '+B(q.v+' สาขา','neg'))].filter(Boolean).join(' · ');
+      return {v:a&&a.v, l:'ยอดขายรวม', sub:l1+(l2?'<br>'+l2:'')}; }
+    case 'branch': { const p=st('plan',0), ok=st('plan',1), q=st('plan',2);
+      return {v:p&&p.v, l:'ทำได้ตามแผน (ทั้งเครือข่าย)', sub:[ok&&('ถึงแผน '+B(ok.v+' สาขา','pos')), q&&('ต่ำกว่าแผน 10%+ '+B(q.v+' สาขา','neg'))].filter(Boolean).join(' · ')}; }
+    case 'cust': { const a=st('customers',0), b=st('customers',2), c=st('customers',3);
+      return {v:a&&a.v, l:'ลูกค้า', sub:[b&&('บิลเฉลี่ย '+B(b.v)), c&&('ลูกค้า/บิล '+B(c.v))].filter(Boolean).join(' · ')}; }
+    case 'cost': { const xs=document.querySelectorAll('#pl .strip .st'), n=xs[xs.length-1], p=st('cos',3), rv=n&&T('.s',n);
+      return {v:n&&T('.v',n), l:'กำไรสุทธิ', sub:[rv&&B(rv.replace(' ของรายได้','')+' ของรายได้'), p&&('Prime cost '+B(p.v))].filter(Boolean).join(' · ')}; }
+    case 'quality': { const c=st('cem',0), o=st('oss',0);
+      return {v:c&&c.v, l:'CEM เฉลี่ย', sub:[c&&('CEM '+c.s), o&&('OSS '+B(o.v))].filter(Boolean).join(' · ')}; }
+  }
+}
+/* แท็บ: ถ้าหมวดมีกลุ่มย่อย ใส่ป้ายกลุ่มคั่น (ภาพรวม · สาขา · ช่องทางขาย) */
+function tabGroups(t,ids){ if(!t.groups) return null;
+  const gs=t.groups.map((g,i)=>({i,cap:g.cap,ids:g.ids.filter(id=>ids.includes(id))})).filter(g=>g.ids.length);
+  return {gs, cur:gs.find(g=>g.ids.includes(TSEC))||gs[0]}; }
+/* หมวดใหญ่: เลือกกลุ่มก่อน (ภาพรวม · สาขา · ช่องทางขาย) แล้วแสดงแท็บเฉพาะกลุ่มนั้น ไม่ให้แท็บยาวล้นจอ */
+function segHtml(t,ids){ const G=tabGroups(t,ids); if(!G) return '';
+  return '<span class="tb-seg" role="group" aria-label="กลุ่มหัวข้อ">'+G.gs.map(g=>'<button type="button" class="'+(g===G.cur?'on':'')+'" data-tgrp="'+g.i+'">'+g.cap+'</button>').join('')+'</span>'; }
+function tabsHtml(t,ids){ const btn=id=>'<button type="button" role="tab" aria-selected="'+(id===TSEC)+'" class="tb-tab'+(id===TSEC?' on':'')+'" data-tsec="'+id+'">'+(TABN[id]||NAV_SHORT[id]||id)+'</button>';
+  const G=tabGroups(t,ids); return (G?G.cur.ids:ids).map(btn).join(''); }
+function place(html){ const main=$('#main'), sb=main.querySelector('.scopebar');
+  if(sb) sb.insertAdjacentHTML('afterend',html); else main.insertAdjacentHTML('afterbegin',html); }
+function hubApply(){
+  const main=$('#main'); if(!main||!main.querySelector('section.slide')) return;
+  document.body.classList.add('hub');
+  ['hubView','topicBar'].forEach(id=>{ const e=document.getElementById(id); if(e) e.remove(); });
+  const secs=[...main.querySelectorAll('section.slide')]; secs.forEach(x=>x.classList.remove('ghide'));
+  const smh=document.querySelector('#salesmix .bar h2'); if(smh) smh.textContent=smh.textContent.replace('Sales Mix & Customers','Sales Mix');
+  const avail=TOPICS.filter(t=>t.ids.some(id=>document.getElementById(id)));
+  if(TOPIC&&!avail.some(t=>t.k===TOPIC)) TOPIC=null;
+  if(!TOPIC){
+    secs.forEach(x=>x.classList.add('hhide'));
+    const b=(typeof BRANDS!=='undefined'&&BRANDS.find(x=>x.k===BRAND))||{n:'Santa Fe'};
+    place('<div id="hubView"><div class="hv-head"><div><div class="hv-t">'+b.n+'</div><div class="hv-s">'+((SCP&&SCP.lab)||label(curM))+(FILT.zone!=='all'?' · โซน '+FILT.zone:'')+' · เลือกหัวข้อที่ต้องการดู</div></div></div>'
+      +'<div class="hv-grid">'+avail.map(t=>{ const d=tile(t)||{};
+        return '<button type="button" class="hv-tile" data-topic="'+t.k+'"><span class="hv-top"><span class="hv-ic">'+t.ic+'</span><span class="hv-n">'+t.n+'</span><span class="hv-go">›</span></span>'
+          +'<span class="hv-l">'+(d.l||'')+'</span><span class="hv-v">'+(d.v||'—')+'</span><span class="hv-sub">'+(d.sub||'')+'</span></button>'; }).join('')+'</div></div>');
+    document.querySelectorAll('[data-topic]').forEach(x=>x.onclick=()=>openTopic(x.dataset.topic));
+  } else {
+    const t=TOPICS.find(x=>x.k===TOPIC), ids=t.ids.filter(id=>document.getElementById(id));
+    if(!ids.includes(TSEC)) TSEC=ids[0];
+    secs.forEach(x=>x.classList.toggle('hhide',x.id!==TSEC));
+    place('<div id="topicBar"><div class="tb-row"><button type="button" class="tb-back" data-hub>‹ ภาพรวม</button><span class="tb-ic">'+t.ic+'</span><h1 class="tb-t">'+t.n+'</h1>'
+      +(ids.length>1?'<button type="button" class="btn small tb-pres" data-tpres>▶ พรีเซนต์หมวดนี้</button>':'')+'</div>'
+      +(ids.length>1?'<div class="tb-nav">'+segHtml(t,ids)+'<div class="tb-tabs" role="tablist">'+tabsHtml(t,ids)+'</div></div>':'')+'</div>');
+    const hb=document.querySelector('[data-hub]'); if(hb) hb.onclick=goHub;
+    document.querySelectorAll('[data-tsec]').forEach(x=>x.onclick=()=>{ TSEC=x.dataset.tsec; hubApply(); window.scrollTo({top:0}); });
+    document.querySelectorAll('[data-tgrp]').forEach(x=>x.onclick=()=>{ const g=t.groups[+x.dataset.tgrp], first=g&&g.ids.find(id=>ids.includes(id)); if(first){ TSEC=first; hubApply(); window.scrollTo({top:0}); } });
+    const tp=document.querySelector('[data-tpres]'); if(tp) tp.onclick=()=>startPresent(ids);
+  }
+}
+function openTopic(k){ TOPIC=k; TSEC=null; try{ history.pushState({hubT:k},''); }catch(e){} hubApply(); window.scrollTo({top:0}); }
+function goHub(){ TOPIC=null; TSEC=null; try{ if(history.state&&history.state.hubT) history.replaceState(null,''); }catch(e){} hubApply(); window.scrollTo({top:0}); }
+addEventListener('popstate',e=>{ if(!document.body.classList.contains('hub')) return; TOPIC=(e.state&&e.state.hubT)||null; hubApply(); window.scrollTo({top:0}); });
+/* ผูกกับตัวสร้างหน้าเดิม */
+const _bm=buildMain; buildMain=function(m){ const r=_bm(m); hubApply(); return r; };
+goSec=function(id){ const t=TOPICS.find(x=>x.ids.includes(id)); if(!t) return; if(!document.getElementById(id)) build(curM);
+  TOPIC=t.k; TSEC=id; hubApply(); window.scrollTo({top:0}); };
+const _sb=setBrand; setBrand=function(k){ TOPIC=null; TSEC=null; document.body.classList.remove('hub'); return _sb(k); };
+const _gh=goHome; goHome=function(){ TOPIC=null; TSEC=null; document.body.classList.remove('hub'); return _gh(); };
+window.__hub={openTopic,goHub,TOPICS};
+})();
 </script>
 </body>
 </html>
