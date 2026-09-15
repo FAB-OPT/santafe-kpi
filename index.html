@@ -4112,10 +4112,13 @@ function parseSalesForm(wb){
   const sheets=monthSheetsOf(wb), data={}, warn=[];
 
   for(const m of Object.keys(sheets).map(Number)){
-    const rs=rows(sheets[m]); const list=[]; let inSF=false;
+    const rs=rows(sheets[m]); const list=[];
+    /* ชีต ม.ค.–มี.ค. ไม่มีแถวหัว "Santa fe" คั่นแบรนด์ → อ่านทุกแถวรหัส 50xx (เป็นของ Santa Fe อยู่แล้ว) */
+    const hasHead=rs.some(r=>r&&typeof r[0]==='string'&&(r[1]==null||r[1]==='')&&/santa\s*fe/i.test(r[0]));
+    let inSF=!hasHead;
     for(const r of rs){
       const c0=r[0], c1=r[1];
-      if(typeof c0==='string' && (c1==null||c1==='')){ inSF=/santa\s*fe/i.test(c0); continue; }
+      if(typeof c0==='string' && (c1==null||c1==='')){ if(hasHead) inSF=/santa\s*fe/i.test(c0); continue; }
       if(typeof c1!=='string') continue;
       const mt=c1.trim().match(/^(\d{4})\s+(.+)$/); if(!mt) continue;
       if(/^total$/i.test(String(c0||'').trim())) continue;
