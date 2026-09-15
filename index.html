@@ -1331,7 +1331,11 @@ body.hub #salesmix .ovbottom > .panel:nth-child(2){display:none}
 .hv-tile.off{background:var(--surface)}
 .hv-tile.off .hv-v{color:var(--faint)}
 .hv-d{margin-top:auto;padding-top:10px;border-top:1px solid var(--hair);font-size:12px;color:var(--faint)}
-#topicBar{position:sticky;top:var(--stick,64px);z-index:15;margin:0 0 14px;padding:6px 0 0;background:rgba(250,248,245,.94);backdrop-filter:blur(6px)}
+#topicBar{position:sticky;top:var(--stick,64px);z-index:15;margin:0 0 14px;padding:6px 0 0;background:#FAF8F5;
+  /* ปิดช่องว่างระหว่างแถบบนกับหัวหมวดตอนเลื่อน ไม่ให้เนื้อหาโผล่ลอดขึ้นมา */
+  box-shadow:0 -16px 0 #FAF8F5}
+/* % เทียบใต้ตัวเลขในตาราง: เพิ่ม = เขียว · ลด = แดง */
+.tiny.pos,tr.hi .tiny.pos{color:var(--good)} .tiny.neg,tr.hi .tiny.neg{color:var(--bad)}
 .tb-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .tb-back{all:unset;box-sizing:border-box;cursor:pointer;font-size:14px;font-weight:600;color:var(--ink);padding:7px 12px;border-radius:9px;border:1px solid var(--line);background:#fff;min-height:36px}
 .tb-back:hover{border-color:var(--ink)}
@@ -2016,7 +2020,8 @@ function customersSection(m){
   const spend=o=>o&&o.customer?o.trans*o.ticket/o.customer:null;
   const findCh=(o,k)=>o&&o.ch.find(x=>chKey(x.name)===chKey(k));
   const P=prv||{};
-  const vsL=(a,b)=>(a!=null&&b!=null&&a)?`<span class="tiny ${cls(pct(a,b))}">${sgn(pct(a,b))} vs LM</span>`:'';
+  const vsL=(a,b)=>{ if(a==null||b==null||!a) return ''; const g=pct(a,b);
+    return `<span class="tiny ${Math.abs(g)<0.05?'':cls(g)}">${sgn(g)} vs LM</span>`; };
   const tile=(l,a,b,f,note)=>`<div class="st ${a!=null&&b!=null&&PV?cls(pct(a,b)):''}"><div class="l">${l}</div><div class="v">${f(b)}</div><div class="s">${a!=null&&b!=null&&PV?`${pill(pct(a,b))} vs ${PV} (${f(a)})`:(note||(S.multi?'ไม่มีช่วงก่อนหน้าให้เทียบ':''))}</div></div>`;
   const strip=`<div class="strip">
     ${tile('Total Trans',P.trans,now.trans,fN)}
@@ -2032,9 +2037,9 @@ function customersSection(m){
       if(!c) return `<div class="smt" style="${sty}"><div class="smh"><i style="background:${o.c}"></i>${o.n}</div><div class="cuk dim"><span>ไม่มีข้อมูล</span></div></div>`;
       return `<div class="smt" style="${sty}" data-tip="${o.n}\nบิลเฉลี่ย ${fB(c.ticket)}\nจำนวนบิล ${fN(c.trans)}${p?`\n${PV}: ${fB(p.ticket)} · ${fN(p.trans)} บิล`:''}">
         <div class="smh"><i style="background:${o.c}"></i>${o.n}</div>
-        <div class="cuk"><span>จำนวนบิล</span><b>${fN(c.trans)}</b>${p&&p.trans?pill(pct(p.trans,c.trans)):''}</div>
-        <div class="cuk"><span>บิลเฉลี่ย</span><b>${fB(c.ticket)}</b>${p&&p.ticket?pill(pct(p.ticket,c.ticket)):''}</div>
-        <div class="sms"><b style="color:${o.tx}">${totTr?(c.trans/totTr*100).toFixed(1)+'%':'—'}</b> ของบิลทั้งหมด</div>
+        <div class="cuk"><span>Total Trans</span><b>${fN(c.trans)}</b>${p&&p.trans?pill(pct(p.trans,c.trans)):''}</div>
+        <div class="cuk"><span>Ticket Avg.</span><b>${fB(c.ticket)}</b>${p&&p.ticket?pill(pct(p.ticket,c.ticket)):''}</div>
+        <div class="sms"><b style="color:${o.tx}">${totTr?(c.trans/totTr*100).toFixed(1)+'%':'—'}</b> of Total Trans</div>
         </div>`; }).join('')}</div>`;
   /* ---- รายเดือน ---- */
   const tm=(S.multi&&S.n>=2?S.ms:MONTHLY.map(r=>r.m).filter(x=>x<=m)).map(x=>({m:x,v:trOf(x)})).filter(r=>r.v);
