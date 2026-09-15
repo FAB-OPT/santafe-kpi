@@ -2827,14 +2827,20 @@ const OVB={dir:'top',all:false};
 function ovBrHtml(){
   const S=SCP||{}, m=S.multi?S.last:curM, by=brOfYear(); if(!by.length) return '';
   const MS=mm=>MONTH_EN[mm-1].slice(0,3), months=MONTHLY.filter(r=>r.m<=m&&r.sales!=null).map(r=>r.m).sort((a,b)=>a-b);
-  const rows=by.map(b=>{ const v=months.map(mm=>brTy(b,mm)/1e6), has=v.filter(x=>x>0), now=brTy(b,m), ly=((b.m&&b.m[m])||{}).ly||0;
-    return {b,v,now,avg:has.length?has.reduce((a,c)=>a+c,0)/has.length:0,g:ly>0&&now>0?(now/ly-1)*100:null}; }).filter(r=>r.now>0);
-  /* เรียงตาม % โตเทียบ LY ของเดือนล่าสุด · สาขาเปิดใหม่ (ไม่มียอด LY) อยู่ท้ายสุด */
+  /* เทียบตามปุ่มของ Performance Trend: LY · Budget (แผนรายสาขา จับด้วยรหัส) · LM (เดือนก่อน) */
+  const dd=DETAIL[m]||{}, br=dd.branchRows||[], pb=dd.planBranches||[], nm=x=>String(x||'').replace(/\s+/g,'');
+  const ML={ly:'LY',bud:'Budget',lm:'LM'}[OVT.mode];
+  const refOf=b=>{ if(OVT.mode==='ly') return ((b.m&&b.m[m])||{}).ly||0;
+    if(OVT.mode==='lm') return m>1?brTy(b,m-1):0;
+    const r=br.find(x=>String(x.code)===String(b.code)); return (r&&r.plan)||(pb.find(x=>nm(x.name)===nm(b.name))||{}).plan||0; };
+  const rows=by.map(b=>{ const v=months.map(mm=>brTy(b,mm)/1e6), has=v.filter(x=>x>0), now=brTy(b,m), ref=refOf(b);
+    return {b,v,now,avg:has.length?has.reduce((a,c)=>a+c,0)/has.length:0,g:ref>0&&now>0?(now/ref-1)*100:null}; }).filter(r=>r.now>0);
+  /* เรียงตาม % เทียบค่าที่เลือกของเดือนล่าสุด · สาขาที่ไม่มีค่าเทียบ (เช่น เปิดใหม่ไม่มียอด LY) อยู่ท้ายสุด */
   rows.sort((p,q)=>{ if(p.g==null||q.g==null) return (p.g==null)-(q.g==null)||q.now-p.now; return OVB.dir==='top'?q.g-p.g:p.g-q.g; });
   const shown=OVB.all?rows:rows.slice(0,10), f=v=>v>0?v.toFixed(2):'—';
   return `<div class="ovth"><h3>Branch detail Sales — ${MS(months[0]||m)} to ${MS(m)} ${YEAR}</h3><span class="ovseg">${[['top','Top 10'],['bot','Bottom 10']].map(([k,t])=>`<button type="button" class="${OVB.dir===k?'on':''}" data-ovbr="${k}">${t}</button>`).join('')}</span></div>
-    <div class="ovsub">เรียงตาม % โตเทียบ LY ${MONTH_TH[m-1]} ${OVB.dir==='top'?'มาก → น้อย':'น้อย → มาก'} · ล้านบาท · ${rows.length} สาขาที่มียอดเดือนนี้ · กดชื่อสาขาเพื่อดูรายละเอียด</div>
-    <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th><th>Branch</th>${months.map(mm=>`<th class="n">${MS(mm)}</th>`).join('')}<th class="n">Avg</th><th class="n">vs LY ${MS(m)}</th></tr>
+    <div class="ovsub">เรียงตาม % เทียบ ${ML} ${MONTH_TH[m-1]} ${OVB.dir==='top'?'มาก → น้อย':'น้อย → มาก'} · ล้านบาท · ${rows.length} สาขาที่มียอดเดือนนี้ · กดชื่อสาขาเพื่อดูรายละเอียด</div>
+    <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th><th>Branch</th>${months.map(mm=>`<th class="n">${MS(mm)}</th>`).join('')}<th class="n">Avg</th><th class="n">vs ${ML} ${MS(m)}</th></tr>
     ${shown.map((r,i)=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td><td>${r.b.code} ${r.b.name}</td>${r.v.map(v=>`<td class="n">${f(v)}</td>`).join('')}<td class="n"><b>${f(r.avg)}</b></td><td class="n">${pill(r.g)}</td></tr>`).join('')}</table></div>
     ${rows.length>10?`<button type="button" class="ovmore ${OVB.all?'on':''}" data-ovbrall="1">${OVB.all?'แสดงแค่ 10 อันดับ':'ดูทั้งหมด '+rows.length+' สาขา'} <i>⌄</i></button>`:''}`;
 }
@@ -2848,7 +2854,7 @@ document.addEventListener('click',e=>{
   const x=e.target.closest('[data-ovx]');
   if(x){ const card=x.closest('.ovc'), p=card&&card.querySelector('[data-ovp="'+x.dataset.ovx+'"]'); if(!p) return;
     p.hidden=!p.hidden; card.querySelectorAll('[data-ovx="'+x.dataset.ovx+'"]').forEach(b=>b.classList.toggle('on',!p.hidden)); return; }
-  const md=e.target.closest('[data-ovmode]'); if(md){ OVT.mode=md.dataset.ovmode; ovTrendRender(); return; }
+  const md=e.target.closest('[data-ovmode]'); if(md){ OVT.mode=md.dataset.ovmode; ovTrendRender(); ovRender('ovBranch',ovBrHtml); return; }
   const bd=e.target.closest('[data-ovbr]'); if(bd){ OVB.dir=bd.dataset.ovbr; OVB.all=false; ovRender('ovBranch',ovBrHtml); return; }
   if(e.target.closest('[data-ovbrall]')){ OVB.all=!OVB.all; ovRender('ovBranch',ovBrHtml); return; }
   const sc=e.target.closest('[data-ovscope]');
