@@ -2455,8 +2455,8 @@ const GROUPS=[
   {k:'sales',ic:'📈',name:'ยอดขาย',subs:[
     {cap:'ภาพรวม',ids:['overview','salesmix','monthly','sssg']},
     {cap:'รายสาขา',ids:['mall','zone','branches','plan','branchdetail']},
-    {cap:'ช่องทางขาย',ids:['custbr','delivery','decline']}]},
-  {k:'cust',ic:'👥',name:'ลูกค้า',subs:[{cap:'',ids:['customers','trans']}]},
+    {cap:'ช่องทางขาย',ids:['delivery','decline']}]},
+  {k:'cust',ic:'👥',name:'ลูกค้า',subs:[{cap:'',ids:['custbr','customers','trans']}]},
   {k:'cost',ic:'🍳',name:'COL / COS',subs:[{cap:'',ids:['cos','plbr']}]},
   {k:'pl',ic:'📊',name:'P&L',subs:[{cap:'',ids:['pl']}]},
   {k:'cem',ic:'⭐',name:'CEM',subs:[{cap:'',ids:['cem']}]},
@@ -4912,8 +4912,8 @@ const TOPICS=[
   {k:'sales',ic:'📈',n:'ยอดขาย & สาขา',groups:[
     {cap:'ภาพรวม',ids:['overview','monthly','sssg']},
     {cap:'สาขา',ids:['plan','mall','zone','branches','branchdetail']},
-    {cap:'ช่องทางขาย',ids:['salesmix','custbr','delivery','decline']}]},
-  {k:'cust',ic:'👥',n:'ลูกค้า',ids:['customers','trans']},
+    {cap:'ช่องทางขาย',ids:['salesmix','delivery','decline']}]},
+  {k:'cust',ic:'👥',n:'ลูกค้า',ids:['custbr','customers','trans']},
   {k:'cost',ic:'📊',n:'ต้นทุน & กำไร',ids:['pl','cos','plbr']},
   {k:'quality',ic:'⭐',n:'คุณภาพร้าน',ids:['cem','oss']}];
 TOPICS.forEach(t=>{ if(t.groups) t.ids=t.groups.flatMap(g=>g.ids); });
