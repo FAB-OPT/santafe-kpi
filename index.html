@@ -1676,18 +1676,25 @@ function plFloatHead(){
   if(!t||!t.rows.length||t.offsetParent===null||document.body.classList.contains('present')){ f.hidden=true; return; }
   const sc=t.parentElement, bar=document.getElementById('topicBar');
   const top=bar&&bar.offsetParent!==null?bar.getBoundingClientRect().bottom:0;
-  const r=sc.getBoundingClientRect(), hr=t.rows[0].getBoundingClientRect();
-  if(!(hr.top<top&&r.bottom>top+hr.height*2)){ f.hidden=true; return; }
+  const r=sc.getBoundingClientRect(), hr=t.rows[0].cells[0].getBoundingClientRect();
+  if(!(hr.top<top-1&&r.bottom>top+hr.height*2)){ f.hidden=true; return; }
   if(f._src!==t){ f.innerHTML='<table class="pltable"></table>'; f.firstChild.appendChild(t.rows[0].cloneNode(true)); f._src=t; }
   const src=[...t.rows[0].cells], dst=[...f.firstChild.rows[0].cells];
-  src.forEach((c,i)=>{ if(!dst[i]) return; const w=c.getBoundingClientRect().width+'px'; dst[i].style.width=w; dst[i].style.minWidth=w; dst[i].style.maxWidth=w; });
+  /* หัวสำเนาอยู่นอกหมวด → คัดลอกสไตล์ที่คำนวณแล้วของหัวจริง ตัวอักษรจะได้ขนาดเท่ากัน */
+  const tcs=getComputedStyle(t); f.firstChild.style.fontFamily=tcs.fontFamily; f.firstChild.style.fontSize=tcs.fontSize;
+  src.forEach((c,i)=>{ if(!dst[i]) return; const cs=getComputedStyle(c), d=dst[i].style, w=c.getBoundingClientRect().width+'px';
+    d.width=w; d.minWidth=w; d.maxWidth=w; d.boxSizing='border-box'; d.height=c.getBoundingClientRect().height+'px';
+    ['fontSize','fontWeight','fontFamily','letterSpacing','textTransform','textAlign','color','lineHeight','paddingTop','paddingRight','paddingBottom','paddingLeft','verticalAlign','whiteSpace'].forEach(k=>d[k]=cs[k]); });
   f.firstChild.style.width=t.getBoundingClientRect().width+'px';
   f.style.top=top+'px'; f.style.left=r.left+'px'; f.style.width=sc.clientWidth+'px';
   f.hidden=false; f.scrollLeft=sc.scrollLeft;
 }
-window.addEventListener('scroll',plFloatHead,{passive:true});
-window.addEventListener('resize',plFloatHead);
-document.addEventListener('scroll',e=>{ if(e.target&&e.target.classList&&e.target.classList.contains('scroll')) plFloatHead(); },{capture:true,passive:true});
+let plFloatRaf=0;
+const plFloatQ=()=>{ if(!plFloatRaf) plFloatRaf=requestAnimationFrame(()=>{ plFloatRaf=0; plFloatHead(); }); };
+/* ฟังทุกการเลื่อน (หน้า/กล่องใดก็ได้) + ขนาดจอ + คลิกเปลี่ยนหน้า */
+document.addEventListener('scroll',plFloatQ,{capture:true,passive:true});
+window.addEventListener('resize',plFloatQ);
+document.addEventListener('click',()=>setTimeout(plFloatQ,60),true);
 /* ---- Profit by Branch: คลิกแท่งการกระจาย %กำไร → รายชื่อสาขาในช่วงนั้น ---- */
 let PLBR=null;
 function plbrPickHtml(){
