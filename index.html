@@ -2497,7 +2497,7 @@ function bindExtra2(){
 const GROUPS=[
   {k:'sales',ic:'📈',name:'ยอดขาย',subs:[
     {cap:'ภาพรวม',ids:['overview','salesmix','monthly','sssg']},
-    {cap:'รายสาขา',ids:['rank','brsales','mall','zone','branches','plan','branchdetail']},
+    {cap:'รายสาขา',ids:['brsales','mall','zone','branches','plan','branchdetail']},
     {cap:'ช่องทางขาย',ids:['delivery','decline']}]},
   {k:'cust',ic:'👥',name:'ลูกค้า',subs:[{cap:'',ids:['customers','trans']}]},
   {k:'cost',ic:'🍳',name:'COL / COS',subs:[{cap:'',ids:['cos','plbr']}]},
@@ -2780,57 +2780,94 @@ function ovTrendData(){
   const plan=(mm,bs)=>{ const dd=DETAIL[mm]||{}, br=dd.branchRows||[], pb=dd.planBranches||[]; let t=0,n=0;
     bs.forEach(b=>{ const r=br.find(x=>String(x.code)===String(b.code));
       const p=r&&r.plan?r.plan:(pb.find(x=>nm(x.name)===nm(b.name))||{}).plan; if(p){ t+=p; n++; } }); return n?t/1e6:null; };
+  /* ssA / ssL = ยอด Same Store ปีนี้ / LY (ทั้งบริษัทใช้แถว SSSG ของไฟล์ · รายสาขาและโซนนับสาขาที่มียอดทั้ง 2 ปี) */
   const rows=months.map(mm=>{
-    if(!list){ const r=salesRow(MONTHLY.find(x=>x.m===mm),[mm]); return {m:mm,a:r.sales,ly:r.ly,bud:r.budget}; }
-    let t=0,l=0,ht=0,hl=0; const br=(DETAIL[mm]||{}).branchRows||[];
+    if(!list){ const r=salesRow(MONTHLY.find(x=>x.m===mm),[mm]);
+      const ssL=r.sssgLy!=null?r.sssgLy:((r.sssgSales!=null&&r.sssg!=null)?r.sssgSales/(1+r.sssg/100):null);
+      return {m:mm,a:r.sales,ly:r.ly,bud:r.budget,ssA:r.sssgSales??null,ssL}; }
+    let t=0,l=0,ht=0,hl=0,st=0,sl=0; const br=(DETAIL[mm]||{}).branchRows||[];
     list.forEach(b=>{ const x=(b.m&&b.m[mm])||{}; const ty=x.ty>0?x.ty:((br.find(r=>String(r.code)===String(b.code))||{}).sales||0);
-      if(ty>0){ t+=ty; ht++; } if(x.ly>0){ l+=x.ly; hl++; } });
-    return {m:mm,a:ht?t/1e6:null,ly:hl?l/1e6:null,bud:plan(mm,list)}; });
+      if(ty>0){ t+=ty; ht++; } if(x.ly>0){ l+=x.ly; hl++; } if(ty>0&&x.ly>0){ st+=ty; sl+=x.ly; } });
+    return {m:mm,a:ht?t/1e6:null,ly:hl?l/1e6:null,bud:plan(mm,list),ssA:sl?st/1e6:null,ssL:sl?sl/1e6:null}; });
   rows.forEach((r,i)=>{ r.lm=i>0&&rows[i-1].m===r.m-1?rows[i-1].a:null; });
   return rows;
 }
-function ovLine(labels,a,b,bn){
-  const W=1000,H=250,L=52,Rp=18,T=12,Bt=30,n=labels.length;
-  const vals=a.concat(b).filter(v=>v!=null), mx0=Math.max(...vals,0)||1;
-  const nice=v=>{ const p=Math.pow(10,Math.floor(Math.log10(v))), f=v/p; return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:f<=7.5?7.5:10)*p; };
-  const top=nice(mx0*1.15), x=i=>n===1?L+(W-L-Rp)/2:L+i*(W-L-Rp)/(n-1), y=v=>T+(H-T-Bt)*(1-v/top);
-  const fy=v=>(+v.toFixed(2))+'M';
-  let g=''; for(let k=0;k<=4;k++){ const v=top*k/4; g+=`<line x1="${L}" x2="${W-Rp}" y1="${y(v)}" y2="${y(v)}" stroke="#E2E8F0" stroke-dasharray="${k?'4 4':''}"/><text x="${L-8}" y="${y(v)+4}" text-anchor="end" font-size="12" fill="#94A3B8">${fy(v)}</text>`; }
-  const path=arr=>{ let p='',pen=false; arr.forEach((v,i)=>{ if(v==null){ pen=false; return; } p+=(pen?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1)+' '; pen=true; }); return p; };
-  const tip=i=>`${labels[i]}\nActual ${a[i]==null?'—':a[i].toFixed(2)+'M'}\n${bn} ${b[i]==null?'—':b[i].toFixed(2)+'M'}`;
-  const dots=(arr,c,fill)=>arr.map((v,i)=>v==null?'':`<circle cx="${x(i)}" cy="${y(v)}" r="4.5" fill="${fill}" stroke="${c}" stroke-width="2" data-tip="${tip(i)}"/>`).join('');
-  const xl=labels.map((t,i)=>`<text x="${x(i)}" y="${H-8}" text-anchor="${n>1&&i===0?'start':(n>1&&i===n-1?'end':'middle')}" font-size="12" fill="#94A3B8">${t}</text>`).join('');
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Performance Trend">${g}<path d="${path(b)}" fill="none" stroke="#94A3B8" stroke-width="2" stroke-dasharray="6 5"/><path d="${path(a)}" fill="none" stroke="#2563EB" stroke-width="2.5"/>${dots(b,'#94A3B8','#fff')}${dots(a,'#2563EB','#fff')}${xl}</svg>`;
+/* กราฟเส้นโค้งแบบเดียวกับแท็บ Trend: เส้นหลักสีส้มมีพื้นไล่สีและตัวเลขบนจุด · เส้นเทียบสีเทา · แผนเส้นประสีฟ้า
+   main = {k,name} · refs = [{k,name,c,dash}] · สเกลแกนปรับตามช่วงค่า (ทั้งบริษัทหลักสิบล้าน · รายสาขาหลักล้าน) */
+function ovChart(rows,main,refs){
+  const W=1180,H=290,L=56,R=26,T=34,B=44, n=rows.length, id='ovc'+(ovChart.n=(ovChart.n||0)+1);
+  const ys=rows.flatMap(r=>[r[main.k]].concat(refs.map(s=>r[s.k]))).filter(v=>v!=null);
+  if(!ys.length) return '<div class="empty">ยังไม่มีข้อมูล</div>';
+  const mn=Math.min(...ys), mx=Math.max(...ys), span=Math.max(mx-mn,mx*.08,.01);
+  const step=[.05,.1,.2,.5,1,2,5,10,20,50].find(s=>span/s<=6)||100;
+  const lo=Math.max(0,Math.floor(mn/step)*step-step), hi=Math.ceil(mx/step)*step+step;
+  const dp=step<.1?2:(step<1?1:0), fv=v=>v>=10?v.toFixed(1):v.toFixed(2);
+  const x=i=>L+(W-L-R)*(n===1?.5:i/(n-1)), y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
+  const curve=pts=>{ if(pts.length<2) return pts.length?`M${pts[0][0]},${pts[0][1]}`:'';
+    let d=`M${pts[0][0]},${pts[0][1]}`;
+    for(let i=0;i<pts.length-1;i++){ const p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||p2, k=.17;
+      d+=` C${p1[0]+(p2[0]-p0[0])*k},${p1[1]+(p2[1]-p0[1])*k} ${p2[0]-(p3[0]-p1[0])*k},${p2[1]-(p3[1]-p1[1])*k} ${p2[0]},${p2[1]}`; }
+    return d; };
+  const pts=k=>rows.map((r,i)=>r[k]==null?null:[x(i),y(r[k])]).filter(Boolean);
+  let g=`<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D9822D" stop-opacity=".22"/><stop offset="1" stop-color="#D9822D" stop-opacity="0"/></linearGradient></defs>`;
+  for(let v=lo;v<=hi+1e-9;v+=step) g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#EEF2F6" ${Math.abs(v-lo)<1e-9?'':'stroke-dasharray="3 5"'}/>
+    <text x="${L-12}" y="${y(v)+4}" font-size="11.5" fill="#94A3B8" text-anchor="end">${v.toFixed(dp)}M</text>`;
+  const ci=n-1, MP=pts(main.k);
+  g+=`<line x1="${x(ci)}" x2="${x(ci)}" y1="${T-10}" y2="${H-B}" stroke="#CBD5E1" stroke-dasharray="4 4"/>`;
+  if(MP.length>1) g+=`<path d="${curve(MP)} L${MP[MP.length-1][0]},${H-B} L${MP[0][0]},${H-B} Z" fill="url(#${id})"/>`;
+  refs.slice().reverse().forEach(s=>{ const P=pts(s.k); if(P.length>1) g+=`<path d="${curve(P)}" fill="none" stroke="${s.c}" stroke-width="${s.dash?2.2:2.6}" ${s.dash?'stroke-dasharray="7 6"':''} stroke-linecap="round"/>`; });
+  if(MP.length>1) g+=`<path d="${curve(MP)}" fill="none" stroke="#D9822D" stroke-width="3.4" stroke-linecap="round"/>`;
+  rows.forEach((r,i)=>{
+    refs.forEach(s=>{ if(r[s.k]!=null) g+=`<circle cx="${x(i)}" cy="${y(r[s.k])}" r="3.2" fill="${s.c}"/>`; });
+    const v=r[main.k];
+    if(v!=null){ const now=i===ci, above=refs.some(s=>r[s.k]!=null&&r[s.k]>v&&y(r[s.k])>y(v)-26);
+      g+=`${now?`<circle cx="${x(i)}" cy="${y(v)}" r="11" fill="#D9822D" opacity=".18"/>`:''}
+        <circle cx="${x(i)}" cy="${y(v)}" r="${now?6:4.6}" fill="${now?'#D9822D':'#fff'}" stroke="#D9822D" stroke-width="2.6"/>
+        <text x="${x(i)}" y="${above?y(v)+24:y(v)-13}" font-size="${now?13.5:12}" font-weight="${now?800:700}" fill="#B45F16" text-anchor="middle"
+          stroke="#fff" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${fv(v)}</text>`; }
+    g+=`<text x="${x(i)}" y="${H-16}" font-size="12.5" fill="${i===ci?'#0F172A':'#64748B'}" font-weight="${i===ci?700:400}" text-anchor="middle">${MONTH_TH[r.m-1]}</text>`;
+  });
+  const colW=(W-L-R)/Math.max(1,n-1);
+  rows.forEach((r,i)=>{ const v=r[main.k], t=[`${MONTH_TH[r.m-1]} ${YEAR}`, `${main.name} ${v==null?'—':v.toFixed(2)+'M'}`];
+    refs.forEach(s=>{ const b=r[s.k]; t.push(`${s.name} ${b==null?'—':b.toFixed(2)+'M'}${b!=null&&v!=null?' ('+sgn(pct(b,v))+')':''}`); });
+    g+=`<rect x="${Math.max(L-20,x(i)-colW/2)}" y="${T-12}" width="${colW}" height="${H-B-T+12}" fill="transparent" data-tip="${t.join('\n')}"/>`; });
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Performance Trend">${g}</svg>
+    <div class="legend lcleg"><span><i class="ln" style="background:#D9822D"></i>${main.name}</span>${refs.map(s=>`<span><i class="ln${s.dash?' dash':''}"${s.dash?'':` style="background:${s.c}"`}></i>${s.name}</span>`).join('')}<span class="hint">ชี้ที่เดือนเพื่อดูตัวเลข</span></div>`;
 }
 function ovTrendHtml(){
   const by=brOfYear(), rows=ovTrendData();
-  const MODES=[['ly','vs LY'],['bud','vs Budget'],['lm','vs LM']];
-  const ref=r=>OVT.mode==='ly'?r.ly:(OVT.mode==='bud'?r.bud:r.lm);
-  const refN={ly:'Last Year',bud:'Budget',lm:'LM'}[OVT.mode];
-  const cap={ly:`${YEAR} vs ${YEAR-1} (Last Year)`,bud:`${YEAR} vs Budget`,lm:`${YEAR} vs LM (Month-over-Month)`}[OVT.mode];
+  const MODES=[['ly','vs LY'],['bud','vs Budget'],['lm','vs LM'],['ss','vs SSSG']];
+  const ss=OVT.mode==='ss', act=r=>ss?r.ssA:r.a;
+  const ref=r=>({ly:r.ly,bud:r.bud,lm:r.lm,ss:r.ssL})[OVT.mode];
+  const cap={ly:`${YEAR} vs ${YEAR-1} (Last Year)`,bud:`${YEAR} vs Budget`,lm:`${YEAR} vs LM (Month-over-Month)`,ss:`${YEAR} vs ${YEAR-1} Same-store (SSSG)`}[OVT.mode];
   const zones=[...new Set(by.map(b=>b.zone).filter(Boolean))];
   const sel=OVT.scope==='branch'?`<select data-ovsel="code" aria-label="สาขา">${by.slice().sort((p,q)=>String(p.code).localeCompare(String(q.code))).map(b=>`<option value="${b.code}" ${String(b.code)===String(OVT.code)?'selected':''}>${b.code} ${b.name}</option>`).join('')}</select>`
     :(OVT.scope==='zone'?`<select data-ovsel="zone" aria-label="โซน">${zones.map(z=>`<option ${z===OVT.zone?'selected':''}>${z}</option>`).join('')}</select>`:'');
   const head=`<div class="ovth"><h3>Performance Trend</h3><span class="ovseg">${MODES.map(([k,t])=>`<button type="button" class="${OVT.mode===k?'on':''}" data-ovmode="${k}">${t}</button>`).join('')}</span></div>`+
     (by.length?`<div class="ovscope"><span class="ovseg">${[['all','All Stores'],['branch','Branch'],['zone','Zone']].map(([k,t])=>`<button type="button" class="${OVT.scope===k?'on':''}" data-ovscope="${k}">${t}</button>`).join('')}</span>${sel}</div>`:'');
   if(!rows.length) return head+'<div class="empty">ยังไม่มียอดขาย</div>';
-  const A=rows.map(r=>r.a), R=rows.map(ref), MS=mm=>MONTH_EN[mm-1].slice(0,3);
-  const gr=r=>{ const b=ref(r); return (r.a!=null&&b)?(r.a/b-1)*100:null; };
+  const R=rows.map(ref), MS=mm=>MONTH_EN[mm-1].slice(0,3);
+  const gr=r=>{ const a=act(r), b=ref(r); return (a!=null&&b)?(a/b-1)*100:null; };
   const pills=`<div class="ovpw"><div class="ovpills" style="--n:${rows.length}"><span></span>${rows.map(r=>`<span class="mh">${MS(r.m)}</span>`).join('')}<span class="rl">${MODES.find(q=>q[0]===OVT.mode)[1]}</span>${rows.map(r=>`<span>${pill(gr(r))}</span>`).join('')}</div></div>`;
   const miss=OVT.mode==='lm'?[]:rows.filter((r,i)=>R[i]==null).map(r=>MS(r.m));
-  const note=miss.length?`<div class="note">ไม่มี${OVT.mode==='bud'?'แผน':'ยอด LY '}${OVT.scope==='all'?'':'รายสาขา'}ของ ${miss.join(', ')}${OVT.mode==='bud'&&OVT.scope!=='all'?' (แผนรายสาขาในไฟล์ส่งยอดเริ่มเดือน เม.ย.)':''}</div>`:'';
-  return head+`<div class="ovcap">${cap}</div><div class="ovchart">${ovLine(rows.map(r=>MS(r.m)+' '+YEAR),A,R,refN)}</div>`+
-    `<div class="ovleg"><span><i style="border-color:#2563EB"></i>Actual</span><span><i style="border-color:#94A3B8;border-top-style:dashed"></i>${refN}</span></div>`+pills+note;
+  const note=miss.length?`<div class="note">ไม่มี${OVT.mode==='bud'?'แผน':(ss?'ยอด Same Store ':'ยอด LY ')}${OVT.scope==='all'?'':'รายสาขา'}ของ ${miss.join(', ')}${OVT.mode==='bud'&&OVT.scope!=='all'?' (แผนรายสาขาในไฟล์ส่งยอดเริ่มเดือน เม.ย.)':''}</div>`:'';
+  /* vs LY / vs Budget แสดงครบ 3 เส้น (ยอดขาย · LY · แผน) · vs LM เทียบเดือนก่อน · vs SSSG เฉพาะยอด Same Store */
+  const MAIN=ss?{k:'ssA',name:'Same-store '+YEAR}:{k:'a',name:'Sales '+YEAR};
+  const REFS=OVT.mode==='lm'?[{k:'lm',name:'LM (เดือนก่อน)',c:'#A3AEBB'}]
+    :(ss?[{k:'ssL',name:'Same-store '+(YEAR-1),c:'#A3AEBB'}]:[{k:'ly',name:'Last year '+(YEAR-1),c:'#A3AEBB'},{k:'bud',name:'Budget '+YEAR,c:'#38BDF8',dash:1}]);
+  return head+`<div class="ovcap">${cap}</div><div class="ovchart">${ovChart(rows,MAIN,REFS)}</div>`+pills+note;
 }
 /* ยอดขายรายสาขารายเดือน เรียงตามเดือนล่าสุด · แสดง 10 อันดับ กดดูทั้งหมดได้ */
 const OVB={dir:'top',all:false};
 function ovBrHtml(){
-  const S=SCP||{}, m=S.multi?S.last:curM, by=brOfYear(); if(!by.length) return '';
+  const S=SCP||{}, m=S.multi?S.last:curM, by0=brOfYear(); if(!by0.length) return '';
+  /* เลือก Zone ใน Performance Trend: ตารางแสดงเฉพาะสาขาในโซนนั้น */
+  const inZ=OVT.scope==='zone'&&OVT.zone, by=inZ?by0.filter(b=>b.zone===OVT.zone):by0;
   const MS=mm=>MONTH_EN[mm-1].slice(0,3), months=MONTHLY.filter(r=>r.m<=m&&r.sales!=null).map(r=>r.m).sort((a,b)=>a-b);
   /* เทียบตามปุ่มของ Performance Trend: LY · Budget (แผนรายสาขา จับด้วยรหัส) · LM (เดือนก่อน) */
   const dd=DETAIL[m]||{}, br=dd.branchRows||[], pb=dd.planBranches||[], nm=x=>String(x||'').replace(/\s+/g,'');
-  const ML={ly:'LY',bud:'Budget',lm:'LM'}[OVT.mode];
-  const refOf=b=>{ if(OVT.mode==='ly') return ((b.m&&b.m[m])||{}).ly||0;
+  const ML={ly:'LY',bud:'Budget',lm:'LM',ss:'SSSG'}[OVT.mode];
+  const refOf=b=>{ if(OVT.mode==='ly'||OVT.mode==='ss') return ((b.m&&b.m[m])||{}).ly||0;
     if(OVT.mode==='lm') return m>1?brTy(b,m-1):0;
     const r=br.find(x=>String(x.code)===String(b.code)); return (r&&r.plan)||(pb.find(x=>nm(x.name)===nm(b.name))||{}).plan||0; };
   const rows=by.map(b=>{ const v=months.map(mm=>brTy(b,mm)/1e6), has=v.filter(x=>x>0), now=brTy(b,m), ref=refOf(b);
@@ -2838,7 +2875,7 @@ function ovBrHtml(){
   /* เรียงตาม % เทียบค่าที่เลือกของเดือนล่าสุด · สาขาที่ไม่มีค่าเทียบ (เช่น เปิดใหม่ไม่มียอด LY) อยู่ท้ายสุด */
   rows.sort((p,q)=>{ if(p.g==null||q.g==null) return (p.g==null)-(q.g==null)||q.now-p.now; return OVB.dir==='top'?q.g-p.g:p.g-q.g; });
   const shown=OVB.all?rows:rows.slice(0,10), f=v=>v>0?v.toFixed(2):'—';
-  return `<div class="ovth"><h3>Branch detail Sales — ${MS(months[0]||m)} to ${MS(m)} ${YEAR}</h3><span class="ovseg">${[['top','Top 10'],['bot','Bottom 10']].map(([k,t])=>`<button type="button" class="${OVB.dir===k?'on':''}" data-ovbr="${k}">${t}</button>`).join('')}</span></div>
+  return `<div class="ovth"><h3>Branch detail Sales — ${MS(months[0]||m)} to ${MS(m)} ${YEAR}${inZ?' · โซน '+OVT.zone:''}</h3><span class="ovseg">${[['top','Top 10'],['bot','Bottom 10']].map(([k,t])=>`<button type="button" class="${OVB.dir===k?'on':''}" data-ovbr="${k}">${t}</button>`).join('')}</span></div>
     <div class="ovsub">เรียงตาม % เทียบ ${ML} ${MONTH_TH[m-1]} ${OVB.dir==='top'?'มาก → น้อย':'น้อย → มาก'} · ล้านบาท · ${rows.length} สาขาที่มียอดเดือนนี้ · กดชื่อสาขาเพื่อดูรายละเอียด</div>
     <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th><th>Branch</th>${months.map(mm=>`<th class="n">${MS(mm)}</th>`).join('')}<th class="n">Avg</th><th class="n">vs ${ML} ${MS(m)}</th></tr>
     ${shown.map((r,i)=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td><td>${r.b.code} ${r.b.name}</td>${r.v.map(v=>`<td class="n">${f(v)}</td>`).join('')}<td class="n"><b>${f(r.avg)}</b></td><td class="n">${pill(r.g)}</td></tr>`).join('')}</table></div>
@@ -2861,8 +2898,8 @@ document.addEventListener('click',e=>{
   if(sc){ OVT.scope=sc.dataset.ovscope; const by=brOfYear();
     if(OVT.scope==='branch'&&!by.some(b=>String(b.code)===String(OVT.code))) OVT.code=(by.slice().sort((p,q)=>String(p.code).localeCompare(String(q.code)))[0]||{}).code||'';
     if(OVT.scope==='zone'&&!by.some(b=>b.zone===OVT.zone)) OVT.zone=(by.find(b=>b.zone)||{}).zone||'';
-    ovTrendRender(); } });
-document.addEventListener('change',e=>{ const s2=e.target.closest('[data-ovsel]'); if(!s2) return; OVT[s2.dataset.ovsel]=s2.value; ovTrendRender(); });
+    ovTrendRender(); ovRender('ovBranch',ovBrHtml); } });
+document.addEventListener('change',e=>{ const s2=e.target.closest('[data-ovsel]'); if(!s2) return; OVT[s2.dataset.ovsel]=s2.value; ovTrendRender(); ovRender('ovBranch',ovBrHtml); });
 /* แถวล่างของหน้า Monthly KPI: Sales Mix (ช่องทาง + แพลตฟอร์ม) และ Customers & Branches */
 function ovBottom(m,rows,ch,d){
   const S=SCP||{}, t=d.trans, M2=v=>(v/1e6).toFixed(2)+'M', prevTH=S.multi?(S.prevLabS||''):(m>1?MONTH_TH[m-2]:'');
@@ -3304,7 +3341,6 @@ function buildMain(m){
 
   // 3.1-3.3 อันดับสาขา · กลุ่มห้าง · โซน (จากยอดรายสาขา 2 ปี)
   if(EXTRA&&EXTRA.branchYears&&EXTRA.branchYears.length){
-    const rk=rankSection(m); if(rk) out.push(rk);
     const bs=branchSalesSection(m); if(bs) out.push(bs);
     const ml=mallSection(); if(ml) out.push(ml);
     const zn=zoneSection(); if(zn) out.push(zn);
@@ -4841,14 +4877,14 @@ $('#exportBtn').onclick=e=>{e.stopPropagation();$('#exportDd').classList.toggle(
 const TOPICS=[
   {k:'sales',ic:'📈',n:'ยอดขาย & สาขา',groups:[
     {cap:'ภาพรวม',ids:['overview','monthly','sssg']},
-    {cap:'สาขา',ids:['rank','plan','mall','zone','brsales','branches','branchdetail']},
+    {cap:'สาขา',ids:['plan','mall','zone','brsales','branches','branchdetail']},
     {cap:'ช่องทางขาย',ids:['salesmix','delivery','decline']}]},
   {k:'cust',ic:'👥',n:'ลูกค้า',ids:['customers','trans']},
   {k:'cost',ic:'📊',n:'ต้นทุน & กำไร',ids:['pl','cos','plbr']},
   {k:'quality',ic:'⭐',n:'คุณภาพร้าน',ids:['cem','oss']}];
 TOPICS.forEach(t=>{ if(t.groups) t.ids=t.groups.flatMap(g=>g.ids); });
 const TABN={overview:'Overview',monthly:'Trend',sssg:'SSSG',salesmix:'Sales Mix',delivery:'Delivery',decline:'Delivery Declines',
-  rank:'Ranking',plan:'Plan',mall:'Mall Group',zone:'Trade Zone',brsales:'Sales by Branch',branches:'Watchlist',branchdetail:'Branch Explorer',
+  plan:'Plan',mall:'Mall Group',zone:'Trade Zone',brsales:'Sales by Branch',branches:'Watchlist',branchdetail:'Branch Explorer',
   customers:'Customers',trans:'Bills by Channel',pl:'P&L',cos:'COS / COL',plbr:'Profit by Branch',cem:'CEM',oss:'OSS'};
 let TOPIC=null, TSEC=null;
 const T=(sel,root)=>{ const e=(root||document).querySelector(sel); return e?e.textContent.replace(/\s+/g,' ').trim():''; };
