@@ -2497,8 +2497,8 @@ function bindExtra2(){
 const GROUPS=[
   {k:'sales',ic:'📈',name:'ยอดขาย',subs:[
     {cap:'ภาพรวม',ids:['overview','salesmix','monthly','sssg']},
-    {cap:'รายสาขา',ids:['brsales','mall','zone','branches','plan','branchdetail']},
-    {cap:'ช่องทางขาย',ids:['delivery','decline']}]},
+    {cap:'รายสาขา',ids:['mall','zone','branches','plan','branchdetail']},
+    {cap:'ช่องทางขาย',ids:['brsales','delivery','decline']}]},
   {k:'cust',ic:'👥',name:'ลูกค้า',subs:[{cap:'',ids:['customers','trans']}]},
   {k:'cost',ic:'🍳',name:'COL / COS',subs:[{cap:'',ids:['cos','plbr']}]},
   {k:'pl',ic:'📊',name:'P&L',subs:[{cap:'',ids:['pl']}]},
@@ -4877,8 +4877,8 @@ $('#exportBtn').onclick=e=>{e.stopPropagation();$('#exportDd').classList.toggle(
 const TOPICS=[
   {k:'sales',ic:'📈',n:'ยอดขาย & สาขา',groups:[
     {cap:'ภาพรวม',ids:['overview','monthly','sssg']},
-    {cap:'สาขา',ids:['plan','mall','zone','brsales','branches','branchdetail']},
-    {cap:'ช่องทางขาย',ids:['salesmix','delivery','decline']}]},
+    {cap:'สาขา',ids:['plan','mall','zone','branches','branchdetail']},
+    {cap:'ช่องทางขาย',ids:['salesmix','brsales','delivery','decline']}]},
   {k:'cust',ic:'👥',n:'ลูกค้า',ids:['customers','trans']},
   {k:'cost',ic:'📊',n:'ต้นทุน & กำไร',ids:['pl','cos','plbr']},
   {k:'quality',ic:'⭐',n:'คุณภาพร้าน',ids:['cem','oss']}];
