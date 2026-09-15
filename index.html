@@ -2739,6 +2739,16 @@ function syncPnl(){
   }
   EXTRA.pnlFull=Object.assign({},B,{actual:actZ,branch,ly:lyZ,branchLY,companyActual:actual,months:K.slice(0,last),__merged:1});
 }
+/* ยอดขายทั้งบริษัท = รายได้ขายอาหารและเครื่องดื่มในงบ P&L (ตรงกับไฟล์ PL) ทั้งปีนี้และ LY
+   เดือนที่ยังไม่มีงบ ใช้ยอดจากไฟล์ยอดขายตามเดิม · ms = เดือนที่รวม (ต้องมีงบครบทุกเดือน) */
+function plFood(ms,ly){ const F=EXTRA&&EXTRA.pnlFull, src=F&&(ly?F.ly:F.actual); if(!src||!ms||!ms.length||!F.meta) return null;
+  const it=plFlat().find(x=>x.parent==='revenue'); if(!it) return null; let t=0;
+  for(const mm of ms){ const a=src[PL_MONKEY[mm-1]]; if(!a||typeof a[it.index]!=='number') return null; t+=a[it.index]; }
+  return t; }
+function salesRow(r,ms){ if(!r) return r; const a=plFood(ms); if(a==null) return r;
+  const o=Object.assign({},r,{sales:a,salesSrc:'pl'}), l=plFood(ms,1); if(l!=null) o.ly=l;
+  if(ms.length===1&&ms[0]>1){ const p=plFood([ms[0]-1]); if(p) o.mom=(a/p-1)*100; }
+  return o; }
 /* ยอดสาขาเดือน mm ปีนี้ (บาท): ใช้ยอด 2 ปีก่อน ถ้าเดือนนั้นยังไม่มี ใช้ยอดรายสาขาของเดือนนั้น */
 function brTy(b,mm){ const x=(b.m&&b.m[mm])||{}; if(x.ty>0) return x.ty;
   const r=((DETAIL[mm]||{}).branchRows||[]).find(y=>String(y.code)===String(b.code)); return r&&r.sales>0?r.sales:0; }
@@ -2771,7 +2781,7 @@ function ovTrendData(){
     bs.forEach(b=>{ const r=br.find(x=>String(x.code)===String(b.code));
       const p=r&&r.plan?r.plan:(pb.find(x=>nm(x.name)===nm(b.name))||{}).plan; if(p){ t+=p; n++; } }); return n?t/1e6:null; };
   const rows=months.map(mm=>{
-    if(!list){ const r=MONTHLY.find(x=>x.m===mm); return {m:mm,a:r.sales,ly:r.ly,bud:r.budget}; }
+    if(!list){ const r=salesRow(MONTHLY.find(x=>x.m===mm),[mm]); return {m:mm,a:r.sales,ly:r.ly,bud:r.budget}; }
     let t=0,l=0,ht=0,hl=0; const br=(DETAIL[mm]||{}).branchRows||[];
     list.forEach(b=>{ const x=(b.m&&b.m[mm])||{}; const ty=x.ty>0?x.ty:((br.find(r=>String(r.code)===String(b.code))||{}).sales||0);
       if(ty>0){ t+=ty; ht++; } if(x.ly>0){ l+=x.ly; hl++; } });
@@ -3161,9 +3171,9 @@ function buildMain(m){
   const presCur=presOn?slides()[slideIdx]:null;
   const presKeep=presCur?{id:presCur.id,top:presCur.scrollTop}:null;
   SCP=scopeCtx(m); const S=SCP; if(S.multi) m=S.last;
-  const rows = MONTHLY.filter(r=>r.m<=m);
-  const rowsS = S.multi ? MONTHLY.filter(r=>S.ms.includes(r.m)) : rows;
-  const cur = S.multi ? S.row : MONTHLY.find(r=>r.m===m);
+  const rows = MONTHLY.filter(r=>r.m<=m).map(r=>salesRow(r,[r.m]));
+  const rowsS = S.multi ? rows.filter(r=>S.ms.includes(r.m)) : rows;
+  const cur = S.multi ? salesRow(S.row,S.ms) : rows.find(r=>r.m===m);
   const d0 = DETAIL[m]||{};
   /* ช่วงหลายเดือน: ข้อมูลที่รวมได้ใช้ค่ารวม · ที่รวมไม่ได้ (CEM/OSS/Watchlist) ใช้เดือนล่าสุดในช่วง */
   const d = S.multi ? Object.assign({},d0,{branchRows:S.br?S.br.rows:[], trans:S.trans||null, delivery:S.delivery||null,
@@ -3217,7 +3227,7 @@ function buildMain(m){
           ${o.d?`<div class="kd ${o.d.v>=0?'pos':'neg'}">${o.d.v>=0?'▲ +':'▼ −'}${Math.abs(o.d.v).toFixed(2)}M <span>${o.d.t}</span></div>`:''}
           <div class="kx">${o.x||''}</div>
           <div class="kf">${o.f||''}</div></div>`;
-        const prevRow=S.multi?S.prevRow:MONTHLY.find(r=>r.m===m-1), prevSales=prevRow&&prevRow.sales!=null?prevRow.sales:null;
+        const prevRow=S.multi?salesRow(S.prevRow,S.prevMs||[]):salesRow(MONTHLY.find(r=>r.m===m-1),[m-1]), prevSales=prevRow&&prevRow.sales!=null?prevRow.sales:null;
         const PVL=S.multi?S.prevLabS:MONTH_TH[m-2];
         /* แผนไม่ครบทุกเดือนในช่วง → เทียบเฉพาะเดือนที่มีแผน */
         const BA=cur.budget!=null?{s:cur.sales,b:cur.budget,note:''}:(cur.budB>0?{s:cur.budS,b:cur.budB,note:' (เฉพาะ '+RNG(cur.budMs)+')'}:null);
@@ -3260,7 +3270,7 @@ function buildMain(m){
           return ly?{ty,ly,g:(ty/ly-1)*100,n}:null; })();
         const cSales=`<div class="ovc acc" data-kc="Total Sales"><span class="kv" hidden>฿${cur.sales.toFixed(1)}M</span>
           <div class="ovrow">
-            <div><div class="ovlab">Actual Sales${S.multi?' · '+S.lab:''}</div><div class="ovbig">${M1(cur.sales)}</div><div class="ovsub">LY ${M1(cur.ly)}</div></div>
+            <div><div class="ovlab">Actual Sales${S.multi?' · '+S.lab:''}</div><div class="ovbig">${M1(cur.sales)}</div><div class="ovsub">LY ${M1(cur.ly)}${cur.salesSrc==='pl'?' · จากงบ P&L (รายได้ขายอาหารและเครื่องดื่ม)':''}</div></div>
             ${stack?`<div class="ovmix">${stack}${cov}</div>`:''}
             <div class="ovkpis">
               ${kpiB('YoY',M1(cur.ly),cur.ly!=null?yoy:null,'vs LY')}
