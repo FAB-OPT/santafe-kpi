@@ -2771,6 +2771,8 @@ function salesRow(r,ms){ if(!r) return r; let o=r;
   if(sf){ const ty=sf.reduce((x,v)=>x+v.ty,0), ly=sf.reduce((x,v)=>x+v.ly,0);
     if(o===r) o=Object.assign({},r);
     Object.assign(o,{sssgSales:ty/1e6,sssgLy:ly/1e6,sssg:(ty/ly-1)*100,ssApprox:false,ssSrc:'file'}); }
+  /* ไม่มีแถว SSSG จากไฟล์ครบช่วง → ไม่แสดง % (ค่าจาก Daily Sale ไม่ตรงกับไฟล์) */
+  else if(FILT.zone==='all'&&ms&&ms.length){ if(o===r) o=Object.assign({},r); Object.assign(o,{sssg:null,sssgSales:null,ssSrc:'none'}); }
   return o; }
 /* ยอดสาขาเดือน mm ปีนี้ (บาท): ใช้ยอด 2 ปีก่อน ถ้าเดือนนั้นยังไม่มี ใช้ยอดรายสาขาของเดือนนั้น */
 function brTy(b,mm){ const x=(b.m&&b.m[mm])||{}; if(x.ty>0) return x.ty;
