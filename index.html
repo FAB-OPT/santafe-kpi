@@ -2897,11 +2897,11 @@ function smxDeliHtml(mm,codes,lyM){
     return `<div class="st"><div class="l">${n}</div><div class="v">${MB(v)}</div><div class="s">${k==='deli'?pc(v,T('sales'))+' ของยอดขาย':pc(v,T('deli'))+' ของ Delivery'} · ${p?pill(pct(p,TC(k)))+' vs LM':'— vs '+RN}</div></div>`; }).join('')}</div>`;
   const opts=[['deli','Total Delivery'],['grab','Grab'],['lm','Line Man'],['sp','Shopee Food'],['pc','% Delivery ของยอดขาย']].concat(lyM?[]:[['g','Delivery โตเทียบ LM']]);
   const bar=`<div class="plbar"><label>เรียงตาม <select data-smxdsort>${opts.map(([k,t])=>`<option value="${k}" ${SMXD.sort===k?'selected':''}>${t}</option>`).join('')}</select></label>
-    <label>ลำดับ <select data-smxddir><option value="desc" ${up?'':'selected'}>มาก → น้อย</option><option value="asc" ${up?'selected':''}>น้อย → มาก</option></select></label>
-    <span class="ovseg">${[['ly','vs LY'],['lm','vs LM']].map(([k,t])=>`<button type="button" class="${(lyM?'ly':'lm')===k?'on':''}" data-smxmode="${k}">${t}</button>`).join('')}</span>
-    <span class="hint">ยอดจากแบบฟอร์มส่งยอดขาย${lyM?` · ยังไม่มียอด Delivery รายสาขาของปี ${YEAR-1} จึงเทียบ LY ไม่ได้ กด vs LM เพื่อดูการเปลี่ยนแปลง`:' · เทียบ LM (เดือนก่อน) ของสาขาเดียวกัน'}</span></div>`;
+    <label>ลำดับ <select data-smxddir><option value="desc" ${up?'':'selected'}>มาก → น้อย</option><option value="asc" ${up?'selected':''}>น้อย → มาก</option></select></label>    <span class="hint">ยอดจากแบบฟอร์มส่งยอดขาย${lyM?` · ยังไม่มียอด Delivery รายสาขาของปี ${YEAR-1} จึงเทียบ LY ไม่ได้ กด vs LM เพื่อดูการเปลี่ยนแปลง`:' · เทียบ LM (เดือนก่อน) ของสาขาเดียวกัน'}</span></div>`;
   const row=b=>`<tr><td>${b.code} ${b.name}</td>${P.map(([k])=>`<td class="n">${k==='deli'?'<b>':''}${KB(b[k]||0)}${k==='deli'?'</b>':''}${chg(ref(b,k),b[k]||0)}</td>`).join('')}<td class="n">${pc(b.deli||0,b.sales)}</td></tr>`;
-  return `<div class="grp" style="margin-top:22px">Delivery by Branch — ${label(mm)} · ${cur.length} สาขา</div>`+bar+strip+
+  /* ปุ่ม vs LY / vs LM อยู่บนหัวกรอบ (ชุดเดียวกับการ์ด Sales Mix) */
+  const seg=`<span class="ovseg">${[['ly','vs LY'],['lm','vs LM']].map(([k,t])=>`<button type="button" class="${(lyM?'ly':'lm')===k?'on':''}" data-smxmode="${k}">${t}</button>`).join('')}</span>`;
+  return `<div class="ovth dlh" style="margin-top:22px"><div class="grp" style="margin:0">Delivery by Branch — ${label(mm)} · ${cur.length} สาขา</div>${seg}</div>`+bar+strip+
     `<div class="scroll"><table><tr><th>สาขา</th>${P.map(([,n])=>`<th class="n">${n}</th>`).join('')}<th class="n">% ของยอดขาย</th></tr>
     <tr class="hi"><td><b>รวม ${cur.length} สาขา</b></td>${P.map(([k])=>{ const p=TP(k); return `<td class="n"><b>${MB(T(k))}</b>${p?`<span class="tiny ${cls(pct(p,TC(k)))}">${sgn(pct(p,TC(k)))} vs LM</span>`:`<span class="tiny">— vs ${RN}</span>`}</td>`; }).join('')}<td class="n">${pc(T('deli'),T('sales'))}</td></tr>
     ${list.map(row).join('')}</table></div>`;
