@@ -167,6 +167,12 @@ tr.clk:hover td{background:var(--surface)} tr.sel td{background:var(--accent-2)}
 .scroll > table.pltable tr:first-child th{position:sticky;top:0;z-index:3;background:#fff;box-shadow:0 1px 0 var(--line)}
 .scroll > table.pltable tr:first-child th:first-child{z-index:4}
 body.present .scroll:has(> table.pltable){max-height:none}
+/* หัวตาราง P&L ลอยติดใต้หัวหมวด เมื่อเลื่อนทั้งหน้าลงจนหัวจริงพ้นจอ */
+.plfloat{position:fixed;z-index:14;overflow:hidden;background:#fff;border-radius:0 0 8px 8px;box-shadow:0 4px 10px rgba(15,23,42,.08)}
+.plfloat table{border-collapse:collapse;table-layout:fixed}
+.plfloat th{background:#fff;box-shadow:0 1px 0 var(--line)}
+.plfloat th:first-child{position:sticky;left:0;z-index:2;box-shadow:1px 0 0 var(--hair),0 1px 0 var(--line)}
+body.present .plfloat{display:none!important}
 .plsub-in{position:relative}
 .plsub-in::before{content:"";position:absolute;left:-14px;top:50%;width:8px;height:1px;background:var(--faint)}
 .pltg{border:0;background:var(--accent);color:#fff;width:18px;height:18px;border-radius:5px;font-size:11px;line-height:1;margin-right:7px;padding:0;vertical-align:middle}
@@ -1662,6 +1668,26 @@ function histo(vals,edges,labels){
         <text x="${cx}" y="${H-14}" font-size="11.5" fill="var(--mute)" text-anchor="middle" pointer-events="none">${labels[i]}</text>`; });
   return `<svg class="chart" viewBox="0 0 ${W} ${H}">${g}</svg>`;
 }
+/* ---- หัวตาราง P&L ลอย: เลื่อนทั้งหน้าลงจนแถวหัวจริงพ้นแถบหัวหมวด → แสดงหัวสำเนาติดไว้ด้านบน เลื่อนแนวนอนตามตาราง ---- */
+function plFloatHead(){
+  const t=document.querySelector('#pl .scroll > table.pltable');
+  let f=document.getElementById('plFloat');
+  if(!f){ f=document.createElement('div'); f.id='plFloat'; f.className='plfloat'; f.hidden=true; document.body.appendChild(f); }
+  if(!t||!t.rows.length||t.offsetParent===null||document.body.classList.contains('present')){ f.hidden=true; return; }
+  const sc=t.parentElement, bar=document.getElementById('topicBar');
+  const top=bar&&bar.offsetParent!==null?bar.getBoundingClientRect().bottom:0;
+  const r=sc.getBoundingClientRect(), hr=t.rows[0].getBoundingClientRect();
+  if(!(hr.top<top&&r.bottom>top+hr.height*2)){ f.hidden=true; return; }
+  if(f._src!==t){ f.innerHTML='<table class="pltable"></table>'; f.firstChild.appendChild(t.rows[0].cloneNode(true)); f._src=t; }
+  const src=[...t.rows[0].cells], dst=[...f.firstChild.rows[0].cells];
+  src.forEach((c,i)=>{ if(!dst[i]) return; const w=c.getBoundingClientRect().width+'px'; dst[i].style.width=w; dst[i].style.minWidth=w; dst[i].style.maxWidth=w; });
+  f.firstChild.style.width=t.getBoundingClientRect().width+'px';
+  f.style.top=top+'px'; f.style.left=r.left+'px'; f.style.width=sc.clientWidth+'px';
+  f.hidden=false; f.scrollLeft=sc.scrollLeft;
+}
+window.addEventListener('scroll',plFloatHead,{passive:true});
+window.addEventListener('resize',plFloatHead);
+document.addEventListener('scroll',e=>{ if(e.target&&e.target.classList&&e.target.classList.contains('scroll')) plFloatHead(); },{capture:true,passive:true});
 /* ---- Profit by Branch: คลิกแท่งการกระจาย %กำไร → รายชื่อสาขาในช่วงนั้น ---- */
 let PLBR=null;
 function plbrPickHtml(){
