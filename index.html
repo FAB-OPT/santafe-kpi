@@ -3265,7 +3265,7 @@ function buildMain(m){
 
         /* ยอดแยกช่องทาง: Dine in · Takeaway · Delivery (ไฟล์เดือนที่ไม่มียอดแยก ใช้ 2 ก้อน) · คำอธิบายเรียงลงมา */
         const split3=ch&&ch.store>0&&ch.take!=null;
-        const pc3=v=>(v/(split3?ch.sales/1e6:cur.sales)*100).toFixed(1)+'%';   // v เป็นล้านบาท
+        const pc3=v=>Math.round(v/(split3?ch.sales/1e6:cur.sales)*100)+'%';   // v เป็นล้านบาท
         const segs=split3
           ? [{c:'dine',v:ch.dine/1e6,n:'Dine in'},{c:'take',v:ch.take/1e6,n:'Takeaway'},{c:'dim',v:ch.deli/1e6,n:'Delivery'}]
           : (inStore!=null&&deliv!=null?[{c:'dine',v:inStore,n:'Dine in + Takeaway'},{c:'dim',v:deliv,n:'Delivery'}]:[]);
