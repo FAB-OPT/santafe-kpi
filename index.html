@@ -2030,8 +2030,7 @@ function customersSection(m){
         <div class="cuk"><span>บิลเฉลี่ย</span><b>${fB(c.ticket)}</b>${p&&p.ticket?pill(pct(p.ticket,c.ticket)):''}</div>
         <div class="cuk"><span>จำนวนบิล</span><b>${fN(c.trans)}</b>${p&&p.trans?pill(pct(p.trans,c.trans)):''}</div>
         <div class="sms"><b style="color:${o.tx}">${totTr?(c.trans/totTr*100).toFixed(1)+'%':'—'}</b> ของบิลทั้งหมด</div>
-        <div class="cuk dim"><span>ลูกค้า</span><em>แบบฟอร์มไม่แยกช่องทาง</em></div></div>`; }).join('')}</div>
-    <div class="note">จำนวนลูกค้าในแบบฟอร์มส่งยอดขายมีเฉพาะยอดรวมทุกช่องทาง ยังไม่แยก Dine in / Takeaway / Delivery · ถ้าต้องการลูกค้ารายช่องทาง ต้องเพิ่มคอลัมน์ในแบบฟอร์ม</div>`;
+        </div>`; }).join('')}</div>`;
   /* ---- รายเดือน ---- */
   const tm=(S.multi&&S.n>=2?S.ms:MONTHLY.map(r=>r.m).filter(x=>x<=m)).map(x=>({m:x,v:trOf(x)})).filter(r=>r.v);
   let trend='';
