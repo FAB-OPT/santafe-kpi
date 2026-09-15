@@ -2023,7 +2023,7 @@ function customersSection(m){
     const CK=['dine','take','deli'], TRK=['trDine','trTake','trDeli'];
     const tkc=(x,j)=>x&&x[TRK[j]]?x[CK[j]]/x[TRK[j]]:null, ca=x=>x&&x.cust&&x.tr?x.cust/x.tr:null, pb=x=>x&&x.cust?x.sales/x.cust:null;
     const hasCh=list.some(b=>b.trDine||b.trTake||b.trDeli);
-    const chHint=hasCh?'':'<div class="hint" style="margin-top:8px">Ticket แยกช่องทางรายสาขา: นำเข้าไฟล์แบบฟอร์มส่งยอดขายอีกครั้ง (ข้อมูลที่นำเข้าไว้ก่อนหน้านี้ยังไม่มีจำนวนบิลแยกช่องทางรายสาขา)</div>';
+    const chHint=hasCh?'':`<div class="hint" style="margin-top:8px">Ticket แยกช่องทางรายสาขา: ข้อมูล ${label(m)} ในเครื่องนี้มีบิลแยกช่องทาง 0 จาก ${list.length} สาขา — นำเข้าไฟล์แบบฟอร์มส่งยอดขายอีกครั้ง แล้วดูข้อความหลังนำเข้าว่า "บิลแยกช่องทางรายสาขา" ได้กี่สาขา</div>`;
     btbl=`<div class="grp big">รายสาขา</div>
     <div class="scroll"><table><tr><th>#</th><th>สาขา</th><th class="n">Total Trans</th><th class="n">Ticket Avg.</th>${CUS_CH.map(o=>`<th class="n">Ticket ${o.n}</th>`).join('')}<th class="n">Customers</th><th class="n">Customer Avg.</th><th class="n">Per Bill</th></tr>
     ${list.map((b,i)=>{ const p=pMap[b.code];
@@ -3790,7 +3790,9 @@ function applyState(s){ if(!s||!Array.isArray(s.monthly)) return; if(!s.monthly.
   setMonth(curM); if(s.updatedAt) $('#status').textContent='อัปเดต '+new Date(s.updatedAt).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'}); }
 async function saveState(){
   const s={monthly:MONTHLY, detail:DETAIL, by:BY_IMPORT||undefined, v:DATA_V, updatedAt:new Date().toISOString()};
-  try{localStorage.setItem(brandStoreKey(DATA_BRAND),JSON.stringify(s))}catch(e){}
+  /* บันทึกในเครื่องไม่สำเร็จ (เช่น พื้นที่เบราว์เซอร์เต็ม) ต้องบอก ไม่งั้นเปิดเว็บใหม่ข้อมูลที่นำเข้าจะหายเงียบ ๆ */
+  SAVE_ERR=null;
+  try{localStorage.setItem(brandStoreKey(DATA_BRAND),JSON.stringify(s))}catch(e){ console.warn(e); SAVE_ERR=e; }
   if(dbDoc&&DATA_BRAND==='kt'){ saving=true; try{ await dbDoc.set(s); }catch(e){ console.warn(e); showMsg('บันทึกขึ้นระบบไม่สำเร็จ (เก็บไว้ในเครื่องนี้แล้ว): '+(e.message||e.code),'err'); } saving=false; }
   applyState(s);
 }
@@ -4596,7 +4598,10 @@ const LOG_KEY='sf-kpi-log';
 function getLog(){ try{ return JSON.parse(localStorage.getItem(LOG_KEY))||[]; }catch(e){ return []; } }
 function logImport(e){ const L=getLog(); L.unshift(e); try{ localStorage.setItem(LOG_KEY,JSON.stringify(L.slice(0,20))); }catch(err){} }
 /* ใช้แทน showMsg ภายใน importFile: แสดงผล + บันทึกประวัติ + วาดแผงใหม่ */
-function finish(t,c){ showMsg(t,c);
+let SAVE_ERR=null;
+function finish(t,c){
+  if(SAVE_ERR&&c==='ok'&&!dbDoc){ t+=' — ⚠ แต่บันทึกลงเครื่องไม่สำเร็จ ('+(SAVE_ERR.name||SAVE_ERR.message)+') เปิดเว็บใหม่แล้วข้อมูลนี้จะหาย: ล้างข้อมูลแบรนด์อื่นที่ไม่ใช้ หรือกดล้างประวัติ แล้วนำเข้าอีกครั้ง'; c='err'; }
+  showMsg(t,c);
   if(IMP){ logImport({t:new Date().toISOString(),file:IMP.file,size:IMP.size,
       kind:IMP.kind||(c==='ok'?'ไฟล์ข้อมูลเว็บ':'ไม่รู้จักไฟล์'),
       months:c==='ok'?(IMP.months||[curM]):[],ok:c==='ok',msg:String(t).slice(0,240)}); IMP=null; }
@@ -4786,6 +4791,7 @@ async function importFile(file){
       const kept=mergeMonthly(Object.values(mon),{keepBudget:true}); mergeDetail(det);
       curM=months[months.length-1]; await saveState();
       finish('นำเข้าแบบฟอร์มส่งยอดขายสำเร็จ: '+months.map(m=>MONTH_TH[m-1]).join(', ')+' · เดือนหลัก '+label(curM)
+        +' · บิลแยกช่องทางรายสาขา '+((det[curM]||{}).branchRows||[]).filter(b=>b.trDine||b.trTake||b.trDeli).length+' จาก '+((det[curM]||{}).branchRows||[]).length+' สาขา'
         +(partial&&partial.length?' — ข้ามเดือนที่ยังเก็บข้อมูลไม่ครบ: '+partial.map(m=>MONTH_TH[m-1]).join(', '):'')
         +(kept.length?' — คง Budget เดิมไว้: '+kept.join(', '):'')
         +(warn.length?' ['+warn.join('; ')+']':''),'ok');
