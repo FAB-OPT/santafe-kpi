@@ -1621,6 +1621,8 @@ const PL_TH={revenue:'รายได้รวม','rev-food':'รายได�
   gp3:'กำไรก่อนหักค่าดำเนินงาน', opex:'ค่าใช้จ่ายดำเนินงาน (OPEX)','opex-supplies':'วัสดุและอุปกรณ์','opex-stationery':'เครื่องเขียน','opex-computer':'คอมพิวเตอร์','opex-bank':'ค่าธรรมเนียมธนาคารและอื่นๆ','opex-vehicle':'ยานพาหนะและเดินทาง','opex-audit':'ตรวจสอบและพัฒนา','opex-otherservice':'ค่าบริการอื่น','opex-assetloss':'ขาดทุนจำหน่ายสินทรัพย์','opex-closureloss':'ขาดทุนปิดสาขา','opex-damage':'ค่าชดเชยความเสียหาย','opex-repair':'ซ่อมแซม','opex-other':'ค่าใช้จ่ายอื่น',
   op:'กำไรจากการดำเนินงาน (OP)', central:'ค่าใช้จ่ายส่วนกลางปันส่วน','net-bd':'กำไรก่อนค่าเสื่อม', dep:'ค่าเสื่อมราคา', net:'กำไรสุทธิ (บรรทัดสุดท้าย)'};
 const PL_MONKEY=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+/* ชื่อบรรทัดงบ: Jaedang ใช้ชื่อบัญชีของตัวเอง · KT ใช้ชื่อไทยมาตรฐาน */
+function plLabel(it){ return (typeof DATA_BRAND!=='undefined'&&DATA_BRAND==='jd')?it.label:(PL_TH[it.id]||it.label); }
 function plFlat(){ const items=[]; let i=0;
   const walk=(defs,depth,parent)=>defs.forEach(d=>{ items.push({id:d.id,label:d.label,index:i++,highlight:!!d.highlight,depth,parent,hasKids:!!(d.children&&d.children.length)});
     if(d.children) walk(d.children,depth+1,d.id); });
@@ -1682,18 +1684,18 @@ function plSection(m){
           if(mn.id!=='revenue'&&ok.length>1&&hi!==lo&&p!=null) c=(isProfit?p===hi:p===lo)?'cbest':((isProfit?p===lo:p===hi)?'cworst':'');
           return `<td class="n ${c}">${fmOf(e.br)(e.v[it.index])}<span class="tiny">${p==null?'—':p.toFixed(1)+'%'}</span></td>`; }).join(''); };
       rowsOut.push(`<tr class="${mn.highlight?'plhl':'plmain'}" data-id="${mn.id}">
-        <td>${mn.hasKids?`<button class="pltg" data-tg="${mn.id}" title="พับ/กาง">${open?'▾':'▸'}</button>`:'<span class="pltg-sp"></span>'}${PL_TH[mn.id]||mn.label}${mn.hasKids?` <span class="plkids">(${kids.length})</span>`:''}</td>${cells(mn)}</tr>`);
-      if(open) kids.forEach(k=>rowsOut.push(`<tr class="plsub" data-parent="${mn.id}"><td><span class="plsub-in">${PL_TH[k.id]||k.label}</span></td>${cells(k)}</tr>`));
+        <td>${mn.hasKids?`<button class="pltg" data-tg="${mn.id}" title="พับ/กาง">${open?'▾':'▸'}</button>`:'<span class="pltg-sp"></span>'}${plLabel(mn)}${mn.hasKids?` <span class="plkids">(${kids.length})</span>`:''}</td>${cells(mn)}</tr>`);
+      if(open) kids.forEach(k=>rowsOut.push(`<tr class="plsub" data-parent="${mn.id}"><td><span class="plsub-in">${plLabel(k)}</span></td>${cells(k)}</tr>`));
       return;
     }
     rowsOut.push(`<tr class="${mn.highlight?'plhl':'plmain'}" data-id="${mn.id}">
-      <td>${mn.hasKids?`<button class="pltg" data-tg="${mn.id}" title="พับ/กาง">${open?'▾':'▸'}</button>`:'<span class="pltg-sp"></span>'}${PL_TH[mn.id]||mn.label}${mn.hasKids?` <span class="plkids">(${kids.length})</span>`:''}</td>
+      <td>${mn.hasKids?`<button class="pltg" data-tg="${mn.id}" title="พับ/กาง">${open?'▾':'▸'}</button>`:'<span class="pltg-sp"></span>'}${plLabel(mn)}${mn.hasKids?` <span class="plkids">(${kids.length})</span>`:''}</td>
       <td class="n ${PROFIT_IDS.includes(mn.id)?cls(val):''}">${fm(val)}</td><td class="n">${pc(val,rev)}</td>
       ${prev?`<td class="n">${fm(prev[mn.index])}</td><td class="n ${good(Math.round((val-prev[mn.index])*1e6))}">${dl(val,prev[mn.index])}</td>`:''}
       ${ly?`<td class="n">${fm(ly[mn.index])}</td><td class="n ${good(Math.round((val-ly[mn.index])*1e6))}">${dl(val,ly[mn.index])}</td>`:''}
     </tr>`);
     if(open) kids.forEach(k=>{ const v=cur[k.index];
-      rowsOut.push(`<tr class="plsub" data-parent="${mn.id}"><td><span class="plsub-in">${PL_TH[k.id]||k.label}</span></td>
+      rowsOut.push(`<tr class="plsub" data-parent="${mn.id}"><td><span class="plsub-in">${plLabel(k)}</span></td>
         <td class="n">${fm(v)}</td><td class="n">${pc(v,rev)}</td>
         ${prev?`<td class="n">${fm(prev[k.index])}</td><td class="n ${good(Math.round((v-prev[k.index])*1e6))}">${dl(v,prev[k.index])}</td>`:''}
         ${ly?`<td class="n">${fm(ly[k.index])}</td><td class="n ${good(Math.round((v-ly[k.index])*1e6))}">${dl(v,ly[k.index])}</td>`:''}</tr>`); });
@@ -1705,7 +1707,7 @@ function plSection(m){
   const brOpts=brs.filter(c=>FILT.zone==='all'||(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone===FILT.zone))
     .sort((a,b)=>String(a).localeCompare(String(b)));
   const head=`<div class="plbar">
-      <label>สาขา <select id="plBranch"><option value="all">${FILT.zone==='all'?'ทั้งบริษัท (Santa Fe)':'ทั้งโซน '+FILT.zone+' (รวมงบสาขาในโซน)'}</option>${brOpts.map(c=>`<option value="${c}" ${PLS.branch===c?'selected':''}>${c} ${brName(c)}</option>`).join('')}</select></label>
+      <label>สาขา <select id="plBranch"><option value="all">${FILT.zone==='all'?'ทั้งบริษัท ('+((typeof BRANDS!=='undefined'&&BRANDS.find(b=>b.k===BRAND))||{n:'Santa Fe'}).n+')':'ทั้งโซน '+FILT.zone+' (รวมงบสาขาในโซน)'}</option>${brOpts.map(c=>`<option value="${c}" ${PLS.branch===c?'selected':''}>${c} ${brName(c)}</option>`).join('')}</select></label>
       <label>เทียบกับสาขา <select id="plAdd" ${(PLS.cmp||[]).length>=4?'disabled':''}><option value="">${(PLS.cmp||[]).length>=4?'เทียบได้สูงสุด 4 สาขา':'+ เพิ่มสาขา'}</option>${brOpts.filter(c=>c!==PLS.branch&&!(PLS.cmp||[]).includes(c)).map(c=>`<option value="${c}">${c} ${brName(c)}</option>`).join('')}</select></label>
       ${cmpCodes.map(c=>`<span class="cmpchip">${c} ${brName(c)}<button data-plrm="${c}" title="เอาออก">×</button></span>`).join('')}
       ${cmpMode?'<button class="btn small" id="plCmpClear">ล้างการเทียบ</button>':''}
@@ -1797,7 +1799,7 @@ function sssgSection(m,rows){
   const S=SCP||{}, inScope=S.multi&&S.n>=2;
   const months=inScope?S.ms.slice():MONTHLY.map(r=>r.m).filter(x=>x<=m);
   const M2=MB, K2=KB;
-  const bar=`<div class="plbar"><label>สาขา <select id="ssBranch"><option value="all">${FILT.zone==='all'?'ทั้งบริษัท (Santa Fe)':'ทั้งโซน '+FILT.zone}</option>${BY.map(b=>`<option value="${b.code}" ${SSS.branch===b.code?'selected':''}>${b.code} ${b.name}</option>`).join('')}</select></label>
+  const bar=`<div class="plbar"><label>สาขา <select id="ssBranch"><option value="all">${FILT.zone==='all'?'ทั้งบริษัท ('+((typeof BRANDS!=='undefined'&&BRANDS.find(b=>b.k===BRAND))||{n:'Santa Fe'}).n+')':'ทั้งโซน '+FILT.zone}</option>${BY.map(b=>`<option value="${b.code}" ${SSS.branch===b.code?'selected':''}>${b.code} ${b.name}</option>`).join('')}</select></label>
     ${SSS.branch==='all'?'<span class="hint">คลิกแท่งเดือนในกราฟ เพื่อดู SSSG รายสาขาของเดือนนั้น</span>':'<button class="btn small" id="ssBack">← กลับภาพรวม</button>'}</div>`;
   const b=SSS.branch!=='all'&&BY.find(x=>x.code===SSS.branch);
   if(b){ // ---- รายสาขา ----
@@ -2925,10 +2927,11 @@ function useBrandData(k){
   BSTORE[DATA_BRAND]={MONTHLY,DETAIL,EXTRA,BY_IMPORT,PNL_BASE,curM,BRANCH_META,ZONES_LIST};
   let t=BSTORE[k];
   if(!t){ let loc=null; try{ loc=JSON.parse(localStorage.getItem(brandStoreKey(k))); }catch(e){}
-    const ke=BSTORE.kt&&BSTORE.kt.EXTRA, meta=ke&&ke.pnlFull&&ke.pnlFull.meta;
+    const ke=BSTORE.kt&&BSTORE.kt.EXTRA, meta=k==='jd'?JD_META:(ke&&ke.pnlFull&&ke.pnlFull.meta);
     t={MONTHLY:(loc&&loc.monthly)||[], DETAIL:(loc&&loc.detail)||{}, EXTRA:{pnlFull:meta?{meta,months:[],actual:{},ly:{},branch:{},branchLY:{}}:null, branchYears:[]},
        BY_IMPORT:null, PNL_BASE:null, curM:null, BRANCH_META:null, ZONES_LIST:[]}; }
   MONTHLY=t.MONTHLY; DETAIL=t.DETAIL; EXTRA=t.EXTRA; BY_IMPORT=t.BY_IMPORT; PNL_BASE=t.PNL_BASE; BRANCH_META=t.BRANCH_META; ZONES_LIST=t.ZONES_LIST;
+  if(k!=='kt'&&!BRANCH_META) BRANCH_META=brandMetaFromData();
   DATA_BRAND=k; FILT.zone='all';
   refreshMonths();
   if(t.curM&&(months.includes(t.curM)||DETAIL[t.curM])) curM=t.curM;
@@ -4104,6 +4107,123 @@ function parseSalesSummary(wb,brand){
         dine:null,take:null,deli:null,grab:null,lm:null,sp:null,tr:null,cust:null,tk:null,trMom:null}))}; });
   return {mon,det,months,branches:nb,year,warn:[]};
 }
+/* ===== ตัวอ่านงบกำไรขาดทุน Jaedang (ไฟล์ PL Jaedang ปี) =====
+   ชีตปี (เช่น 2026) = ทั้งบริษัท เดือนละ 2 คอลัมน์ (Amount · %) · ชีต JAN…DEC = รายสาขา (แถว 5 รหัส · แถว 6 ชื่อ)
+   ผังบัญชีของ Jaedang จัดลงโครงเดียวกับ KT: id หลักเหมือนกัน รายการย่อยใช้ชื่อบัญชีของ Jaedang */
+const JD_MAP=[
+  {id:'revenue',label:'รายได้รวม',kids:[
+    ['jd-rev-fb','ขายอาหารและเครื่องดื่ม',['Sales - Food and Beverage']],
+    ['jd-rev-deli','ขาย Delivery',['Sales - Delivery']],
+    ['jd-rev-svc','Service charge',['Sales - Service charge']],
+    ['jd-rev-disc','ส่วนลด',['Sales - Discount']],
+    ['jd-rev-other','รายได้อื่น',['Other Income']]]},
+  {id:'cogs',label:'ต้นทุนขาย (COGS)',kids:[
+    ['jd-cogs-fb','ต้นทุนอาหารและเครื่องดื่ม',['Cost of sales - Food and Beverage']],
+    ['jd-cogs-pork','คอหมู (Neck Pork)',['Cost of sales - Neck Pork']],
+    ['jd-cogs-sup','วัสดุสิ้นเปลือง',['Cost of sales - Supplies']],
+    ['jd-cogs-oth','ต้นทุนอื่น',['Cost of sales - Other']],
+    ['jd-cogs-fuel','เชื้อเพลิงครัว',['Kitchen fuel']]]},
+  {id:'gp1',label:'กำไรขั้นต้น (หลัง COGS)',hl:1},
+  {id:'labor',label:'ค่าแรง',kids:[
+    ['jd-lab-sal','เงินเดือนและค่าจ้าง',['Salaries and wages']],
+    ['jd-lab-inc','Incentive',['Incentive']],
+    ['jd-lab-ben','สวัสดิการอื่น',['Other benefits']],
+    ['jd-lab-sso','ประกันสังคม',['Social Security Fund']],
+    ['jd-lab-bonus','โบนัส',['Employee bonus']],
+    ['jd-lab-wcf','กองทุนเงินทดแทน',["Workmen's compensation fund"]]]},
+  {id:'gp2',label:'กำไรก่อน SG&A',hl:1},
+  {id:'sga',label:'ค่าขายและบริหาร (SG&A)',kids:[
+    ['jd-sga-adv','โฆษณา',['Advertising expense']],
+    ['jd-sga-promo','โปรโมชั่น',['Promotion expense']],
+    ['jd-sga-comm','ค่าคอมมิชชั่น (Delivery ฯลฯ)',['Other commission']],
+    ['jd-sga-card','ค่าธรรมเนียมบัตรเครดิต',['Commission on credit card']],
+    ['jd-sga-travel','ขนส่งและเดินทาง',['Transport and travelling expense']],
+    ['jd-sga-uniform','ยูนิฟอร์ม',['Uniform']],
+    ['jd-sga-elec','ค่าไฟฟ้า',['Electricity']],
+    ['jd-sga-water','ค่าน้ำ',['Water']],
+    ['jd-sga-tel','โทรศัพท์และอินเทอร์เน็ต',['Telephone and Internet']],
+    ['jd-sga-rent','ค่าเช่า',['Rental expense','Rental (TFRS 16)']],
+    ['jd-sga-ptax','ภาษีโรงเรือน',['Property taxes']],
+    ['jd-sga-equip','ค่าเช่าอุปกรณ์และอื่น',['Equipment rental expense','Other rental expense']]]},
+  {id:'gp3',label:'กำไรก่อนหักค่าดำเนินงาน',hl:1},
+  {id:'opex',label:'ค่าใช้จ่ายดำเนินงาน (OPEX)',kids:[
+    ['jd-ox-utensil','ภาชนะและอุปกรณ์ร้าน',['Chinaware glass and utensil','Restaurant supplies','Decoration expense']],
+    ['jd-ox-repair','ซ่อมแซม',['Repair and maintenance - general','Repair and maintenance - vehicle']],
+    ['jd-ox-service','ค่าบริการ',['Service fee','Service contract']],
+    ['jd-ox-office','สำนักงานและเครื่องเขียน',['Computer supplies','Office supplies','Printing & Stationery','Postage fee','Magazine&Newpaper']],
+    ['jd-ox-audit','สอบบัญชีและที่ปรึกษา',['Audit fee','Advice and consultation fee']],
+    ['jd-ox-insure','ประกันภัย',['Insurance']],
+    ['jd-ox-fee','ภาษีและค่าธรรมเนียม',['Taxes & Duties','Certificate of selling food fee','Certificate of DBD and other','Signboard tax','Bank Charges','Music Copyright','Work permit and VISA','Fine and penalty']],
+    ['jd-ox-gainloss','กำไร/ขาดทุนอื่น',['Gain or Loss on Exchange Rate','Gain or Loss - Other','Cash Over/Short']],
+    ['jd-ox-interest','ดอกเบี้ยจ่าย',['Interest paid']],
+    ['jd-ox-citax','ภาษีเงินได้นิติบุคคล',['Corporate income tax']],
+    ['jd-ox-other','ค่าใช้จ่ายอื่น',['Franchise','R&D expense','Concenience expenses','Accommodation fee','Air ticket','Miscellaneous expense','Donation','Entertainment','Medical expense','Unclaimable expreses','Other expense','Other fee','Staff training']]]},
+  {id:'op',label:'กำไรจากการดำเนินงาน (OP)',hl:1},
+  {id:'central',label:'ค่าบริหาร (Management fee · Royalty)',src:['Management fee','Royalty Fee']},
+  {id:'net-bd',label:'กำไรก่อนค่าเสื่อม',hl:1},
+  {id:'dep',label:'ค่าเสื่อมราคา',src:['Depreciation expense']},
+  {id:'net',label:'กำไรสุทธิ (บรรทัดสุดท้าย)',hl:1}];
+const JD_META=JD_MAP.map(g=>({id:g.id,label:g.label,highlight:!!g.hl,children:g.kids?g.kids.map(k=>({id:k[0],label:k[1]})):undefined}));
+const JD_SKIP=['00000','BR099','BR001'];   // สำนักงานใหญ่ · BT-ALL · ครัวกลาง (ไม่ใช่สาขา)
+const jdCode=v=>{ const t=String(v==null?'':v).trim(); return /^\d+$/.test(t)?String(+t):t; };
+const jdKey=v=>String(v==null?'':v).replace(/\s+/g,' ').trim().toLowerCase();
+function jdYearSheet(wb){ return wb.SheetNames.find(n=>{ if(!/^20\d{2}$/.test(n.trim())) return false;
+  const a=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:null,range:'A1:A2'}); return /jaedang/i.test(String((a[0]||[])[0]||'')); }); }
+function isJDPLWb(wb){ return !!jdYearSheet(wb); }
+/* แถวบัญชี → อาร์เรย์ตามลำดับผัง (หน่วยล้านบาท) · get(label) คืนยอดบาทของบรรทัดนั้น */
+function jdArr(get){ const out=[]; const tot={};
+  JD_MAP.forEach(g=>{ if(g.hl) return;
+    if(g.kids){ let sum=0; const vals=g.kids.map(k=>{ const v=k[2].reduce((a,l)=>a+get(l),0); sum+=v; return v; }); tot[g.id]=sum; g.vals=vals; }
+    else tot[g.id]=g.src.reduce((a,l)=>a+get(l),0); });
+  tot.gp1=tot.revenue-tot.cogs; tot.gp2=tot.gp1-tot.labor; tot.gp3=tot.gp2-tot.sga; tot.op=tot.gp3-tot.opex; tot['net-bd']=tot.op-tot.central; tot.net=tot['net-bd']-tot.dep;
+  JD_MAP.forEach(g=>{ out.push(+(tot[g.id]/1e6).toFixed(6)); if(g.kids) g.vals.forEach(v=>out.push(+(v/1e6).toFixed(6))); });
+  return {arr:out, net:tot.net, rev:tot.revenue}; }
+function parseJDPL(wb){
+  const warn=[], ys=jdYearSheet(wb);
+  const rs=XLSX.utils.sheet_to_json(wb.Sheets[ys],{header:1,defval:null});
+  const year=+((String((rs[2]||[])[0]||'').match(/(20\d{2})/)||[])[1])||+ys.trim();
+  const MN=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const hi=rs.findIndex(r=>r&&r.some(v=>typeof v==='string'&&/^JANUARY/i.test(v.trim())));
+  if(hi<0) return {det:{},months:[],branches:0,year,warn:['ไม่พบหัวคอลัมน์เดือนในชีต '+ys]};
+  const mcol={}; rs[hi].forEach((v,c)=>{ if(typeof v!=='string') return; const i=MN.indexOf(v.trim().slice(0,3).toUpperCase()); if(i>=0&&mcol[i+1]==null) mcol[i+1]=c; });
+  /* ใช้บรรทัดแรกของชื่อบัญชี (ท้ายชีตมีตารางสรุปชื่อซ้ำ เช่น Rental Expense ที่เป็นศูนย์) */
+  const rowsBy={}; rs.forEach(r=>{ if(r&&typeof r[0]==='string'){ const k=jdKey(r[0]); if(!(k in rowsBy)) rowsBy[k]=r; } });
+  const used=new Set(); JD_MAP.forEach(g=>{ (g.kids||[]).forEach(k=>k[2].forEach(l=>used.add(jdKey(l)))); (g.src||[]).forEach(l=>used.add(jdKey(l))); });
+  const det={}, months=[];
+  Object.entries(mcol).forEach(([m,c])=>{ m=+m;
+    const get=l=>{ const r=rowsBy[jdKey(l)]; const v=r&&r[c]; return typeof v==='number'&&isFinite(v)?v:0; };
+    const tr=rowsBy[jdKey('Total Revenues')]; if(!(tr&&typeof tr[c]==='number'&&tr[c]!==0)) return;
+    const A=jdArr(get); months.push(m);
+    const fileNet=rowsBy[jdKey('Net Profit (EBIT)')]; const fn=fileNet&&typeof fileNet[c]==='number'?fileNet[c]:null;
+    if(fn!=null&&Math.abs(fn-A.net)>5000) warn.push(MN[m-1]+' กำไรสุทธิคำนวณ '+Math.round(A.net).toLocaleString()+' ไม่ตรงกับไฟล์ '+Math.round(fn).toLocaleString());
+    /* บรรทัดที่มีตัวเลขแต่ยังไม่ได้จัดเข้าผัง */
+    Object.entries(rowsBy).forEach(([k,r])=>{ if(used.has(k)||/^(total|less|net profit|for the year|profit & loss|somtum)/.test(k)) return;
+      const v=r[c]; if(typeof v==='number'&&Math.abs(v)>1000&&!/(cost|expenses?|fee|song)$/.test(k)&&k.indexOf('percentage')<0) warn.push(MN[m-1]+' ยังไม่จัดบัญชี: '+r[0]); });
+    det[m]={plFull:{actual:A.arr, branch:{}, names:{}}, plBranches:[]}; });
+  /* รายสาขาจากชีตรายเดือน */
+  const codes=new Set();
+  wb.SheetNames.forEach(sn=>{ const i=MN.indexOf(sn.trim().slice(0,3).toUpperCase()); const m=i+1; if(i<0||!det[m]) return;
+    const sr=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:null});
+    const ci=sr.findIndex(r=>r&&r.filter(v=>typeof v==='string'&&/^(BR\d+|DM\d+|\d{5})$/.test(v.trim())).length>=5); if(ci<0) return;
+    const cr=sr[ci], nr=sr[ci+1]||[], by={}; sr.forEach(r=>{ if(r&&typeof r[0]==='string'){ const k=jdKey(r[0]); if(!(k in by)) by[k]=r; } });
+    cr.forEach((v,c)=>{ if(c===0||typeof v!=='string') return; const raw=v.trim(); if(!/^(BR\d+|DM\d+|\d{5})$/.test(raw)||JD_SKIP.includes(raw)) return;
+      const get=l=>{ const r=by[jdKey(l)]; const x=r&&r[c]; return typeof x==='number'&&isFinite(x)?x:0; };
+      const A=jdArr(get); if(!(A.rev>0)) return;
+      const code=jdCode(raw), name=String(nr[c]||raw).replace(/\s+/g,' ').trim();
+      const I=id=>JD_META.reduce((acc,g)=>acc,0);
+      det[m].plFull.branch[code]=A.arr; det[m].plFull.names[code]=name; codes.add(code);
+      const idx=id=>{ let n=0, hit=-1; JD_MAP.forEach(g=>{ if(g.id===id) hit=n; n+=1+(g.kids?g.kids.length:0); }); return hit; };
+      const rev=A.arr[idx('revenue')], cg=A.arr[idx('cogs')], lb=A.arr[idx('labor')], nt=A.arr[idx('net')];
+      det[m].plBranches.push({code,name,sales:rev*1e6,profit:nt*1e6,gp:rev?nt/rev*100:0,cos:rev?cg/rev*100:0,col:rev?lb/rev*100:0}); }); });
+  months.sort((a,b)=>a-b);
+  return {det,months,branches:codes.size,year,warn:[...new Set(warn)]};
+}
+/* ชื่อสาขาของแบรนด์ที่นำเข้าเอง: จากยอดรายสาขาก่อน (ชื่อไทย) แล้วค่อยจากงบรายสาขา */
+function brandMetaFromData(){ const meta={};
+  Object.keys(DETAIL||{}).forEach(k=>{ const d=DETAIL[k]||{};
+    (d.branchRows||[]).forEach(b=>{ if(b&&b.code&&!meta[b.code]) meta[b.code]={name:b.name}; });
+    const nm=d.plFull&&d.plFull.names; if(nm) Object.entries(nm).forEach(([c,n])=>{ if(!meta[c]) meta[c]={name:n}; }); });
+  return Object.keys(meta).length?meta:null; }
 /* ===== ตัวอ่านไฟล์ CEM (ผลสำรวจลูกค้า ทุกสาขาในเดือนเดียว) ===== */
 function isCEMWb(wb){ return wb.SheetNames.some(n=>/^Survey Questions/i.test(n.trim())); }
 function parseCEM(wb){
@@ -4350,11 +4470,20 @@ async function importFile(file){
     /* ---- Santa Fe FS / Jaedang: รับเฉพาะ Summary Salse และ P&L (ชีต FS) ข้อมูลเก็บแยกแบรนด์ ---- */
     if(BRAND!=='kt'){
       const BN=(BRANDS.find(b=>b.k===BRAND)||{n:BRAND}).n;
+      if(isJDPLWb(wb)){ IMP.kind='งบกำไรขาดทุน (PL Jaedang)';
+        if(BRAND!=='jd') throw new Error('ไฟล์นี้เป็นงบกำไรขาดทุนของ Jaedang — เปิดหน้า Jaedang ก่อนนำเข้า');
+        const R=parseJDPL(wb);
+        if(R.year&&R.year!==YEAR) throw new Error('ไฟล์นี้เป็นงบปี '+R.year+' — ระบบใช้ปี '+YEAR);
+        if(!R.months.length) throw new Error('อ่านงบจากไฟล์นี้ไม่ได้'+(R.warn.length?' ('+R.warn.join('; ')+')':''));
+        IMP.months=R.months; mergeDetail(R.det); BRANCH_META=brandMetaFromData();
+        if(!MONTHLY.some(r=>r.m===curM)) curM=R.months[R.months.length-1]; await saveState();
+        finish('นำเข้างบกำไรขาดทุน Jaedang สำเร็จ: '+monRange(R.months)+' · ทั้งบริษัท + '+R.branches+' สาขา'+(R.warn.length?' ['+R.warn.join('; ')+']':''),'ok');
+        return; }
       if(isSalesSummaryWb(wb)){ IMP.kind='ยอดขายรายเดือน (Summary Salse) · '+BN;
         const R=parseSalesSummary(wb,BRAND);
         if(R.year&&R.year!==YEAR) throw new Error('ชีต Summary Salse เป็นปี '+R.year+' — ระบบใช้ปี '+YEAR);
         if(!R.mon.length) throw new Error('ไม่พบยอดขายของ '+BN+' ในชีต Summary Salse'+(R.warn.length?' ('+R.warn.join('; ')+')':''));
-        IMP.months=R.months; mergeMonthly(R.mon); mergeDetail(R.det); curM=R.months[R.months.length-1]; await saveState();
+        IMP.months=R.months; mergeMonthly(R.mon); mergeDetail(R.det); BRANCH_META=brandMetaFromData(); curM=R.months[R.months.length-1]; await saveState();
         const lr=R.mon[R.mon.length-1];
         finish('นำเข้ายอดขาย '+BN+' สำเร็จ: '+monRange(R.months)+' · '+R.branches+' สาขา · '+label(lr.m)+' '+lr.sales.toFixed(2)+'M','ok');
         return; }
@@ -4363,8 +4492,9 @@ async function importFile(file){
         throw new Error(BRAND==='fs'
           ? 'ชีต FS ในไฟล์ P&L เป็นงบรายได้ค่าแฟรนไชส์ของบริษัท (Franchise Fee · ค่าการตลาด · ค่าบริหาร) ไม่ใช่งบกำไรขาดทุนของร้าน Santa Fe FS ผังบัญชีไม่ตรงกัน จึงยังนำเข้าไม่ได้'
           : 'ไฟล์ P&L นี้ไม่มีงบของ '+BN+' (มีชีต SF · ES · MM · FS)'); }
-      throw new Error('หน้า '+BN+' รับไฟล์ Daily Sale (ชีต Summary Salse '+YEAR+')'+' · ไฟล์ชนิดนี้ใช้กับ Santa Fe KT');
+      throw new Error('หน้า '+BN+' รับไฟล์ Daily Sale (ชีต Summary Salse '+YEAR+')'+(BRAND==='jd'?' และไฟล์ PL Jaedang':'')+' · ไฟล์ชนิดนี้ใช้กับ Santa Fe KT');
     }
+    if(isJDPLWb(wb)) throw new Error('ไฟล์นี้เป็นงบกำไรขาดทุนของ Jaedang — เปิดหน้า Jaedang ก่อนนำเข้า');
     if(isSales2YWb(wb)){ IMP.kind='ยอดรายสาขา 2 ปี';     // ไฟล์ Sales 2025_2026 (ชีต Santa Fe)
       const R=parseSales2Y(wb);
       if(R.tyYear&&R.tyYear!==YEAR) throw new Error(`ไฟล์นี้เป็นยอดปี ${R.tyYear} เทียบ ${R.lyYear} — ระบบใช้ปี ${YEAR} เทียบ ${YEAR-1}`);
@@ -4575,7 +4705,7 @@ function hubApply(){
       +'<div class="hv-grid">'+TOPICS.map(t=>{
         /* แบรนด์ที่มีข้อมูลบางส่วน: การ์ดหมวดที่ยังไม่มีข้อมูล กดแล้วเปิดหน้าต่างนำเข้า */
         if(!avail.includes(t)) return '<button type="button" class="hv-tile off" data-imp-t="'+t.k+'"><span class="hv-top"><span class="hv-ic">'+t.ic+'</span><span class="hv-n">'+t.n+'</span><span class="hv-go">⤒</span></span>'
-          +'<span class="hv-l">ยังไม่มีข้อมูล</span><span class="hv-v">—</span><span class="hv-sub">ต้องใช้: '+NEED_T[t.k]+'</span></button>';
+          +'<span class="hv-l">ยังไม่มีข้อมูล</span><span class="hv-v">—</span><span class="hv-sub">ต้องใช้: '+needT(t.k)+'</span></button>';
         const d=tile(t)||{};
         return '<button type="button" class="hv-tile" data-topic="'+t.k+'"><span class="hv-top"><span class="hv-ic">'+t.ic+'</span><span class="hv-n">'+t.n+'</span><span class="hv-go">›</span></span>'
           +'<span class="hv-l">'+(d.l||'')+'</span><span class="hv-v">'+(d.v||'—')+'</span><span class="hv-sub">'+(d.sub||'')+'</span></button>'; }).join('')+'</div></div>');
@@ -4603,6 +4733,7 @@ const NEED_S={sssg:'แบบฟอร์มส่งยอดขาย + ยอ
   delivery:'Daily Sale หรือ แบบฟอร์มส่งยอดขาย',decline:'Daily Sale',plan:'แบบฟอร์มส่งยอดขาย (แผนรายสาขา)',
   customers:'แบบฟอร์มส่งยอดขาย (บิล · ลูกค้า)',trans:'แบบฟอร์มส่งยอดขาย (บิลรายช่องทาง)',
   pl:'ไฟล์ P&L (ชีตสรุปของแบรนด์)',cos:'ไฟล์ P&L (ต้นทุนอาหาร · ค่าแรง)',plbr:'ไฟล์ P&L (ชีต SUM รายสาขา)',cem:'ไฟล์ผลสำรวจลูกค้า CEM',oss:'ไฟล์ผลตรวจมาตรฐาน OSS'};
+const needT=k=>(k==='cost'&&BRAND==='jd')?'ไฟล์ PL Jaedang (ชีต 2026 และชีตรายเดือน)':NEED_T[k];
 function emptyApply(){
   const main=$('#main'); if(!main) return;
   const b=BRANDS.find(x=>x.k===BRAND)||BRANDS[0];
@@ -4612,7 +4743,7 @@ function emptyApply(){
   if(!TOPIC){
     main.innerHTML='<div id="hubView"><div class="hv-head"><div><div class="hv-t">'+b.n+'</div><div class="hv-s">ยังไม่มีข้อมูลในระบบ · เลือกหัวข้อเพื่อดูว่าต้องใช้ข้อมูลอะไร</div></div><button type="button" class="btn primary" data-imp>⤒ นำเข้าข้อมูล '+b.n+'</button></div>'
       +'<div class="hv-grid">'+TOPICS.map(t=>'<button type="button" class="hv-tile off" data-topic="'+t.k+'"><span class="hv-top"><span class="hv-ic">'+t.ic+'</span><span class="hv-n">'+t.n+'</span><span class="hv-go">›</span></span>'
-        +'<span class="hv-l">ยังไม่มีข้อมูล</span><span class="hv-v">—</span><span class="hv-sub">ต้องใช้: '+NEED_T[t.k]+'</span></button>').join('')+'</div></div>';
+        +'<span class="hv-l">ยังไม่มีข้อมูล</span><span class="hv-v">—</span><span class="hv-sub">ต้องใช้: '+needT(t.k)+'</span></button>').join('')+'</div></div>';
     main.querySelectorAll('[data-topic]').forEach(x=>x.onclick=()=>openTopic(x.dataset.topic));
   } else {
     const t=TOPICS.find(x=>x.k===TOPIC)||TOPICS[0], ids=t.ids.slice();
@@ -4622,7 +4753,7 @@ function emptyApply(){
       +(ids.length>1?'<div class="tb-nav">'+segHtml(t,ids)+'<div class="tb-tabs" role="tablist">'+tabsHtml(t,ids)+'</div></div>':'')+'</div>'
       +'<section class="slide" id="brandEmpty" data-title="'+b.n+' · '+name+'"><div class="body"><div class="bempty">'
       +'<div class="be-top">'+ico+'<div class="be-h">ยังไม่มีข้อมูล '+name+' ของ '+b.n+'</div></div>'
-      +'<p>ต้องใช้: <b>'+(NEED_S[TSEC]||NEED_T[t.k])+'</b> · ข้อมูลที่มีตอนนี้ทั้งหมดเป็นของ '+BRANDS[0].n+'</p>'
+      +'<p>ต้องใช้: <b>'+(t.k==='cost'&&BRAND==='jd'?needT('cost'):(NEED_S[TSEC]||needT(t.k)))+'</b> · ข้อมูลที่มีตอนนี้ทั้งหมดเป็นของ '+BRANDS[0].n+'</p>'
       +'<div class="be-act"><button type="button" class="btn primary" data-imp>⤒ นำเข้าข้อมูล '+b.n+'</button><button type="button" class="btn" data-brand-go="kt">ไปที่ '+BRANDS[0].n+'</button></div></div></div></section>';
     const hb=main.querySelector('[data-hub]'); if(hb) hb.onclick=goHub;
     main.querySelectorAll('[data-tsec]').forEach(x=>x.onclick=()=>{ TSEC=x.dataset.tsec; emptyApply(); window.scrollTo({top:0}); });
