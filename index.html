@@ -1130,8 +1130,12 @@ body.present .cmpchip{font-size:15px}
 body.present .brandsw{display:none}
 @media (min-width:821px) and (max-width:1700px){ body:not(.brand-empty):not(.brand-home) .top h1{display:none} }
 body.brand-empty .wrap{grid-template-columns:minmax(0,1fr)}
-body.brand-empty #nav,body.brand-empty .filters,body.brand-empty .find,body.brand-empty .menu,
-body.brand-empty #importBtn,body.brand-empty #presentBtn,body.brand-empty .tabbar{display:none!important}
+body.brand-empty #nav,body.brand-empty .filters,body.brand-empty .find,
+body.brand-empty #presentBtn,body.brand-empty .tabbar{display:none!important}
+body.brand-nokt #fZone{display:none!important}
+body.brand-nokt #moreBadge,body.brand-nokt #importBtn .nbadge{display:none!important}
+.be-act{display:flex;gap:8px;flex-wrap:wrap}
+.hv-head .btn.primary{align-self:center}
 .bempty{max-width:780px;padding:6px 0 10px}
 .be-h{font-size:20px;font-weight:700;color:var(--ink);margin:0 0 6px}
 .bempty p{color:var(--mute);margin:0 0 16px}
@@ -1426,7 +1430,7 @@ let DETAIL = JSON.parse(JSON.stringify(DEFAULT_DETAIL));
 /* ========================= helpers ========================= */
 const $ = s => document.querySelector(s);
 const fmtM = v => v==null ? '—' : v.toFixed(1)+'M';
-const fmtN = v => v.toLocaleString('en-US');
+const fmtN = v => v==null||isNaN(v) ? '—' : v.toLocaleString('en-US');
 const bahtM = v => v==null ? '—' : Math.round(v*1e6).toLocaleString('en-US');   // ค่าในหน่วยล้านบาท → บาทเต็ม
 const baht  = v => v==null ? '—' : Math.round(v).toLocaleString('en-US');       // ค่าในหน่วยบาท → บาทเต็ม
 /* หน่วยแสดงผล: ภาพรวม = M · รายสาขา = K */
@@ -2205,7 +2209,8 @@ function branchSalesSection(m){
   const SC=SCP||{};
   const rows=filtZone((SC.multi?(SC.br?SC.br.rows:[]):(DETAIL[m]||{}).branchRows)||[]).filter(b=>b.sales>0);
   if(!rows.length) return null;
-  const has=rows.some(b=>b.dine!=null||b.take!=null);   // ไฟล์บางเดือนไม่มียอดแยกDine in/Takeaway
+  const has=rows.some(b=>b.dine!=null||b.take!=null);
+  const hasD=rows.some(b=>b.deli!=null&&b.deli>0);   // แบรนด์ที่นำเข้าจาก Summary Salse มีแค่ยอดรวม   // ไฟล์บางเดือนไม่มียอดแยกDine in/Takeaway
   const zoneOf=c=>(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone)||'';
   const T=chanSum(m,rows);
   const pc=(v,t)=>(v==null||!t)?'':((v/t*100).toFixed(1)+'%');
@@ -2229,10 +2234,10 @@ function branchSalesSection(m){
     <td class="n"><b>${KB(b.sales)}</b></td>
     ${has?`<td class="n">${KB(b.dine)}<span class="tiny">${pc(b.dine,b.sales)}</span></td>
     <td class="n">${KB(b.take)}<span class="tiny">${pc(b.take,b.sales)}</span></td>`:''}
-    <td class="n">${KB(b.grab)}</td><td class="n">${KB(b.lm)}</td><td class="n">${KB(b.sp)}</td>
-    <td class="n"><b>${KB(b.deli)}</b><span class="tiny">${pc(b.deli,b.sales)}</span></td></tr>`;
+    ${hasD?`<td class="n">${KB(b.grab)}</td><td class="n">${KB(b.lm)}</td><td class="n">${KB(b.sp)}</td>
+    <td class="n"><b>${KB(b.deli)}</b><span class="tiny">${pc(b.deli,b.sales)}</span></td>`:''}</tr>`;
   const tbl=`<div class="scroll"><table><tr><th>สาขา</th><th class="n">ยอดขายรวม</th>${has?'<th class="n">Dine in</th><th class="n">Takeaway</th>':''}
-      <th class="n">Grab</th><th class="n">Line Man</th><th class="n">Shopee</th><th class="n">Total Delivery</th></tr>
+      ${hasD?'<th class="n">Grab</th><th class="n">Line Man</th><th class="n">Shopee</th><th class="n">Total Delivery</th>':''}</tr>
     ${T?`<tr class="hi"><td><b>รวมทุกสาขา</b><span class="tiny">${T.n} สาขา</span></td><td class="n"><b>${MB(T.sales)}</b></td>
       ${has?`<td class="n">${MB(T.dine)}<span class="tiny">${pc(T.dine,T.sales)}</span></td><td class="n">${MB(T.take)}<span class="tiny">${pc(T.take,T.sales)}</span></td>`:''}
       <td class="n">${MB(T.grab)}</td><td class="n">${MB(T.lm)}</td><td class="n">${MB(T.sp)}</td>
@@ -2846,6 +2851,7 @@ function chanSum(mm,list){
   const S=k=>rows.reduce((a,b)=>a+(b[k]||0),0);
   const dine=S('dine'), take=S('take'), deli=S('deli'), sales=S('sales');
   if(!(sales>0)) return null;
+  if(!(dine+take+deli>0)) return null;
   return {sales, dine, take, store:dine+take, deli, grab:S('grab'), lm:S('lm'), sp:S('sp'), n:rows.length};
 }
 /* ========================= ตัวกรองโซน =========================
@@ -2910,7 +2916,27 @@ function brandHome(){
   $('#nav').innerHTML=''; const tb=$('#tabbar'); if(tb) tb.innerHTML='';
   setStick();
 }
-function setBrand(k){ if(!BRANDS.some(b=>b.k===k)) return; if(k===BRAND&&!HOME) return; BRAND=k; HOME=false;
+/* ข้อมูลแยกแบรนด์: KT = ข้อมูลที่ฝังในเว็บ + ที่นำเข้า (sf-kpi-data) · FS / Jaedang = ที่นำเข้าจากเครื่องนี้ (sf-kpi-data-fs / -jd) */
+let DATA_BRAND='kt'; const BSTORE={};
+function brandStoreKey(k){ return k==='kt'?'sf-kpi-data':'sf-kpi-data-'+k; }
+function brandHasData(){ return MONTHLY.length>0 || Object.keys(DETAIL||{}).some(k=>DETAIL[k]&&Object.keys(DETAIL[k]).length); }
+function useBrandData(k){
+  if(k===DATA_BRAND) return;
+  BSTORE[DATA_BRAND]={MONTHLY,DETAIL,EXTRA,BY_IMPORT,PNL_BASE,curM,BRANCH_META,ZONES_LIST};
+  let t=BSTORE[k];
+  if(!t){ let loc=null; try{ loc=JSON.parse(localStorage.getItem(brandStoreKey(k))); }catch(e){}
+    const ke=BSTORE.kt&&BSTORE.kt.EXTRA, meta=ke&&ke.pnlFull&&ke.pnlFull.meta;
+    t={MONTHLY:(loc&&loc.monthly)||[], DETAIL:(loc&&loc.detail)||{}, EXTRA:{pnlFull:meta?{meta,months:[],actual:{},ly:{},branch:{},branchLY:{}}:null, branchYears:[]},
+       BY_IMPORT:null, PNL_BASE:null, curM:null, BRANCH_META:null, ZONES_LIST:[]}; }
+  MONTHLY=t.MONTHLY; DETAIL=t.DETAIL; EXTRA=t.EXTRA; BY_IMPORT=t.BY_IMPORT; PNL_BASE=t.PNL_BASE; BRANCH_META=t.BRANCH_META; ZONES_LIST=t.ZONES_LIST;
+  DATA_BRAND=k; FILT.zone='all';
+  refreshMonths();
+  if(t.curM&&(months.includes(t.curM)||DETAIL[t.curM])) curM=t.curM;
+  else if(months.length) curM=defaultMonth();
+  else { const dm=Object.keys(DETAIL).map(Number).filter(Boolean); curM=dm.length?Math.max(...dm):null; }
+  try{ if(curM!=null) sel.value=curM; renderFilters(); }catch(e){}
+}
+function setBrand(k){ if(!BRANDS.some(b=>b.k===k)) return; if(k===BRAND&&!HOME&&k===DATA_BRAND) return; BRAND=k; HOME=false; useBrandData(k);
   try{ localStorage.setItem('sf-kpi-brand',k); }catch(e){}
   if(document.body.classList.contains('present')) exitPresent();
   build(curM); window.scrollTo({top:0}); }
@@ -2944,9 +2970,11 @@ function syncBranchYears(){
       if(!(v.ty>0)||v.src==='form'){ v.ty=r.sales; v.src='form'; } }); });
 }
 function build(m){
-  renderBrands(); document.body.classList.toggle('brand-home', HOME); document.body.classList.toggle('brand-empty', !HOME&&BRAND!=='kt');
+  const hasData=BRAND==='kt'||brandHasData();
+  renderBrands(); document.body.classList.toggle('brand-home', HOME); document.body.classList.toggle('brand-empty', !HOME&&!hasData);
+  document.body.classList.toggle('brand-nokt', !HOME&&BRAND!=='kt');
   if(HOME) return brandHome();
-  if(BRAND!=='kt') return brandEmpty();
+  if(!hasData) return brandEmpty();
   syncBranchYears();
   if(FILT.zone==='all') return buildMain(m);
   const M0=MONTHLY, D0=DETAIL, z=zoneData();
@@ -3003,7 +3031,7 @@ function buildMain(m){
     const storesNow = d.stores?d.stores.now:null;
     /* จำนวนสาขาปีก่อน: ใช้ของแบบฟอร์มก่อน ถ้าไม่มีนับจากยอดรายสาขา 2 ปี */
     const storesLy = (d.stores&&d.stores.ly) || (brOfYear().filter(b=>b.m&&b.m[m]&&b.m[m].ly>0).length||null);
-    out.push(sec('overview',(S.multi?'Sales KPI — ':'Monthly KPI — ')+S.titleEn+(FILT.zone!=='all'?' · โซน '+FILT.zone:' · Santa Fe'),subLine,`
+    out.push(sec('overview',(S.multi?'Sales KPI — ':'Monthly KPI — ')+S.titleEn+(FILT.zone!=='all'?' · โซน '+FILT.zone:' · '+((BRANDS.find(b=>b.k===BRAND)||{n:'Santa Fe'}).n)),subLine,`
       ${(()=>{
         const M1=v=>v==null?'—':v.toFixed(1)+'M', M2=v=>v==null?'—':v.toFixed(2)+'M';
         /* แท่งเทียบแนวนอน 2 แถว: แถวที่ dim = ค่าอ้างอิง (ปีก่อน/เดือนก่อน) สีเทา */
@@ -3520,11 +3548,14 @@ function applyBY(list){ if(!Array.isArray(list)||!list.length) return; BY_IMPORT
     if(n.name) b.name=n.name; if(n.zone) b.zone=n.zone; if(n.mall) b.mall=n.mall; delete b.fromForm; b.m=b.m||{};
     Object.entries(n.m||{}).forEach(([mm,v])=>{ const o=b.m[mm]||(b.m[mm]={});
       if(v.ly!=null) o.ly=v.ly; if(v.ty!=null){ o.ty=v.ty; delete o.src; } }); }); }
-function applyState(s){ if(!s||!Array.isArray(s.monthly)||!s.monthly.length) return; MONTHLY=s.monthly; DETAIL=s.detail||{}; if(s.by) applyBY(s.by); refreshMonths(); setMonth(curM); if(s.updatedAt) $('#status').textContent='อัปเดต '+new Date(s.updatedAt).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'}); }
+function applyState(s){ if(!s||!Array.isArray(s.monthly)) return; if(!s.monthly.length&&!Object.keys(s.detail||{}).length) return;
+  MONTHLY=s.monthly; DETAIL=s.detail||{}; if(s.by) applyBY(s.by); refreshMonths();
+  if(curM==null){ const dm=Object.keys(DETAIL).map(Number).filter(Boolean); curM=dm.length?Math.max(...dm):null; }
+  setMonth(curM); if(s.updatedAt) $('#status').textContent='อัปเดต '+new Date(s.updatedAt).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'}); }
 async function saveState(){
   const s={monthly:MONTHLY, detail:DETAIL, by:BY_IMPORT||undefined, v:DATA_V, updatedAt:new Date().toISOString()};
-  try{localStorage.setItem('sf-kpi-data',JSON.stringify(s))}catch(e){}
-  if(dbDoc){ saving=true; try{ await dbDoc.set(s); }catch(e){ console.warn(e); showMsg('บันทึกขึ้นระบบไม่สำเร็จ (เก็บไว้ในเครื่องนี้แล้ว): '+(e.message||e.code),'err'); } saving=false; }
+  try{localStorage.setItem(brandStoreKey(DATA_BRAND),JSON.stringify(s))}catch(e){}
+  if(dbDoc&&DATA_BRAND==='kt'){ saving=true; try{ await dbDoc.set(s); }catch(e){ console.warn(e); showMsg('บันทึกขึ้นระบบไม่สำเร็จ (เก็บไว้ในเครื่องนี้แล้ว): '+(e.message||e.code),'err'); } saving=false; }
   applyState(s);
 }
 async function boot(){
@@ -4047,6 +4078,32 @@ function parseSales2Y(wb){
   return {list, lyYear, tyYear, months:[...months].sort((a,b)=>a-b), warn};
 }
 
+/* ===== ตัวอ่านไฟล์ Daily Sale ชีต Summary Salse ปี (ยอดขายรายเดือนรายสาขา ทุกแบรนด์) =====
+   แถวหัว: Brand · Code · Stores · เดือน ม.ค.–ธ.ค. (วันที่) · รวมปี */
+const SUMMARY_BRAND={kt:/^Santa Fe'?\s*KTR$/i, fs:/^Santa Fe'?\s*FS$/i, jd:/^Jaedang Samyan$/i};
+function summarySheetKey(wb){ return wb.SheetNames.find(n=>/^Summary\s*Sal(se|es)\s*\d{4}$/i.test(n.trim())); }
+function isSalesSummaryWb(wb){ return !!summarySheetKey(wb); }
+function parseSalesSummary(wb,brand){
+  const k=summarySheetKey(wb), year=+((k.trim().match(/(\d{4})$/)||[])[1]);
+  const rs=XLSX.utils.sheet_to_json(wb.Sheets[k],{header:1,defval:null});
+  const hi=rs.findIndex(r=>r&&typeof r[1]==='string'&&r[1].trim()==='Brand');
+  if(hi<0) return {mon:[],det:{},months:[],branches:0,year,warn:['ไม่พบหัวตาราง Brand ในชีต '+k]};
+  const H=rs[hi], col=t=>H.findIndex(v=>typeof v==='string'&&v.trim()===t);
+  const cCode=col('Code'), cName=col('Stores');
+  const mc=H.map((v,c)=>{ if(typeof v!=='number'||v<30000||v>60000) return null; const o=XLSX.SSF.parse_date_code(v); return o?{c,y:o.y,m:o.m}:null; }).filter(x=>x&&x.y===YEAR);
+  const re=SUMMARY_BRAND[brand], rows={}; let nb=0;
+  rs.slice(hi+1).forEach(r=>{ if(!r||typeof r[1]!=='string'||!re||!re.test(r[1].trim())) return; nb++;
+    const code=String(r[cCode]==null?'':r[cCode]).trim(), name=String(r[cName]||code).trim();
+    mc.forEach(x=>{ const v=r[x.c]; if(typeof v==='number'&&v>0) (rows[x.m]=rows[x.m]||[]).push({code,name,sales:v}); }); });
+  const months=Object.keys(rows).map(Number).sort((a,b)=>a-b), mon=[], det={};
+  months.forEach(m=>{ const list=rows[m], prev=rows[m-1]||[], pm={}; prev.forEach(b=>pm[b.code]=b.sales);
+    const tot=list.reduce((a,b)=>a+b.sales,0), ptot=prev.reduce((a,b)=>a+b.sales,0);
+    mon.push({m, sales:+(tot/1e6).toFixed(2), ly:null, budget:null, sssgSales:null, sssg:null, mom:ptot?+((tot/ptot-1)*100).toFixed(1):null});
+    det[m]={stores:{now:list.length, ly:null, sameStore:null},
+      branchRows:list.map(b=>({code:b.code,name:b.name,sales:b.sales,plan:null,ach:null,mom:pm[b.code]?+((b.sales/pm[b.code]-1)*100).toFixed(1):null,
+        dine:null,take:null,deli:null,grab:null,lm:null,sp:null,tr:null,cust:null,tk:null,trMom:null}))}; });
+  return {mon,det,months,branches:nb,year,warn:[]};
+}
 /* ===== ตัวอ่านไฟล์ CEM (ผลสำรวจลูกค้า ทุกสาขาในเดือนเดียว) ===== */
 function isCEMWb(wb){ return wb.SheetNames.some(n=>/^Survey Questions/i.test(n.trim())); }
 function parseCEM(wb){
@@ -4290,6 +4347,24 @@ async function importFile(file){
   IMP={file:file.name,size:file.size,kind:null,months:null};
   try{
     const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+    /* ---- Santa Fe FS / Jaedang: รับเฉพาะ Summary Salse และ P&L (ชีต FS) ข้อมูลเก็บแยกแบรนด์ ---- */
+    if(BRAND!=='kt'){
+      const BN=(BRANDS.find(b=>b.k===BRAND)||{n:BRAND}).n;
+      if(isSalesSummaryWb(wb)){ IMP.kind='ยอดขายรายเดือน (Summary Salse) · '+BN;
+        const R=parseSalesSummary(wb,BRAND);
+        if(R.year&&R.year!==YEAR) throw new Error('ชีต Summary Salse เป็นปี '+R.year+' — ระบบใช้ปี '+YEAR);
+        if(!R.mon.length) throw new Error('ไม่พบยอดขายของ '+BN+' ในชีต Summary Salse'+(R.warn.length?' ('+R.warn.join('; ')+')':''));
+        IMP.months=R.months; mergeMonthly(R.mon); mergeDetail(R.det); curM=R.months[R.months.length-1]; await saveState();
+        const lr=R.mon[R.mon.length-1];
+        finish('นำเข้ายอดขาย '+BN+' สำเร็จ: '+monRange(R.months)+' · '+R.branches+' สาขา · '+label(lr.m)+' '+lr.sales.toFixed(2)+'M','ok');
+        return; }
+      if(isPLWb(wb)){ IMP.kind='งบกำไรขาดทุน (PL) · '+BN;
+        /* ชีต FS ในไฟล์ P&L เป็นงบรายได้ของบริษัทแม่ (ค่า Franchise Fee · ค่าการตลาด · ค่าบริหาร) ไม่ใช่งบของร้านแฟรนไชส์ ผังบัญชีไม่ตรงกัน จึงยังไม่นำเข้า */
+        throw new Error(BRAND==='fs'
+          ? 'ชีต FS ในไฟล์ P&L เป็นงบรายได้ค่าแฟรนไชส์ของบริษัท (Franchise Fee · ค่าการตลาด · ค่าบริหาร) ไม่ใช่งบกำไรขาดทุนของร้าน Santa Fe FS ผังบัญชีไม่ตรงกัน จึงยังนำเข้าไม่ได้'
+          : 'ไฟล์ P&L นี้ไม่มีงบของ '+BN+' (มีชีต SF · ES · MM · FS)'); }
+      throw new Error('หน้า '+BN+' รับไฟล์ Daily Sale (ชีต Summary Salse '+YEAR+')'+' · ไฟล์ชนิดนี้ใช้กับ Santa Fe KT');
+    }
     if(isSales2YWb(wb)){ IMP.kind='ยอดรายสาขา 2 ปี';     // ไฟล์ Sales 2025_2026 (ชีต Santa Fe)
       const R=parseSales2Y(wb);
       if(R.tyYear&&R.tyYear!==YEAR) throw new Error(`ไฟล์นี้เป็นยอดปี ${R.tyYear} เทียบ ${R.lyYear} — ระบบใช้ปี ${YEAR} เทียบ ${YEAR-1}`);
@@ -4378,6 +4453,7 @@ async function importFile(file){
         (miss.length?' — ยังไม่มี: '+miss.join(' / '):'')+(warn.length?' ['+warn.join('; ')+']':''),'ok');
       return;
     }
+    if(isSalesSummaryWb(wb)) throw new Error('ชีต Summary Salse ใช้นำเข้าหน้า Santa Fe FS และ Jaedang · Santa Fe KT ใช้แบบฟอร์มส่งยอดขายและไฟล์ Daily Sale เดิม');
     const S={}; wb.SheetNames.forEach(n=>S[n]=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:null}));
     if(!S[SHEETS.monthly]) throw new Error('ไม่พบชีต "Monthly" และไม่ใช่ไฟล์ Daily Sale — ใช้ไฟล์ข้อมูลที่ดาวน์โหลดจากหน้านี้เป็นแบบฟอร์ม');
     const {mon,det}=fromRows(S); const ms=Object.keys(mon).map(Number);
@@ -4388,7 +4464,9 @@ async function importFile(file){
     finish('นำเข้าสำเร็จ: '+ms.map(label).join(', '),'ok');
   }catch(e){ finish('นำเข้าไม่สำเร็จ: '+e.message,'err'); }
 }
-$('#importBtn').onclick=()=>{showMsg('','');renderImportPanel();$('#importModal').classList.add('open');};
+$('#importBtn').onclick=()=>{showMsg('','');
+  const ih=document.querySelector('#importModal h2'); if(ih) ih.textContent='นำเข้าข้อมูล · '+((BRANDS.find(b=>b.k===BRAND)||{n:''}).n);
+  renderImportPanel();$('#importModal').classList.add('open');};
 $('#logClear').onclick=()=>{ if(!confirm('ล้างประวัติการนำเข้าในเครื่องนี้?')) return; try{localStorage.removeItem(LOG_KEY)}catch(e){} renderImportPanel(); };
 $('#closeModal').onclick=()=>$('#importModal').classList.remove('open');
 $('#importModal').onclick=e=>{if(e.target.id==='importModal')$('#importModal').classList.remove('open');};
@@ -4480,22 +4558,29 @@ function tabsHtml(t,ids){ const btn=id=>'<button type="button" role="tab" aria-s
 function place(html){ const main=$('#main'), sb=main.querySelector('.scopebar');
   if(sb) sb.insertAdjacentHTML('afterend',html); else main.insertAdjacentHTML('afterbegin',html); }
 function hubApply(){
-  if(typeof BRAND!=='undefined'&&BRAND!=='kt'&&!HOME) return emptyApply();
+  if(typeof BRAND!=='undefined'&&BRAND!=='kt'&&!HOME&&!brandHasData()) return emptyApply();
   const main=$('#main'); if(!main||!main.querySelector('section.slide')) return;
   document.body.classList.add('hub');
   ['hubView','topicBar'].forEach(id=>{ const e=document.getElementById(id); if(e) e.remove(); });
   const secs=[...main.querySelectorAll('section.slide')]; secs.forEach(x=>x.classList.remove('ghide'));
   const smh=document.querySelector('#salesmix .bar h2'); if(smh) smh.textContent=smh.textContent.replace('Sales Mix & Customers','Sales Mix');
-  const avail=TOPICS.filter(t=>t.ids.some(id=>document.getElementById(id)));
+  /* หมวดที่หัวข้อทั้งหมดขึ้นแค่ "ยังไม่มีข้อมูล" ถือว่ายังไม่มีข้อมูล */
+  const hasSec=id=>{ const el=document.getElementById(id); if(!el) return false; const b=el.querySelector('.body'); return !!b&&[...b.children].some(c=>!c.classList.contains('empty')); };
+  const avail=TOPICS.filter(t=>t.ids.some(hasSec));
   if(TOPIC&&!avail.some(t=>t.k===TOPIC)) TOPIC=null;
   if(!TOPIC){
     secs.forEach(x=>x.classList.add('hhide'));
     const b=(typeof BRANDS!=='undefined'&&BRANDS.find(x=>x.k===BRAND))||{n:'Santa Fe'};
     place('<div id="hubView"><div class="hv-head"><div><div class="hv-t">'+b.n+'</div><div class="hv-s">'+((SCP&&SCP.lab)||label(curM))+(FILT.zone!=='all'?' · โซน '+FILT.zone:'')+' · เลือกหัวข้อที่ต้องการดู</div></div></div>'
-      +'<div class="hv-grid">'+avail.map(t=>{ const d=tile(t)||{};
+      +'<div class="hv-grid">'+TOPICS.map(t=>{
+        /* แบรนด์ที่มีข้อมูลบางส่วน: การ์ดหมวดที่ยังไม่มีข้อมูล กดแล้วเปิดหน้าต่างนำเข้า */
+        if(!avail.includes(t)) return '<button type="button" class="hv-tile off" data-imp-t="'+t.k+'"><span class="hv-top"><span class="hv-ic">'+t.ic+'</span><span class="hv-n">'+t.n+'</span><span class="hv-go">⤒</span></span>'
+          +'<span class="hv-l">ยังไม่มีข้อมูล</span><span class="hv-v">—</span><span class="hv-sub">ต้องใช้: '+NEED_T[t.k]+'</span></button>';
+        const d=tile(t)||{};
         return '<button type="button" class="hv-tile" data-topic="'+t.k+'"><span class="hv-top"><span class="hv-ic">'+t.ic+'</span><span class="hv-n">'+t.n+'</span><span class="hv-go">›</span></span>'
           +'<span class="hv-l">'+(d.l||'')+'</span><span class="hv-v">'+(d.v||'—')+'</span><span class="hv-sub">'+(d.sub||'')+'</span></button>'; }).join('')+'</div></div>');
     document.querySelectorAll('[data-topic]').forEach(x=>x.onclick=()=>openTopic(x.dataset.topic));
+    document.querySelectorAll('[data-imp-t]').forEach(x=>x.onclick=()=>$('#importBtn').click());
   } else {
     const t=TOPICS.find(x=>x.k===TOPIC), ids=t.ids.filter(id=>document.getElementById(id));
     if(!ids.includes(TSEC)) TSEC=ids[0];
@@ -4513,7 +4598,7 @@ function openTopic(k){ TOPIC=k; TSEC=null; try{ history.pushState({hubT:k},''); 
 function goHub(){ TOPIC=null; TSEC=null; try{ if(history.state&&history.state.hubT) history.replaceState(null,''); }catch(e){} hubApply(); window.scrollTo({top:0}); }
 addEventListener('popstate',e=>{ if(!document.body.classList.contains('hub')) return; TOPIC=(e.state&&e.state.hubT)||null; hubApply(); window.scrollTo({top:0}); });
 /* ---- แบรนด์ที่ยังไม่มีข้อมูล (Santa Fe FS · Jaedang): โครงเดียวกับ KT ---- */
-const NEED_T={sales:'แบบฟอร์มส่งยอดขาย · Daily Sale',cust:'แบบฟอร์มส่งยอดขาย (บิล · ลูกค้า)',cost:'ไฟล์ P&L ของแบรนด์',quality:'ผลสำรวจ CEM · ผลตรวจ OSS'};
+const NEED_T={sales:'ไฟล์ Daily Sale (ชีต Summary Salse)',cust:'แบบฟอร์มส่งยอดขาย (บิล · ลูกค้า)',cost:'งบกำไรขาดทุนของร้าน (ไฟล์ P&L ปัจจุบันยังไม่มี)',quality:'ผลสำรวจ CEM · ผลตรวจ OSS'};
 const NEED_S={sssg:'แบบฟอร์มส่งยอดขาย + ยอดรายสาขา 2 ปี',rank:'ยอดรายสาขา 2 ปี',mall:'ยอดรายสาขา 2 ปี',zone:'ยอดรายสาขา 2 ปี',
   delivery:'Daily Sale หรือ แบบฟอร์มส่งยอดขาย',decline:'Daily Sale',plan:'แบบฟอร์มส่งยอดขาย (แผนรายสาขา)',
   customers:'แบบฟอร์มส่งยอดขาย (บิล · ลูกค้า)',trans:'แบบฟอร์มส่งยอดขาย (บิลรายช่องทาง)',
@@ -4525,7 +4610,7 @@ function emptyApply(){
   $('#hsub').textContent=b.n; $('#nav').innerHTML=''; const tbar=$('#tabbar'); if(tbar) tbar.innerHTML='';
   const ico='<img class="bh-ico" src="'+b.ico+'" alt="โลโก้ '+b.n+'">';
   if(!TOPIC){
-    main.innerHTML='<div id="hubView"><div class="hv-head"><div><div class="hv-t">'+b.n+'</div><div class="hv-s">ยังไม่มีข้อมูลในระบบ · เลือกหัวข้อเพื่อดูว่าต้องใช้ข้อมูลอะไร</div></div></div>'
+    main.innerHTML='<div id="hubView"><div class="hv-head"><div><div class="hv-t">'+b.n+'</div><div class="hv-s">ยังไม่มีข้อมูลในระบบ · เลือกหัวข้อเพื่อดูว่าต้องใช้ข้อมูลอะไร</div></div><button type="button" class="btn primary" data-imp>⤒ นำเข้าข้อมูล '+b.n+'</button></div>'
       +'<div class="hv-grid">'+TOPICS.map(t=>'<button type="button" class="hv-tile off" data-topic="'+t.k+'"><span class="hv-top"><span class="hv-ic">'+t.ic+'</span><span class="hv-n">'+t.n+'</span><span class="hv-go">›</span></span>'
         +'<span class="hv-l">ยังไม่มีข้อมูล</span><span class="hv-v">—</span><span class="hv-sub">ต้องใช้: '+NEED_T[t.k]+'</span></button>').join('')+'</div></div>';
     main.querySelectorAll('[data-topic]').forEach(x=>x.onclick=()=>openTopic(x.dataset.topic));
@@ -4538,12 +4623,13 @@ function emptyApply(){
       +'<section class="slide" id="brandEmpty" data-title="'+b.n+' · '+name+'"><div class="body"><div class="bempty">'
       +'<div class="be-top">'+ico+'<div class="be-h">ยังไม่มีข้อมูล '+name+' ของ '+b.n+'</div></div>'
       +'<p>ต้องใช้: <b>'+(NEED_S[TSEC]||NEED_T[t.k])+'</b> · ข้อมูลที่มีตอนนี้ทั้งหมดเป็นของ '+BRANDS[0].n+'</p>'
-      +'<button type="button" class="btn primary" data-brand-go="kt">ไปที่ '+BRANDS[0].n+'</button></div></div></section>';
+      +'<div class="be-act"><button type="button" class="btn primary" data-imp>⤒ นำเข้าข้อมูล '+b.n+'</button><button type="button" class="btn" data-brand-go="kt">ไปที่ '+BRANDS[0].n+'</button></div></div></div></section>';
     const hb=main.querySelector('[data-hub]'); if(hb) hb.onclick=goHub;
     main.querySelectorAll('[data-tsec]').forEach(x=>x.onclick=()=>{ TSEC=x.dataset.tsec; emptyApply(); window.scrollTo({top:0}); });
     main.querySelectorAll('[data-tgrp]').forEach(x=>x.onclick=()=>{ const g=t.groups[+x.dataset.tgrp]; if(g){ TSEC=g.ids[0]; emptyApply(); window.scrollTo({top:0}); } });
     const go=main.querySelector('[data-brand-go]'); if(go) go.onclick=()=>setBrand('kt');
   }
+  main.querySelectorAll('[data-imp]').forEach(x=>x.onclick=()=>$('#importBtn').click());
   setStick();
 }
 brandEmpty=function(){ emptyApply(); };
