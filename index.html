@@ -955,6 +955,7 @@ body.present #overview .headline{flex:0 0 auto}
 /* ============ หน้ายอดขาย: การ์ดเรียงลงมา (จำนวนสาขา · ยอดขาย · Performance Trend) ============ */
 .klegend{flex-direction:column;gap:6px}
 .ovstack{display:flex;flex-direction:column;gap:14px}
+.ovbottom.one{grid-template-columns:1fr}
 .ovc{background:#fff;border:1px solid rgba(226,232,240,.8);border-radius:14px;box-shadow:var(--sh);padding:16px 20px;min-width:0}
 .ovc.acc{border-left:4px solid var(--accent)}
 .ovlab{font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2)}
@@ -2899,7 +2900,7 @@ document.addEventListener('click',e=>{
     if(OVT.scope==='zone'&&!by.some(b=>b.zone===OVT.zone)) OVT.zone=(by.find(b=>b.zone)||{}).zone||'';
     ovTrendRender(); ovRender('ovBranch',ovBrHtml); } });
 document.addEventListener('change',e=>{ const s2=e.target.closest('[data-ovsel]'); if(!s2) return; OVT[s2.dataset.ovsel]=s2.value; ovTrendRender(); ovRender('ovBranch',ovBrHtml); });
-/* ===== Sales Mix รายเดือน: แท่งซ้อน Dine in · Takeaway · Delivery + เส้นประ LY ·ทั้งบริษัท หรือเลือกสาขา =====
+/* ===== Sales Mix รายเดือน: แท่งสัดส่วน 100% Dine in · Takeaway · Delivery · ทั้งบริษัท หรือเลือกสาขา =====
    ทั้งบริษัท: ความสูงแท่ง = ยอดขายเดียวกับหน้า Overview (งบ P&L ถ้ามี) แบ่งตามสัดส่วนช่องทางจากแบบฟอร์มส่งยอดขาย
    เดือนที่ยังไม่มียอดแยกช่องทาง แสดงเป็นแท่งเทาก้อนเดียว */
 const SMX={code:'all'};
@@ -2917,66 +2918,37 @@ function smxHtml(){
   const opts=`<option value="all">All Stores</option>`+by.slice().sort((p,q)=>String(p.code).localeCompare(String(q.code))).map(b=>`<option value="${b.code}" ${String(b.code)===one?'selected':''}>${b.code} ${b.name}</option>`).join('');
   const ytd=rows.reduce((a,r)=>a+(r.tot||0),0), ytdL=rows.every(r=>r.tot==null||r.ly!=null)?rows.reduce((a,r)=>a+(r.tot!=null?r.ly||0:0),0):null;
   const head=`<div class="ovth"><h3>Sales Mix — ${months.length?RNG(months):''} ${YEAR} vs ${YEAR-1}</h3><select class="smxsel" data-smx aria-label="สาขา">${opts}</select></div>
-    <div class="ovsub">${months.length?RNG(months)+' '+YEAR:''}: <b>${ytd.toFixed(2)}M</b>${ytdL?` · ${YEAR-1}: <b>${ytdL.toFixed(2)}M</b> ${pill(pct(ytdL,ytd))}`:''} · แท่งแบ่งตามช่องทาง · เส้นประ = LY</div>`;
+    <div class="ovsub">${months.length?RNG(months)+' '+YEAR:''}: <b>${ytd.toFixed(2)}M</b>${ytdL?` · ${YEAR-1}: <b>${ytdL.toFixed(2)}M</b> ${pill(pct(ytdL,ytd))}`:''} · แท่งแสดงสัดส่วนช่องทางของแต่ละเดือน (รวม 100%)</div>`;
   if(!rows.some(r=>r.tot!=null)) return head+'<div class="empty">ยังไม่มียอดขาย</div>';
-  const W=1180,H=280,L=56,R=20,T=26,B=40, n=rows.length, colW=(W-L-R)/n, bw=Math.min(64,colW*.52);
-  const mx=Math.max(...rows.flatMap(r=>[r.tot||0,r.ly||0]))*1.12||1;
-  const step=[.1,.2,.5,1,2,5,10,20,50].find(s=>mx/s<=6)||100, hi=Math.ceil(mx/step)*step, dp=step<1?1:0;
-  const x=i=>L+colW*(i+.5), y=v=>T+(H-T-B)*(1-v/hi), fv=v=>v>=10?v.toFixed(1):v.toFixed(2);
+  const W=1180,H=260,L=48,R=20,T=14,B=40, n=rows.length, colW=(W-L-R)/n, bw=Math.min(72,colW*.58);
+  const x=i=>L+colW*(i+.5), y=p=>T+(H-T-B)*(1-p/100), MS=mm=>MONTH_EN[mm-1].slice(0,3);
   let g='';
-  for(let v=0;v<=hi+1e-9;v+=step) g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#EEF2F6" ${v?'stroke-dasharray="3 5"':''}/><text x="${L-10}" y="${y(v)+4}" font-size="11.5" fill="#94A3B8" text-anchor="end">${v.toFixed(dp)}M</text>`;
+  [0,25,50,75,100].forEach(p=>{ g+=`<line x1="${L}" x2="${W-R}" y1="${y(p)}" y2="${y(p)}" stroke="#EEF2F6" ${p?'stroke-dasharray="3 5"':''}/><text x="${L-10}" y="${y(p)+4}" font-size="11.5" fill="#94A3B8" text-anchor="end">${p}%</text>`; });
   rows.forEach((r,i)=>{ const cx=x(i), now=i===n-1;
-    if(r.tot!=null){
-      if(r.seg){ let base=0; r.seg.forEach((s,j)=>{ const y0=y(base+s.v), h=y(base)-y0; g+=`<rect x="${cx-bw/2}" y="${y0}" width="${bw}" height="${Math.max(0,h)}" fill="${s.o.c}" ${j===r.seg.length-1?'rx="3"':''}/>`; base+=s.v; }); }
-      else g+=`<rect x="${cx-bw/2}" y="${y(r.tot)}" width="${bw}" height="${y(0)-y(r.tot)}" fill="#CBD5E1" rx="3"/>`;
-      /* ตัวเลขยอดรวมอยู่ในหัวแท่ง ไม่ให้ทับเส้นประ LY */
-      const inside=y(0)-y(r.tot)>28;
-      g+=`<text x="${cx}" y="${inside?y(r.tot)+18:y(r.tot)-7}" font-size="${now?13:12}" font-weight="${now?800:700}" fill="${inside?'#fff':'#334155'}" text-anchor="middle">${fv(r.tot)}</text>`; }
+    if(r.seg){ let base=0;
+      r.seg.forEach((sg,j)=>{ const p=sg.v/r.tot*100, y0=y(base+p), h=y(base)-y0;
+        g+=`<rect x="${cx-bw/2}" y="${y0}" width="${bw}" height="${Math.max(0,h)}" fill="${sg.o.c}" ${j===r.seg.length-1?'rx="3"':''}/>`;
+        if(h>=16) g+=`<text x="${cx}" y="${y0+h/2+4}" font-size="${now?13:12}" font-weight="${now?800:700}" fill="#fff" text-anchor="middle">${Math.round(p)}%</text>`;
+        base+=p; }); }
+    else if(r.tot!=null) g+=`<rect x="${cx-bw/2}" y="${y(100)}" width="${bw}" height="${y(0)-y(100)}" fill="#E2E8F0" rx="3"/><text x="${cx}" y="${y(50)+4}" font-size="11" fill="#64748B" text-anchor="middle">ไม่มียอดแยก</text>`;
     g+=`<text x="${cx}" y="${H-14}" font-size="12.5" fill="${now?'#0F172A':'#64748B'}" font-weight="${now?700:400}" text-anchor="middle">${MONTH_TH[r.m-1]}</text>`; });
-  let lp='', pen=false; rows.forEach((r,i)=>{ if(r.ly==null){ pen=false; return; } lp+=(pen?'L':'M')+x(i)+' '+y(r.ly)+' '; pen=true; });
-  if(lp) g+=`<path d="${lp}" fill="none" stroke="#64748B" stroke-width="2" stroke-dasharray="6 5"/>`+rows.map((r,i)=>r.ly==null?'':`<circle cx="${x(i)}" cy="${y(r.ly)}" r="3.4" fill="#fff" stroke="#64748B" stroke-width="2"/>`).join('');
   rows.forEach((r,i)=>{ const t=[`${MONTH_TH[r.m-1]} ${YEAR} · รวม ${r.tot==null?'—':r.tot.toFixed(2)+'M'}`];
-    if(r.seg) r.seg.forEach(s=>t.push(`${s.o.n} ${s.v.toFixed(2)}M (${Math.round(s.v/r.tot*100)}%)`)); else if(r.tot!=null) t.push('ยังไม่มียอดแยกช่องทาง');
+    if(r.seg) r.seg.forEach(sg=>t.push(`${sg.o.n} ${Math.round(sg.v/r.tot*100)}% · ${sg.v.toFixed(2)}M`)); else if(r.tot!=null) t.push('ยังไม่มียอดแยกช่องทาง');
     if(r.ly!=null) t.push(`${YEAR-1} ${r.ly.toFixed(2)}M${r.tot!=null?' ('+sgn(pct(r.ly,r.tot))+')':''}`);
-    g+=`<rect x="${L+colW*i}" y="${T-10}" width="${colW}" height="${H-B-T+10}" fill="transparent" data-tip="${t.join('\n')}"/>`; });
-  const leg=`<div class="legend lcleg">${SMX_C.map(o=>`<span><i style="background:${o.c}"></i>${o.n}</span>`).join('')}${rows.some(r=>r.tot!=null&&!r.seg)?'<span><i style="background:#CBD5E1"></i>ยอดรวม (ยังไม่มียอดแยกช่องทาง)</span>':''}<span><i class="ln" style="background:none;border-top:2px dashed #64748B;height:0"></i>${YEAR-1} (LY)</span></div>`;
-  const MS=mm=>MONTH_EN[mm-1].slice(0,3);
+    g+=`<rect x="${L+colW*i}" y="${T}" width="${colW}" height="${H-B-T}" fill="transparent" data-tip="${t.join('\n')}"/>`; });
+  const leg=`<div class="legend lcleg">${SMX_C.map(o=>`<span><i style="background:${o.c}"></i>${o.n}</span>`).join('')}${rows.some(r=>r.tot!=null&&!r.seg)?'<span><i style="background:#E2E8F0"></i>ยังไม่มียอดแยกช่องทาง</span>':''}</div>`;
+  const shareRow=k=>rows.map(r=>`<span class="mh">${r.seg?Math.round(r.seg.find(x=>x.o.k===k).v/r.tot*100)+'%':'—'}</span>`).join('');
   const tbl=`<div class="ovpw"><div class="ovpills" style="--n:${n}"><span></span>${rows.map(r=>`<span class="mh">${MS(r.m)}</span>`).join('')}
+    <span class="rl">ยอดรวม</span>${rows.map(r=>`<span><b>${r.tot==null?'—':(r.tot>=10?r.tot.toFixed(1):r.tot.toFixed(2))+'M'}</b></span>`).join('')}
     <span class="rl">vs LY</span>${rows.map(r=>`<span>${pill(r.tot!=null&&r.ly?pct(r.ly,r.tot):null)}</span>`).join('')}
-    <span class="rl">% Delivery</span>${rows.map(r=>`<span class="mh">${r.deliPc==null?'—':Math.round(r.deliPc)+'%'}</span>`).join('')}</div></div>`;
-  return head+`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Sales Mix รายเดือน">${g}</svg>`+leg+tbl;
+    ${SMX_C.map(o=>`<span class="rl">${o.n}</span>${shareRow(o.k)}`).join('')}</div></div>`;
+  return head+`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="สัดส่วนช่องทางขายรายเดือน">${g}</svg>`+leg+tbl;
 }
 document.addEventListener('change',e=>{ const s=e.target.closest('[data-smx]'); if(!s) return; SMX.code=s.value; ovRender('smxChart',smxHtml); });
 /* แถวล่างของหน้า Monthly KPI: Sales Mix (ช่องทาง + แพลตฟอร์ม) และ Customers & Branches */
 function ovBottom(m,rows,ch,d){
   const S=SCP||{}, t=d.trans, M2=v=>(v/1e6).toFixed(2)+'M', prevTH=S.multi?(S.prevLabS||''):(m>1?MONTH_TH[m-2]:'');
-  const chP=S.multi?S.chP:chanSum(m-1);
   const vsPrev=(prev,now)=>(prev&&now!=null)?`${pill(pct(prev,now))}<span class="vs">vs ${prevTH}</span>`:'';
-
-  /* ---- Sales Mix ---- */
-  let mix='<div class="empty">ยังไม่มียอดแยกช่องทางของเดือนนี้</div>';
-  if(ch){
-    /* ช่องทาง: สีต่างกันชัด ใช้ชุดเดียวกับการ์ด Total Sales */
-    const C=[{k:'dine',n:'Dine in',c:'#D9822D',bg:'#FFF5EB',bd:'#F7DDC2',tx:'#B45F16'},
-             {k:'take',n:'Takeaway',c:'#7C5CFC',bg:'#F5F3FF',bd:'#DDD6FE',tx:'#6D28D9'},
-             {k:'deli',n:'Delivery',c:'#0F9488',bg:'#EEF8F6',bd:'#CBEAE5',tx:'#0B6E66'}];
-    const share=k=>(ch[k]/ch.sales*100).toFixed(1)+'%';
-    const tiles=C.map(o=>`<div class="smt" style="background:${o.bg};border-color:${o.bd};box-shadow:inset 0 3px 0 ${o.c}" data-tip="${o.n}\n${M2(ch[o.k])} · ${share(o.k)} ของยอดขาย${chP?'\n'+prevTH+' '+M2(chP[o.k]):''}">
-        <div class="smh"><i style="background:${o.c}"></i>${o.n}</div>
-        <div class="smv">${M2(ch[o.k])}</div>
-        <div class="sms"><b style="color:${o.tx}">${share(o.k)}</b> ของยอดขาย</div>
-        <div class="smc">${chP?vsPrev(chP[o.k],ch[o.k]):''}</div></div>`).join('');
-    const PL=[{k:'grab',n:'Grab',c:PLAT_COL[0]},{k:'lm',n:'Line Man',c:PLAT_COL[1]},{k:'sp',n:'Shopee Food',c:PLAT_COL[2]}];
-    const ps=k=>ch.deli?(ch[k]/ch.deli*100).toFixed(1)+'%':'—';
-    const plat=`<div class="smplat">
-        <div class="smph"><span><i class="smdot"></i>Delivery by platform</span><b>${M2(ch.deli)} <em>${share('deli')} ของยอดขาย</em></b></div>
-        <div class="smbar thin">${PL.map(o=>`<span style="flex:${ch[o.k]||0.0001};background:${o.c}" data-tip="${o.n}\n${M2(ch[o.k])} · ${ps(o.k)} ของ Delivery"></span>`).join('')}</div>
-        <div class="smprows">${PL.map(o=>`<div class="smpr" style="box-shadow:inset 3px 0 0 ${o.c}" data-tip="${o.n}\n${M2(ch[o.k])} · ${ps(o.k)} ของ Delivery${chP?'\n'+prevTH+' '+M2(chP[o.k]):''}">
-            <div class="smh"><i style="background:${o.c}"></i>${o.n}</div>
-            <div class="smpv"><b>${M2(ch[o.k])}</b><em style="color:#0B6E66">${ps(o.k)}</em></div>
-            <div class="smc">${chP?vsPrev(chP[o.k],ch[o.k]):''}</div></div>`).join('')}</div></div>`;
-    mix=`<div class="smsub">Channels · ${S.lab||label(m)}</div><div class="smtiles">${tiles}</div>`+plat;
-  }
 
   /* ---- Customers ---- */
   const cst=(l,now,prev,f)=>`<div class="cst" data-tip="${l}\n${S.lab||label(m)} ${f(now)}${prev!=null?'\n'+prevTH+' '+f(prev):''}">
@@ -3002,8 +2974,8 @@ function ovBottom(m,rows,ch,d){
       <div><div class="cblh"><span class="dot pos"></span>Top growth</div><ol class="cbl">${top.map((b,i)=>row(b,i,'pos')).join('')}</ol></div>
       <div><div class="cblh"><span class="dot neg"></span>Needs attention</div><ol class="cbl">${bot.map((b,i)=>row(b,i,'neg')).join('')}</ol></div></div>`;
   }
-  return `<div class="ovbottom">
-    <div class="panel"><div class="phx"><div><h3>Sales Mix</h3>${S.multi&&S.br&&S.br.ms.length<S.n?`<span class="pcov">ข้อมูล ${RNG(S.br.ms)}</span>`:''}</div>${ch?`<b>${MB(ch.sales)}</b>`:''}</div>${mix}</div>
+  if(!stats&&!lists) return '';
+  return `<div class="ovbottom one">
     <div class="panel"><div class="phx"><div><h3>Customers &amp; Branches</h3>${S.multi&&S.tN&&S.tN.n<S.n?`<span class="pcov">ข้อมูล ${RNG(S.ms.filter(x=>trOf(x)))}</span>`:''}</div></div>${stats}${lists}</div>
   </div>`;
 }
