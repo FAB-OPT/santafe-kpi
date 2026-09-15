@@ -1343,6 +1343,7 @@ body.hub #salesmix .ovbottom > .panel:nth-child(2){display:none}
 #customers .strip .st .s{margin-top:0;display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;line-height:1.6}
 #customers .custiles{margin-top:22px}
 #customers .grp.big{font-size:18px;font-weight:700;color:var(--ink);letter-spacing:0;text-transform:none;margin:28px 0 12px}
+#customers .ph.big{font-size:18px;font-weight:700;color:var(--ink);letter-spacing:0;text-transform:none}
 #customers .stack1{margin:22px 0 18px}
 #customers .custiles .cuk span{min-width:84px}
 .tb-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -2073,10 +2074,11 @@ function customersSection(m){
     const CK=['dine','take','deli'], TRK=['trDine','trTake','trDeli'];
     const tkc=(x,j)=>x&&x[TRK[j]]?x[CK[j]]/x[TRK[j]]:null, ca=x=>x&&x.cust&&x.tr?x.cust/x.tr:null, pb=x=>x&&x.cust?x.sales/x.cust:null;
     const hasCh=list.some(b=>b.trDine||b.trTake||b.trDeli);
-    btbl=`<div class="grp big">รายสาขา</div>${hasCh?'':'<div class="hint" style="margin:-4px 0 10px">Ticket แยกช่องทางรายสาขา: นำเข้าไฟล์แบบฟอร์มส่งยอดขายอีกครั้ง (ข้อมูลที่นำเข้าไว้ก่อนหน้านี้ยังไม่มีจำนวนบิลแยกช่องทางรายสาขา)</div>'}
+    const chHint=hasCh?'':'<div class="hint" style="margin-top:8px">Ticket แยกช่องทางรายสาขา: นำเข้าไฟล์แบบฟอร์มส่งยอดขายอีกครั้ง (ข้อมูลที่นำเข้าไว้ก่อนหน้านี้ยังไม่มีจำนวนบิลแยกช่องทางรายสาขา)</div>';
+    btbl=`<div class="grp big">รายสาขา</div>
     <div class="scroll"><table><tr><th>#</th><th>สาขา</th><th class="n">Total Trans</th><th class="n">Ticket Avg.</th>${hasCh?CUS_CH.map(o=>`<th class="n">Ticket ${o.n}</th>`).join(''):''}<th class="n">Customers</th><th class="n">Customer Avg.</th><th class="n">Per Bill</th></tr>
     ${list.map((b,i)=>{ const p=pMap[b.code];
-      return `<tr class="clk" data-ssbr="${b.code}"><td>${i+1}</td><td>${b.code} ${b.name}</td><td class="n">${fN(b.tr)}${vsL(p&&p.tr,b.tr)}</td><td class="n"><b>${fB(b.tk)}</b>${vsL(p&&p.tk,b.tk)}</td>${hasCh?CUS_CH.map((o,j)=>`<td class="n">${fB(tkc(b,j))}${vsL(tkc(p,j),tkc(b,j))}</td>`).join(''):''}<td class="n">${fN(b.cust||null)}${vsL(p&&p.cust,b.cust)}</td><td class="n">${ca(b)==null?'—':f2(ca(b))}${vsL(ca(p),ca(b))}</td><td class="n">${fB(pb(b))}${vsL(pb(p),pb(b))}</td></tr>`; }).join('')}</table></div>`; }
+      return `<tr class="clk" data-ssbr="${b.code}"><td>${i+1}</td><td>${b.code} ${b.name}</td><td class="n">${fN(b.tr)}${vsL(p&&p.tr,b.tr)}</td><td class="n"><b>${fB(b.tk)}</b>${vsL(p&&p.tk,b.tk)}</td>${hasCh?CUS_CH.map((o,j)=>`<td class="n">${fB(tkc(b,j))}${vsL(tkc(p,j),tkc(b,j))}</td>`).join(''):''}<td class="n">${fN(b.cust||null)}${vsL(p&&p.cust,b.cust)}</td><td class="n">${ca(b)==null?'—':f2(ca(b))}${vsL(ca(p),ca(b))}</td><td class="n">${fB(pb(b))}${vsL(pb(p),pb(b))}</td></tr>`; }).join('')}</table></div>${chHint}`; }
   return sec('customers',T,'',strip+chTiles+trend+btbl);
 }
 
@@ -2600,7 +2602,7 @@ function frameBlocks(){
       body.insertBefore(panel,el);
       const before=kids[i-1];
       if(before && before.classList && before.classList.contains('grp')){
-        const head=document.createElement('div'); head.className='ph';
+        const head=document.createElement('div'); head.className='ph'+(before.classList.contains('big')?' big':'');
         head.innerHTML=before.innerHTML; panel.appendChild(head); before.remove();
       }
       run.forEach(n=>panel.appendChild(n));
