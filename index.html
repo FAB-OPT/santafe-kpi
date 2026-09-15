@@ -3753,13 +3753,16 @@ function drawBranchCust(code,box){
     return `<div class="bp-k" style="box-shadow:inset 0 3px 0 ${c}"><div class="bp-l">${n}</div>
       <div class="bp-s">Total Trans <b>${fN(t)}</b> ${lm(pt,t)}</div><div class="bp-s">Ticket Avg. <b>${fB(tick)}</b> ${lm(ptick,tick)}</div>
       <div class="bp-s">${totTr&&t?(t/totTr*100).toFixed(1)+'% of Total Trans':''}</div></div>`; }).join('');
+  /* กราฟลูกค้าและจำนวนบิลรายเดือนของสาขา (แบบเดียวกับหน้า Customers) */
+  const cS=[{name:'Customers',color:'#D9822D',w:3,label:1,vals:hist.map(h=>h.r.cust||null)},{name:'Total Trans',color:'#94A3B8',label:1,vals:hist.map(h=>h.r.tr||null)}];
+  const chart=hist.length>1?`<div class="bp-card"><div class="bp-h"><span>Customers และ Total Trans รายเดือน</span></div>${lineSeries(hist.map(h=>MONTH_TH[h.m-1]),cS,{w:1180,h:240,fmt:v=>(v/1000).toFixed(1)+'K',tipFmt:v=>fmtN(Math.round(v))})}${legendOf(cS)}</div>`:'';
   const tbl=`<div class="bp-card"><div class="bp-h"><span>รายเดือน</span></div><div class="scroll"><table>
     <tr><th>เดือน</th><th class="n">Total Trans</th><th class="n">Ticket Avg.</th><th class="n">Customers</th><th class="n">Customer Avg.</th><th class="n">Per Bill</th></tr>
     ${hist.map((h,i)=>{ const x=h.r, q=i>0&&hist[i-1].m===h.m-1?hist[i-1].r:null;
       return `<tr class="${h.m===cur.m?'hi':''}"><td>${MONTH_TH[h.m-1]}</td><td class="n">${fN(x.tr)}${vs(q&&q.tr,x.tr)}</td><td class="n">${fB(tkOf(x))}${vs(tkOf(q),tkOf(x))}</td><td class="n">${fN(x.cust||null)}${vs(q&&q.cust,x.cust)}</td><td class="n">${ca(x)==null?'—':f2(ca(x))}${vs(ca(q),ca(x))}</td><td class="n">${fB(pb(x))}${vs(pb(q),pb(x))}</td></tr>`; }).join('')}
     </table></div></div>`;
   box.innerHTML=`<div class="bp"><div class="bp-kpis" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">${kpis}</div>`+
-    (hasCh?`<div class="bp-kpis" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${chBox}</div>`:'<div class="hint">Total Trans / Ticket Avg. แยกช่องทางของสาขา: นำเข้าไฟล์แบบฟอร์มส่งยอดขายอีกครั้ง</div>')+tbl+`</div>`;
+    (hasCh?`<div class="bp-kpis" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${chBox}</div>`:'<div class="hint">Total Trans / Ticket Avg. แยกช่องทางของสาขา: นำเข้าไฟล์แบบฟอร์มส่งยอดขายอีกครั้ง</div>')+chart+tbl+`</div>`;
 }
 function openBranch(code,mode){ code=String(code);
   const meta=(BRANCH_META&&BRANCH_META[code])||{}, r=BR_CTX&&BR_CTX.rows.find(x=>String(x.code)===code);
