@@ -955,6 +955,10 @@ body.present #overview .headline{flex:0 0 auto}
 /* ============ หน้ายอดขาย: การ์ดเรียงลงมา (จำนวนสาขา · ยอดขาย · Performance Trend) ============ */
 .klegend{flex-direction:column;gap:6px}
 .ovstack{display:flex;flex-direction:column;gap:14px}
+.stack1{display:flex;flex-direction:column;gap:24px}
+.smxby{display:inline-flex;gap:12px;align-items:center;font-size:13px;color:var(--ink-2)}
+.smxby label{display:inline-flex;gap:5px;align-items:center;cursor:pointer}
+.smxby input:disabled+*,.smxby label:has(input:disabled){opacity:.45;cursor:not-allowed}
 .ovbottom.one{grid-template-columns:1fr}
 .ovc{background:#fff;border:1px solid rgba(226,232,240,.8);border-radius:14px;box-shadow:var(--sh);padding:16px 20px;min-width:0}
 .ovc.acc{border-left:4px solid var(--accent)}
@@ -2039,8 +2043,8 @@ function customersSection(m){
     const cSer=[{name:'ลูกค้า',color:'#D9822D',w:3,label:1,vals:tm.map(r=>r.v.customer)},{name:'บิล',color:'#94A3B8',vals:tm.map(r=>r.v.trans)}];
     const tSer=[{key:'all',name:'รวม',color:'#334155',vals:tm.map(r=>r.v.ticket)}]
       .concat(CUS_CH.map(o=>({key:o.k,name:o.n,color:o.c,vals:tm.map(r=>{ const c=findCh(r.v,o.k); return c?c.ticket:null; })})));
-    trend=`<div class="two"><div><h3>ลูกค้าและจำนวนบิล รายเดือน</h3>${lineSeries(labs,cSer,{w:580,h:230,fmt:v=>(v/1000).toFixed(0)+'K',tipFmt:v=>fmtN(Math.round(v))})}${legendOf(cSer)}</div>
-      <div><h3>บิลเฉลี่ยรายเดือน แยกช่องทาง (฿)</h3>${groupBars(labs.map(n=>({name:n})),tSer,{w:580,h:230,fmt:v=>Math.round(v),tipFmt:v=>'฿'+Math.round(v),bw:20,vals:tm.length<=4})}${legendOf(tSer)}</div></div>
+    trend=`<div class="stack1"><div><h3>ลูกค้าและจำนวนบิล รายเดือน</h3>${lineSeries(labs,cSer,{w:1180,h:260,fmt:v=>(v/1000).toFixed(0)+'K',tipFmt:v=>fmtN(Math.round(v))})}${legendOf(cSer)}</div>
+      <div><h3>บิลเฉลี่ยรายเดือน แยกช่องทาง (฿)</h3>${groupBars(labs.map(n=>({name:n})),tSer,{w:1180,h:260,fmt:v=>Math.round(v),tipFmt:v=>'฿'+Math.round(v),bw:26,vals:tm.length<=4})}${legendOf(tSer)}</div></div>
       <div class="grp">รายเดือน</div>
       <div class="scroll"><table><tr><th>เดือน</th><th class="n">ลูกค้า</th><th class="n">บิล</th><th class="n">ลูกค้า/บิล</th><th class="n">บิลเฉลี่ย รวม</th>${CUS_CH.map(o=>`<th class="n">บิลเฉลี่ย ${o.n}</th>`).join('')}<th class="n">ใช้จ่ายต่อหัว</th></tr>
       ${tm.map(r=>`<tr class="${r.m===m&&!S.multi?'hi':''}"><td>${r.m===m&&!S.multi?'★ ':''}${MONTH_TH[r.m-1]}</td><td class="n">${fN(r.v.customer)}</td><td class="n">${fN(r.v.trans)}</td><td class="n">${r.v.customer?f2(r.v.customer/r.v.trans):'—'}</td><td class="n"><b>${fB(r.v.ticket)}</b></td>${CUS_CH.map(o=>{ const c=findCh(r.v,o.k); return `<td class="n">${c?fB(c.ticket):'—'}</td>`; }).join('')}<td class="n">${fB(spend(r.v))}</td></tr>`).join('')}
@@ -2864,7 +2868,7 @@ const SMX_C=[{k:'dine',n:'Dine in',c:'#D9822D'},{k:'take',n:'Takeaway',c:'#7C5CF
 const SMX_P=[{k:'grab',n:'Grab'},{k:'lm',n:'Line Man'},{k:'sp',n:'Shopee Food'}];
 /* Delivery รายสาขาของเดือนล่าสุด: Grab · Line Man · Shopee Food · รวม · เทียบตามปุ่ม vs LY / vs LM ของการ์ด Sales Mix
    ยอดจากแบบฟอร์มส่งยอดขาย (บาท) · ยอด Delivery รายสาขาของปีก่อนไม่มีในข้อมูล → vs LY แสดง — */
-const SMXD={sort:'deli',dir:'desc'};
+const SMXD={sort:'deli',dir:'desc',by:'val'};
 function smxDeliHtml(mm,codes,lyM){
   const cur=filtZone((DETAIL[mm]||{}).branchRows||[]).filter(b=>b.sales>0&&(!codes||codes.has(String(b.code))));
   if(!cur.length) return '';
@@ -2876,16 +2880,19 @@ function smxDeliHtml(mm,codes,lyM){
   const TC=k=>{ const l=cur.filter(b=>pv[String(b.code)]); return l.reduce((a,b)=>a+(b[k]||0),0); };
   const chg=(p,v)=>p?`<span class="tiny ${cls(pct(p,v))}">${sgn(pct(p,v))} vs ${RN}</span>`:`<span class="tiny">— vs ${RN}</span>`;
   const pc=(v,t)=>t?(v/t*100).toFixed(1)+'%':'—';
-  const S={deli:b=>b.deli||0, grab:b=>b.grab||0, lm:b=>b.lm||0, sp:b=>b.sp||0, pc:b=>b.sales?(b.deli||0)/b.sales:0,
-    g:b=>{ const p=ref(b,'deli'); return p?pct(p,b.deli||0):null; }};
+  /* ติ๊กเลือก: เรียงตามยอดเงิน หรือ % เทียบ LM ของช่องที่เลือก · vs LY ยังไม่มียอดรายสาขาปีก่อน จึงเรียงได้เฉพาะยอด */
+  const byPct=SMXD.by==='pct'&&!lyM;
+  const gOf=k=>b=>{ if(!byPct) return b[k]||0; const p=ref(b,k); return p?pct(p,b[k]||0):null; };
+  const S={deli:gOf('deli'), grab:gOf('grab'), lm:gOf('lm'), sp:gOf('sp'), pc:b=>b.sales?(b.deli||0)/b.sales:0};
   /* มาก → น้อย หรือ น้อย → มาก · สาขาที่ไม่มีค่าเทียบอยู่ท้ายเสมอ */
-  const f=(lyM&&SMXD.sort==='g'?S.deli:S[SMXD.sort])||S.deli, up=SMXD.dir==='asc';
+  const f=S[SMXD.sort]||S.deli, up=SMXD.dir==='asc';
   const list=cur.slice().sort((a,b)=>{ const x=f(a), y=f(b); if(x==null||y==null) return (x==null)-(y==null); return up?x-y:y-x; });
   const strip=`<div class="strip">${P.map(([k,n])=>{ const v=T(k), p=TP(k);
     return `<div class="st"><div class="l">${n}</div><div class="v">${MB(v)}</div><div class="s">${k==='deli'?pc(v,T('sales'))+' ของยอดขาย':pc(v,T('deli'))+' ของ Delivery'} · ${p?pill(pct(p,TC(k)))+' vs LM':'— vs '+RN}</div></div>`; }).join('')}</div>`;
-  const opts=[['deli','Total Delivery'],['grab','Grab'],['lm','Line Man'],['sp','Shopee Food'],['pc','% Delivery ของยอดขาย']].concat(lyM?[]:[['g','Delivery โตเทียบ LM']]);
+  const opts=[['deli','Total Delivery'],['grab','Grab'],['lm','Line Man'],['sp','Shopee Food'],['pc','% Delivery ของยอดขาย']];
   const bar=`<div class="plbar"><label>เรียงตาม <select data-smxdsort>${opts.map(([k,t])=>`<option value="${k}" ${SMXD.sort===k?'selected':''}>${t}</option>`).join('')}</select></label>
-    <label>ลำดับ <select data-smxddir><option value="desc" ${up?'':'selected'}>มาก → น้อย</option><option value="asc" ${up?'selected':''}>น้อย → มาก</option></select></label>    <span class="hint">ยอดจากแบบฟอร์มส่งยอดขาย${lyM?` · ยังไม่มียอด Delivery รายสาขาของปี ${YEAR-1} จึงเทียบ LY ไม่ได้ กด vs LM เพื่อดูการเปลี่ยนแปลง`:' · เทียบ LM (เดือนก่อน) ของสาขาเดียวกัน'}</span></div>`;
+    <label>ลำดับ <select data-smxddir>${(t=>`<option value="desc" ${up?'':'selected'}>${t}มาก → น้อย</option><option value="asc" ${up?'selected':''}>${t}น้อย → มาก</option>`)(byPct&&SMXD.sort!=='pc'?'% vs LM ':'ยอด ')}</select></label>
+    <span class="smxby">ตาม <label><input type="radio" name="smxby" value="val" data-smxby ${byPct?'':'checked'}> ยอด</label><label title="${lyM?'ยังไม่มียอด Delivery รายสาขาของปีก่อน':''}"><input type="radio" name="smxby" value="pct" data-smxby ${byPct?'checked':''} ${lyM?'disabled':''}> % vs ${RN}</label></span>    <span class="hint">ยอดจากแบบฟอร์มส่งยอดขาย${lyM?` · ยังไม่มียอด Delivery รายสาขาของปี ${YEAR-1} จึงเทียบ LY ไม่ได้ กด vs LM เพื่อดูการเปลี่ยนแปลง`:' · เทียบ LM (เดือนก่อน) ของสาขาเดียวกัน'}</span></div>`;
   const row=b=>`<tr><td>${b.code} ${b.name}</td>${P.map(([k])=>`<td class="n">${k==='deli'?'<b>':''}${KB(b[k]||0)}${k==='deli'?'</b>':''}${chg(ref(b,k),b[k]||0)}</td>`).join('')}<td class="n">${pc(b.deli||0,b.sales)}</td></tr>`;
   /* ปุ่ม vs LY / vs LM อยู่บนหัวกรอบ (ชุดเดียวกับการ์ด Sales Mix) */
   const seg=`<span class="ovseg">${[['ly','vs LY'],['lm','vs LM']].map(([k,t])=>`<button type="button" class="${(lyM?'ly':'lm')===k?'on':''}" data-smxmode="${k}">${t}</button>`).join('')}</span>`;
@@ -2961,6 +2968,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{
   const ds=e.target.closest('[data-smxdsort]'); if(ds){ SMXD.sort=ds.value; ovRender('smxChart',smxHtml); return; }
   const dd=e.target.closest('[data-smxddir]'); if(dd){ SMXD.dir=dd.value; ovRender('smxChart',smxHtml); return; }
+  const by=e.target.closest('[data-smxby]'); if(by){ SMXD.by=by.value; ovRender('smxChart',smxHtml); return; }
   const x=e.target.closest('[data-smxsel]'); if(!x) return; SMX[x.dataset.smxsel]=x.value; ovRender('smxChart',smxHtml); });
 /* ========================= ขอบเขตช่วงเวลา: รวมตัวเลขหลายเดือน =========================
    build() สร้าง SCP ครั้งเดียว ทุกหัวข้ออ่านจากตัวนี้ · โหมดรายเดือนใช้ข้อมูลเดิมของเดือนนั้นตรง ๆ
