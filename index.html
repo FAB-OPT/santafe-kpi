@@ -1678,15 +1678,18 @@ function plFloatHead(){
   const top=bar&&bar.offsetParent!==null?bar.getBoundingClientRect().bottom:0;
   const r=sc.getBoundingClientRect(), hr=t.rows[0].cells[0].getBoundingClientRect();
   if(!(hr.top<top-1&&r.bottom>top+hr.height*2)){ f.hidden=true; return; }
+  /* อยู่ใน .wrap เดียวกับตาราง → ได้การย่อ/ขยาย (zoom) เท่ากัน · ค่าพิกัดจอหารด้วย k ให้เป็นหน่วยก่อนซูม */
+  const host=sc.closest('.wrap')||document.body; if(f.parentNode!==host) host.appendChild(f);
+  const k=(t.getBoundingClientRect().width/(t.offsetWidth||1))||1;
   if(f._src!==t){ f.innerHTML='<table class="pltable"></table>'; f.firstChild.appendChild(t.rows[0].cloneNode(true)); f._src=t; }
   const src=[...t.rows[0].cells], dst=[...f.firstChild.rows[0].cells];
   /* หัวสำเนาอยู่นอกหมวด → คัดลอกสไตล์ที่คำนวณแล้วของหัวจริง ตัวอักษรจะได้ขนาดเท่ากัน */
   const tcs=getComputedStyle(t); f.firstChild.style.fontFamily=tcs.fontFamily; f.firstChild.style.fontSize=tcs.fontSize;
-  src.forEach((c,i)=>{ if(!dst[i]) return; const cs=getComputedStyle(c), d=dst[i].style, w=c.getBoundingClientRect().width+'px';
-    d.width=w; d.minWidth=w; d.maxWidth=w; d.boxSizing='border-box'; d.height=c.getBoundingClientRect().height+'px';
-    ['fontSize','fontWeight','fontFamily','letterSpacing','textTransform','textAlign','color','lineHeight','paddingTop','paddingRight','paddingBottom','paddingLeft','verticalAlign','whiteSpace'].forEach(k=>d[k]=cs[k]); });
-  f.firstChild.style.width=t.getBoundingClientRect().width+'px';
-  f.style.top=top+'px'; f.style.left=r.left+'px'; f.style.width=sc.clientWidth+'px';
+  src.forEach((c,i)=>{ if(!dst[i]) return; const cs=getComputedStyle(c), d=dst[i].style, cr=c.getBoundingClientRect(), w=cr.width/k+'px';
+    d.width=w; d.minWidth=w; d.maxWidth=w; d.boxSizing='border-box'; d.height=cr.height/k+'px';
+    ['fontSize','fontWeight','fontFamily','letterSpacing','textTransform','textAlign','color','lineHeight','paddingTop','paddingRight','paddingBottom','paddingLeft','verticalAlign','whiteSpace'].forEach(p=>d[p]=cs[p]); });
+  f.firstChild.style.width=t.offsetWidth+'px';
+  f.style.top=top/k+'px'; f.style.left=r.left/k+'px'; f.style.width=sc.clientWidth+'px';
   f.hidden=false; f.scrollLeft=sc.scrollLeft;
 }
 let plFloatRaf=0;
