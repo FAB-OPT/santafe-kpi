@@ -1733,6 +1733,10 @@ function plSection(m){
   const pc=(v,base)=>v==null?'—':(v/base*100).toFixed(1)+'%';
   const dl=(a,b)=>{ if(a==null||b==null) return '—'; const d=a-b; return (d>0?'+':(d<0?'−':''))+fm(Math.abs(d)); };
   const rowsOut=[];
+  /* ช่วงหลายเดือน: แยกคอลัมน์รายเดือน (ยอด · %) ก่อนคอลัมน์รวม เหมือนงบในไฟล์ */
+  const split=!cmpMode&&months.length>1;
+  const MV=split?months.map(mm=>plVals(src,[mm])):[];
+  const mcells=it=>MV.map(v=>`<td class="n">${v?fm(v[it.index]):'—'}</td><td class="n mute">${v?pc(v[it.index],v[0]||1):'—'}</td>`).join('');
   const mains=items.filter(x=>x.depth===0);
   const sortKids=(kids)=> PLS.sort==='desc' ? kids.slice().sort((a,b)=>Math.abs(cur[b.index])-Math.abs(cur[a.index])) : kids;
   mains.forEach(mn=>{
@@ -1756,13 +1760,13 @@ function plSection(m){
       return;
     }
     rowsOut.push(`<tr class="${mn.highlight?'plhl':'plmain'}" data-id="${mn.id}">
-      <td>${mn.hasKids?`<button class="pltg" data-tg="${mn.id}" title="พับ/กาง">${open?'▾':'▸'}</button>`:'<span class="pltg-sp"></span>'}${plLabel(mn)}${mn.hasKids?` <span class="plkids">(${kids.length})</span>`:''}</td>
+      <td>${mn.hasKids?`<button class="pltg" data-tg="${mn.id}" title="พับ/กาง">${open?'▾':'▸'}</button>`:'<span class="pltg-sp"></span>'}${plLabel(mn)}${mn.hasKids?` <span class="plkids">(${kids.length})</span>`:''}</td>${mcells(mn)}
       <td class="n ${PROFIT_IDS.includes(mn.id)?cls(val):''}">${fm(val)}</td><td class="n">${pc(val,rev)}</td>
       ${prev?`<td class="n">${fm(prev[mn.index])}</td><td class="n ${good(Math.round((val-prev[mn.index])*1e6))}">${dl(val,prev[mn.index])}</td>`:''}
       ${ly?`<td class="n">${fm(ly[mn.index])}</td><td class="n ${good(Math.round((val-ly[mn.index])*1e6))}">${dl(val,ly[mn.index])}</td>`:''}
     </tr>`);
     if(open) kids.forEach(k=>{ const v=cur[k.index];
-      rowsOut.push(`<tr class="plsub" data-parent="${mn.id}"><td><span class="plsub-in">${plLabel(k)}</span></td>
+      rowsOut.push(`<tr class="plsub" data-parent="${mn.id}"><td><span class="plsub-in">${plLabel(k)}</span></td>${mcells(k)}
         <td class="n">${fm(v)}</td><td class="n">${pc(v,rev)}</td>
         ${prev?`<td class="n">${fm(prev[k.index])}</td><td class="n ${good(Math.round((v-prev[k.index])*1e6))}">${dl(v,prev[k.index])}</td>`:''}
         ${ly?`<td class="n">${fm(ly[k.index])}</td><td class="n ${good(Math.round((v-ly[k.index])*1e6))}">${dl(v,ly[k.index])}</td>`:''}</tr>`); });
@@ -1802,7 +1806,7 @@ function plSection(m){
     ${chartRows.length>1?`<div class="grp">สัดส่วนต้นทุนต่อรายได้ รายเดือน (%)</div>`+costStack(chartRows.map(r=>({m:r.m,revenue:r.revenue,food:r.food,labor:r.labor,rent:r.rent,admin:r.admin,profit:r.profit}))):''}
     <div class="scroll" style="margin-top:12px"><table class="pltable">
       ${cmpMode?`<tr><th>รายการ · ${RNG(months)} ${YEAR}</th>${ents.map(e=>`<th class="n cmpth">${e.name}</th>`).join('')}</tr>`
-      :`<tr><th>รายการ</th><th class="n">${RNG(months)} ${YEAR}</th><th class="n">% รายได้</th>
+      :`<tr><th>รายการ</th>${split?months.map(mm=>`<th class="n">${MONTH_TH[mm-1]} ${YEAR}</th><th class="n">%</th>`).join(''):''}<th class="n">${split?'รวม ':''}${RNG(months)} ${YEAR}</th><th class="n">% รายได้</th>
       ${prev?`<th class="n">${RNG(pm)} ${YEAR}</th><th class="n">Δ</th>`:''}
       ${ly?`<th class="n">${RNG(months)} ${YEAR-1}</th><th class="n">Δ</th>`:''}</tr>`}
       ${rowsOut.join('')}
