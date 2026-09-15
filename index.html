@@ -1961,57 +1961,6 @@ function deliverySection(m,d){
 
 /* ========================= Trans · Ticket · ลูกค้า แยกช่องทาง ========================= */
 const TRS={ch:'all'};
-function transSection(m,d){
-  const t=d.trans, T='Transactions · Ticket · Customers';
-  if(!t) return sec('trans',T,'',EMPTY('Trans/Ticket'));
-  const chs=[{key:'all',name:'รวมทุกช่องทาง',trans:t.trans,ticket:t.ticket,customer:t.customer,custAvg:t.custAvg},
-    ...(t.channels||[]).map(c=>({key:c.name,name:c.name,trans:c.trans,ticket:c.ticket,customer:c.customer||null,custAvg:c.custAvg||null}))];
-  const sel=chs.find(c=>c.key===TRS.ch)||chs[0];
-  const chips=`<div class="chips">${chs.map(c=>`<button class="chip ${c.key===sel.key?'on':''}" data-ch="${c.key}">${c.name}</button>`).join('')}</div>`;
-  const NA='แบบฟอร์มไม่แยกลูกค้ารายช่องทาง';
-  const S=SCP||{}, PVn=S.multi?(S.prevLabS||'ช่วงก่อน'):'LM', NWn=S.multi?S.labS:'เดือนนี้';
-  const st=(l,a,b,f=fmtN,pre='')=>{ if(b!=null&&a==null) return `<div class="st"><div class="l">${l}</div><div class="v">${pre}${f(b)}</div><div class="s">ไม่มีช่วงก่อนหน้าให้เทียบ</div></div>`;
-    if(a==null||b==null) return `<div class="st"><div class="l">${l}</div><div class="v" style="color:var(--faint)">—</div><div class="s">${NA}</div></div>`;
-    const p=pct(a,b); return `<div class="st ${cls(p)}"><div class="l">${l}</div><div class="v">${sgn(p)}</div><div class="s">${pre}${f(a)} → ${pre}${f(b)}</div></div>`; };
-  const sales=c=>(c.trans&&c.ticket&&c.trans[1]!=null)?[(c.trans[0]!=null&&c.ticket[0]!=null)?c.trans[0]*c.ticket[0]/1e6:null,c.trans[1]*c.ticket[1]/1e6]:null;
-  const strip=`<div class="grp">${sel.name} · ${t.compare}</div><div class="strip">
-    ${st('จำนวนบิล (Trans.)',sel.trans[0],sel.trans[1])}
-    ${st('ค่าเฉลี่ยต่อบิล (Ticket)',sel.ticket[0],sel.ticket[1],v=>v,'฿')}
-    ${st('ลูกค้า',sel.customer&&sel.customer[0],sel.customer&&sel.customer[1])}
-    ${st('ลูกค้าต่อบิล',sel.custAvg&&sel.custAvg[0],sel.custAvg&&sel.custAvg[1],v=>(+v).toFixed(2))}
-    ${sales(sel)?st('ยอดขาย ≈ บิล × เช็คเฉลี่ย',sales(sel)[0],sales(sel)[1],v=>v.toFixed(2)+'M','฿'):''}
-  </div>`;
-  // กราฟรายช่องทาง (คลิกแท่งเพื่อเลือกช่องทาง)
-  const chn=chs.slice(1).filter(c=>c.trans&&c.trans[1]>0);
-  let charts='';
-  if(chn.length){ const groups=chn.map(c=>({name:c.name})), selG=chn.findIndex(c=>c.key===sel.key);
-    const mk=(k,f)=>groupBars(groups,[{key:'prev',name:PVn,color:'var(--chart-soft)',vals:chn.map(c=>c[k][0])},{key:'now',name:NWn,color:'var(--chart-1)',vals:chn.map(c=>c[k][1])}],
-      {w:580,h:210,fmt:f,tipFmt:k==='trans'?(v=>fmtN(Math.round(v))+' บิล'):(v=>'฿'+Math.round(v)),attr:`data-chs="${chn.map(c=>c.key).join('|')}"`,sel:selG>=0?{g:selG,k:'now'}:null});
-    charts=`<div class="two"><div><h3>จำนวนบิลรายช่องทาง (พันบิล)</h3>${mk('trans',v=>(v/1000).toFixed(1))}</div><div><h3>ค่าเฉลี่ยต่อบิลรายช่องทาง (฿)</h3>${mk('ticket',v=>v)}</div></div>`
-      +legendOf([{name:PVn,color:'var(--chart-soft)'},{name:NWn,color:'var(--chart-1)'}])+`<div class="hint" style="margin-top:4px">คลิกแท่ง หรือปุ่มช่องทางด้านบน เพื่อดูตัวเลขของช่องทางนั้น</div>`; }
-  // ตารางรายช่องทาง: บิล · เช็คเฉลี่ย · ลูกค้า · ลูกค้า/บิล · ยอดขาย
-  const pc=(a,b)=>(a==null||b==null)?'<td class="n">—</td>':`<td class="n">${pill(pct(a,b))}</td>`;
-  const c2=(v,f=fmtN)=>`<td class="n">${v==null?'—':f(v)}</td>`;
-  const table=`<div class="scroll" style="margin-top:14px"><table><tr><th>ช่องทาง</th><th class="n">บิล ก่อน</th><th class="n">บิล นี้</th><th class="n">%</th><th class="n">เช็คเฉลี่ย ก่อน</th><th class="n">เช็คเฉลี่ย นี้</th><th class="n">%</th><th class="n">ลูกค้า ก่อน</th><th class="n">ลูกค้า นี้</th><th class="n">%</th><th class="n">ลูกค้า/บิล</th><th class="n">ยอดขาย ≈</th></tr>
-    ${chs.map(c=>{const s=sales(c); return `<tr class="clk ${c.key===sel.key?'sel':''} ${c.key==='all'?'hi':''}" data-ch="${c.key}"><td>${c.name}</td>${c2(c.trans[0])}${c2(c.trans[1])}${pc(c.trans[0],c.trans[1])}${c2(c.ticket[0],v=>'฿'+v)}${c2(c.ticket[1],v=>'฿'+v)}${pc(c.ticket[0],c.ticket[1])}${c2(c.customer&&c.customer[0])}${c2(c.customer&&c.customer[1])}${pc(c.customer&&c.customer[0],c.customer&&c.customer[1])}${c2(c.custAvg&&c.custAvg[1],v=>(+v).toFixed(2))}${c2(s&&s[1],v=>v.toFixed(2)+'M')}</tr>`;}).join('')}</table></div>
-    <div class="hint" style="margin-top:6px">ลูกค้าและลูกค้า/บิล มีเฉพาะยอดรวม (${NA}) · ยอดขาย ≈ จำนวนบิล × เช็คเฉลี่ย</div>`;
-  // แนวโน้มรายเดือน + ค่าเฉลี่ย ของช่องทางที่เลือก
-  const hist=MONTHLY.map(r=>r.m).filter(x=>x<=m&&DETAIL[x]&&DETAIL[x].trans&&(!(S.multi&&S.n>=2)||S.ms.includes(x)));
-  let trend='';
-  if(hist.length>1){
-    const g=mm=>{const tt=DETAIL[mm].trans; if(sel.key==='all') return {trans:tt.trans[1],ticket:tt.ticket[1],customer:tt.customer&&tt.customer[1],custAvg:tt.custAvg&&tt.custAvg[1]}; const c=(tt.channels||[]).find(x=>x.name===sel.key); return c?{trans:c.trans[1],ticket:c.ticket[1]}:null;};
-    const rows=hist.map(mm=>({m:mm,v:g(mm)})).filter(r=>r.v);
-    const av=k=>{const a=rows.map(r=>r.v[k]).filter(v=>v!=null); return a.length?a.reduce((x,y)=>x+y,0)/a.length:null;};
-    const row=(l,v,hi)=>`<tr class="${hi?'hi':''}"><td>${l}</td>${c2(v.trans,x=>fmtN(Math.round(x)))}${c2(v.ticket,x=>'฿'+Math.round(x))}${c2(v.customer,x=>fmtN(Math.round(x)))}${c2(v.custAvg,x=>(+x).toFixed(2))}${c2(v.trans!=null&&v.ticket!=null?v.trans*v.ticket/1e6:null,x=>x.toFixed(2)+'M')}</tr>`;
-    trend=`<div class="grp" style="margin-top:18px">รายเดือน · ${sel.name} · ค่าเฉลี่ย ${rows.length} เดือน</div>
-      <div class="two"><div>${groupBars(rows.map(r=>({name:MONTH_TH[r.m-1]})),[{key:'tr',name:'บิล',color:'var(--chart-1)',vals:rows.map(r=>r.v.trans)}],{w:580,h:180,fmt:v=>(v/1000).toFixed(1)+'K',tipFmt:v=>fmtN(Math.round(v))+' บิล'})}<div class="hint">จำนวนบิล (พันบิล)</div></div>
-      <div>${groupBars(rows.map(r=>({name:MONTH_TH[r.m-1]})),[{key:'tk',name:'เช็คเฉลี่ย',color:'var(--chart-2)',vals:rows.map(r=>r.v.ticket)}],{w:580,h:180,fmt:v=>'฿'+Math.round(v),tipFmt:v=>'฿'+Math.round(v)+' ต่อบิล'})}<div class="hint">ค่าเฉลี่ยต่อบิล (฿)</div></div></div>
-      <div class="scroll" style="margin-top:10px"><table><tr><th>เดือน</th><th class="n">บิล</th><th class="n">เช็คเฉลี่ย</th><th class="n">ลูกค้า</th><th class="n">ลูกค้า/บิล</th><th class="n">ยอดขาย ≈</th></tr>
-      ${rows.map(r=>row((r.m===m?'★ ':'')+MONTH_TH[r.m-1],r.v,r.m===m)).join('')}
-      ${row('<b>ค่าเฉลี่ย</b>',{trans:av('trans'),ticket:av('ticket'),customer:av('customer'),custAvg:av('custAvg')},false)}</table></div>`;
-  }
-  return sec('trans',T,t.compare||'',chips+strip+charts+table+trend+(t.note?`<div class="note">${t.note}</div>`:''));
-}
 
 /* ========================= ลูกค้าและบิลเฉลี่ย (เมนูแยก) =========================
    ภาพรวม: ลูกค้า · บิล · บิลเฉลี่ย · ลูกค้าต่อบิล · ใช้จ่ายต่อหัว
@@ -2479,7 +2428,7 @@ const GROUPS=[
     {cap:'ภาพรวม',ids:['overview','salesmix','monthly','sssg']},
     {cap:'รายสาขา',ids:['mall','zone','branches','plan','branchdetail']},
     {cap:'ช่องทางขาย',ids:['delivery','decline']}]},
-  {k:'cust',ic:'👥',name:'ลูกค้า',subs:[{cap:'',ids:['customers','trans']}]},
+  {k:'cust',ic:'👥',name:'ลูกค้า',subs:[{cap:'',ids:['customers']}]},
   {k:'cost',ic:'🍳',name:'COL / COS',subs:[{cap:'',ids:['cos','plbr']}]},
   {k:'pl',ic:'📊',name:'P&L',subs:[{cap:'',ids:['pl']}]},
   {k:'cem',ic:'⭐',name:'CEM',subs:[{cap:'',ids:['cem']}]},
@@ -3388,7 +3337,6 @@ function buildMain(m){
 
   // 6 trans / ticket
   const t=d.trans;
-  out.push(transSection(m,d));
   out.push(customersSection(m));
 
   // 7 branches good vs bad
@@ -4942,7 +4890,7 @@ const TOPICS=[
     {cap:'ภาพรวม',ids:['overview','monthly','sssg']},
     {cap:'สาขา',ids:['plan','mall','zone','branches','branchdetail']},
     {cap:'ช่องทางขาย',ids:['salesmix','delivery','decline']}]},
-  {k:'cust',ic:'👥',n:'ลูกค้า',ids:['customers','trans']},
+  {k:'cust',ic:'👥',n:'ลูกค้า',ids:['customers']},
   {k:'cost',ic:'📊',n:'ต้นทุน & กำไร',ids:['pl','cos','plbr']},
   {k:'quality',ic:'⭐',n:'คุณภาพร้าน',ids:['cem','oss']}];
 TOPICS.forEach(t=>{ if(t.groups) t.ids=t.groups.flatMap(g=>g.ids); });
