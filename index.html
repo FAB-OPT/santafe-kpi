@@ -701,6 +701,8 @@ body:not(.present) .plbar{font-size:13px}
 .grp{color:var(--ink-2)}
 /* ตารางยาว: ย่อไว้ก่อน */
 tr.rowhide{display:none}
+.syncst{margin-left:8px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.syncst.ok{color:var(--good)} .syncst.err{color:var(--bad)}
 /* ค้นหาสาขาในตาราง: หัวกรอบวางช่องค้นหาชิดขวา · ขณะค้นหาแสดงเฉพาะแถวที่ตรง (รวมแถวที่ถูกย่อ) และซ่อนปุ่มแสดงทั้งหมด */
 .ph:has(.brq),.grp:has(.brq){display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .brqwrap{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
@@ -1414,7 +1416,7 @@ body.hub section.slide .bar h2[data-n]::before{display:none}
 
 <header class="top">
   <img class="logo" src="data:image/jpeg;base64,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jr0BH+liDCyyYAYCNAcCdtyQd/tWri/c62hvGKx01VNCySoJe2N5aHEFut679ypriGB9sYcfP7SH9pWTcQOJFuyy42OppaeeNlBIXvEmtkEt7fku5n3FijyJlpktlPPFUUFSJwZdaOh7KMvE8fVkHXYJbXmqulOHhGVpxm8uiA8O8XdWrFx5u1fbfsuOjrainjma8SNikLQ8eh13UvmRfYOELIre50f+TFGXs6EA6319+34qIn4u4hfqOnferVJJUwfM2N0fMA72PokfGrHLvR1VBd7XKyid8rIw3mDmeWwOxVj8nFdLM8Tj9QUOu230qWYmYyKCM4x/Sdbun92+1d1K469z+BtW5zi532dVdSdns9Qn7O3+hkP80H9Hr5HjBjj7HXWRtqqaegkjfTRNi10jc3W/r1KqvCziFQYNHdG1sE8pqzGW+Frpy8297/mVAzMZmVjO5gIY0gn9q+1tHAy34WWzlEOe4OA8Xf18rRrLjWJScQpa+lu5musc0j3UUoHR/mR27KUym4Y1j+Vw3q73adtbBDyw0bSS0A+fKO+1gLsrkpMzlyCgBaTUumax/m0nsVqVfxPwfJI4Ki9WeWSshHytczej6bB7fVZxuJY743sbpY4OsXdHz7WMvhOVHLHI7W9pbpNVqHj0suzvJ25dklTc2RGKJ4DI2u78oGgT7qtBTuYXa33u+z1lsovg6R4AEXTuB30OyggvK5Ly+Zzi7VZO/de0w2CPHYwN0gAbH48IiIqFsIiIiK92mx4/UYz8VU1AFy+CqJRFz6Be2QBv468vNfSqxixw2awyMrIX13jQtuDBKN8svzD6coGjr1VARboyo9NGMdK/772XOOFKXahMepNe729b/wCD8LSTasQ/eK4RCRnwNLTPLtynlMgk0OU9z8uvxUIabHnY/cquNshqoZzDAxz9F7XH5XEewH6qAtVluF8qPh7dRzVMwGy2Nu9D3PkuLrZrhY6n4a40ktNNrYbINbHqPVTdOXN18oAb71tv58KDMZrXiMzku22veh128qcZbre3Dorh4UZrGVAEnPL1kbvs0A9PdWClsuOVeT1VK2GJtHFQCVg+I6PlJb02SPU9PZZqigzLY2rjBqvq/Hz+FZJhPfqqUi777XXn4r7V3tWOWmpxa61FVVQxXZxkdSRGXsItEjXnzDmA36BMmsdlosZttXbpGSVssUDqlvigmIuYSdDz27e/TQ9VSEWDkx6NAjF1V/n3+FkYcvM1mU1d18evX53RERaa30QIgRERERERERERERF6JwihsNs4e3Oa23uo8Iv3V18EDmyx6aNtaNb0ATo681mnE7NaHLKi3w29s7qagj8P4io+/KenU/l5rr8Oc8OG1s8VVEai01gDZ4h1I/5Af+eauM/DPFMsldWY5kcNOyT5jSvAdyb/ABBb9CF6Z0r87DbDi6QRs5vQ7GxVnp3+V5BsMfDs58+ZqIJtrqsbiiDQ69viljLGOke1jAXOcdADzKvGe4HBhlFaHiskmq61hfJE4ACPoO34k/krpQ41hfDef7Ru15ZdLjD1ipo2jo7yPKCd/U6CzLMssqsyvctxqWhjNckUQOxGwdgudLix4kDhPRkdVAG9I+Sa23XVhzZc7JY7HsRNuyRWo/AF77dbVfREXKXaRERERAiBERERERERERERERERERERERERERERERAiBERERERERERERERERERERERERERERERAi5CIv//Z" alt="Santa Fe Happy Steak">
-  <h1>Monthly Performance Review <span id="hsub"></span></h1><span class="status" id="status"></span>
+  <h1>Monthly Performance Review <span id="hsub"></span></h1><span class="status" id="status"></span><span class="syncst" id="syncSt" hidden></span>
   <div class="brandsw" id="brandSw"></div>
   <div class="filters">
     <select id="fMode" aria-label="ช่วงข้อมูล">
@@ -3278,7 +3280,7 @@ function useBrandData(k){
 function setBrand(k){ if(!BRANDS.some(b=>b.k===k)) return; if(k===BRAND&&!HOME&&k===DATA_BRAND) return; BRAND=k; HOME=false; useBrandData(k);
   try{ localStorage.setItem('sf-kpi-brand',k); }catch(e){}
   if(document.body.classList.contains('present')) exitPresent();
-  build(curM); window.scrollTo({top:0}); }
+  build(curM); window.scrollTo({top:0}); syncPull(brandStoreKey(k)); }
 function brandEmpty(){
   const b=BRANDS.find(x=>x.k===BRAND), kt=BRANDS[0].n;
   const ms=MONTHLY.map(r=>r.m).sort((a,c)=>a-c), rng=ms.length?RNG(ms)+' '+YEAR:'';
@@ -3911,6 +3913,57 @@ new MutationObserver(()=>tipify($('#main'))).observe($('#main'),{childList:true,
 
 /* ========================= storage (db → localStorage) ========================= */
 let db=null, dbDoc=null, saving=false;
+/* ===== ฐานข้อมูลกลาง (Supabase): ทุกเครื่องเห็นข้อมูลที่นำเข้าชุดเดียวกัน =====
+   เก็บเป็นก้อนเข้ารหัส AES-GCM (กุญแจสร้างจากรหัสเข้าเว็บ) · ใครอ่านก็ถอดไม่ได้ถ้าไม่มีรหัส
+   เขียนได้ผ่านฟังก์ชัน sfkpi_save ที่ตรวจกุญแจเขียน (สร้างจากรหัสเข้าเว็บ) เท่านั้น · ต่อไม่ได้ = ใช้ข้อมูลในเครื่องตามเดิม */
+const SB_URL='https://prkoyrorasldnqekhhtv.supabase.co', SB_KEY='sb_publishable_iNEgZgxU0QSn_WtCrRZtRg_5AbWjaQO';
+const SYNC={key:null, token:null, row:{}, err:null, busy:false};
+let SYNC_IT=200000;   // รอบ PBKDF2 (ต้องตรงกับแฮชกุญแจเขียนในฐาน)
+const b64e=u=>{ let s=''; const a=new Uint8Array(u); for(let i=0;i<a.length;i+=0x8000) s+=String.fromCharCode.apply(null,a.subarray(i,i+0x8000)); return btoa(s); };
+async function syncKeys(pass){ try{
+  const kb=await crypto.subtle.importKey('raw',new TextEncoder().encode(pass),'PBKDF2',false,['deriveKey','deriveBits']);
+  const P=s=>({name:'PBKDF2',salt:new TextEncoder().encode(s),iterations:SYNC_IT,hash:'SHA-256'});
+  SYNC.key=await crypto.subtle.deriveKey(P('sfkpi-data-v1'),kb,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+  const bits=await crypto.subtle.deriveBits(P('sfkpi-write-v1'),kb,256);
+  SYNC.token=[...new Uint8Array(bits)].map(x=>x.toString(16).padStart(2,'0')).join('');
+}catch(e){ console.warn('sync keys',e); SYNC.key=null; } }
+async function syncGz(bytes,de){ if(typeof CompressionStream==='undefined') return null;
+  const st=new Blob([bytes]).stream().pipeThrough(de?new DecompressionStream('gzip'):new CompressionStream('gzip'));
+  return new Uint8Array(await new Response(st).arrayBuffer()); }
+async function syncEnc(obj){ const raw=new TextEncoder().encode(JSON.stringify(obj)), z=await syncGz(raw), iv=crypto.getRandomValues(new Uint8Array(12));
+  const c=await crypto.subtle.encrypt({name:'AES-GCM',iv},SYNC.key,z||raw); return JSON.stringify({i:b64e(iv),c:b64e(c),z:z?1:0}); }
+async function syncDec(blob){ const o=JSON.parse(blob); let p=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:B64(o.i)},SYNC.key,B64(o.c)));
+  if(o.z) p=await syncGz(p,1); return JSON.parse(new TextDecoder().decode(p)); }
+const sbH=()=>({apikey:SB_KEY,'Content-Type':'application/json'});
+function syncBadge(st){ const el=document.getElementById('syncSt'); if(!el) return; el.hidden=false; el.className='syncst '+st;
+  el.textContent=st==='ok'?'● ข้อมูลกลาง':'● ซิงก์ไม่สำเร็จ';
+  el.title=st==='ok'?'ข้อมูลที่นำเข้าเก็บในฐานข้อมูลกลาง ทุกเครื่องเห็นชุดเดียวกัน':'ต่อฐานข้อมูลกลางไม่ได้ (ใช้ข้อมูลในเครื่องนี้แทน): '+((SYNC.err&&SYNC.err.message)||''); }
+async function syncPush(id,s){ if(!SYNC.key||!SYNC.token) return;
+  try{ const r=await fetch(SB_URL+'/rest/v1/rpc/sfkpi_save',{method:'POST',headers:sbH(),
+      body:JSON.stringify({p_id:id,p_blob:await syncEnc(s),p_v:s.v==null?null:String(s.v),p_token:SYNC.token})});
+    if(!r.ok) throw new Error('HTTP '+r.status+' '+(await r.text()).slice(0,160));
+    SYNC.row[id]=await r.json(); SYNC.err=null; syncBadge('ok'); }
+  catch(e){ console.warn('sync push',e); SYNC.err=e; syncBadge('err'); } }
+/* ดึงจากฐานกลาง: เช็กเวลาอัปเดตก่อน (เบา) · ของฐานใหม่กว่าในเครื่อง → ใช้ของฐาน · ในเครื่องใหม่กว่า/ฐานยังว่าง → ส่งขึ้น */
+async function syncPull(id){ if(!SYNC.key||SYNC.busy) return; SYNC.busy=true;
+  try{ const q=SB_URL+'/rest/v1/sfkpi_state?id=eq.'+encodeURIComponent(id)+'&select=';
+    let r=await fetch(q+'updated_at',{headers:sbH()}); if(!r.ok) throw new Error('HTTP '+r.status+' '+(await r.text()).slice(0,160));
+    const head=(await r.json())[0];
+    let local=null; try{ local=JSON.parse(localStorage.getItem(id)); }catch(e){}
+    const okV=x=>x&&(!DATA_V||!x.v||x.v===DATA_V), lt=okV(local)&&local.updatedAt||'';
+    if(!head){ if(lt) await syncPush(id,local); else { SYNC.err=null; syncBadge('ok'); } return; }
+    if(SYNC.row[id]===head.updated_at){ SYNC.err=null; syncBadge('ok'); return; }
+    r=await fetch(q+'updated_at,blob',{headers:sbH()}); if(!r.ok) throw new Error('HTTP '+r.status);
+    const row=(await r.json())[0]; const s=await syncDec(row.blob), st=okV(s)&&s.updatedAt||'';
+    SYNC.row[id]=row.updated_at;
+    if(st&&st>lt){ try{ localStorage.setItem(id,JSON.stringify(s)); }catch(e){}
+      if(brandStoreKey(DATA_BRAND)===id) applyState(s); }
+    else if(lt&&lt>st) await syncPush(id,local);
+    SYNC.err=null; syncBadge('ok'); }
+  catch(e){ console.warn('sync pull',e); SYNC.err=e; syncBadge('err'); }
+  finally{ SYNC.busy=false; } }
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') syncPull(brandStoreKey(DATA_BRAND)); });
+setInterval(()=>{ if(document.visibilityState==='visible') syncPull(brandStoreKey(DATA_BRAND)); },120000);
 /* ยอดรายสาขา 2 ปีที่นำเข้าจากเครื่องนี้: รวมเข้ากับชุดที่ฝังในเว็บ (ตัวเลขจากไฟล์ชนะ)
    เดือนที่ไฟล์ยังไม่มียอดปีนี้ ยังใช้ยอดที่เติมจากแบบฟอร์มส่งยอดขายเหมือนเดิม */
 let BY_IMPORT=null;
@@ -3930,6 +3983,7 @@ async function saveState(){
   /* บันทึกในเครื่องไม่สำเร็จ (เช่น พื้นที่เบราว์เซอร์เต็ม) ต้องบอก ไม่งั้นเปิดเว็บใหม่ข้อมูลที่นำเข้าจะหายเงียบ ๆ */
   SAVE_ERR=null;
   try{localStorage.setItem(brandStoreKey(DATA_BRAND),JSON.stringify(s))}catch(e){ console.warn(e); SAVE_ERR=e; }
+  await syncPush(brandStoreKey(DATA_BRAND),s);
   if(dbDoc&&DATA_BRAND==='kt'){ saving=true; try{ await dbDoc.set(s); }catch(e){ console.warn(e); showMsg('บันทึกขึ้นระบบไม่สำเร็จ (เก็บไว้ในเครื่องนี้แล้ว): '+(e.message||e.code),'err'); } saving=false; }
   applyState(s);
 }
@@ -3945,6 +3999,7 @@ async function boot(){
   // เปิดหน้ามาที่เดือนที่ปิดครบแล้ว (LM เดือนปัจจุบัน) · ถ้าเดือนนั้นยังไม่มีข้อมูล ใช้เดือนล่าสุดก่อนหน้านั้น
   setMonth(defaultMonth());
   renderFilters(); bindFilters();
+  syncPull(brandStoreKey(DATA_BRAND));
   if(!window.claude) return;
   db=await claude.use('db'); if(!db) return;
   dbDoc=db.doc('kpi/data');
@@ -3981,6 +4036,7 @@ async function unlock(pass, remember){
            kpiMonths:data.kpiMonths, mallGroups:data.mallGroups};
   MONTHLY = JSON.parse(JSON.stringify(DEFAULT_MONTHLY));
   DETAIL  = JSON.parse(JSON.stringify(DEFAULT_DETAIL));
+  await syncKeys(pass);
   if(remember){ try{ localStorage.setItem('sf-kpi-pass', pass); }catch(e){} }
   document.getElementById('lock').classList.add('done');
   document.body.classList.remove('locked');
@@ -4737,7 +4793,8 @@ function logImport(e){ const L=getLog(); L.unshift(e); try{ localStorage.setItem
 /* ใช้แทน showMsg ภายใน importFile: แสดงผล + บันทึกประวัติ + วาดแผงใหม่ */
 let SAVE_ERR=null;
 function finish(t,c){
-  if(SAVE_ERR&&c==='ok'&&!dbDoc){ t+=' — ⚠ แต่บันทึกลงเครื่องไม่สำเร็จ ('+(SAVE_ERR.name||SAVE_ERR.message)+') เปิดเว็บใหม่แล้วข้อมูลนี้จะหาย: ล้างข้อมูลแบรนด์อื่นที่ไม่ใช้ หรือกดล้างประวัติ แล้วนำเข้าอีกครั้ง'; c='err'; }
+  if(c==='ok'&&SYNC.key&&SYNC.err){ t+=' — ⚠ แต่ส่งขึ้นฐานข้อมูลกลางไม่สำเร็จ เครื่องอื่นจะยังไม่เห็นข้อมูลนี้ ('+String(SYNC.err.message||SYNC.err).slice(0,120)+')'; c='err'; }
+  if(SAVE_ERR&&c==='ok'&&!dbDoc&&!(SYNC.key&&!SYNC.err)){ t+=' — ⚠ แต่บันทึกลงเครื่องไม่สำเร็จ ('+(SAVE_ERR.name||SAVE_ERR.message)+') เปิดเว็บใหม่แล้วข้อมูลนี้จะหาย: ล้างข้อมูลแบรนด์อื่นที่ไม่ใช้ หรือกดล้างประวัติ แล้วนำเข้าอีกครั้ง'; c='err'; }
   showMsg(t,c);
   if(IMP){ logImport({t:new Date().toISOString(),file:IMP.file,size:IMP.size,
       kind:IMP.kind||(c==='ok'?'ไฟล์ข้อมูลเว็บ':'ไม่รู้จักไฟล์'),
