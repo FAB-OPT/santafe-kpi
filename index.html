@@ -1650,11 +1650,35 @@ function histo(vals,edges,labels){
   const mx=Math.max(...cnt,1), y=v=>T+(H-T-B)*(1-v/mx);
   let g=`<line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="var(--line)"/>`;
   cnt.forEach((n,i)=>{ const cx=L+gw*(i+.5), c=i<2?'var(--bad)':(i<3?'var(--amber)':'var(--good)');
-    g+=`<rect x="${cx-bw/2}" y="${y(n)}" width="${bw}" height="${Math.max(2,H-B-y(n))}" fill="${c}" rx="4" data-tip="%กำไร ${labels[i]}\n${n} สาขา · ${vals.length?(n/vals.length*100).toFixed(0):0}% ของสาขาทั้งหมด"/>
-        <text x="${cx}" y="${y(n)-6}" font-size="12.5" font-weight="600" fill="var(--ink)" text-anchor="middle">${n}</text>
-        <text x="${cx}" y="${H-14}" font-size="11.5" fill="var(--mute)" text-anchor="middle">${labels[i]}</text>`; });
+    /* data-bin: คลิกทั้งคอลัมน์ได้ (ดูรายชื่อสาขาในช่วงนั้น) */
+    g+=`<rect x="${L+gw*i}" y="${T}" width="${gw}" height="${H-T}" fill="transparent" data-bin="${i}" style="cursor:pointer"/>
+        <rect x="${cx-bw/2}" y="${y(n)}" width="${bw}" height="${Math.max(2,H-B-y(n))}" fill="${c}" rx="4" data-bin="${i}" data-bar="${i}" style="cursor:pointer" data-tip="%กำไร ${labels[i]}\n${n} สาขา · ${vals.length?(n/vals.length*100).toFixed(0):0}% ของสาขาทั้งหมด\nคลิกเพื่อดูรายชื่อสาขา"/>
+        <text x="${cx}" y="${y(n)-6}" font-size="12.5" font-weight="600" fill="var(--ink)" text-anchor="middle" pointer-events="none">${n}</text>
+        <text x="${cx}" y="${H-14}" font-size="11.5" fill="var(--mute)" text-anchor="middle" pointer-events="none">${labels[i]}</text>`; });
   return `<svg class="chart" viewBox="0 0 ${W} ${H}">${g}</svg>`;
 }
+/* ---- Profit by Branch: คลิกแท่งการกระจาย %กำไร → รายชื่อสาขาในช่วงนั้น ---- */
+let PLBR=null;
+function plbrPickHtml(){
+  if(!PLBR||PLBR.sel==null) return '';
+  const {rank,edges,labels,sel}=PLBR, binOf=v=>{ const k=edges.findIndex(e=>v<e); return k<0?edges.length-1:k; };
+  const list=rank.filter(b=>binOf(b.gp)===sel).sort((a,b)=>b.gp-a.gp);
+  return `<div class="bp-card" style="margin-top:12px"><div class="bp-h"><span>%กำไร ${labels[sel]} · ${list.length} สาขา</span><button type="button" class="btn small" data-binclose>ปิด</button></div>`+
+    (list.length?`<div class="scroll"><table><tr><th>#</th><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">กำไร</th><th class="n">%กำไร</th><th class="n">%COS</th><th class="n">%COL</th></tr>
+      ${list.map((b,i)=>`<tr class="clk" data-plpick="${b.code}"><td>${i+1}</td><td>${b.name}</td><td class="n">${KB(b.sales)}</td><td class="n ${cls(b.profit)}">${KB(b.profit)}</td><td class="n ${cls(b.gp)}">${b.gp.toFixed(1)}%</td><td class="n">${b.cos.toFixed(1)}%</td><td class="n">${b.col.toFixed(1)}%</td></tr>`).join('')}</table></div>`
+      :'<div class="empty">ไม่มีสาขาในช่วงนี้</div>')+`</div>`;
+}
+function plbrPickShow(){
+  const box=document.getElementById('plbrPick'); if(box) box.innerHTML=plbrPickHtml();
+  document.querySelectorAll('#plbr svg rect[data-bar]').forEach(r=>r.style.opacity=(!PLBR||PLBR.sel==null||+r.dataset.bar===PLBR.sel)?'1':'.35');
+  if(box&&PLBR&&PLBR.sel!=null) box.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+document.addEventListener('click',e=>{
+  const bin=e.target.closest('#plbr [data-bin]');
+  if(bin&&PLBR){ const i=+bin.dataset.bin; PLBR.sel=PLBR.sel===i?null:i; plbrPickShow(); return; }
+  if(e.target.closest('#plbrPick [data-binclose]')&&PLBR){ PLBR.sel=null; plbrPickShow(); return; }
+  const r=e.target.closest('#plbrPick tr[data-plpick]'); if(r) openBranch(r.dataset.plpick);
+});
 /* ---- เส้นยอดขายรายเดือนของสาขาเดียว + เส้นแผน ---- */
 function branchLine(hist){
   const rows=hist.filter(h=>h.r); if(rows.length<2) return '';
@@ -3399,6 +3423,7 @@ function buildMain(m){
     const t=(arr)=>`<div class="scroll"><table><tr><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">กำไร</th><th class="n">%กำไร</th><th class="n">%COS</th><th class="n">%COL</th></tr>
       ${arr.map(b=>`<tr class="clk" data-ssbr="${b.code}"><td>${b.name}</td><td class="n">${KB(b.sales)}</td><td class="n ${cls(b.profit)}">${KB(b.profit)}</td><td class="n ${cls(b.gp)}">${b.gp.toFixed(1)}%</td><td class="n">${b.cos.toFixed(1)}%</td><td class="n">${b.col.toFixed(1)}%</td></tr>`).join('')}</table></div>`;
     const loss=plb.filter(b=>b.profit<0);
+    PLBR={rank,edges:[-10,0,5,10,15,1e9],labels:['ขาดทุน>10%','ขาดทุน 0-10%','0-5%','5-10%','10-15%','>15%'],sel:null};
     out.push(sec('plbr','Profit by Branch',`${S.multi?S.lab:label(plbM)}${plbM!==m&&!S.multi?' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':''} · ${rank.length} สาขา${isJD()&&JD_CLOSED.size?(PLS.closed?' (รวมสาขาปิด)':` (ไม่รวมสาขาปิด ${JD_CLOSED.size} สาขา)`):''} · เรียงตาม %กำไร${skipped?` (ไม่รวม ${skipped} สาขาที่ยอดต่ำกว่า 0.2M)`:''}`,`
       <div class="strip">
         <div class="st pos"><div class="l">สาขาที่กำไร</div><div class="v">${plb.length-loss.length}</div><div class="s">จาก ${plb.length} สาขา</div></div>
@@ -3407,7 +3432,9 @@ function buildMain(m){
         <div class="st"><div class="l">%COL เฉลี่ย</div><div class="v">${((rank.length?rank:plb).reduce((a,b)=>a+b.col,0)/(rank.length?rank:plb).length).toFixed(1)}%</div><div class="s">ค่าแรง</div></div>
       </div>
       <div class="grp">การกระจาย %กำไร (จำนวนสาขา)</div>
-      ${histo(rank.map(b=>b.gp),[-10,0,5,10,15,1e9],['ขาดทุน>10%','ขาดทุน 0-10%','0-5%','5-10%','10-15%','>15%'])}
+      ${histo(rank.map(b=>b.gp),PLBR.edges,PLBR.labels)}
+      <div class="hint" style="margin-top:4px">คลิกแท่งกราฟเพื่อดูรายชื่อสาขาในช่วงนั้น</div>
+      <div id="plbrPick"></div>
       <div class="two" style="margin-top:16px"><div><h3 class="g">กำไรดีที่สุด 5 สาขา</h3>${t(srt.slice(0,5))}</div>
       <div><h3 class="r">ต้องดูแลด่วน 5 สาขา</h3>${t(srt.slice(-5).reverse())}</div></div>`));
   }
