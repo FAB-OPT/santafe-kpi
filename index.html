@@ -2020,7 +2020,16 @@ const DELS={lm:false,ly:false};
 const PLATS=['Grab','Line Man','Shopee Food'], PLAT_COL=['#166534','#22C55E','#EE4D2D'];   // Grab เขียวเข้ม · Line Man เขียวสว่าง · Shopee Food ส้ม (สีแบรนด์)
 const platKey=n=>String(n||'').toLowerCase().replace(/[\s_\-]/g,'').replace('shopeefood','shopee');
 function platVal(mm,n,k){ const dd=DETAIL[mm]&&DETAIL[mm].delivery; const p=dd&&(dd.platforms||[]).find(x=>platKey(x.name)===platKey(n)); return p&&p[k]!=null?p[k]:null; }
-function platLY(mm,n){ if(FILT.zone!=='all') return null; const arr=EXTRA.deliveryMonths&&EXTRA.deliveryMonths[`${YEAR}-${String(mm).padStart(2,'0')}`]; const p=arr&&arr.find(x=>platKey(x.platform)===platKey(n)); return p&&p.ly!=null?p.ly:null; }
+const STF_PLAT={grab:'g',lineman:'l',shopee:'p'};
+/* ยอด LY รายแพลตฟอร์ม: ใช้ของไฟล์ที่ฝังมาก่อน ถ้าไม่มีให้รวมจากประวัติรายสาขา (ไฟล์ STF) */
+function platLYh(mm,n){ const k=STF_PLAT[platKey(n)]; if(!k) return null;
+  const BY=filtZone(EXTRA.branchYears||[]); let t=0, has=false;
+  BY.forEach(b=>{ const a=b.h&&b.h[YEAR-1]&&b.h[YEAR-1][k], v=a&&a[mm-1]; if(v!=null){ t+=v; has=true; } });
+  return has?+(t/1e6).toFixed(2):null; }
+/* ใช้ประวัติรายสาขา (ไฟล์ STF) ก่อน เพราะนับสาขาชุดเดียวกับยอดปีนี้ · ไม่มีค่อยใช้ค่าที่ฝังมาในไฟล์เว็บ */
+function platLY(mm,n){ const h=platLYh(mm,n); if(h!=null) return h;
+  const arr=FILT.zone==='all'&&EXTRA.deliveryMonths&&EXTRA.deliveryMonths[`${YEAR}-${String(mm).padStart(2,'0')}`];
+  const p=arr&&arr.find(x=>platKey(x.platform)===platKey(n)); return p&&p.ly!=null?p.ly:null; }
 function platLM(mm,n){ const v=platVal(mm-1,n,'now'); if(v!=null) return v; const p=platVal(mm,n,'prev'); return p>0?p:null; }
 function deliverySection(m,d){
   const dl=d.delivery, T='Delivery Sales by Platform';
@@ -3972,6 +3981,7 @@ function applyBY(list){ if(!Array.isArray(list)||!list.length) return; BY_IMPORT
   list.forEach(n=>{ let b=idx[n.code];
     if(!b){ b={code:n.code,name:n.name,zone:n.zone,mall:n.mall,m:{}}; BY.push(b); idx[n.code]=b; }
     if(n.name) b.name=n.name; if(n.zone) b.zone=n.zone; if(n.mall) b.mall=n.mall; delete b.fromForm; b.m=b.m||{};
+    if(n.h) b.h=n.h; if(n.region) b.region=n.region; if(n.owner) b.owner=n.owner; if(n.open) b.open=n.open;
     Object.entries(n.m||{}).forEach(([mm,v])=>{ const o=b.m[mm]||(b.m[mm]={});
       if(v.ly!=null) o.ly=v.ly; if(v.ty!=null){ o.ty=v.ty; delete o.src; } }); }); }
 function applyState(s){ if(!s||!Array.isArray(s.monthly)) return; if(!s.monthly.length&&!Object.keys(s.detail||{}).length) return;
@@ -4483,6 +4493,61 @@ function parsePL(wb){
 
 /* ===== ตัวอ่านไฟล์ยอดรายสาขา 2 ปี (Sales 2025_2026 · ชีต Santa Fe) =====
    แถวหัว: ST · Branch · … · Location 2 (กลุ่มห้าง) · … · BZM แล้วเดือนละ 3 คอลัมน์ (LY · ปีนี้ · YoY) */
+/* ===== ไฟล์ STF - Data / STF - DataSummery (ยอดรายสาขารายเดือนย้อนหลัง 3 ปี) =====
+   แถว = สาขา (Code · Name · Opening Date · Brand · Owner · Territory · Region)
+   คอลัมน์แบ่งเป็นบล็อกตามตัวชี้วัด (Sales Total / Grab / Line Man / Shopee / Takeaway · Ticket · Cust.) แต่ละบล็อกเรียงเป็นเดือน (วันที่ของ Excel)
+   เก็บเป็นประวัติรายสาขา b.h[ปี] = {s,g,l,p,t,k,c} ปีละ 12 ช่อง (ยอด · Grab · Line Man · Shopee · Takeaway · เช็คเฉลี่ย · ลูกค้า) */
+const STF_MET={'sales/total':'s','sales/grab':'g','sales/line man':'l','sales/shopee':'p','sales/takeaway':'t','ticket/total':'k','cust./total':'c'};
+const STF_MN={s:'ยอดขาย',g:'Grab',l:'Line Man',p:'Shopee',t:'Takeaway',k:'เช็คเฉลี่ย',c:'ลูกค้า'};
+function stfSheet(wb,name){ const sh=wb.Sheets[name]; if(!sh) return null;
+  const rs=XLSX.utils.sheet_to_json(sh,{header:1,defval:null,blankrows:false});
+  const hi=rs.findIndex(r=>r&&r.some(v=>typeof v==='string'&&String(v).trim()==='Code'));
+  if(hi<3) return null; const H=rs[hi]||[];
+  if(!H.some(v=>typeof v==='string'&&/^opening\s*date$/i.test(String(v).trim()))) return null;
+  return {rs,hi,H}; }
+function isSTFWb(wb){ return wb.SheetNames.some(n=>stfSheet(wb,n)); }
+function parseSTF(wb){
+  const out={}, warn=[], got={}, YMIN=YEAR-2; let sheets=0;
+  wb.SheetNames.forEach(sn=>{
+    const S=stfSheet(wb,sn); if(!S) return; sheets++;
+    const rs=S.rs, hi=S.hi, H=S.H, lab=(r,c)=>{ const v=(rs[r]||[])[c]; return v==null?'':String(v).trim(); };
+    const cols=[];
+    for(let c=10;c<H.length;c++){
+      const v=H[c]; if(typeof v!=='number'||v<20000) continue;
+      const d=XLSX.SSF.parse_date_code(v); if(!d||!d.y||d.y<YMIN||d.y>YEAR) continue;
+      const key=(lab(hi-3,c)+'/'+lab(hi-2,c)).toLowerCase(), met=STF_MET[key];
+      if(met) cols.push({c:c,met:met,y:d.y,m:d.m});
+    }
+    if(!cols.length) return;
+    for(let i=hi+1;i<rs.length;i++){ const r=rs[i]||[]; const code=String(r[1]==null?'':r[1]).trim();
+      if(!/^\d{4}$/.test(code)) continue;
+      let op=''; if(typeof r[3]==='number'&&r[3]>20000){ const d0=XLSX.SSF.parse_date_code(r[3]); if(d0) op=d0.y+'-'+String(d0.m).padStart(2,'0')+'-'+String(d0.d).padStart(2,'0'); }
+      const b=out[code]||(out[code]={code:code, name:String(r[2]||code).replace(/\s+/g,' ').trim(),
+        owner:r[5]==null?'':String(r[5]).trim(), region:r[7]==null?'':String(r[7]).trim(), open:op, h:{}});
+      cols.forEach(k=>{ const v=r[k.c]; if(typeof v!=='number'||!isFinite(v)||v<=0) return;
+        const y=b.h[k.y]||(b.h[k.y]={}), a=y[k.met]||(y[k.met]=new Array(12).fill(null));
+        a[k.m-1]=k.met==='k'?Math.round(v*100)/100:Math.round(v);
+        (got[k.y+'/'+k.met]=got[k.y+'/'+k.met]||new Set()).add(k.m); });
+    }
+  });
+  if(!sheets) warn.push('ไม่พบชีตที่มีหัวตาราง Code / Opening Date');
+  return {branches:Object.keys(out).map(k=>out[k]), got:got, warn:warn, sheets:sheets};
+}
+/* รวมประวัติเข้ากับสาขาที่มีอยู่แล้วเท่านั้น (ไม่เพิ่มสาขาใหม่ เพื่อไม่ให้จำนวนสาขา/SSSG เปลี่ยน) */
+function mergeSTF(R){
+  const base=BY_IMPORT||(EXTRA.branchYears||[]).map(b=>({code:b.code,name:b.name,zone:b.zone,mall:b.mall,m:JSON.parse(JSON.stringify(b.m||{})),h:b.h,region:b.region,owner:b.owner,open:b.open}));
+  const idx={}; base.forEach(b=>idx[String(b.code)]=b);
+  let hit=0, filled=0; const skip=[];
+  R.branches.forEach(n=>{ const b=idx[String(n.code)]; if(!b){ skip.push(n.code); return; } hit++;
+    b.h=n.h; if(n.region) b.region=n.region; if(n.owner) b.owner=n.owner; if(n.open) b.open=n.open;
+    b.m=b.m||{};
+    for(let mm=1;mm<=12;mm++){ const o=b.m[mm]||(b.m[mm]={});
+      const ly=((n.h[YEAR-1]||{}).s||[])[mm-1], ty=((n.h[YEAR]||{}).s||[])[mm-1];
+      if(o.ly==null&&ly!=null){ o.ly=ly; filled++; }
+      if(o.ty==null&&ty!=null){ o.ty=ty; filled++; } } });
+  applyBY(base);
+  return {hit:hit, skip:skip, filled:filled};
+}
 function isSales2YWb(wb){
   const k=wb.SheetNames.find(n=>/^santa\s*fe$/i.test(n.trim())); if(!k) return false;
   const rs=XLSX.utils.sheet_to_json(wb.Sheets[k],{header:1,defval:null,range:'A1:Z6'});
@@ -4934,6 +4999,21 @@ async function importFile(file){
       throw new Error('หน้า '+BN+' รับไฟล์ Daily Sale (ชีต Summary Salse '+YEAR+')'+(BRAND==='jd'?' และไฟล์ PL Jaedang':'')+' · ไฟล์ชนิดนี้ใช้กับ Santa Fe KT');
     }
     if(isJDPLWb(wb)) throw new Error('ไฟล์นี้เป็นงบกำไรขาดทุนของ Jaedang — เปิดหน้า Jaedang ก่อนนำเข้า');
+    if(isSTFWb(wb)){ IMP.kind='ประวัติรายสาขา 3 ปี (STF)';      // ไฟล์ STF - Data / STF - DataSummery
+      const R=parseSTF(wb);
+      if(!R.branches.length) throw new Error('ไม่พบแถวสาขา (รหัส 4 หลัก) ในไฟล์นี้'+(R.warn.length?' ('+R.warn.join('; ')+')':''));
+      const M=mergeSTF(R);
+      if(!M.hit) throw new Error('รหัสสาขาในไฟล์ไม่ตรงกับสาขาในระบบเลย ('+R.branches.length+' สาขาในไฟล์)');
+      const ys=[...new Set(Object.keys(R.got).map(k=>+k.split('/')[0]))].sort();
+      const sum=ys.map(y=>{ const mets=Object.keys(R.got).filter(k=>+k.split('/')[0]===y).map(k=>k.split('/')[1]);
+        const ms=[...(R.got[y+'/s']||[])].sort((a,b)=>a-b);
+        return y+': '+(ms.length?monRange(ms):'—')+' ('+mets.map(x=>STF_MN[x]).join(', ')+')'; }).join(' · ');
+      IMP.months=[...(R.got[YEAR+'/s']||[])].sort((a,b)=>a-b);
+      await saveState();
+      finish('นำเข้าประวัติรายสาขาสำเร็จ: '+M.hit+' สาขาในระบบ · '+sum+(M.filled?' · เติมยอดที่ยังว่าง '+M.filled+' ช่อง':'')
+        +(M.skip.length?' — ข้ามสาขาที่ยังไม่มีในระบบ '+M.skip.length+' สาขา':''),'ok');
+      return;
+    }
     if(isSales2YWb(wb)){ IMP.kind='ยอดรายสาขา 2 ปี';     // ไฟล์ Sales 2025_2026 (ชีต Santa Fe)
       const R=parseSales2Y(wb);
       if(R.tyYear&&R.tyYear!==YEAR) throw new Error(`ไฟล์นี้เป็นยอดปี ${R.tyYear} เทียบ ${R.lyYear} — ระบบใช้ปี ${YEAR} เทียบ ${YEAR-1}`);
