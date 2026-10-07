@@ -3268,18 +3268,22 @@ function smxHtml(){
     (by.length?`<div class="ovscope"><span class="ovseg">${[['all','All Stores'],['branch','Branch'],['zone','Zone']].map(([k,t])=>`<button type="button" class="${SMX.scope===k?'on':''}" data-smxscope="${k}">${t}</button>`).join('')}</span>${sel}</div>`:'')+
     `<div class="ovsub" style="margin-top:8px">${months.length?RNG(months)+' '+YEAR:''}: <b>${ytd.toFixed(2)}M</b>${ytdL?` · ${YEAR-1}: <b>${ytdL.toFixed(2)}M</b> ${pill(pct(ytdL,ytd))}`:''} · แท่งแสดงสัดส่วนช่องทางของแต่ละเดือน (รวม 100%)</div>`;
   if(!rows.some(r=>r.tot!=null)) return head+'<div class="empty">ยังไม่มียอดขาย</div>';
-  const W=1180,H=260,L=48,R=20,T=14,B=40, n=rows.length, colW=(W-L-R)/n, bw=Math.min(72,colW*.58);
+  const W=1180,H=340,L=48,R=20,T=14,B=40, n=rows.length, colW=(W-L-R)/n, bw=Math.min(84,colW*.62);
   const x=i=>L+colW*(i+.5), y=p=>T+(H-T-B)*(1-p/100);
   let g='';
   [0,25,50,75,100].forEach(p=>{ g+=`<line x1="${L}" x2="${W-R}" y1="${y(p)}" y2="${y(p)}" stroke="#EEF2F6" ${p?'stroke-dasharray="3 5"':''}/><text x="${L-10}" y="${y(p)+4}" font-size="11.5" fill="#94A3B8" text-anchor="end">${p}%</text>`; });
   rows.forEach((r,i)=>{ const cx=x(i), now=i===n-1;
-    if(r.seg){ let base=0;
-      r.seg.forEach((sg,j)=>{ const p=sg.v/r.tot*100, y0=y(base+p), h=y(base)-y0;
-        g+=`<rect x="${cx-bw/2}" y="${y0}" width="${bw}" height="${Math.max(0,h)}" fill="${sg.o.c}" ${j===r.seg.length-1?'rx="3"':''}/>`;
-        /* ช่องที่หนาพอ ใส่ตัวเลขในแท่ง · ช่องบางเกินไป เขียนไว้ข้างแท่งด้วยสีของช่องนั้น จะได้เห็นครบทุกช่อง */
-        if(h>=16) g+=`<text x="${cx}" y="${y0+h/2+4}" font-size="${now?13:12}" font-weight="${now?800:700}" fill="#fff" text-anchor="middle">${Math.round(p)}%</text>`;
-        else if(p>=0.5) g+=`<text x="${cx+bw/2+5}" y="${y0+h/2+4}" font-size="11" font-weight="700" fill="${sg.o.c}" text-anchor="start">${Math.round(p)}%</text>`;
-        base+=p; }); }
+    if(r.seg){
+      /* ช่องที่บางเกินไปขยายเป็นอย่างน้อย MINH px เพื่อให้ตัวเลขอยู่ในแท่งได้ครบ · Dine in รับส่วนที่หายไป
+         ตัวเลขที่เขียนและข้อมูลในป้ายยังเป็นสัดส่วนจริงทุกช่อง */
+      const MINH=16, tot=H-T-B, ps=r.seg.map(sg=>sg.v/r.tot*100), hs=ps.map(p=>p/100*tot);
+      let need=0; hs.forEach((h,j)=>{ if(j>0&&h<MINH){ need+=MINH-h; hs[j]=MINH; } });
+      hs[0]=Math.max(MINH,hs[0]-need);
+      let yb=T+tot;
+      r.seg.forEach((sg,j)=>{ const h=hs[j], y0=yb-h;
+        g+=`<rect x="${cx-bw/2}" y="${y0}" width="${bw}" height="${h}" fill="${sg.o.c}" ${j===r.seg.length-1?'rx="3"':''}/>`;
+        g+=`<text x="${cx}" y="${y0+h/2+4}" font-size="${j===0?(now?14:13):(now?12.5:12)}" font-weight="${now?800:700}" fill="#fff" text-anchor="middle">${Math.round(ps[j])}%</text>`;
+        yb=y0; }); }
     else if(r.tot!=null) g+=`<rect x="${cx-bw/2}" y="${y(100)}" width="${bw}" height="${y(0)-y(100)}" fill="#E2E8F0" rx="3"/><text x="${cx}" y="${y(50)+4}" font-size="11" fill="#64748B" text-anchor="middle">ไม่มียอดแยก</text>`;
     g+=`<text x="${cx}" y="${H-14}" font-size="12.5" fill="${now?'#0F172A':'#64748B'}" font-weight="${now?700:400}" text-anchor="middle">${MONTH_TH[r.m-1]}</text>`; });
   rows.forEach((r,i)=>{ const t=[`${MONTH_TH[r.m-1]} ${YEAR} · รวม ${fm(r.tot)}`];
