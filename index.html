@@ -3074,7 +3074,7 @@ function ovBrHtml(){
   const many=months.length>1, rangeTxt=many?`${MS(months[0])} to ${MS(months[months.length-1])}`:MS(months[0]);
   const refTxt=(BM==='lm'&&refMs!==months)?`${MS(refMs[0])}–${MS(refMs[refMs.length-1])}`:rangeTxt.replace(' to ','–');
   return `<div class="ovth"><h3>Branch detail Sales — ${rangeTxt} ${YEAR}${inZ?' · โซน '+OVT.zone:''}</h3>${seg}</div>
-    <div class="ovsub">${SALES?'เรียงตามยอดขายมาก → น้อย':'เรียงตาม % เทียบ '+ML+' มาก → น้อย'} · ล้านบาท · ${rows.length} สาขาที่มียอดในช่วงนี้ · กดชื่อสาขาเพื่อดูรายละเอียด</div>
+    
     ${strip}
     <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th><th>Branch</th>${(ALLM&&!many)?'':months.map(mm=>`<th class="n">${MS(mm)}</th>`).join('')}${many?'<th class="n">Avg</th>':''}${ALLM?`<th class="n">Total Sales ${YEAR}</th><th class="n">Total Sales ${YEAR-1}</th><th class="n">YoY</th><th class="n">Budget ${YEAR}</th><th class="n">vs Budget</th><th class="n">ขาด / เกินแผน</th><th class="n">SSSG %</th>`
       :`<th class="n">${SALES?'ขาด / เกินแผน':'vs '+ML+' '+refTxt}</th>`}${lmMs.length?`<th class="n">vs LM ${MS(lmMs[0])}${lmMs.length>1?'–'+MS(lmMs[lmMs.length-1]):''}</th>`:''}</tr>
