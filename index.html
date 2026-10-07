@@ -3056,9 +3056,9 @@ function ovBrHtml(){
     const dif=['Dine in','Takeaway','Delivery'].map(n=>[n,A[n]-B[n]])
       .filter(x=>Math.abs(x[1])>=B.s*0.01).sort((x,y)=>Math.abs(y[1])-Math.abs(x[1]));
     /* ประโยค: ยอดรวมเทียบตัวเทียบ → ช่องทางที่เป็นตัวหลัก → ตัวถ่วง/ตัวช่วย → ลูกค้ากับเช็คเฉลี่ย */
-    let s='ยอดรวม'+up(A.s-B.s)+' '+PC(B.s,A.s)+' เทียบ'+ref;
+    let s='';
     if(dif.length){ const [n1,v1]=dif[0];
-      s+=' หลักมาจาก '+n1+' ที่'+up(v1)+' '+MB(v1);
+      s=n1+' '+up(v1)+' '+MB(v1);
       if(dif[1]){ const [n2,v2]=dif[1];
         s+=(v2>=0)===(v1>=0) ? ' และ '+n2+' '+up(v2)+' '+MB(v2) : ' ขณะที่ '+n2+' '+up(v2)+' '+MB(v2); } }
     const avg=(src,k,ms)=>{ const a=ms.map(mm=>(src&&src[k]&&src[k][mm-1])||0).filter(x=>x>0);
@@ -3067,7 +3067,7 @@ function ovBrHtml(){
     const tail=[];
     if(c0&&c1&&Math.abs(c1/c0-1)>=0.01) tail.push('ลูกค้า'+up(c1-c0)+' '+PC(c0,c1));
     if(k0&&k1&&Math.abs(k1/k0-1)>=0.01) tail.push('เช็คเฉลี่ย'+up(k1-k0)+' '+PC(k0,k1));
-    if(tail.length) s+=' โดย'+tail.join(' และ');
+    if(tail.length) s+=(s?' โดย':'')+tail.join(' และ');
     /* สิ่งที่ควรโฟกัส: ช่องทางที่ฉุดมากสุด + ต้นเหตุฝั่งลูกค้าหรือยอดต่อบิล + ส่วนที่ขาดจากแผน */
     const worst=dif.filter(x=>x[1]<0)[0];
     const dC=(c0&&c1)?c1/c0-1:null, dK=(k0&&k1)?k1/k0-1:null, fs=[];
@@ -3078,7 +3078,6 @@ function ovBrHtml(){
       else if(dK<-0.01) fs.push('เพิ่มยอดต่อบิล');
     } else if(dC!=null&&dC<-0.01) fs.push('ดึงลูกค้าเข้าร้าน');
     else if(dK!=null&&dK<-0.01) fs.push('เพิ่มยอดต่อบิล');
-    if(r.plan>0&&r.now<r.plan) fs.push('ยังขาดอีก '+MB(r.plan-r.now)+' จึงถึงแผน');
     if(!fs.length) fs.push(A.s>=B.s?'รักษาระดับนี้ไว้':'ติดตามต่อเนื่อง');
     return s+' <b>ควรโฟกัส: '+fs.join(' · ')+'</b>';
   };
