@@ -92,9 +92,21 @@ section.slide{background:var(--card);border-radius:var(--r);overflow:hidden;scro
 .st .v{font-size:25px;font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums}
 .st .s{font-size:11.5px;color:var(--faint)}
 /* แถวป้ายเทียบในการ์ด Delivery: อยู่บรรทัดเดียว ไม่ตกบรรทัด */
-.st .s.cmp{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:5px}
-.st .cmpi{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
-.st .cmpi em{font-style:normal;font-size:11px;color:var(--faint);font-weight:600}
+/* การ์ด Delivery by Branch */
+.dcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:16px}
+.dcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px 12px;box-shadow:var(--sh-sm,0 1px 2px rgba(15,23,42,.05))}
+.dc-h{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
+.dc-h i{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
+.dc-big{font-size:30px;font-weight:800;line-height:1.15;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:6px}
+.dc-bar{height:5px;border-radius:99px;background:var(--hair);overflow:hidden;margin-top:9px}
+.dc-bar i{display:block;height:100%;border-radius:99px;opacity:.85}
+.dc-share{font-size:12px;color:var(--mute);margin-top:5px}
+.dc-share b{color:var(--ink);font-weight:700}
+.dc-cmp{margin-top:10px;padding-top:9px;border-top:1px solid var(--hair);display:flex;flex-direction:column;gap:5px}
+.dc-r{display:flex;align-items:center;gap:8px;font-size:12.5px}
+.dc-l{color:var(--faint);flex:1 1 auto}
+.dc-v{color:var(--ink-2);font-variant-numeric:tabular-nums;font-weight:600}
+body.present .dc-big{font-size:42px} body.present .dc-r{font-size:16px} body.present .dc-h{font-size:14px}
 .st.pos{border-left-color:var(--good)} .st.neg{border-left-color:var(--bad)}
 .st.pos .v{color:var(--good)} .st.neg .v{color:var(--bad)}
 /* การ์ดสรุปเหนือตารางรายสาขา: ตัวเลขใหญ่ พื้นอ่อนตามทิศทาง อ่านจากไกลได้ */
@@ -3192,14 +3204,17 @@ function smxDeliHtml(mm,codes,lyM){
   const sumRef=(map,k)=>{ let now=0, ref=0, n=0;
     cur.forEach(b=>{ const x=map[String(b.code)]; if(!x) return; now+=b[k]||0; ref+=x[k]||0; n++; });
     return n?{now,ref}:null; };
-  const CARDS=[['deli','Total Delivery'],['grab','Grab'],['lm','Line Man'],['sp','Shopee Food']];
-  const strip=`<div class="strip">${CARDS.map(([k,n])=>{ const v=T(k), L=sumRef(prevMap,k), Y=sumRef(lyMap,k);
-    const head=[L?'LM '+MB(L.ref):'', Y?'LY '+MB(Y.ref):''].filter(Boolean).join(' · ');
-    const cmp=[L&&L.ref?`<span class="cmpi">${pill(pct(L.ref,L.now))}<em>LM</em></span>`:'',
-               Y&&Y.ref?`<span class="cmpi">${pill(pct(Y.ref,Y.now))}<em>LY</em></span>`:''].filter(Boolean).join('');
-    return `<div class="st"><div class="l">${n}</div>${head?`<div class="s">${head}</div>`:''}<div class="v">${MB(v)}</div>
-      <div class="s">${k==='deli'?pc(v,T('sales'))+' ของยอดขาย':pc(v,T('deli'))+' ของ Delivery'}</div>
-      ${cmp?`<div class="s cmp">${cmp}</div>`:''}</div>`; }).join('')}</div>`;
+  const CARDS=[['deli','Total Delivery','#1F2A37'],['grab','Grab','#00B14F'],['lm','Line Man','#06C167'],['sp','Shopee Food','#EE4D2D']];
+  /* การ์ดหนึ่งใบ = ยอดเดือนนี้ตัวใหญ่ + แถบสัดส่วน + บรรทัดเทียบเดือนก่อนและปีก่อน อย่างละบรรทัด */
+  const cmpRow=(lab,ref,now)=>(ref?`<div class="dc-r"><span class="dc-l">${lab}</span><span class="dc-v">${MB(ref)}</span>${pill(pct(ref,now))}</div>`:'');
+  const strip=`<div class="dcards">${CARDS.map(([k,n,c])=>{ const v=T(k), L=sumRef(prevMap,k), Y=sumRef(lyMap,k);
+    const share=k==='deli'?(T('sales')?v/T('sales')*100:null):(T('deli')?v/T('deli')*100:null);
+    const shareTxt=k==='deli'?'ของยอดขาย':'ของ Delivery';
+    return `<div class="dcard"><div class="dc-h"><i style="background:${c}"></i>${n}</div>
+      <div class="dc-big">${MB(v)}</div>
+      ${share!=null?`<div class="dc-bar"><i style="width:${Math.min(100,share).toFixed(1)}%;background:${c}"></i></div>
+      <div class="dc-share"><b>${share.toFixed(1)}%</b> ${shareTxt}</div>`:''}
+      <div class="dc-cmp">${cmpRow('เดือนก่อน',L&&L.ref,L&&L.now)}${cmpRow('ปีก่อน',Y&&Y.ref,Y&&Y.now)}</div></div>`; }).join('')}</div>`;
   const opts=[['deli','Total Delivery'],['grab','Grab'],['lm','Line Man'],['sp','Shopee Food'],['pc','% Delivery ของยอดขาย']];
   const row=b=>`<tr><td>${b.code} ${b.name}</td>${P.map(([k])=>`<td class="n">${k==='deli'?'<b>':''}${KB(b[k]||0)}${k==='deli'?'</b>':''}${chg(ref(b,k),b[k]||0)}</td>`).join('')}<td class="n">${pc(b.deli||0,b.sales)}</td></tr>`;
   /* ปุ่ม vs LY / vs LM อยู่บนหัวกรอบ (ชุดเดียวกับการ์ด Sales Mix) */
