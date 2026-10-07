@@ -3246,10 +3246,13 @@ function smxHtml(){
     const b=ref(r); if(b!=null&&r.tot!=null) t.push(`${RN} ${fm(b)} (${sgn(pct(b,r.tot))})`);
     g+=`<rect x="${L+colW*i}" y="${T}" width="${colW}" height="${H-B-T}" fill="transparent" data-tip="${t.join('\n')}"/>`; });
   const leg=`<div class="legend lcleg">${SMX_C.map(o=>`<span><i style="background:${o.c}"></i>${o.n}</span>`).join('')}${rows.some(r=>r.tot!=null&&!r.seg)?'<span><i style="background:#E2E8F0"></i>ยังไม่มียอดแยกช่องทาง</span>':''}</div>`;
-  const shareRow=k=>rows.map(r=>`<span class="mh">${r.seg?Math.round(r.val(k)/r.tot*100)+'%':'—'}</span>`).join('');
+  /* แถวสัดส่วนของปีก่อน · ของปีนี้ดูจากตัวเลขบนแท่งกราฟได้อยู่แล้ว จึงไม่ต้องซ้ำ */
+  const lyTot=r=>r.lyCh?(r.lyCh.dine+r.lyCh.take+r.lyCh.deli):0;
+  const shareRow=k=>rows.map(r=>{ const t=lyTot(r);
+    return `<span class="mh">${t?Math.round(r.lyCh[k]/t*100)+'%':'—'}</span>`; }).join('');
   const pills=`<div class="ovpw"><div class="ovpills" style="--n:${n}"><span></span>${rows.map(r=>`<span class="mh">${MS(r.m)}</span>`).join('')}
     <span class="rl">vs ${RN}</span>${rows.map(r=>`<span>${pill(r.tot!=null&&ref(r)?pct(ref(r),r.tot):null)}</span>`).join('')}
-    ${SMX_C.map(o=>`<span class="rl">${o.n}</span>${shareRow(o.k)}`).join('')}</div></div>`;
+    ${SMX_C.map(o=>`<span class="rl">${o.n} ${YEAR-1}</span>${shareRow(o.k)}`).join('')}</div></div>`;
   /* รายละเอียดรายเดือน: ยอดแต่ละช่องทาง · สัดส่วน · เทียบ LM ของช่องทางนั้น (ยอดแยกช่องทางปีก่อนไม่มีในข้อมูล) */
   const cell=(r,k,deli)=>{ const v=r.val(k); if(v==null) return '<td class="n">—</td>';
     const base=deli?r.val('deli'):r.tot, sh=base?Math.round(v/base*100)+'%'+(deli?' ของ Delivery':''):'';
