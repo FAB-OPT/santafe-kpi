@@ -2997,23 +2997,34 @@ function ovBrHtml(){
   const why=b=>{
     const H=b.h||{}, now=H[YEAR], base=(BM==='ly'||BM==='ss')?H[YEAR-1]:(BM==='lm'?H[YEAR]:null);
     if(!now||!base) return '';
-    const Rs=(BM==='lm')?((refMs!==months)?refMs:months.map(mm=>mm-1).filter(mm=>mm>=1)):months;
-    if(!Rs.length) return '';
+    /* เทียบเฉพาะเดือนที่ตัวเทียบมียอดจริง ไม่งั้นเดือนที่ปีก่อนยังไม่เปิดจะทำให้ % เพี้ยน */
+    const Ms=(BM==='lm')?months:months.filter(mm=>(base.s||[])[mm-1]>0);
+    const Rs=(BM==='lm')?((refMs!==months)?refMs:months.map(mm=>mm-1).filter(mm=>mm>=1)):Ms;
+    if(!Ms.length||!Rs.length) return '';
     const sum=(src,k,ms)=>ms.reduce((t,mm)=>t+((src&&src[k]&&src[k][mm-1])||0),0);
     const ch=(src,ms)=>{ const s=sum(src,'s',ms), t=sum(src,'t',ms), d=sum(src,'g',ms)+sum(src,'l',ms)+sum(src,'p',ms);
       return {s, 'Dine in':s-t-d, 'Takeaway':t, 'Delivery':d}; };
-    const A=ch(now,months), B=ch(base,Rs); if(!A.s||!B.s) return '';
-    const KB=v=>(v>=0?'+':'-')+(Math.abs(v)>=1e6?(Math.abs(v)/1e6).toFixed(2)+'M':Math.round(Math.abs(v)/1000)+'K');
-    const P=(a,b)=>a?((b/a-1)*100>=0?'+':'')+((b/a-1)*100).toFixed(1)+'%':'';
-    const bits=['Dine in','Takeaway','Delivery'].map(n=>[n,A[n]-B[n]])
-      .filter(x=>Math.abs(x[1])>=B.s*0.01).sort((x,y)=>Math.abs(y[1])-Math.abs(x[1])).slice(0,2)
-      .map(([n,v])=>n+' '+KB(v));
+    const A=ch(now,Ms), B=ch(base,Rs); if(!A.s||!B.s) return '';
+    const MB=v=>Math.abs(v)>=1e6?(Math.abs(v)/1e6).toFixed(2)+' ล้าน':Math.round(Math.abs(v)/1000)+'K';
+    const PC=(a,b)=>Math.abs((b/a-1)*100).toFixed(1)+'%';
+    const up=v=>v>=0?'เพิ่มขึ้น':'ลดลง';
+    const ref={ly:'ปีก่อน',ss:'ปีก่อน',lm:(months.length>1?'ช่วงก่อนหน้า':'เดือนก่อน')}[BM]||'ตัวเทียบ';
+    const dif=['Dine in','Takeaway','Delivery'].map(n=>[n,A[n]-B[n]])
+      .filter(x=>Math.abs(x[1])>=B.s*0.01).sort((x,y)=>Math.abs(y[1])-Math.abs(x[1]));
+    /* ประโยค: ยอดรวมเทียบตัวเทียบ → ช่องทางที่เป็นตัวหลัก → ตัวถ่วง/ตัวช่วย → ลูกค้ากับเช็คเฉลี่ย */
+    let s='ยอดรวม'+up(A.s-B.s)+' '+PC(B.s,A.s)+' เทียบ'+ref;
+    if(dif.length){ const [n1,v1]=dif[0];
+      s+=' หลักมาจาก '+n1+' ที่'+up(v1)+' '+MB(v1);
+      if(dif[1]){ const [n2,v2]=dif[1];
+        s+=(v2>=0)===(v1>=0) ? ' และ '+n2+' '+up(v2)+' '+MB(v2) : ' ขณะที่ '+n2+' '+up(v2)+' '+MB(v2); } }
     const avg=(src,k,ms)=>{ const a=ms.map(mm=>(src&&src[k]&&src[k][mm-1])||0).filter(x=>x>0);
       return a.length?a.reduce((t,x)=>t+x,0)/a.length:0; };
-    const k1=avg(now,'k',months), k0=avg(base,'k',Rs), c1=sum(now,'c',months), c0=sum(base,'c',Rs);
-    if(k0&&k1&&Math.abs(k1/k0-1)>=0.01) bits.push('เช็คเฉลี่ย '+P(k0,k1));
-    if(c0&&c1&&Math.abs(c1/c0-1)>=0.01) bits.push('ลูกค้า '+P(c0,c1));
-    return bits.join(' · ');
+    const k1=avg(now,'k',Ms), k0=avg(base,'k',Rs), c1=sum(now,'c',Ms), c0=sum(base,'c',Rs);
+    const tail=[];
+    if(c0&&c1&&Math.abs(c1/c0-1)>=0.01) tail.push('ลูกค้า'+up(c1-c0)+' '+PC(c0,c1));
+    if(k0&&k1&&Math.abs(k1/k0-1)>=0.01) tail.push('เช็คเฉลี่ย'+up(k1-k0)+' '+PC(k0,k1));
+    if(tail.length) s+=' โดย'+tail.join(' และ');
+    return s;
   };
   /* เรียงตาม % เทียบค่าที่เลือกของเดือนล่าสุด · สาขาที่ไม่มีค่าเทียบ (เช่น เปิดใหม่ไม่มียอด LY) อยู่ท้ายสุด */
   rows.sort((p,q)=>{ if(p.g==null||q.g==null) return (p.g==null)-(q.g==null)||q.now-p.now; return q.g-p.g; });
