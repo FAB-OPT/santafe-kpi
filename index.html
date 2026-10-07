@@ -1339,7 +1339,7 @@ body.present #hubView, body.present #topicBar{display:none}
 .hv-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:6px 2px 18px}
 .hv-t{font-size:30px;font-weight:800;letter-spacing:-.01em;color:var(--ink);line-height:1.15}
 .hv-s{font-size:14px;color:var(--mute);margin-top:4px}
-.hv-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.hv-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 .tb-nav{display:flex;align-items:flex-end;gap:14px;margin-top:10px;border-bottom:1px solid var(--line)}
 .tb-nav .tb-tabs{margin-top:0;border-bottom:0;flex:1 1 auto;min-width:0}
 .tb-seg{display:inline-flex;align-self:center;flex:0 0 auto;gap:2px;padding:3px;margin:0 0 6px;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
@@ -1365,6 +1365,10 @@ body.hub #salesmix .ovbottom > .panel:nth-child(2){display:none}
 .hv-sub b.pos{color:var(--good)} .hv-sub b.neg{color:var(--bad)}
 .hv-tile.off{background:var(--surface)}
 .hv-tile.off .hv-v{color:var(--faint)}
+/* หมวดที่ยังไม่เปิดใช้งาน: แสดงไว้ให้เห็นโครง แต่กดไม่ได้ */
+.hv-tile.soon{background:var(--surface);border-style:dashed;cursor:default;opacity:.72}
+.hv-tile.soon:hover{border-color:var(--line);box-shadow:none;transform:none}
+.hv-tile.soon .hv-v,.hv-tile.soon .hv-l{color:var(--faint)}
 .hv-d{margin-top:auto;padding-top:10px;border-top:1px solid var(--hair);font-size:12px;color:var(--faint)}
 #topicBar{position:sticky;top:var(--stick,64px);z-index:15;margin:0 0 14px;padding:6px 0 0;background:#FAF8F5;
   /* ปิดช่องว่างระหว่างแถบบนกับหัวหมวดตอนเลื่อน ไม่ให้เนื้อหาโผล่ลอดขึ้นมา */
@@ -5191,13 +5195,16 @@ $('#exportBtn').onclick=e=>{e.stopPropagation();$('#exportDd').classList.toggle(
 /* ================= UX ใหม่: หน้ารวมหัวข้อ → หน้าหมวด ================= */
 (function(){
 const TOPICS=[
-  {k:'sales',ic:'📈',n:'ยอดขาย & สาขา',groups:[
+  {k:'sales',ic:'📈',n:'Sales Performance',groups:[
     {cap:'ภาพรวม',ids:['overview','monthly','sssg']},
     {cap:'สาขา',ids:['plan','mall','zone','branches','branchdetail']},
     {cap:'ช่องทางขาย',ids:['salesmix','delivery','decline']}]},
-  {k:'cust',ic:'👥',n:'ลูกค้า',ids:['customers']},
-  {k:'cost',ic:'📊',n:'ต้นทุน & กำไร',ids:['pl','cos','plbr']},
-  {k:'quality',ic:'⭐',n:'คุณภาพร้าน',ids:['cem','oss']}];
+  {k:'cust',ic:'👥',n:'Customer Traffic',ids:['customers']},
+  {k:'cost',ic:'📊',n:'Profitability',ids:['pl','cos','plbr']},
+  {k:'quality',ic:'⭐',n:'Store Excellence',ids:['cem','oss']},
+  /* 2 หมวดที่ยังไม่มีข้อมูลในระบบ แสดงเป็นการ์ดรอข้อมูล กดไม่ได้ */
+  {k:'people',ic:'🧑‍🍳',n:'People Performance',ids:[],soon:'ชั่วโมงแรงงาน · %ค่าแรง · ผลิตภาพต่อสาขา'},
+  {k:'other',ic:'🗂️',n:'Other',ids:[],soon:'หัวข้ออื่นที่จะเพิ่มภายหลัง'}];
 TOPICS.forEach(t=>{ if(t.groups) t.ids=t.groups.flatMap(g=>g.ids); });
 const TABN={overview:'Overview',monthly:'Trend',sssg:'SSSG',salesmix:'Sales Mix',delivery:'Delivery',decline:'Delivery Declines',
   plan:'Plan',mall:'Mall Group',zone:'Trade Zone',branches:'Watchlist',branchdetail:'Branch Explorer',
@@ -5252,6 +5259,9 @@ function hubApply(){
     const b=(typeof BRANDS!=='undefined'&&BRANDS.find(x=>x.k===BRAND))||{n:'Santa Fe'};
     place('<div id="hubView"><div class="hv-head"><div><div class="hv-t">'+b.n+'</div><div class="hv-s">'+((SCP&&SCP.lab)||label(curM))+(FILT.zone!=='all'?' · โซน '+FILT.zone:'')+' · เลือกหัวข้อที่ต้องการดู</div></div></div>'
       +'<div class="hv-grid">'+TOPICS.map(t=>{
+        /* หมวดที่ยังไม่เปิดใช้งาน: การ์ดรอข้อมูล กดไม่ได้ */
+        if(t.soon) return '<span class="hv-tile soon"><span class="hv-top"><span class="hv-ic">'+t.ic+'</span><span class="hv-n">'+t.n+'</span></span>'
+          +'<span class="hv-l">เร็ว ๆ นี้</span><span class="hv-v">—</span><span class="hv-sub">'+t.soon+'</span></span>';
         /* แบรนด์ที่มีข้อมูลบางส่วน: การ์ดหมวดที่ยังไม่มีข้อมูล กดแล้วเปิดหน้าต่างนำเข้า */
         if(!avail.includes(t)) return '<button type="button" class="hv-tile off" data-imp-t="'+t.k+'"><span class="hv-top"><span class="hv-ic">'+t.ic+'</span><span class="hv-n">'+t.n+'</span><span class="hv-go">⤒</span></span>'
           +'<span class="hv-l">ยังไม่มีข้อมูล</span><span class="hv-v">—</span><span class="hv-sub">ต้องใช้: '+needT(t.k)+'</span></button>';
@@ -5291,8 +5301,11 @@ function emptyApply(){
   const ico='<img class="bh-ico" src="'+b.ico+'" alt="โลโก้ '+b.n+'">';
   if(!TOPIC){
     main.innerHTML='<div id="hubView"><div class="hv-head"><div><div class="hv-t">'+b.n+'</div><div class="hv-s">ยังไม่มีข้อมูลในระบบ · เลือกหัวข้อเพื่อดูว่าต้องใช้ข้อมูลอะไร</div></div><button type="button" class="btn primary" data-imp>⤒ นำเข้าข้อมูล '+b.n+'</button></div>'
-      +'<div class="hv-grid">'+TOPICS.map(t=>'<button type="button" class="hv-tile off" data-topic="'+t.k+'"><span class="hv-top"><span class="hv-ic">'+t.ic+'</span><span class="hv-n">'+t.n+'</span><span class="hv-go">›</span></span>'
-        +'<span class="hv-l">ยังไม่มีข้อมูล</span><span class="hv-v">—</span><span class="hv-sub">ต้องใช้: '+needT(t.k)+'</span></button>').join('')+'</div></div>';
+      +'<div class="hv-grid">'+TOPICS.map(t=>t.soon
+        ?'<span class="hv-tile soon"><span class="hv-top"><span class="hv-ic">'+t.ic+'</span><span class="hv-n">'+t.n+'</span></span>'
+          +'<span class="hv-l">เร็ว ๆ นี้</span><span class="hv-v">—</span><span class="hv-sub">'+t.soon+'</span></span>'
+        :'<button type="button" class="hv-tile off" data-topic="'+t.k+'"><span class="hv-top"><span class="hv-ic">'+t.ic+'</span><span class="hv-n">'+t.n+'</span><span class="hv-go">›</span></span>'
+          +'<span class="hv-l">ยังไม่มีข้อมูล</span><span class="hv-v">—</span><span class="hv-sub">ต้องใช้: '+needT(t.k)+'</span></button>').join('')+'</div></div>';
     main.querySelectorAll('[data-topic]').forEach(x=>x.onclick=()=>openTopic(x.dataset.topic));
   } else {
     const t=TOPICS.find(x=>x.k===TOPIC)||TOPICS[0], ids=t.ids.slice();
