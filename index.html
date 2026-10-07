@@ -1229,6 +1229,16 @@ body.present .cmpchip{font-size:15px}
 /* ---- ช่วงเวลา + ลูกค้าและบิลเฉลี่ย ---- */
 .kcov{font-size:11px;color:var(--faint);margin-top:6px}
 .pcov{display:inline-block;margin-left:8px;font-size:11px;font-weight:600;color:#92400E;background:#FEF3C7;border-radius:999px;padding:1px 8px;vertical-align:middle}
+.mx{display:grid;grid-template-columns:150px repeat(3,minmax(0,1fr));background:var(--card,#fff);border:1px solid var(--line);border-radius:16px;padding:6px 18px;margin-top:14px}
+.mx>div{padding:14px 16px;border-top:1px solid var(--line)}
+.mx .h{border-top:0;font-weight:800;font-size:13px;display:flex;align-items:center;padding-bottom:8px}
+.mx .d{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:7px}
+.mx .rl{font-size:12px;font-weight:700;color:var(--mute);letter-spacing:.04em;text-transform:uppercase;display:flex;flex-direction:column;justify-content:center;gap:2px}
+.mx .rl small{text-transform:none;font-weight:500;letter-spacing:0}
+.mxc{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mxc b{font-size:24px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.mxc small{flex-basis:100%;font-size:11.5px;color:var(--mute)} .mxc .mute{color:#B6BDC9}
+@media (max-width:760px){.mx{grid-template-columns:90px repeat(3,minmax(0,1fr));padding:6px 8px}.mx>div{padding:10px 6px}.mxc b{font-size:17px}}
 .kcs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
 .kc{background:var(--card,#fff);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
 .kc.pos{border-left-color:var(--good)} .kc.neg{border-left-color:var(--bad,#E11D48)}
@@ -2175,14 +2185,15 @@ function customersSection(m){
   </div>`;
   /* ---- แยกช่องทาง: แถว 1 Total Trans/Ticket Avg. · แถว 2 Customers/Customer Avg. ---- */
   const totTr=now.ch.reduce((a,c)=>a+(c.trans||0),0);
-  const met=(l,v,pl)=>`<div class="cm"><span>${l}</span><b>${v}</b>${pl||''}</div>`;
-  const chRow=(title,fn)=>`<div class="chrt">${title}</div><div class="smtiles custiles">${CUS_CH.map(o=>{ const c=findCh(now,o.k), p=findCh(prv,o.k);
-      const sty=`background:${o.bg};border-color:${o.bd};box-shadow:inset 0 3px 0 ${o.c}`;
-      return `<div class="smt" style="${sty}"><div class="smh"><i style="background:${o.c}"></i>${o.n}</div>${c?fn(c,p,o):'<div class="cuk dim"><span>ไม่มีข้อมูล</span></div>'}</div>`; }).join('')}</div>`;
-  const chTiles=chRow('Total Trans · Ticket Avg. แยกตามช่องทาง',(c,p,o)=>`<div class="cmw">${met('Total Trans',fN(c.trans),p&&p.trans?pill(pct(p.trans,c.trans)):'')}${met('Ticket Avg.',fB(c.ticket),p&&p.ticket?pill(pct(p.ticket,c.ticket)):'')}</div>
-        <div class="sms"><b style="color:${o.tx}">${totTr?(c.trans/totTr*100).toFixed(1)+'%':'—'}</b> of Total Trans</div>`)
-    +chRow('Customers · Customer Avg. แยกตามช่องทาง',(c,p,o)=>`<div class="cmw">${met('Customers','—')}${met('Customer Avg.','—')}</div>
-        <div class="sms">ยังไม่มีข้อมูลลูกค้าแยกช่องทาง</div>`);
+  const mc=(c,p,k,f)=>{ if(!c) return '<div class="mxc"><span class="mute">ไม่มีข้อมูล</span></div>';
+    return `<div class="mxc"><b>${f(c[k])}</b>${p&&p[k]?pill(pct(p[k],c[k])):''}${k==='trans'&&totTr?`<small><em style="color:var(--ink-2)">${(c.trans/totTr*100).toFixed(1)}%</em> of Total Trans</small>`:''}</div>`; };
+  const mxRow=(lab,sub,fn)=>`<div class="rl">${lab}<small>${sub}</small></div>${CUS_CH.map(o=>fn(findCh(now,o.k),findCh(prv,o.k))).join('')}`;
+  const chTiles=`<div class="mx">
+    <div class="h"></div>${CUS_CH.map(o=>`<div class="h"><i class="d" style="background:${o.c}"></i>${o.n}</div>`).join('')}
+    ${mxRow('Total Trans','ต่อช่องทาง',(c,p)=>mc(c,p,'trans',fN))}
+    ${mxRow('Ticket Avg.','ต่อช่องทาง',(c,p)=>mc(c,p,'ticket',fB))}
+    ${mxRow('Per Bill','ต่อช่องทาง',()=>'<div class="mxc"><b class="mute">—</b><small>ยังไม่มีข้อมูลลูกค้าแยกช่องทาง</small></div>')}
+  </div>`;
   /* ---- รายเดือน ---- */
   const tm=(S.multi&&S.n>=2?S.ms:MONTHLY.map(r=>r.m).filter(x=>x<=m)).map(x=>({m:x,v:trOf(x)})).filter(r=>r.v);
   let trend='';
