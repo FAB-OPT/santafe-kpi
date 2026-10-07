@@ -98,6 +98,7 @@ section.slide{background:var(--card);border-radius:var(--r);overflow:hidden;scro
 .dc-h{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
 .dc-h i{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
 .dc-big{font-size:30px;font-weight:800;line-height:1.15;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:6px}
+.dc-big em{font-style:normal;font-size:14px;font-weight:600;color:var(--mute);margin-left:4px;letter-spacing:0}
 .dc-bar{height:5px;border-radius:99px;background:var(--hair);overflow:hidden;margin-top:9px}
 .dc-bar i{display:block;height:100%;border-radius:99px;opacity:.85}
 .dc-share{font-size:12px;color:var(--mute);margin-top:5px}
@@ -3087,22 +3088,29 @@ function ovBrHtml(){
   const seg=`<span class="ovseg">${[['all','ALL'],['sales','Sales (บาท)'],['bud','vs Budget'],['ly','vs LY'],['ss','vs SSSG']].map(([k,t])=>`<button type="button" class="${OVT.mode===k?'on':''}" data-ovmode="${k}">${t}</button>`).join('')}</span>`;
   /* การ์ดสรุปเหนือตาราง · เปลี่ยนชุดตามปุ่มที่เลือก */
   const MB2=v=>Math.abs(v)>=1e6?(Math.abs(v)/1e6).toFixed(2)+'M':Math.round(Math.abs(v)/1000)+'K';
-  const card=(cl,lab,n,sub)=>`<div class="st big ${cl}"><div class="l">${lab}</div><div class="v">${n}</div><div class="s">${sub}</div></div>`;
-  const brN=n=>`${n} <span style="font-size:14px;font-weight:600">สาขา</span>`;
+  const card=(tone,lab,val,unit,sub,share)=>{ const c=tone==='pos'?'#1c8a4b':tone==='neg'?'#cf3a3a':'#D9822D';
+    return `<div class="dcard"><div class="dc-h"><i style="background:${c}"></i>${lab}</div>
+      <div class="dc-big" style="color:${c}">${val}${unit?`<em>${unit}</em>`:''}</div>
+      ${share!=null?`<div class="dc-bar"><i style="width:${Math.max(2,Math.min(100,share)).toFixed(1)}%;background:${c}"></i></div>`:''}
+      <div class="dc-cmp"><div class="dc-r"><span class="dc-l">${sub}</span></div></div></div>`; };
   const wPlan=rows.filter(r=>r.plan>0), over=wPlan.filter(r=>r.now>=r.plan), under=wPlan.filter(r=>r.now<r.plan);
   const sumOver=over.reduce((t,r)=>t+(r.now-r.plan),0), sumUnder=under.reduce((t,r)=>t+(r.plan-r.now),0);
   const net=wPlan.reduce((t,r)=>t+(r.now-r.plan),0);
   const wLy=rows.filter(r=>r.ly>0), grew=wLy.filter(r=>r.now>=r.ly), fell=wLy.filter(r=>r.now<r.ly);
-  const planCards=wPlan.length?[card('pos','ถึงเป้า (ยอด ≥ แผน)',brN(over.length),'เกินเป้ารวม '+MB2(sumOver)+' บาท'),
-      card('neg','ไม่ถึงเป้า',brN(under.length),'ขาดอีก '+MB2(sumUnder)+' บาท')]:[];
-  const lyCards=wLy.length?[card('pos','โตขึ้นเทียบปีก่อน',brN(grew.length),'จาก '+wLy.length+' สาขาที่มียอดปีก่อน'),
-      card('neg','ลดลงเทียบปีก่อน',brN(fell.length),(rows.length-wLy.length)+' สาขาไม่มีปีก่อนให้เทียบ')]:[];
+  const P100=(a,b)=>b?a/b*100:null;
+  const planCards=wPlan.length?[
+    card('pos','ถึงเป้า',over.length,' สาขา','เกินเป้ารวม '+MB2(sumOver)+' บาท · '+Math.round(P100(over.length,wPlan.length))+'% ของสาขาที่มีแผน',P100(over.length,wPlan.length)),
+    card('neg','ไม่ถึงเป้า',under.length,' สาขา','ขาดอีก '+MB2(sumUnder)+' บาท · '+Math.round(P100(under.length,wPlan.length))+'% ของสาขาที่มีแผน',P100(under.length,wPlan.length))]:[];
+  const lyCards=wLy.length?[
+    card('pos','โตขึ้นเทียบปีก่อน',grew.length,' สาขา','จาก '+wLy.length+' สาขาที่มียอดปีก่อน',P100(grew.length,wLy.length)),
+    card('neg','ลดลงเทียบปีก่อน',fell.length,' สาขา',(rows.length-wLy.length)+' สาขาไม่มีปีก่อนให้เทียบ',P100(fell.length,wLy.length))]:[];
   let cards=[];
-  if(SALES) cards=planCards.concat(wPlan.length?[card('','ส่วนต่างรวมจากแผน',(net>=0?'+':'-')+MB2(net),wPlan.length+' จาก '+rows.length+' สาขาที่มีแผน')]:[]);
-  else if(BM==='bud') cards=planCards.concat(wPlan.length?[card('','ส่วนต่างรวมจากแผน',(net>=0?'+':'-')+MB2(net),'สุทธิทั้งหมดในช่วงนี้')]:[]);
+  const netCard=lab=>card(net>=0?'pos':'neg','ส่วนต่างรวมจากแผน',(net>=0?'+':'-')+MB2(net),'',lab,null);
+  if(SALES) cards=planCards.concat(wPlan.length?[netCard(wPlan.length+' จาก '+rows.length+' สาขาที่มีแผน')]:[]);
+  else if(BM==='bud') cards=planCards.concat(wPlan.length?[netCard('สุทธิทั้งหมดในช่วงนี้')]:[]);
   else if(ALLM) cards=planCards.concat(lyCards);
   else cards=lyCards;
-  const strip=cards.length?`<div class="strip" style="margin:12px 0 0">${cards.join('')}</div>`:'';
+  const strip=cards.length?`<div class="dcards" style="margin:12px 0 0">${cards.join('')}</div>`:'';
   const DB=v=>(v>=0?'+':'-')+(Math.abs(v)>=1e6?(Math.abs(v)/1e6).toFixed(2)+'M':Math.round(Math.abs(v)/1000)+'K');
   const many=months.length>1, rangeTxt=many?`${MS(months[0])} to ${MS(months[months.length-1])}`:MS(months[0]);
   const refTxt=(BM==='lm'&&refMs!==months)?`${MS(refMs[0])}–${MS(refMs[refMs.length-1])}`:rangeTxt.replace(' to ','–');
