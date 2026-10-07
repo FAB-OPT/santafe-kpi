@@ -3310,9 +3310,39 @@ function smxHtml(){
     <tr class="hi"><td><b>ยอดรวม</b></td>${rows.map(r=>{ const b=ref(r); return `<td class="n"><b>${fm(r.tot)}</b>${b&&r.tot!=null?`<span class="tiny ${cls(pct(b,r.tot))}">${sgn(pct(b,r.tot))} vs ${RN}</span>`:''}</td>`; }).join('')}</tr>
     ${SMX_C.map(o=>`<tr><td>${dot(o.c)}${o.n}</td>${rows.map(r=>cell(r,o.k)).join('')}</tr>`).join('')}
     ${SMX_P.map(o=>`<tr><td style="padding-left:30px;color:var(--mute)">${o.n}</td>${rows.map(r=>cell(r,o.k,1)).join('')}</tr>`).join('')}</table></div>`;
-  return head+`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="สัดส่วนช่องทางขายรายเดือน">${g}</svg>`+leg+pills+detail+smxDeliHtml(last,codes,lyM);
+  return head+`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="สัดส่วนช่องทางขายรายเดือน">${g}</svg>`+leg+pills+detail+smxDeliHtml(last,codes,lyM)+smxChgHtml(last,codes,lyM);
+}
+/* Biggest Delivery Changes by Branch: 5 สาขาที่เพิ่มมากสุด (ซ้าย) และลดมากสุด (ขวา)
+   รวมทุก Platform หรือแยก Grab · Line Man · Shopee Food · เทียบตามปุ่ม vs LY / vs LM ของ Delivery by Branch */
+const SMXC={plat:'deli'};
+function smxChgHtml(mm,codes,lyM){
+  const cur=filtZone((DETAIL[mm]||{}).branchRows||[]).filter(b=>b.sales>0&&(!codes||codes.has(String(b.code))));
+  if(!cur.length) return '';
+  const refMap={};
+  if(lyM) filtZone(EXTRA.branchYears||[]).forEach(b=>{ const h=b.h&&b.h[YEAR-1]; if(!h) return;
+    const i=mm-1, g=(h.g||[])[i]||0, l=(h.l||[])[i]||0, p=(h.p||[])[i]||0;
+    if(g||l||p) refMap[String(b.code)]={grab:g,lm:l,sp:p,deli:g+l+p}; });
+  else filtZone((DETAIL[mm-1]||{}).branchRows||[]).forEach(b=>refMap[String(b.code)]=b);
+  const RN=lyM?'LY':'LM';
+  const PL=[['deli','รวมทุก Platform'],['grab','Grab'],['lm','Line Man'],['sp','Shopee Food']];
+  const key=SMXC.plat, pname=(PL.find(x=>x[0]===key)||PL[0])[1];
+  const rows=cur.map(b=>{ const r=refMap[String(b.code)]; if(!r) return null;
+    const a=r[key]||0, c=b[key]||0; if(!a&&!c) return null;
+    return {b,a,c,d:c-a,p:a?(c/a-1)*100:null}; }).filter(Boolean);
+  const KB2=v=>Math.round(Math.abs(v)/1000).toLocaleString('th-TH')+'K';
+  const up=rows.filter(r=>r.d>0).sort((x,y)=>y.d-x.d).slice(0,5);
+  const dn=rows.filter(r=>r.d<0).sort((x,y)=>x.d-y.d).slice(0,5);
+  const tbl=(list,cl,emp)=>list.length?`<table><tr><th>สาขา</th><th class="n">${RN}</th><th class="n">เดือนนี้</th><th class="n">เปลี่ยนแปลง</th><th class="n">%</th></tr>
+    ${list.map(r=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${r.b.code} ${r.b.name}</td><td class="n">${KB2(r.a)}</td><td class="n">${KB2(r.c)}</td>
+      <td class="n ${cl}"><b>${r.d>0?'+':'-'}${KB2(r.d)}</b></td><td class="n">${pill(r.p)}</td></tr>`).join('')}</table>`:`<div class="empty">${emp}</div>`;
+  const btns=`<span class="ovseg">${PL.map(([k,t])=>`<button type="button" class="${key===k?'on':''}" data-smxc="${k}">${t}</button>`).join('')}</span>`;
+  return `<div class="ovth dlh" style="margin-top:26px"><div class="grp" style="margin:0">Biggest Delivery Changes by Branch · ${pname} · เทียบ ${RN}</div>${btns}</div>
+    ${rows.length?`<div class="two" style="margin-top:12px"><div><h3 class="g">เพิ่มขึ้นมากสุด 5 อันดับ</h3>${tbl(up,'pos','ไม่มีสาขาที่เพิ่มขึ้น')}</div>
+      <div><h3 class="r">ลดลงมากสุด 5 อันดับ</h3>${tbl(dn,'neg','ไม่มีสาขาที่ลดลง')}</div></div>`
+      :`<div class="empty" style="margin-top:12px">ยังไม่มีข้อมูลสำหรับเทียบ ${RN} ในเดือนนี้</div>`}`;
 }
 document.addEventListener('click',e=>{
+  const smc=e.target.closest('[data-smxc]'); if(smc){ SMXC.plat=smc.dataset.smxc; ovRender('smxChart',smxHtml); return; }
   const dsr=e.target.closest('[data-dsort]');
   if(dsr){ const k=dsr.dataset.dsort;
     if(SMXD.sort===k) SMXD.dir=SMXD.dir==='asc'?'desc':'asc';
@@ -3678,7 +3708,7 @@ function buildMain(m){
         return `<div class="ovstack">${cStores}${cSales}<div class="ovc" id="ovTrend">${ovTrendHtml()}</div><div class="ovc" id="ovBranch">${ovBrHtml()}</div></div>`;
       })()}`));
     /* Sales Mix + Customers & Branches แยกเป็นอีกหน้า */
-    out.push(sec('salesmix','Sales Mix — '+S.titleEn,'',`<div class="ovc" id="smxChart">${smxHtml()}</div>`));
+    out.push(sec('salesmix','Sales Mix','',`<div class="ovc" id="smxChart">${smxHtml()}</div>`));
   }
 
   // 2 monthly
@@ -3708,10 +3738,7 @@ function buildMain(m){
   // 5 delivery decliners
   const declTable=(arr,h1,h2)=>`<div class="scroll"><table><tr><th>สาขา</th><th class="n">${h1}</th><th class="n">${h2}</th><th class="n">เปลี่ยนแปลง</th><th class="n">%</th></tr>
     ${arr.map(r=>`<tr><td>${r[0]}</td><td class="n">${KB(r[1])}</td><td class="n">${KB(r[2])}</td><td class="n neg">${KB(r[2]-r[1])}</td><td class="n">${pill(pct(r[1],r[2]))}</td></tr>`).join('')}</table></div>`;
-  out.push(sec('decline','Biggest Delivery Declines by Branch', dl?dl.compare+' (เรียงตามมูลค่าที่ลดลง)':'', !dl?EMPTY('Delivery'):`
-    <div class="two"><div><h3 class="r">รวมทุก Platform</h3>${declTable(dl.topDecline,'Delivery ก่อน','Delivery นี้')}</div>
-    <div><h3 class="r">Line Man</h3>${declTable(dl.lineManDecline,'Line Man ก่อน','Line Man นี้')}</div></div>
-    <div class="note">แทบทุกสาขาในเครือข่ายมียอด Delivery ลดลงทิศทางเดียวกัน → สะท้อนปัญหาระดับระบบ/แพลตฟอร์ม มากกว่าปัญหาเฉพาะสาขา</div>`));
+
 
   // 6 trans / ticket
   const t=d.trans;
@@ -5412,7 +5439,7 @@ const TOPICS=[
   {k:'sales',ic:'📈',n:'Sales Performance',groups:[
     {cap:'Overview',ids:['overview']},
     {cap:'สาขา',ids:['mall','zone']},
-    {cap:'ช่องทางขาย',ids:['salesmix','delivery','decline']}]},
+    {cap:'ช่องทางขาย',ids:['salesmix','delivery']}]},
   {k:'cust',ic:'👥',n:'Customer Traffic',ids:['customers']},
   {k:'cost',ic:'📊',n:'Profitability',ids:['pl','cos','plbr']},
   {k:'quality',ic:'⭐',n:'Store Excellence',ids:['cem','oss']},
