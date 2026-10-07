@@ -3158,7 +3158,7 @@ function ovRender(id,fn){ const y=window.scrollY||document.documentElement.scrol
   const el0=document.getElementById(id);
   if(el0){ el0.style.overflowAnchor='none';
     /* Sales Mix อยู่ท้ายหน้า: ตารางสั้นลงตอนสลับ Platform หน้าจะหดแล้วเด้ง · จึงไม่ให้กรอบนี้ต่ำกว่าความสูงสูงสุดที่เคยเป็น */
-    if(id==='smxChart') el0.style.minHeight=Math.max(parseFloat(el0.style.minHeight)||0,el0.offsetHeight)+'px'; }
+    if(id==='smxChart'||id==='smxChg') el0.style.minHeight=Math.max(parseFloat(el0.style.minHeight)||0,el0.offsetHeight)+'px'; }
   try{ ovRender0(id,fn); } finally { window.scrollTo(0,y); requestAnimationFrame(()=>window.scrollTo(0,y)); } }
 function ovRender0(id,fn){ const el=document.getElementById(id); if(!el) return;
   if(FILT.zone==='all'){ el.innerHTML=fn(); return; }
@@ -3321,7 +3321,7 @@ function smxHtml(){
     <tr class="hi"><td><b>ยอดรวม</b></td>${rows.map(r=>{ const b=ref(r); return `<td class="n"><b>${fm(r.tot)}</b>${b&&r.tot!=null?`<span class="tiny ${cls(pct(b,r.tot))}">${sgn(pct(b,r.tot))} vs ${RN}</span>`:''}</td>`; }).join('')}</tr>
     ${SMX_C.map(o=>`<tr><td>${dot(o.c)}${o.n}</td>${rows.map(r=>cell(r,o.k)).join('')}</tr>`).join('')}
     ${SMX_P.map(o=>`<tr><td style="padding-left:30px;color:var(--mute)">${o.n}</td>${rows.map(r=>cell(r,o.k,1)).join('')}</tr>`).join('')}</table></div>`;
-  return head+`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="สัดส่วนช่องทางขายรายเดือน">${g}</svg>`+leg+pills+detail+smxDeliHtml(last,codes,lyM)+smxChgHtml(last,codes,false);   /* เทียบเดือนก่อน (LM) เสมอ ไม่ตามปุ่ม vs LY */
+  return head+`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="สัดส่วนช่องทางขายรายเดือน">${g}</svg>`+leg+pills+detail+smxDeliHtml(last,codes,lyM)+(SMXC.ctx={mm:last,codes},'<div id="smxChg">'+smxChgHtml(last,codes,false)+'</div>');   /* เทียบเดือนก่อน (LM) เสมอ ไม่ตามปุ่ม vs LY */
 }
 /* Biggest Delivery Changes by Branch: 5 สาขาที่เพิ่มมากสุด (ซ้าย) และลดมากสุด (ขวา)
    รวมทุก Platform หรือแยก Grab · Line Man · Shopee Food · เทียบเดือนก่อน (LM) */
@@ -3353,7 +3353,12 @@ function smxChgHtml(mm,codes,lyM){
       :`<div class="empty" style="margin-top:12px">ยังไม่มีข้อมูลสำหรับเทียบ ${RN} ในเดือนนี้</div>`}`;
 }
 document.addEventListener('click',e=>{
-  const smc=e.target.closest('[data-smxc]'); if(smc){ SMXC.plat=smc.dataset.smxc; ovRender('smxChart',smxHtml); return; }
+  const smc=e.target.closest('[data-smxc]');
+  if(smc){ SMXC.plat=smc.dataset.smxc;
+    /* วาดใหม่เฉพาะตารางเพิ่ม/ลด ไม่แตะกราฟและตารางด้านบน หน้าจึงไม่ขยับ */
+    if(SMXC.ctx&&document.getElementById('smxChg')) ovRender('smxChg',()=>smxChgHtml(SMXC.ctx.mm,SMXC.ctx.codes,false));
+    else ovRender('smxChart',smxHtml);
+    return; }
   const dsr=e.target.closest('[data-dsort]');
   if(dsr){ const k=dsr.dataset.dsort;
     if(SMXD.sort===k) SMXD.dir=SMXD.dir==='asc'?'desc':'asc';
