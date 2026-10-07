@@ -1370,6 +1370,7 @@ body.hub #salesmix .ovbottom > .panel:nth-child(2){display:none}
 .hv-mv{font-size:30px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.15;letter-spacing:-.01em;white-space:nowrap}
 .hv-badge{font-size:14px;font-weight:800;border-radius:999px;padding:4px 12px;white-space:nowrap;background:var(--surface);color:var(--ink-2)}
 .hv-badge.neg{background:#FDE7EA;color:var(--bad)} .hv-badge.pos{background:#E7F6EE;color:var(--good)}
+.brwhy{font-size:11.5px;color:var(--faint);margin-top:2px;line-height:1.35}
 .hv-chip{align-self:flex-start;margin-top:10px;font-size:12.5px;font-weight:700;color:var(--mute);background:var(--surface);border-radius:999px;padding:4px 12px}
 .hv-rows{display:flex;flex-direction:column;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--hair)}
 .hv-r{display:flex;align-items:baseline;gap:12px;font-size:13.5px;color:var(--mute)}
@@ -2992,6 +2993,28 @@ function ovBrHtml(){
   const rows=by.map(b=>{ const v=months.map(mm=>brTy(b,mm)/1e6), has=v.filter(x=>x>0);
     const now=months.reduce((t,mm)=>t+brTy(b,mm),0), ref=refOf(b);
     return {b,v,now,avg:has.length?has.reduce((a,c)=>a+c,0)/has.length:0,g:ref>0&&now>0?(now/ref-1)*100:null}; }).filter(r=>r.now>0);
+  /* คำอธิบายสั้น ๆ ว่าสาขานั้นโต/ลดมาจากอะไร · ใช้ประวัติรายสาขา (ยอดแยกช่องทาง · เช็คเฉลี่ย · ลูกค้า) */
+  const why=b=>{
+    const H=b.h||{}, now=H[YEAR], base=(BM==='ly'||BM==='ss')?H[YEAR-1]:(BM==='lm'?H[YEAR]:null);
+    if(!now||!base) return '';
+    const Rs=(BM==='lm')?((refMs!==months)?refMs:months.map(mm=>mm-1).filter(mm=>mm>=1)):months;
+    if(!Rs.length) return '';
+    const sum=(src,k,ms)=>ms.reduce((t,mm)=>t+((src&&src[k]&&src[k][mm-1])||0),0);
+    const ch=(src,ms)=>{ const s=sum(src,'s',ms), t=sum(src,'t',ms), d=sum(src,'g',ms)+sum(src,'l',ms)+sum(src,'p',ms);
+      return {s, 'Dine in':s-t-d, 'Takeaway':t, 'Delivery':d}; };
+    const A=ch(now,months), B=ch(base,Rs); if(!A.s||!B.s) return '';
+    const KB=v=>(v>=0?'+':'-')+(Math.abs(v)>=1e6?(Math.abs(v)/1e6).toFixed(2)+'M':Math.round(Math.abs(v)/1000)+'K');
+    const P=(a,b)=>a?((b/a-1)*100>=0?'+':'')+((b/a-1)*100).toFixed(1)+'%':'';
+    const bits=['Dine in','Takeaway','Delivery'].map(n=>[n,A[n]-B[n]])
+      .filter(x=>Math.abs(x[1])>=B.s*0.01).sort((x,y)=>Math.abs(y[1])-Math.abs(x[1])).slice(0,2)
+      .map(([n,v])=>n+' '+KB(v));
+    const avg=(src,k,ms)=>{ const a=ms.map(mm=>(src&&src[k]&&src[k][mm-1])||0).filter(x=>x>0);
+      return a.length?a.reduce((t,x)=>t+x,0)/a.length:0; };
+    const k1=avg(now,'k',months), k0=avg(base,'k',Rs), c1=sum(now,'c',months), c0=sum(base,'c',Rs);
+    if(k0&&k1&&Math.abs(k1/k0-1)>=0.01) bits.push('เช็คเฉลี่ย '+P(k0,k1));
+    if(c0&&c1&&Math.abs(c1/c0-1)>=0.01) bits.push('ลูกค้า '+P(c0,c1));
+    return bits.join(' · ');
+  };
   /* เรียงตาม % เทียบค่าที่เลือกของเดือนล่าสุด · สาขาที่ไม่มีค่าเทียบ (เช่น เปิดใหม่ไม่มียอด LY) อยู่ท้ายสุด */
   rows.sort((p,q)=>{ if(p.g==null||q.g==null) return (p.g==null)-(q.g==null)||q.now-p.now; return q.g-p.g; });
   const shown=OVB.all?rows:rows.slice(0,10), f=v=>v>0?v.toFixed(2):'—';
@@ -3002,7 +3025,7 @@ function ovBrHtml(){
   return `<div class="ovth"><h3>Branch detail Sales — ${rangeTxt} ${YEAR}${inZ?' · โซน '+OVT.zone:''}</h3>${seg}</div>
     <div class="ovsub">เรียงตาม % เทียบ ${ML} มาก → น้อย · ล้านบาท · ${rows.length} สาขาที่มียอดในช่วงนี้ · กดชื่อสาขาเพื่อดูรายละเอียด</div>
     <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th><th>Branch</th>${months.map(mm=>`<th class="n">${MS(mm)}</th>`).join('')}${many?'<th class="n">Avg</th>':''}<th class="n">vs ${ML} ${refTxt}</th></tr>
-    ${shown.map((r,i)=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td><td>${r.b.code} ${r.b.name}</td>${r.v.map(v=>`<td class="n">${f(v)}</td>`).join('')}${many?`<td class="n"><b>${f(r.avg)}</b></td>`:''}<td class="n">${pill(r.g)}</td></tr>`).join('')}</table></div>
+    ${shown.map((r,i)=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td><td>${r.b.code} ${r.b.name}${(w=>w?`<div class="brwhy">${w}</div>`:'')(why(r.b))}</td>${r.v.map(v=>`<td class="n">${f(v)}</td>`).join('')}${many?`<td class="n"><b>${f(r.avg)}</b></td>`:''}<td class="n">${pill(r.g)}</td></tr>`).join('')}</table></div>
     ${rows.length>10?`<button type="button" class="ovmore ${OVB.all?'on':''}" data-ovbrall="1">${OVB.all?'แสดงแค่ 10 อันดับ':'ดูทั้งหมด '+rows.length+' สาขา'} <i>⌄</i></button>`:''}`;
 }
 /* วาดใหม่เฉพาะการ์ด · เลือกโซนอยู่ต้องใช้ข้อมูลของโซนเหมือนตอนสร้างหน้า */
