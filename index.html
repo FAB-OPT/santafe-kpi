@@ -1742,7 +1742,7 @@ function plbrPickHtml(){
   const list=rank.filter(b=>binOf(b.gp)===sel).sort((a,b)=>b.gp-a.gp);
   return `<div class="bp-card" style="margin-top:12px"><div class="bp-h"><span>%กำไร ${labels[sel]} · ${list.length} สาขา</span><button type="button" class="btn small" data-binclose>ปิด</button></div>`+
     (list.length?`<div class="scroll"><table><tr><th>#</th><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">กำไร</th><th class="n">%กำไร</th><th class="n">%COS</th><th class="n">%COL</th></tr>
-      ${list.map((b,i)=>`<tr class="clk" data-plpick="${b.code}"><td>${i+1}</td><td>${b.name}</td><td class="n">${KB(b.sales)}</td><td class="n ${cls(b.profit)}">${KB(b.profit)}</td><td class="n ${cls(b.gp)}">${b.gp.toFixed(1)}%</td><td class="n">${b.cos.toFixed(1)}%</td><td class="n">${b.col.toFixed(1)}%</td></tr>`).join('')}</table></div>`
+      ${list.map((b,i)=>`<tr class="clk" data-plpick="${b.code}"><td>${i+1}</td><td>${b.name}</td><td class="n">${KB(b.sales)}</td><td class="n ${cls(b.profit)}">${KB(b.profit)}</td><td class="n">${pill(b.gp)}</td><td class="n">${b.cos.toFixed(1)}%</td><td class="n">${b.col.toFixed(1)}%</td></tr>`).join('')}</table></div>`
       :'<div class="empty">ไม่มีสาขาในช่วงนี้</div>')+`</div>`;
 }
 function plbrPickShow(){
@@ -2787,7 +2787,7 @@ function drawBranch(code,target){
       <div class="scroll"><table><tr><th>เดือน</th><th class="n">ยอดขาย</th><th class="n">%แผน</th><th class="n">MoM</th><th class="n">Delivery</th><th class="n">บิล</th><th class="n">เช็คเฉลี่ย</th></tr>
       ${hist.map(h=>`<tr class="${h.m===BR_CTX.m?'hi':''}"><td>${h.m===BR_CTX.m?'★ ':''}${MONTH_TH[h.m-1]}</td><td class="n">${M(h.r.sales)}</td>
         <td class="n ${h.r.ach==null?'':cls(h.r.ach-100)}">${h.r.ach==null?'—':h.r.ach.toFixed(0)+'%'}</td>
-        <td class="n ${cls(h.r.mom)}">${sgn(h.r.mom)}</td><td class="n">${M(h.r.deli)}</td>
+        <td class="n">${pill(h.r.mom)}</td><td class="n">${M(h.r.deli)}</td>
         <td class="n">${fmtN(h.r.tr)}</td><td class="n">฿${h.r.tk==null?'—':h.r.tk}</td></tr>`).join('')}
       </table></div>`:''}`;
 }
@@ -2968,7 +2968,7 @@ function ovTrendHtml(){
     ${rows.map(r=>{ const cm=(SCP&&SCP.multi)?null:curM;
       return `<tr class="${r.m===cm?'hi':''}"><td>${r.m===cm?'★ ':''}${MONTH_TH[r.m-1]}</td>${
         COLS.map(c=>{ const v=c[1](r);
-          if(c[2]===1) return `<td class="n ${cls(v)}">${sgn(v)}</td>`;
+          if(c[2]===1) return `<td class="n">${pill(v)}</td>`;
           if(c[2]===2) return `<td class="n ${cls(v)}">${v==null?'—':(v>=0?'+':'-')+Math.abs(v).toFixed(2)+'M'}</td>`;
           return `<td class="n">${v}</td>`; }).join('')}</tr>`; }).join('')}
   </table></div>`;
@@ -3566,8 +3566,8 @@ function buildMain(m){
     ${gpv||lineChart(S.multi&&S.n>=2?rowsS:rows)}
     ${gpv?'':`<div class="scroll" style="margin-top:18px"><table>
       <tr><th>เดือน</th><th class="n">Total Sales 2026</th><th class="n">Total Sales 2025</th><th class="n">YoY</th><th class="n">Budget 2026</th><th class="n">vs Budget</th><th class="n">SSSG Sales</th><th class="n">SSSG %</th><th class="n">MoM %</th></tr>
-      ${rowsS.map(r=>`<tr class="${r.m===m&&!S.multi?'hi':''}"><td>${r.m===m&&!S.multi?'★ ':''}${MONTH_TH[r.m-1]}</td><td class="n">${fmtM(r.sales)}</td><td class="n">${fmtM(r.ly)}</td><td class="n ${cls(pct(r.ly,r.sales))}">${sgn(pct(r.ly,r.sales))}</td><td class="n">${fmtM(r.budget)}</td><td class="n ${cls(pct(r.budget,r.sales))}">${sgn(pct(r.budget,r.sales))}</td><td class="n">${fmtM(r.sssgSales)}</td><td class="n ${cls(r.sssg)}">${sgn(r.sssg)}</td><td class="n ${cls(r.mom??0)}">${sgn(r.mom)}</td></tr>`).join('')}
-      ${S.multi&&S.row?(r=>`<tr class="hi"><td><b>รวม ${S.labS}</b></td><td class="n"><b>${fmtM(r.sales)}</b></td><td class="n">${fmtM(r.ly)}</td><td class="n ${cls(pct(r.ly,r.sales))}">${sgn(pct(r.ly,r.sales))}</td><td class="n">${fmtM(r.budget)}</td><td class="n ${cls(pct(r.budget,r.sales))}">${sgn(pct(r.budget,r.sales))}</td><td class="n">${fmtM(r.sssgSales)}</td><td class="n ${cls(r.sssg)}">${sgn(r.sssg)}</td><td class="n ${cls(r.mom??0)}">${sgn(r.mom)}</td></tr>`)(S.row):''}
+      ${rowsS.map(r=>`<tr class="${r.m===m&&!S.multi?'hi':''}"><td>${r.m===m&&!S.multi?'★ ':''}${MONTH_TH[r.m-1]}</td><td class="n">${fmtM(r.sales)}</td><td class="n">${fmtM(r.ly)}</td><td class="n">${pill(pct(r.ly,r.sales))}</td><td class="n">${fmtM(r.budget)}</td><td class="n">${pill(pct(r.budget,r.sales))}</td><td class="n">${fmtM(r.sssgSales)}</td><td class="n">${pill(r.sssg)}</td><td class="n">${pill(r.mom)}</td></tr>`).join('')}
+      ${S.multi&&S.row?(r=>`<tr class="hi"><td><b>รวม ${S.labS}</b></td><td class="n"><b>${fmtM(r.sales)}</b></td><td class="n">${fmtM(r.ly)}</td><td class="n">${pill(pct(r.ly,r.sales))}</td><td class="n">${fmtM(r.budget)}</td><td class="n">${pill(pct(r.budget,r.sales))}</td><td class="n">${fmtM(r.sssgSales)}</td><td class="n">${pill(r.sssg)}</td><td class="n">${pill(r.mom)}</td></tr>`)(S.row):''}
     </table></div>`}`));
 
   // 3 SSSG trend
@@ -3598,7 +3598,7 @@ function buildMain(m){
   // 7 branches good vs bad
   const b=d.branches;
   const bt=(arr)=>{const f=arr.some(r=>r.length>3&&r[3]!=null);
-    return `<table><tr><th>สาขา</th><th class="n">Trans %</th><th class="n">Ticket %</th>${f?'<th class="n">ยอดขาย MoM</th>':''}</tr>${arr.map(r=>`<tr><td>${r[0]}</td><td class="n ${cls(r[1])}">${sgn(r[1])}</td><td class="n ${cls(r[2])}">${sgn(r[2])}</td>${f?`<td class="n ${cls(r[3]??0)}">${sgn(r[3])}</td>`:''}</tr>`).join('')}</table>`;};
+    return `<table><tr><th>สาขา</th><th class="n">Trans %</th><th class="n">Ticket %</th>${f?'<th class="n">ยอดขาย MoM</th>':''}</tr>${arr.map(r=>`<tr><td>${r[0]}</td><td class="n">${pill(r[1])}</td><td class="n">${pill(r[2])}</td>${f?`<td class="n">${pill(r[3])}</td>`:''}</tr>`).join('')}</table>`;};
   out.push(sec('branches','Branch Watchlist — best vs needs attention', b&&b.basis==='yoy'?'จำนวนบิล (Trans.) และเช็คเฉลี่ย (Ticket) เทียบเดือนเดียวกัน LY':'จำนวนบิล (Trans.) และเช็คเฉลี่ย (Ticket) เทียบ LM', !b?EMPTY('รายสาขา'):`
     <div class="two"><div><h3 class="g">สาขาที่ผลงานดี (Trans.+Ticket โตพร้อมกัน / ทรงตัว)</h3>${bt(b.good)}</div><div><h3 class="r">สาขาที่น่าเป็นห่วง (Trans.+Ticket ลดพร้อมกัน)</h3>${bt(b.bad)}</div></div>
     <div class="note">${b.note}</div>`));
@@ -3632,7 +3632,7 @@ function buildMain(m){
     const rank=plb.filter(b=>b.sales>=MIN), skipped=plb.length-rank.length;
     const srt=rank.slice().sort((a,b)=>b.gp-a.gp);
     const t=(arr)=>`<div class="scroll"><table><tr><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">กำไร</th><th class="n">%กำไร</th><th class="n">%COS</th><th class="n">%COL</th></tr>
-      ${arr.map(b=>`<tr class="clk" data-ssbr="${b.code}"><td>${b.name}</td><td class="n">${KB(b.sales)}</td><td class="n ${cls(b.profit)}">${KB(b.profit)}</td><td class="n ${cls(b.gp)}">${b.gp.toFixed(1)}%</td><td class="n">${b.cos.toFixed(1)}%</td><td class="n">${b.col.toFixed(1)}%</td></tr>`).join('')}</table></div>`;
+      ${arr.map(b=>`<tr class="clk" data-ssbr="${b.code}"><td>${b.name}</td><td class="n">${KB(b.sales)}</td><td class="n ${cls(b.profit)}">${KB(b.profit)}</td><td class="n">${pill(b.gp)}</td><td class="n">${b.cos.toFixed(1)}%</td><td class="n">${b.col.toFixed(1)}%</td></tr>`).join('')}</table></div>`;
     const loss=plb.filter(b=>b.profit<0);
     PLBR={rank,edges:[-10,0,5,10,15,1e9],labels:['ขาดทุน>10%','ขาดทุน 0-10%','0-5%','5-10%','10-15%','>15%'],sel:null};
     out.push(sec('plbr','Profit by Branch',`${S.multi?S.lab:label(plbM)}${plbM!==m&&!S.multi?' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':''} · ${rank.length} สาขา${isJD()&&JD_CLOSED.size?(PLS.closed?' (รวมสาขาปิด)':` (ไม่รวมสาขาปิด ${JD_CLOSED.size} สาขา)`):''} · เรียงตาม %กำไร${skipped?` (ไม่รวม ${skipped} สาขาที่ยอดต่ำกว่า 0.2M)`:''}`,`
@@ -3673,7 +3673,7 @@ function buildMain(m){
         ${rows.map(b=>{const pl=plMap[b.code],ce=cemMap[b.code],os=ossMap[b.code];
           return `<tr class="clk" data-ssbr="${b.code}"><td>${b.name}</td><td class="n">${KB(b.sales)}</td><td class="n">${(b.sales/totS*100).toFixed(1)}%</td>
           <td class="n ${b.ach==null?'':cls(b.ach-100)}">${b.ach==null?'—':b.ach.toFixed(0)+'%'}</td>
-          <td class="n ${cls(b.mom)}">${sgn(b.mom)}</td>
+          <td class="n">${pill(b.mom)}</td>
           <td class="n">${KB(b.deli)}</td><td class="n">${b.sales?(b.deli/b.sales*100).toFixed(1)+'%':'—'}</td>
           <td class="n">${fmtN(b.tr)}</td><td class="n">฿${b.tk==null?'—':b.tk}</td>
           <td class="n ${pl?cls(pl.gp):''}">${pl?pl.gp.toFixed(1)+'%':'—'}</td>
@@ -3718,7 +3718,7 @@ function buildMain(m){
       <div class="grp" style="margin-top:16px">รายเดือน</div>
       <div class="scroll"><table>
         <tr><th>เดือน</th><th class="n">รายได้</th><th class="n">Food</th><th class="n">%Food</th><th class="n">Labor</th><th class="n">%Labor</th><th class="n">เช่า+Utility</th><th class="n">รวมค่าใช้จ่าย</th><th class="n">กำไร</th><th class="n">%กำไร</th></tr>
-        ${plRows.map(r=>`<tr class="${r.m===cur2.m?'hi':''}"><td>${r.m===cur2.m?'★ ':''}${MONTH_TH[r.m-1]}</td><td class="n">${fm(r.revenue)}</td><td class="n">${fm(r.food)}</td><td class="n">${P(r.food,r.revenue).toFixed(1)}%</td><td class="n">${fm(r.labor)}</td><td class="n">${P(r.labor,r.revenue).toFixed(1)}%</td><td class="n">${fm(r.rent)}</td><td class="n">${fm(r.expense)}</td><td class="n ${cls(r.profit)}">${fm(r.profit)}</td><td class="n ${cls(r.profit)}">${P(r.profit,r.revenue).toFixed(1)}%</td></tr>`).join('')}
+        ${plRows.map(r=>`<tr class="${r.m===cur2.m?'hi':''}"><td>${r.m===cur2.m?'★ ':''}${MONTH_TH[r.m-1]}</td><td class="n">${fm(r.revenue)}</td><td class="n">${fm(r.food)}</td><td class="n">${P(r.food,r.revenue).toFixed(1)}%</td><td class="n">${fm(r.labor)}</td><td class="n">${P(r.labor,r.revenue).toFixed(1)}%</td><td class="n">${fm(r.rent)}</td><td class="n">${fm(r.expense)}</td><td class="n ${cls(r.profit)}">${fm(r.profit)}</td><td class="n">${pill(P(r.profit,r.revenue))}</td></tr>`).join('')}
       </table></div>`));
   }
 
@@ -3942,7 +3942,7 @@ function drawBranchPop(code,box){
       <tr><th>เดือน</th><th class="n">ยอดขาย</th><th class="n">%แผน</th><th class="n">${ML}</th><th class="n">Delivery</th><th class="n">บิล</th><th class="n">เช็คเฉลี่ย</th></tr>
       ${hist.map(h=>`<tr class="${h.m===BR_CTX.m?'hi':''}"><td>${MONTH_TH[h.m-1]}</td><td class="n">${KB(h.r.sales)}</td>
         <td class="n ${h.r.ach==null?'':cls(h.r.ach-100)}">${h.r.ach==null?'—':h.r.ach.toFixed(0)+'%'}</td>
-        <td class="n ${cls(h.r.mom)}">${sgn(h.r.mom)}</td><td class="n">${KB(h.r.deli)}</td>
+        <td class="n">${pill(h.r.mom)}</td><td class="n">${KB(h.r.deli)}</td>
         <td class="n">${h.r.tr?fmtN(h.r.tr):'—'}</td><td class="n">${h.r.tk==null?'—':'฿'+h.r.tk}</td></tr>`).join('')}
     </table></div></div>`:'';
   /* กราฟเต็มความกว้าง (ตัวอักษรในกราฟอ่านได้) · Delivery แถวเดียว 3 แพลตฟอร์ม · ตารางย้อนหลัง */
