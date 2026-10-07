@@ -3741,7 +3741,16 @@ function bindFilters(){
 /* ========================= month selector ========================= */
 let months=[], curM=null;
 const sel=$('#monthSel');
+/* เดือนที่ไฟล์นำเข้าไม่มียอดปีก่อน (เช่น แบบฟอร์มส่งยอดขาย) เติมจากประวัติรายสาขา 2 ปี
+   ใช้ยอดรวมของสาขาที่มียอดปีก่อนในเดือนนั้น หน่วยในประวัติเป็นบาท MONTHLY เป็นล้านบาท */
+function fillLyFromBranches(){
+  const BY=EXTRA.branchYears||[]; if(!BY.length) return;
+  MONTHLY.forEach(r=>{ if(r.ly!=null) return;
+    let ly=0; BY.forEach(b=>{ const v=b.m&&b.m[r.m]; if(v&&v.ly>0) ly+=v.ly; });
+    if(ly>0) r.ly=+(ly/1e6).toFixed(2); });
+}
 function refreshMonths(){
+  fillLyFromBranches();
   months=MONTHLY.map(r=>r.m).sort((a,b)=>a-b);
   sel.innerHTML=''; months.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=label(m);sel.appendChild(o);});
   if(!months.includes(curM)) curM=months[months.length-1];
@@ -3998,6 +4007,7 @@ function applyState(s){ if(!s||!Array.isArray(s.monthly)) return; if(!s.monthly.
   if(curM==null){ const dm=Object.keys(DETAIL).map(Number).filter(Boolean); curM=dm.length?Math.max(...dm):null; }
   setMonth(curM); if(s.updatedAt) $('#status').textContent='อัปเดต '+new Date(s.updatedAt).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'}); }
 async function saveState(){
+  fillLyFromBranches();
   const s={monthly:MONTHLY, detail:DETAIL, by:BY_IMPORT||undefined, v:DATA_V, updatedAt:new Date().toISOString()};
   /* บันทึกในเครื่องไม่สำเร็จ (เช่น พื้นที่เบราว์เซอร์เต็ม) ต้องบอก ไม่งั้นเปิดเว็บใหม่ข้อมูลที่นำเข้าจะหายเงียบ ๆ */
   SAVE_ERR=null;
