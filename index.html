@@ -3018,12 +3018,20 @@ function ovBrHtml(){
     const b=r.b;
     const refName={ly:'ปีก่อน',ss:'ปีก่อน',bud:'แผน',lm:(months.length>1?'ช่วงก่อนหน้า':'เดือนก่อน')}[BM]||'ตัวเทียบ';
     const dirTxt=v=>v>=0?'เพิ่มขึ้น':'ลดลง';
-    /* ไม่มีประวัติรายสาขาให้แจกแจงช่องทาง ใช้ยอดรวมที่คำนวณไว้แล้วบอกภาพกว้างแทน */
-    const brief=()=>{ const parts=[];
-      if(r.g!=null) parts.push('ยอดรวม'+dirTxt(r.g)+' '+Math.abs(r.g).toFixed(1)+'% เทียบ'+refName);
-      if(r.gl!=null&&BM!=='lm') parts.push((months.length>1?'เทียบช่วงก่อนหน้า':'เทียบเดือนก่อน')+dirTxt(r.gl)+' '+Math.abs(r.gl).toFixed(1)+'%');
-      if(r.plan>0) parts.push((r.now>=r.plan?'เกินแผน ':'ต่ำกว่าแผน ')+MB2(Math.abs(r.now-r.plan))+' บาท');
-      return parts.join(' · '); };
+    /* ไม่มีประวัติรายสาขาให้แจกแจงช่องทาง · เรียบเรียงจากยอดรวมให้อ่านเป็นคำวิเคราะห์ */
+    const brief=()=>{
+      const P=v=>Math.abs(v).toFixed(1)+'%', M=v=>MB2(Math.abs(v))+' บาท';
+      let t='';
+      if(r.g!=null) t=(r.g>=0?'ยอดโตขึ้น ':'ยอดลดลง ')+P(r.g)+' จาก'+refName;
+      if(r.gl!=null&&BM!=='lm'){
+        const lab=months.length>1?'ช่วงก่อนหน้า':'เดือนก่อน';
+        if(!t) t=(r.gl>=0?'ยอดโตขึ้น ':'ยอดลดลง ')+P(r.gl)+' จาก'+lab;
+        else if((r.gl>=0)===(r.g>=0)) t+=' และเทียบ'+lab+(r.gl>=0?'ยังโตต่อ ':'ลดต่อเนื่อง ')+P(r.gl);
+        else t+=' แต่เทียบ'+lab+(r.gl>=0?'กลับมาโต ':'แผ่วลง ')+P(r.gl);
+      }
+      if(r.plan>0){ const d=r.now-r.plan;
+        t+=(t?' ':'')+(d>=0?'โดยรวมทำได้เกินแผน ':'โดยรวมยังต่ำกว่าแผน ')+M(d); }
+      return t; };
     const H=b.h||{}, now=H[YEAR], base=(BM==='ly'||BM==='ss')?H[YEAR-1]:(BM==='lm'?H[YEAR]:null);
     if(!now||!base) return brief();
     /* เทียบเฉพาะเดือนที่ตัวเทียบมียอดจริง ไม่งั้นเดือนที่ปีก่อนยังไม่เปิดจะทำให้ % เพี้ยน */
