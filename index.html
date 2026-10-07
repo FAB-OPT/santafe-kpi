@@ -1377,6 +1377,7 @@ body.hub #salesmix .ovbottom > .panel:nth-child(2){display:none}
 .hv-badge{font-size:14px;font-weight:800;border-radius:999px;padding:4px 12px;white-space:nowrap;background:var(--surface);color:var(--ink-2)}
 .hv-badge.neg{background:#FDE7EA;color:var(--bad)} .hv-badge.pos{background:#E7F6EE;color:var(--good)}
 .brwhy{font-size:11.5px;color:var(--faint);margin-top:2px;line-height:1.35}
+.brwhy b{color:var(--accent-ink);font-weight:700}
 .hv-chip{align-self:flex-start;margin-top:10px;font-size:12.5px;font-weight:700;color:var(--mute);background:var(--surface);border-radius:999px;padding:4px 12px}
 .hv-rows{display:flex;flex-direction:column;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--hair)}
 .hv-r{display:flex;align-items:baseline;gap:12px;font-size:13.5px;color:var(--mute)}
@@ -3031,7 +3032,13 @@ function ovBrHtml(){
       }
       if(r.plan>0){ const d=r.now-r.plan;
         t+=(t?' ':'')+(d>=0?'โดยรวมทำได้เกินแผน ':'โดยรวมยังต่ำกว่าแผน ')+M(d); }
-      return t; };
+      /* ปิดท้ายด้วยสิ่งที่ควรโฟกัส ให้อ่านแล้วรู้ว่าต้องไปทำอะไรต่อ */
+      let fc='';
+      if(r.plan>0&&r.now<r.plan) fc='ต้องเพิ่มอีก '+M(r.plan-r.now)+' จึงถึงแผน';
+      else if(r.g!=null&&r.g<0) fc='หาสาเหตุที่ยอดหายเทียบ'+refName;
+      else if(r.gl!=null&&r.gl<0) fc='เฝ้าดูแนวโน้มที่เริ่มแผ่ว';
+      else if(r.plan>0) fc='รักษาระดับนี้ไว้';
+      return t+(fc?' <b>ควรโฟกัส: '+fc+'</b>':''); };
     const H=b.h||{}, now=H[YEAR], base=(BM==='ly'||BM==='ss')?H[YEAR-1]:(BM==='lm'?H[YEAR]:null);
     if(!now||!base) return brief();
     /* เทียบเฉพาะเดือนที่ตัวเทียบมียอดจริง ไม่งั้นเดือนที่ปีก่อนยังไม่เปิดจะทำให้ % เพี้ยน */
@@ -3061,7 +3068,19 @@ function ovBrHtml(){
     if(c0&&c1&&Math.abs(c1/c0-1)>=0.01) tail.push('ลูกค้า'+up(c1-c0)+' '+PC(c0,c1));
     if(k0&&k1&&Math.abs(k1/k0-1)>=0.01) tail.push('เช็คเฉลี่ย'+up(k1-k0)+' '+PC(k0,k1));
     if(tail.length) s+=' โดย'+tail.join(' และ');
-    return s;
+    /* สิ่งที่ควรโฟกัส: ช่องทางที่ฉุดมากสุด + ต้นเหตุฝั่งลูกค้าหรือยอดต่อบิล + ส่วนที่ขาดจากแผน */
+    const worst=dif.filter(x=>x[1]<0)[0];
+    const dC=(c0&&c1)?c1/c0-1:null, dK=(k0&&k1)?k1/k0-1:null, fs=[];
+    if(worst) fs.push(worst[0]);
+    if(dC!=null&&dK!=null){
+      if(dC<-0.01&&dK<-0.01) fs.push('ทั้งจำนวนลูกค้าและยอดต่อบิล');
+      else if(dC<-0.01) fs.push('ดึงลูกค้าเข้าร้าน');
+      else if(dK<-0.01) fs.push('เพิ่มยอดต่อบิล');
+    } else if(dC!=null&&dC<-0.01) fs.push('ดึงลูกค้าเข้าร้าน');
+    else if(dK!=null&&dK<-0.01) fs.push('เพิ่มยอดต่อบิล');
+    if(r.plan>0&&r.now<r.plan) fs.push('ยังขาดอีก '+MB(r.plan-r.now)+' จึงถึงแผน');
+    if(!fs.length) fs.push(A.s>=B.s?'รักษาระดับนี้ไว้':'ติดตามต่อเนื่อง');
+    return s+' <b>ควรโฟกัส: '+fs.join(' · ')+'</b>';
   };
   /* เรียงตาม % เทียบค่าที่เลือกของเดือนล่าสุด · สาขาที่ไม่มีค่าเทียบ (เช่น เปิดใหม่ไม่มียอด LY) อยู่ท้ายสุด */
   rows.sort((p,q)=>{ if(SALES) return q.now-p.now;
