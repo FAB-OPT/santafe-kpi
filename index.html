@@ -2168,13 +2168,6 @@ function lyTrAgg(ms){ let sales=0,trans=0,cu=0,cuS=0,cuT=0,any=false;
       any=true; sales+=S; trans+=S/K; if(C>0){ cu+=C; cuS+=S; cuT+=S/K; } }); });
   if(!any||!trans) return null;
   return {trans, ticket:sales/trans, customer:cu||null, custAvg:cu?cu/cuT:null, perBill:cu?cuS/cu:null}; }
-/* ยอดขายแยกช่องทาง ปีนี้ vs LY (สาขาที่มีประวัติปีก่อนเท่านั้น เทียบสาขาเดียวกัน) · Dine in ปีก่อน = ยอดรวม − Takeaway − Delivery */
-function chSalesLY(ms){ const T={dine:[0,0],take:[0,0],deli:[0,0]}; let any=false;
-  const BY={}; filtZone(EXTRA.branchYears||[]).forEach(b=>{ BY[String(b.code)]=b.h&&b.h[YEAR-1]; });
-  ms.forEach(m=>{ const i=m-1; filtZone((DETAIL[m]||{}).branchRows||[]).forEach(r=>{ const h=BY[String(r.code)]; if(!h) return;
-    const S=(h.s||[])[i]; if(!(S>0)) return; const t=(h.t||[])[i]||0, d=((h.g||[])[i]||0)+((h.l||[])[i]||0)+((h.p||[])[i]||0);
-    any=true; T.dine[0]+=r.dine||0; T.dine[1]+=Math.max(0,S-t-d); T.take[0]+=r.take||0; T.take[1]+=t; T.deli[0]+=r.deli||0; T.deli[1]+=d; }); });
-  return any?T:null; }
 function customersSection(m){
   const S=SCP||{multi:false}, T='Customers & Average Ticket';
   const now=aggTr(S.multi?S.ms:[m]), prv=S.multi?S.tP:aggTr(m>1?[m-1]:null);
@@ -2201,7 +2194,6 @@ function customersSection(m){
   </div>`;
   /* ---- แยกช่องทาง: แถว 1 Total Trans/Ticket Avg. · แถว 2 Customers/Customer Avg. ---- */
   const totTr=now.ch.reduce((a,c)=>a+(c.trans||0),0);
-  const CSL=chSalesLY(S.multi?S.ms:[m]);
   const mc=(c,p,k,f)=>{ if(!c) return '<div class="mxc"><span class="mute">ไม่มีข้อมูล</span></div>';
     const has=p&&p[k]; return `<div class="mxc"><b>${f(c[k])}</b>${has?pill(pct(p[k],c[k])):''}<small>${has&&PV?`vs ${PV} <b>${f(p[k])}</b>`:''}${k==='trans'&&totTr?`${has&&PV?' · ':''}<em style="color:var(--ink-2)">${(c.trans/totTr*100).toFixed(1)}%</em> of Total Trans`:''}</small></div>`; };
   const mxRow=(lab,sub,fn)=>`<div class="rl">${lab}<small>${sub}</small></div>${CUS_CH.map(o=>fn(findCh(now,o.k),findCh(prv,o.k))).join('')}`;
@@ -2209,8 +2201,6 @@ function customersSection(m){
     <div class="h"></div>${CUS_CH.map(o=>`<div class="h"><i class="d" style="background:${o.c}"></i>${o.n}</div>`).join('')}
     ${mxRow('Total Trans','ต่อช่องทาง',(c,p)=>mc(c,p,'trans',fN))}
     ${mxRow('Ticket Avg.','ต่อช่องทาง',(c,p)=>mc(c,p,'ticket',fB))}
-    ${CSL?`<div class="rl">ยอดขาย<small>vs LY · สาขาเดียวกัน</small></div>${['dine','take','deli'].map(x=>{ const [a,b]=CSL[x], M=v=>(v/1e6).toFixed(2)+'M';
-      return `<div class="mxc"><b>${M(a)}</b>${b>0?pill(pct(b,a)):''}<small>${b>0?`vs LY <b>${M(b)}</b>`:'ไม่มีข้อมูล LY'}</small></div>`; }).join('')}`:''}
   </div>`;
   /* ---- รายเดือน ---- */
   const tm=(S.multi&&S.n>=2?S.ms:MONTHLY.map(r=>r.m).filter(x=>x<=m)).map(x=>({m:x,v:trOf(x)})).filter(r=>r.v);
