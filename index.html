@@ -3005,46 +3005,45 @@ function ovTrendHtml(){
           if(c[2]===2) return `<td class="n ${cls(v)}">${v==null?'—':(v>=0?'+':'-')+Math.abs(v).toFixed(2)+'M'}</td>`;
           return `<td class="n">${v}</td>`; }).join('')}</tr>`; }).join('')}
   </table></div>`;
-  /* สรุปใต้ตาราง: เดือนล่าสุดเป็นอย่างไร · ติดต่อกันกี่เดือน · เดือนดีสุด/แย่สุด · ภาพรวมสะสม */
+  /* กล่องสรุปสั้น ๆ ใต้ตาราง: เดือนล่าสุดทำได้เท่าไร · อะไรลดลงบ้างเทียบเดือนก่อน · ต่อเนื่องกี่เดือน */
   const FM=v=>Math.abs(v)>=1 ? Math.abs(v).toFixed(2)+'M' : Math.round(Math.abs(v)*1000)+'K';
   const pc=(a0,b0)=>(a0&&b0!=null)?((b0/a0-1)*100):null;
   const PP=v=>Math.abs(v).toFixed(1)+'%';
   const focus=(()=>{
     const have=rows.filter(r=>r.a!=null); if(!have.length) return '';
-    const L=[];
-    /* 1. เดือนล่าสุด */
-    const last=have[have.length-1], vb=last.bud?pc(last.bud,last.a):null, vl=last.ly?pc(last.ly,last.a):null, vm=last.lm?pc(last.lm,last.a):null;
+    const last=have[have.length-1], L=[];
+    /* 1. ผลเดือนล่าสุด */
+    const vb=last.bud?pc(last.bud,last.a):null, vl=last.ly?pc(last.ly,last.a):null, vm=last.lm?pc(last.lm,last.a):null;
     const p1=[`<b>${MONTH_TH[last.m-1]}</b> ทำได้ <b>${last.a.toFixed(2)}M</b>`];
     if(vb!=null) p1.push((vb>=0?'เกินแผน ':'ต่ำกว่าแผน ')+PP(vb)+' ('+(vb>=0?'เกิน ':'ขาด ')+FM(last.a-last.bud)+')');
-    if(vl!=null) p1.push((vl>=0?'โตจากปีก่อน ':'หดจากปีก่อน ')+PP(vl));
-    if(vm!=null) p1.push((vm>=0?'โตจากเดือนก่อน ':'ลดจากเดือนก่อน ')+PP(vm));
+    if(vl!=null) p1.push('ปีก่อน '+(vl>=0?'+':'-')+PP(vl));
+    if(vm!=null) p1.push('เดือนก่อน '+(vm>=0?'+':'-')+PP(vm));
     L.push(p1.join(' · '));
-    /* 2. ติดต่อกันกี่เดือน */
-    const streak=(test)=>{ let n=0; for(let i=have.length-1;i>=0;i--){ const v=test(have[i]); if(v===null) break; if(!v) break; n++; } return n; };
-    const sB=streak(r=>r.bud?r.a<r.bud:null), sL=streak(r=>r.ly?r.a<r.ly:null), sM=streak(r=>r.lm?r.a<r.lm:null);
-    const p2=[];
-    if(sB>1) p2.push('ต่ำกว่าแผนติดต่อกัน <b>'+sB+' เดือน</b>');
-    if(sL>1) p2.push('หดเทียบปีก่อนติดต่อกัน <b>'+sL+' เดือน</b>');
-    if(sM>1) p2.push('ลดลงต่อเนื่อง <b>'+sM+' เดือน</b>');
-    if(p2.length) L.push(p2.join(' · '));
-    /* 3. เดือนดีสุด / แย่สุด ของช่วง (เทียบแผนก่อน ถ้าไม่มีแผนใช้ยอด) */
-    if(have.length>1){
-      const key=r=>r.bud?pc(r.bud,r.a):null, hv=have.filter(r=>key(r)!=null);
-      if(hv.length>1){ const srt=hv.slice().sort((x,y)=>key(y)-key(x)), best=srt[0], worst=srt[srt.length-1];
-        L.push('เดือนที่ทำได้ดีสุดเทียบแผนคือ <b>'+MONTH_TH[best.m-1]+'</b> ('+(key(best)>=0?'+':'-')+PP(key(best))+') · แย่สุดคือ <b>'+MONTH_TH[worst.m-1]+'</b> ('+(key(worst)>=0?'+':'-')+PP(key(worst))+')');
-      } else { const srt=have.slice().sort((x,y)=>y.a-x.a);
-        L.push('เดือนที่ยอดสูงสุดคือ <b>'+MONTH_TH[srt[0].m-1]+'</b> '+srt[0].a.toFixed(2)+'M · ต่ำสุดคือ <b>'+MONTH_TH[srt[srt.length-1].m-1]+'</b> '+srt[srt.length-1].a.toFixed(2)+'M'); }
+    /* 2. อะไรลดลงเทียบเดือนก่อน (ช่องทาง · แพลตฟอร์ม · บิล · เช็คเฉลี่ย) ตามขอบเขตที่เลือก */
+    const keep=OVT.scope==='branch'?by.filter(b=>String(b.code)===String(OVT.code)):(OVT.scope==='zone'?by.filter(b=>b.zone===OVT.zone):null);
+    const codes=keep?new Set(keep.map(b=>String(b.code))):null;
+    const rowsOf=mm=>((DETAIL[mm]||{}).branchRows||[]).filter(b=>b.sales>0&&(!codes||codes.has(String(b.code))));
+    const A=rowsOf(last.m), B=rowsOf(last.m-1), bm={}; B.forEach(b=>bm[String(b.code)]=b);
+    const both=A.filter(b=>bm[String(b.code)]);
+    if(both.length){
+      const sum=(arr,k)=>arr.reduce((t,b)=>t+(b[k]||0),0), prev=both.map(b=>bm[String(b.code)]);
+      const items=[['Dine in','dine'],['Takeaway','take'],['Delivery','deli'],['Grab','grab'],['Line Man','lm'],['Shopee Food','sp']]
+        .map(([n,k])=>({n,d:(sum(both,k)-sum(prev,k))/1e6,p:sum(prev,k)?sum(both,k)/sum(prev,k)-1:0,k}))
+        .filter(x=>x.d<0&&Math.abs(x.p)>=0.005).sort((x,y)=>x.d-y.d);
+      const ch=items.filter(x=>['dine','take','deli'].includes(x.k)), pf=items.filter(x=>!['dine','take','deli'].includes(x.k));
+      const parts=ch.map(x=>x.n+' <b>-'+FM(x.d)+'</b>');
+      if(pf.length) parts.push('(Delivery แยก: '+pf.map(x=>x.n+' -'+FM(x.d)).join(' · ')+')');
+      const tr1=sum(both,'tr'), tr0=sum(prev,'tr');
+      if(tr0&&tr1<tr0*0.995) parts.push('จำนวนบิล <b>-'+PP((tr1/tr0-1)*100)+'</b>');
+      const t1=tr1?sum(both,'sales')/tr1:0, t0=tr0?sum(prev,'sales')/tr0:0;
+      if(t0&&t1<t0*0.995) parts.push('เช็คเฉลี่ย <b>-'+PP((t1/t0-1)*100)+'</b>');
+      L.push(parts.length?'ที่ลดลงจากเดือนก่อน: '+parts.join(' · '):'ไม่มีช่องทางที่ลดลงจากเดือนก่อน');
     }
-    /* 4. ภาพรวมสะสมของช่วงที่ดูอยู่ */
-    const p4=[], sa=have.reduce((t,r)=>t+r.a,0);
-    const wb=have.filter(r=>r.bud>0), sb=wb.reduce((t,r)=>t+r.bud,0), ab=wb.reduce((t,r)=>t+r.a,0);
-    const wl=have.filter(r=>r.ly>0), sl=wl.reduce((t,r)=>t+r.ly,0), al=wl.reduce((t,r)=>t+r.a,0);
-    p4.push('รวม '+MONTH_TH[have[0].m-1]+' ถึง '+MONTH_TH[last.m-1]+' <b>'+sa.toFixed(1)+'M</b>');
-    if(wb.length&&sb) p4.push((ab>=sb?'เกินแผน ':'ต่ำกว่าแผน ')+'<b>'+FM(ab-sb)+'</b> ('+PP(pc(sb,ab))+')'+(wb.length>1?' เฉลี่ยเดือนละ '+FM((ab-sb)/wb.length):''));
-    if(wl.length&&sl) p4.push((al>=sl?'โตจากปีก่อน ':'หดจากปีก่อน ')+PP(pc(sl,al)));
-    const ss=have.filter(r=>r.ssA!=null&&r.ssL), sA=ss.reduce((t,r)=>t+r.ssA,0), sL2=ss.reduce((t,r)=>t+r.ssL,0);
-    if(ss.length&&sL2) p4.push('SSSG ช่วงนี้ '+(sA>=sL2?'+':'-')+PP(pc(sL2,sA)));
-    L.push(p4.join(' · '));
+    /* 3. ความต่อเนื่อง */
+    const streak=(test)=>{ let n=0; for(let i=have.length-1;i>=0;i--){ const v=test(have[i]); if(v==null||!v) break; n++; } return n; };
+    const sB=streak(r=>r.bud?r.a<r.bud:null), sL=streak(r=>r.ly?r.a<r.ly:null);
+    const p3=[]; if(sB>1) p3.push('ต่ำกว่าแผนติดต่อกัน <b>'+sB+' เดือน</b>'); if(sL>1) p3.push('หดเทียบปีก่อนติดต่อกัน <b>'+sL+' เดือน</b>');
+    if(p3.length) L.push(p3.join(' · '));
     return `<div class="note focusnote"><b class="ttl">ควรโฟกัส</b>${L.map(x=>`<div>${x}</div>`).join('')}</div>`;
   })();
   return head+`<div class="ovcap">${cap}</div><div class="ovchart">${ovChart(rows,MAIN,REFS)}</div>`+tbl+focus+note;
