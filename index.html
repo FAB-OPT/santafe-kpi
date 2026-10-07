@@ -2975,25 +2975,34 @@ function ovBrHtml(){
   const S=SCP||{}, m=S.multi?S.last:curM, by0=brOfYear(); if(!by0.length) return '';
   /* เลือก Zone ใน Performance Trend: ตารางแสดงเฉพาะสาขาในโซนนั้น */
   const inZ=OVT.scope==='zone'&&OVT.zone, by=inZ?by0.filter(b=>b.zone===OVT.zone):by0;
-  const MS=mm=>MONTH_EN[mm-1].slice(0,3), months=MONTHLY.filter(r=>r.m<=m&&r.sales!=null).map(r=>r.m).sort((a,b)=>a-b);
-  /* เทียบตามปุ่มของ Performance Trend: LY · Budget (แผนรายสาขา จับด้วยรหัส) · LM (เดือนก่อน) */
-  const dd=DETAIL[m]||{}, br=dd.branchRows||[], pb=dd.planBranches||[], nm=x=>String(x||'').replace(/\s+/g,'');
+  /* เดือนในตาราง = ช่วงข้อมูลที่เลือกด้านบน (รายเดือน · ไตรมาส · ช่วงเดือน · ตั้งแต่ต้นปี) */
+  const MS=mm=>MONTH_EN[mm-1].slice(0,3);
+  const months=((S.ms&&S.ms.length)?S.ms:[m]).filter(mm=>MONTHLY.some(r=>r.m===mm&&r.sales!=null)).sort((a,b)=>a-b);
+  if(!months.length) return '';
+  const nm=x=>String(x||'').replace(/\s+/g,'');
   const BM=OVT.mode==='all'?'ly':OVT.mode;   /* ALL: ตารางรายสาขาเทียบ LY เป็นหลัก */
   const ML={ly:'LY',bud:'Budget',lm:'LM',ss:'SSSG'}[BM];
-  const refOf=b=>{ if(BM==='ly'||BM==='ss') return ((b.m&&b.m[m])||{}).ly||0;
-    if(BM==='lm') return m>1?brTy(b,m-1):0;
+  /* ค่าเทียบของเดือนเดียว · ถ้าเลือกหลายเดือนจะรวมทั้งช่วงให้ตรงกับยอดที่แสดง */
+  const refM=(b,mm)=>{ if(BM==='ly'||BM==='ss') return ((b.m&&b.m[mm])||{}).ly||0;
+    if(BM==='lm') return mm>1?brTy(b,mm-1):0;
+    const dd=DETAIL[mm]||{}, br=dd.branchRows||[], pb=dd.planBranches||[];
     const r=br.find(x=>String(x.code)===String(b.code)); return (r&&r.plan)||(pb.find(x=>nm(x.name)===nm(b.name))||{}).plan||0; };
-  const rows=by.map(b=>{ const v=months.map(mm=>brTy(b,mm)/1e6), has=v.filter(x=>x>0), now=brTy(b,m), ref=refOf(b);
+  const refMs=(BM==='lm'&&S.multi&&S.prevMs&&S.prevMs.length)?S.prevMs:months;
+  const refOf=b=>(BM==='lm'&&refMs!==months)?refMs.reduce((t,mm)=>t+brTy(b,mm),0):months.reduce((t,mm)=>t+refM(b,mm),0);
+  const rows=by.map(b=>{ const v=months.map(mm=>brTy(b,mm)/1e6), has=v.filter(x=>x>0);
+    const now=months.reduce((t,mm)=>t+brTy(b,mm),0), ref=refOf(b);
     return {b,v,now,avg:has.length?has.reduce((a,c)=>a+c,0)/has.length:0,g:ref>0&&now>0?(now/ref-1)*100:null}; }).filter(r=>r.now>0);
   /* เรียงตาม % เทียบค่าที่เลือกของเดือนล่าสุด · สาขาที่ไม่มีค่าเทียบ (เช่น เปิดใหม่ไม่มียอด LY) อยู่ท้ายสุด */
   rows.sort((p,q)=>{ if(p.g==null||q.g==null) return (p.g==null)-(q.g==null)||q.now-p.now; return q.g-p.g; });
   const shown=OVB.all?rows:rows.slice(0,10), f=v=>v>0?v.toFixed(2):'—';
   /* ปุ่มตัวเทียบชุดเดียวกับ Performance Trend · กดที่นี่ก็เปลี่ยนทั้งกราฟและตารางด้านบนด้วย */
   const seg=`<span class="ovseg">${[['all','ALL'],['ly','vs LY'],['bud','vs Budget'],['lm','vs LM'],['ss','vs SSSG']].map(([k,t])=>`<button type="button" class="${OVT.mode===k?'on':''}" data-ovmode="${k}">${t}</button>`).join('')}</span>`;
-  return `<div class="ovth"><h3>Branch detail Sales — ${MS(months[0]||m)} to ${MS(m)} ${YEAR}${inZ?' · โซน '+OVT.zone:''}</h3>${seg}</div>
-    <div class="ovsub">เรียงตาม % เทียบ ${ML} ${MONTH_TH[m-1]} มาก → น้อย · ล้านบาท · ${rows.length} สาขาที่มียอดเดือนนี้ · กดชื่อสาขาเพื่อดูรายละเอียด</div>
-    <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th><th>Branch</th>${months.map(mm=>`<th class="n">${MS(mm)}</th>`).join('')}<th class="n">Avg</th><th class="n">vs ${ML} ${MS(m)}</th></tr>
-    ${shown.map((r,i)=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td><td>${r.b.code} ${r.b.name}</td>${r.v.map(v=>`<td class="n">${f(v)}</td>`).join('')}<td class="n"><b>${f(r.avg)}</b></td><td class="n">${pill(r.g)}</td></tr>`).join('')}</table></div>
+  const many=months.length>1, rangeTxt=many?`${MS(months[0])} to ${MS(months[months.length-1])}`:MS(months[0]);
+  const refTxt=(BM==='lm'&&refMs!==months)?`${MS(refMs[0])}–${MS(refMs[refMs.length-1])}`:rangeTxt.replace(' to ','–');
+  return `<div class="ovth"><h3>Branch detail Sales — ${rangeTxt} ${YEAR}${inZ?' · โซน '+OVT.zone:''}</h3>${seg}</div>
+    <div class="ovsub">เรียงตาม % เทียบ ${ML} มาก → น้อย · ล้านบาท · ${rows.length} สาขาที่มียอดในช่วงนี้ · กดชื่อสาขาเพื่อดูรายละเอียด</div>
+    <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th><th>Branch</th>${months.map(mm=>`<th class="n">${MS(mm)}</th>`).join('')}${many?'<th class="n">Avg</th>':''}<th class="n">vs ${ML} ${refTxt}</th></tr>
+    ${shown.map((r,i)=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td><td>${r.b.code} ${r.b.name}</td>${r.v.map(v=>`<td class="n">${f(v)}</td>`).join('')}${many?`<td class="n"><b>${f(r.avg)}</b></td>`:''}<td class="n">${pill(r.g)}</td></tr>`).join('')}</table></div>
     ${rows.length>10?`<button type="button" class="ovmore ${OVB.all?'on':''}" data-ovbrall="1">${OVB.all?'แสดงแค่ 10 อันดับ':'ดูทั้งหมด '+rows.length+' สาขา'} <i>⌄</i></button>`:''}`;
 }
 /* วาดใหม่เฉพาะการ์ด · เลือกโซนอยู่ต้องใช้ข้อมูลของโซนเหมือนตอนสร้างหน้า */
