@@ -3013,18 +3013,27 @@ function ovBrHtml(){
     return {b,v,now,plan,ly:lyv,avg:has.length?has.reduce((a,c)=>a+c,0)/has.length:0,g:ref>0&&now>0?(now/ref-1)*100:null,
       gl:lmv>0&&now>0?(now/lmv-1)*100:null}; }).filter(r=>r.now>0);
   /* คำอธิบายสั้น ๆ ว่าสาขานั้นโต/ลดมาจากอะไร · ใช้ประวัติรายสาขา (ยอดแยกช่องทาง · เช็คเฉลี่ย · ลูกค้า) */
-  const why=b=>{
+  const why=r=>{
     if(SALES) return '';
+    const b=r.b;
+    const refName={ly:'ปีก่อน',ss:'ปีก่อน',bud:'แผน',lm:(months.length>1?'ช่วงก่อนหน้า':'เดือนก่อน')}[BM]||'ตัวเทียบ';
+    const dirTxt=v=>v>=0?'เพิ่มขึ้น':'ลดลง';
+    /* ไม่มีประวัติรายสาขาให้แจกแจงช่องทาง ใช้ยอดรวมที่คำนวณไว้แล้วบอกภาพกว้างแทน */
+    const brief=()=>{ const parts=[];
+      if(r.g!=null) parts.push('ยอดรวม'+dirTxt(r.g)+' '+Math.abs(r.g).toFixed(1)+'% เทียบ'+refName);
+      if(r.gl!=null&&BM!=='lm') parts.push((months.length>1?'เทียบช่วงก่อนหน้า':'เทียบเดือนก่อน')+dirTxt(r.gl)+' '+Math.abs(r.gl).toFixed(1)+'%');
+      if(r.plan>0) parts.push((r.now>=r.plan?'เกินแผน ':'ต่ำกว่าแผน ')+MB2(Math.abs(r.now-r.plan))+' บาท');
+      return parts.join(' · '); };
     const H=b.h||{}, now=H[YEAR], base=(BM==='ly'||BM==='ss')?H[YEAR-1]:(BM==='lm'?H[YEAR]:null);
-    if(!now||!base) return '';
+    if(!now||!base) return brief();
     /* เทียบเฉพาะเดือนที่ตัวเทียบมียอดจริง ไม่งั้นเดือนที่ปีก่อนยังไม่เปิดจะทำให้ % เพี้ยน */
     const Ms=(BM==='lm')?months:months.filter(mm=>(base.s||[])[mm-1]>0);
     const Rs=(BM==='lm')?((refMs!==months)?refMs:months.map(mm=>mm-1).filter(mm=>mm>=1)):Ms;
-    if(!Ms.length||!Rs.length) return '';
+    if(!Ms.length||!Rs.length) return brief();
     const sum=(src,k,ms)=>ms.reduce((t,mm)=>t+((src&&src[k]&&src[k][mm-1])||0),0);
     const ch=(src,ms)=>{ const s=sum(src,'s',ms), t=sum(src,'t',ms), d=sum(src,'g',ms)+sum(src,'l',ms)+sum(src,'p',ms);
       return {s, 'Dine in':s-t-d, 'Takeaway':t, 'Delivery':d}; };
-    const A=ch(now,Ms), B=ch(base,Rs); if(!A.s||!B.s) return '';
+    const A=ch(now,Ms), B=ch(base,Rs); if(!A.s||!B.s) return brief();
     const MB=v=>Math.abs(v)>=1e6?(Math.abs(v)/1e6).toFixed(2)+' ล้าน':Math.round(Math.abs(v)/1000)+'K';
     const PC=(a,b)=>Math.abs((b/a-1)*100).toFixed(1)+'%';
     const up=v=>v>=0?'เพิ่มขึ้น':'ลดลง';
@@ -3078,7 +3087,7 @@ function ovBrHtml(){
     ${strip}
     <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th><th>Branch</th>${(ALLM&&!many)?'':months.map(mm=>`<th class="n">${MS(mm)}</th>`).join('')}${many?'<th class="n">Avg</th>':''}${ALLM?`<th class="n">Total Sales ${YEAR}</th><th class="n">Total Sales ${YEAR-1}</th><th class="n">YoY</th><th class="n">Budget ${YEAR}</th><th class="n">vs Budget</th><th class="n">ขาด / เกินแผน</th><th class="n">SSSG %</th>`
       :`<th class="n">${SALES?'ขาด / เกินแผน':'vs '+ML+' '+refTxt}</th>`}${lmMs.length?`<th class="n">vs LM ${MS(lmMs[0])}${lmMs.length>1?'–'+MS(lmMs[lmMs.length-1]):''}</th>`:''}</tr>
-    ${shown.map((r,i)=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td><td>${r.b.code} ${r.b.name}${(w=>w?`<div class="brwhy">${w}</div>`:'')(why(r.b))}</td>${(ALLM&&!many)?'':r.v.map(v=>`<td class="n">${f(v)}</td>`).join('')}${many?`<td class="n"><b>${f(r.avg)}</b></td>`:''}${ALLM?`<td class="n"><b>${f(r.now/1e6)}</b></td><td class="n">${r.ly>0?f(r.ly/1e6):'—'}</td><td class="n">${pill(r.ly>0?(r.now/r.ly-1)*100:null)}</td>
+    ${shown.map((r,i)=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td><td>${r.b.code} ${r.b.name}${(w=>w?`<div class="brwhy">${w}</div>`:'')(why(r))}</td>${(ALLM&&!many)?'':r.v.map(v=>`<td class="n">${f(v)}</td>`).join('')}${many?`<td class="n"><b>${f(r.avg)}</b></td>`:''}${ALLM?`<td class="n"><b>${f(r.now/1e6)}</b></td><td class="n">${r.ly>0?f(r.ly/1e6):'—'}</td><td class="n">${pill(r.ly>0?(r.now/r.ly-1)*100:null)}</td>
         <td class="n">${r.plan>0?f(r.plan/1e6):'—'}</td><td class="n">${pill(r.plan>0?(r.now/r.plan-1)*100:null)}</td>
         <td class="n">${r.plan>0?`<b class="${cls(r.now-r.plan)}">${DB(r.now-r.plan)}</b>`:'<span class="mute">—</span>'}</td>
         <td class="n">${pill(r.ly>0?(r.now/r.ly-1)*100:null)}</td>`
