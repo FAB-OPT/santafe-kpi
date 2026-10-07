@@ -2982,7 +2982,23 @@ function ovTrendHtml(){
           if(c[2]===2) return `<td class="n ${cls(v)}">${v==null?'—':(v>=0?'+':'-')+Math.abs(v).toFixed(2)+'M'}</td>`;
           return `<td class="n">${v}</td>`; }).join('')}</tr>`; }).join('')}
   </table></div>`;
-  return head+`<div class="ovcap">${cap}</div><div class="ovchart">${ovChart(rows,MAIN,REFS)}</div>`+tbl+note;
+  /* สรุปสั้น ๆ ใต้ตาราง: เดือนไหนควรโฟกัส และภาพรวมของช่วงที่ดูอยู่ */
+  const FM=v=>Math.abs(v)>=1 ? Math.abs(v).toFixed(2)+'M' : Math.round(Math.abs(v)*1000)+'K';
+  const pc=(a0,b0)=>(a0&&b0!=null)?((b0/a0-1)*100):null;
+  const focus=(()=>{
+    const have=rows.filter(r=>r.a!=null); if(!have.length) return '';
+    const bits=[];
+    const wb=have.filter(r=>r.bud>0).map(r=>({r,v:pc(r.bud,r.a)})).sort((x,y)=>x.v-y.v)[0];
+    if(wb&&wb.v<0) bits.push('ต่ำกว่าแผนมากสุดคือ <b>'+MONTH_TH[wb.r.m-1]+'</b> '+Math.abs(wb.v).toFixed(1)+'% (ขาด '+FM(wb.r.bud-wb.r.a)+')');
+    const wl=have.filter(r=>r.ly>0).map(r=>({r,v:pc(r.ly,r.a)})).sort((x,y)=>x.v-y.v)[0];
+    if(wl&&wl.v<0) bits.push('หดเทียบปีก่อนมากสุดคือ <b>'+MONTH_TH[wl.r.m-1]+'</b> '+Math.abs(wl.v).toFixed(1)+'%');
+    const last=have[have.length-1], mom=last.lm?pc(last.lm,last.a):null;
+    if(mom!=null) bits.push('ล่าสุด '+MONTH_TH[last.m-1]+(mom>=0?' โตจากเดือนก่อน ':' ลดจากเดือนก่อน ')+Math.abs(mom).toFixed(1)+'%');
+    const tb=have.filter(r=>r.bud>0), sa=tb.reduce((t,r)=>t+r.a,0), sb=tb.reduce((t,r)=>t+r.bud,0);
+    if(tb.length>1&&sb) bits.push('รวม '+MONTH_TH[tb[0].m-1]+' ถึง '+MONTH_TH[tb[tb.length-1].m-1]+(sa>=sb?' เกินแผน ':' ต่ำกว่าแผน ')+FM((sa-sb)/1));
+    return bits.length?`<div class="note" style="margin-top:12px">ควรโฟกัส: ${bits.join(' · ')}</div>`:'';
+  })();
+  return head+`<div class="ovcap">${cap}</div><div class="ovchart">${ovChart(rows,MAIN,REFS)}</div>`+tbl+focus+note;
 }
 /* ยอดขายรายสาขารายเดือน เรียงตามเดือนล่าสุด · แสดง 10 อันดับ กดดูทั้งหมดได้ */
 const OVB={all:false,sort:'code',dir:'asc'};
