@@ -91,6 +91,10 @@ section.slide{background:var(--card);border-radius:var(--r);overflow:hidden;scro
 .st .l{font-size:11.5px;color:var(--mute);font-weight:500}
 .st .v{font-size:25px;font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums}
 .st .s{font-size:11.5px;color:var(--faint)}
+/* แถวป้ายเทียบในการ์ด Delivery: อยู่บรรทัดเดียว ไม่ตกบรรทัด */
+.st .s.cmp{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:5px}
+.st .cmpi{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.st .cmpi em{font-style:normal;font-size:11px;color:var(--faint);font-weight:600}
 .st.pos{border-left-color:var(--good)} .st.neg{border-left-color:var(--bad)}
 .st.pos .v{color:var(--good)} .st.neg .v{color:var(--bad)}
 /* การ์ดสรุปเหนือตารางรายสาขา: ตัวเลขใหญ่ พื้นอ่อนตามทิศทาง อ่านจากไกลได้ */
@@ -3180,8 +3184,22 @@ function smxDeliHtml(mm,codes,lyM){
   /* มาก → น้อย หรือ น้อย → มาก · สาขาที่ไม่มีค่าเทียบอยู่ท้ายเสมอ */
   const f=S[SMXD.sort]||S.deli, up=SMXD.dir==='asc';
   const list=cur.slice().sort((a,b)=>{ const x=f(a), y=f(b); if(x==null||y==null) return (x==null)-(y==null); return up?x-y:y-x; });
-  const strip=`<div class="strip">${P.map(([k,n])=>{ const v=T(k), p=TP(k);
-    return `<div class="st"><div class="l">${n}</div><div class="v">${MB(v)}</div><div class="s">${k==='deli'?pc(v,T('sales'))+' ของยอดขาย':pc(v,T('deli'))+' ของ Delivery'} · ${p?pill(pct(p,TC(k)))+' vs '+RN:'— vs '+RN}</div></div>`; }).join('')}</div>`;
+  /* การ์ดสรุปด้านบน: เรียง Total → Grab → Line Man → Shopee Food · เทียบทั้งเดือนก่อนและปีก่อน */
+  const prevMap={}; filtZone((DETAIL[mm-1]||{}).branchRows||[]).forEach(b=>prevMap[String(b.code)]=b);
+  const lyMap={}; filtZone(EXTRA.branchYears||[]).forEach(b=>{ const h=b.h&&b.h[YEAR-1]; if(!h) return;
+    const i=mm-1, g=(h.g||[])[i]||0, l=(h.l||[])[i]||0, sp2=(h.p||[])[i]||0;
+    if(g||l||sp2) lyMap[String(b.code)]={grab:g, lm:l, sp:sp2, deli:g+l+sp2}; });
+  const sumRef=(map,k)=>{ let now=0, ref=0, n=0;
+    cur.forEach(b=>{ const x=map[String(b.code)]; if(!x) return; now+=b[k]||0; ref+=x[k]||0; n++; });
+    return n?{now,ref}:null; };
+  const CARDS=[['deli','Total Delivery'],['grab','Grab'],['lm','Line Man'],['sp','Shopee Food']];
+  const strip=`<div class="strip">${CARDS.map(([k,n])=>{ const v=T(k), L=sumRef(prevMap,k), Y=sumRef(lyMap,k);
+    const head=[L?'LM '+MB(L.ref):'', Y?'LY '+MB(Y.ref):''].filter(Boolean).join(' · ');
+    const cmp=[L&&L.ref?`<span class="cmpi">${pill(pct(L.ref,L.now))}<em>LM</em></span>`:'',
+               Y&&Y.ref?`<span class="cmpi">${pill(pct(Y.ref,Y.now))}<em>LY</em></span>`:''].filter(Boolean).join('');
+    return `<div class="st"><div class="l">${n}</div>${head?`<div class="s">${head}</div>`:''}<div class="v">${MB(v)}</div>
+      <div class="s">${k==='deli'?pc(v,T('sales'))+' ของยอดขาย':pc(v,T('deli'))+' ของ Delivery'}</div>
+      ${cmp?`<div class="s cmp">${cmp}</div>`:''}</div>`; }).join('')}</div>`;
   const opts=[['deli','Total Delivery'],['grab','Grab'],['lm','Line Man'],['sp','Shopee Food'],['pc','% Delivery ของยอดขาย']];
   const row=b=>`<tr><td>${b.code} ${b.name}</td>${P.map(([k])=>`<td class="n">${k==='deli'?'<b>':''}${KB(b[k]||0)}${k==='deli'?'</b>':''}${chg(ref(b,k),b[k]||0)}</td>`).join('')}<td class="n">${pc(b.deli||0,b.sales)}</td></tr>`;
   /* ปุ่ม vs LY / vs LM อยู่บนหัวกรอบ (ชุดเดียวกับการ์ด Sales Mix) */
