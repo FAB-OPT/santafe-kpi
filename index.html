@@ -2985,6 +2985,7 @@ function ovBrHtml(){
   const months=((S.ms&&S.ms.length)?S.ms:[m]).filter(mm=>MONTHLY.some(r=>r.m===mm&&r.sales!=null)).sort((a,b)=>a-b);
   if(!months.length) return '';
   const nm=x=>String(x||'').replace(/\s+/g,'');
+  const ALLM=OVT.mode==='all';               /* ALL: ตารางรายสาขาแสดงครบทุกตัวเทียบเหมือนตารางรายเดือน */
   const SALES=OVT.mode==='sales';            /* Sales (บาท): ดูยอดอย่างเดียว เรียงจากยอดมากไปน้อย */
   const BM=OVT.mode==='all'?'ly':OVT.mode;   /* ALL: ตารางรายสาขาเทียบ LY เป็นหลัก */
   const ML={ly:'LY',bud:'Budget',lm:'LM',ss:'SSSG'}[BM];
@@ -3002,7 +3003,8 @@ function ovBrHtml(){
   const rows=by.map(b=>{ const v=months.map(mm=>brTy(b,mm)/1e6), has=v.filter(x=>x>0);
     const now=months.reduce((t,mm)=>t+brTy(b,mm),0), ref=refOf(b), lmv=lmMs.reduce((t,mm)=>t+brTy(b,mm),0);
     const plan=months.reduce((t,mm)=>t+planM(b,mm),0);
-    return {b,v,now,plan,avg:has.length?has.reduce((a,c)=>a+c,0)/has.length:0,g:ref>0&&now>0?(now/ref-1)*100:null,
+    const lyv=months.reduce((t,mm)=>t+(((b.m&&b.m[mm])||{}).ly||0),0);
+    return {b,v,now,plan,ly:lyv,avg:has.length?has.reduce((a,c)=>a+c,0)/has.length:0,g:ref>0&&now>0?(now/ref-1)*100:null,
       gl:lmv>0&&now>0?(now/lmv-1)*100:null}; }).filter(r=>r.now>0);
   /* คำอธิบายสั้น ๆ ว่าสาขานั้นโต/ลดมาจากอะไร · ใช้ประวัติรายสาขา (ยอดแยกช่องทาง · เช็คเฉลี่ย · ลูกค้า) */
   const why=b=>{
@@ -3049,8 +3051,13 @@ function ovBrHtml(){
   const refTxt=(BM==='lm'&&refMs!==months)?`${MS(refMs[0])}–${MS(refMs[refMs.length-1])}`:rangeTxt.replace(' to ','–');
   return `<div class="ovth"><h3>Branch detail Sales — ${rangeTxt} ${YEAR}${inZ?' · โซน '+OVT.zone:''}</h3>${seg}</div>
     <div class="ovsub">${SALES?'เรียงตามยอดขายมาก → น้อย':'เรียงตาม % เทียบ '+ML+' มาก → น้อย'} · ล้านบาท · ${rows.length} สาขาที่มียอดในช่วงนี้ · กดชื่อสาขาเพื่อดูรายละเอียด</div>
-    <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th><th>Branch</th>${months.map(mm=>`<th class="n">${MS(mm)}</th>`).join('')}${many?'<th class="n">Avg</th>':''}<th class="n">${SALES?'ขาด / เกินแผน':'vs '+ML+' '+refTxt}</th>${lmMs.length?`<th class="n">vs LM ${MS(lmMs[0])}${lmMs.length>1?'–'+MS(lmMs[lmMs.length-1]):''}</th>`:''}</tr>
-    ${shown.map((r,i)=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td><td>${r.b.code} ${r.b.name}${(w=>w?`<div class="brwhy">${w}</div>`:'')(why(r.b))}</td>${r.v.map(v=>`<td class="n">${f(v)}</td>`).join('')}${many?`<td class="n"><b>${f(r.avg)}</b></td>`:''}<td class="n">${SALES?(r.plan>0?`<b class="${cls(r.now-r.plan)}">${DB(r.now-r.plan)}</b>`:'<span class="mute">ไม่มีแผน</span>'):pill(r.g)}</td>${lmMs.length?`<td class="n">${pill(r.gl)}</td>`:''}</tr>`).join('')}</table></div>
+    <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th><th>Branch</th>${(ALLM&&!many)?'':months.map(mm=>`<th class="n">${MS(mm)}</th>`).join('')}${many?'<th class="n">Avg</th>':''}${ALLM?`<th class="n">Total Sales ${YEAR}</th><th class="n">Total Sales ${YEAR-1}</th><th class="n">YoY</th><th class="n">Budget ${YEAR}</th><th class="n">vs Budget</th><th class="n">ขาด / เกินแผน</th><th class="n">SSSG %</th>`
+      :`<th class="n">${SALES?'ขาด / เกินแผน':'vs '+ML+' '+refTxt}</th>`}${lmMs.length?`<th class="n">vs LM ${MS(lmMs[0])}${lmMs.length>1?'–'+MS(lmMs[lmMs.length-1]):''}</th>`:''}</tr>
+    ${shown.map((r,i)=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td><td>${r.b.code} ${r.b.name}${(w=>w?`<div class="brwhy">${w}</div>`:'')(why(r.b))}</td>${(ALLM&&!many)?'':r.v.map(v=>`<td class="n">${f(v)}</td>`).join('')}${many?`<td class="n"><b>${f(r.avg)}</b></td>`:''}${ALLM?`<td class="n"><b>${f(r.now/1e6)}</b></td><td class="n">${r.ly>0?f(r.ly/1e6):'—'}</td><td class="n">${pill(r.ly>0?(r.now/r.ly-1)*100:null)}</td>
+        <td class="n">${r.plan>0?f(r.plan/1e6):'—'}</td><td class="n">${pill(r.plan>0?(r.now/r.plan-1)*100:null)}</td>
+        <td class="n">${r.plan>0?`<b class="${cls(r.now-r.plan)}">${DB(r.now-r.plan)}</b>`:'<span class="mute">—</span>'}</td>
+        <td class="n">${pill(r.ly>0?(r.now/r.ly-1)*100:null)}</td>`
+      :`<td class="n">${SALES?(r.plan>0?`<b class="${cls(r.now-r.plan)}">${DB(r.now-r.plan)}</b>`:'<span class="mute">ไม่มีแผน</span>'):pill(r.g)}</td>`}${lmMs.length?`<td class="n">${pill(r.gl)}</td>`:''}</tr>`).join('')}</table></div>
     ${rows.length>10?`<button type="button" class="ovmore ${OVB.all?'on':''}" data-ovbrall="1">${OVB.all?'แสดงแค่ 10 อันดับ':'ดูทั้งหมด '+rows.length+' สาขา'} <i>⌄</i></button>`:''}`;
 }
 /* วาดใหม่เฉพาะการ์ด · เลือกโซนอยู่ต้องใช้ข้อมูลของโซนเหมือนตอนสร้างหน้า */
