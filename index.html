@@ -3152,6 +3152,14 @@ function ovBrHtml(){
     ${rows.length>10?`<button type="button" class="ovmore ${OVB.all?'on':''}" data-ovbrall="1">${OVB.all?'แสดงแค่ 10 อันดับ':'ดูทั้งหมด '+rows.length+' สาขา'} <i>⌄</i></button>`:''}`;
 }
 /* วาดใหม่เฉพาะการ์ด · เลือกโซนอยู่ต้องใช้ข้อมูลของโซนเหมือนตอนสร้างหน้า */
+/* วาดใหม่แล้วคงตำแหน่งปุ่มที่กดไว้ที่เดิมบนหน้าจอ · กันหน้าขยับเมื่อความสูงเนื้อหาเปลี่ยนเพียงเล็กน้อย */
+function anchorRender(btn,selector,fn){
+  const top0=btn.getBoundingClientRect().top;
+  fn();
+  const fix=()=>{ const n=document.querySelector(selector); if(!n) return;
+    const d=n.getBoundingClientRect().top-top0; if(Math.abs(d)>.5) window.scrollBy(0,d); };
+  fix(); requestAnimationFrame(fix); setTimeout(fix,150);
+}
 /* วาดการ์ดใหม่แล้วคงตำแหน่งการเลื่อนหน้าไว้ที่เดิม · เดิมกดปุ่มในการ์ดแล้วหน้าเด้งไปที่อื่น
    เพราะเนื้อหาถูกแทนที่ทั้งก้อนและเบราว์เซอร์ปรับตำแหน่งเอง */
 function ovRender(id,fn){ const y=window.scrollY||document.documentElement.scrollTop||0;
@@ -3356,14 +3364,15 @@ document.addEventListener('click',e=>{
   const smc=e.target.closest('[data-smxc]');
   if(smc){ SMXC.plat=smc.dataset.smxc;
     /* วาดใหม่เฉพาะตารางเพิ่ม/ลด ไม่แตะกราฟและตารางด้านบน หน้าจึงไม่ขยับ */
-    if(SMXC.ctx&&document.getElementById('smxChg')) ovRender('smxChg',()=>smxChgHtml(SMXC.ctx.mm,SMXC.ctx.codes,false));
-    else ovRender('smxChart',smxHtml);
+    anchorRender(smc,'[data-smxc="'+smc.dataset.smxc+'"]',()=>{
+      if(SMXC.ctx&&document.getElementById('smxChg')) ovRender('smxChg',()=>smxChgHtml(SMXC.ctx.mm,SMXC.ctx.codes,false));
+      else ovRender('smxChart',smxHtml); });
     return; }
   const dsr=e.target.closest('[data-dsort]');
   if(dsr){ const k=dsr.dataset.dsort;
     if(SMXD.sort===k) SMXD.dir=SMXD.dir==='asc'?'desc':'asc';
     else { SMXD.sort=k; SMXD.dir=(k==='code')?'asc':'desc'; }
-    ovRender('smxChart',smxHtml); return; }
+    anchorRender(dsr,'[data-dsort="'+k+'"]',()=>ovRender('smxChart',smxHtml)); return; }
   const md=e.target.closest('[data-smxmode]'); if(md){ SMX.mode=md.dataset.smxmode; ovRender('smxChart',smxHtml); return; }
   const sc=e.target.closest('[data-smxscope]'); if(sc){ SMX.scope=sc.dataset.smxscope; ovRender('smxChart',smxHtml); } });
 document.addEventListener('change',e=>{
