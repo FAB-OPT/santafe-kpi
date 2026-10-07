@@ -1569,7 +1569,6 @@ body.hub section.slide .bar h2[data-n]::before{display:none}
 </div></div>
 <div class="modal" id="brModal"><div class="box wide brm" role="dialog" aria-labelledby="brmTitle">
   <div class="imphd"><div><h2 id="brmTitle"></h2><p id="brmSub"></p></div><button class="btn" id="brmClose">ปิด</button></div>
-  <div class="brm-act"><button type="button" class="btn small" id="brmSssg">SSSG รายเดือน ›</button><button type="button" class="btn small" id="brmPl">งบ P&amp;L สาขา ›</button><button type="button" class="btn small" id="brmExp">เปิดใน Branch Explorer ›</button></div>
   <div id="brmBody"></div>
 </div></div>
 <div class="modal" id="importModal"><div class="box wide imp">
@@ -4261,10 +4260,6 @@ function openBranch(code,mode){ code=String(code);
   $('#brmSub').textContent=[meta.zone?'โซน '+meta.zone:'', (SCP&&SCP.lab)||label(curM)].filter(Boolean).join(' · ');
   const box=$('#brmBody'); if(mode==='cust') drawBranchCust(code,box); else drawBranchPop(code,box);
   const hasPl=!!(EXTRA.pnlFull&&EXTRA.pnlFull.branch&&EXTRA.pnlFull.branch[code]);
-  $('#brmPl').hidden=!hasPl; $('#brmExp').hidden=!r;
-  $('#brmSssg').onclick=()=>{ closeBranch(); SSS.branch=code; SSS.pickM=null; build(curM); goSec('sssg'); };
-  $('#brmPl').onclick=()=>{ closeBranch(); PLS.branch=code; PLS.cmp=[]; build(curM); goSec('pl'); };
-  $('#brmExp').onclick=()=>{ closeBranch(); goSec('branchdetail'); const sl=$('#brSel'); if(sl){ sl.value=code; drawBranch(code); } };
   $('#brModal').classList.add('open'); }
 function closeBranch(){ $('#brModal').classList.remove('open'); }
 $('#brmClose').onclick=closeBranch;
