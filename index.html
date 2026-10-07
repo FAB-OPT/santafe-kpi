@@ -2192,7 +2192,7 @@ function customersSection(m){
     <div class="h"></div>${CUS_CH.map(o=>`<div class="h"><i class="d" style="background:${o.c}"></i>${o.n}</div>`).join('')}
     ${mxRow('Total Trans','ต่อช่องทาง',(c,p)=>mc(c,p,'trans',fN))}
     ${mxRow('Ticket Avg.','ต่อช่องทาง',(c,p)=>mc(c,p,'ticket',fB))}
-    ${mxRow('Per Bill','ต่อช่องทาง',()=>'<div class="mxc"><b class="mute">—</b><small>ยังไม่มีข้อมูลลูกค้าแยกช่องทาง</small></div>')}
+    ${mxRow('Per Bill','ยอดขาย ÷ Trans',(c,p)=>{ const pb=x=>x&&x.trans?x.trans*x.ticket/x.trans:null; return mc(c&&{pb:pb(c)},p&&{pb:pb(p)},'pb',fB); })}
   </div>`;
   /* ---- รายเดือน ---- */
   const tm=(S.multi&&S.n>=2?S.ms:MONTHLY.map(r=>r.m).filter(x=>x<=m)).map(x=>({m:x,v:trOf(x)})).filter(r=>r.v);
