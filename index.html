@@ -3310,10 +3310,10 @@ function smxHtml(){
     <tr class="hi"><td><b>ยอดรวม</b></td>${rows.map(r=>{ const b=ref(r); return `<td class="n"><b>${fm(r.tot)}</b>${b&&r.tot!=null?`<span class="tiny ${cls(pct(b,r.tot))}">${sgn(pct(b,r.tot))} vs ${RN}</span>`:''}</td>`; }).join('')}</tr>
     ${SMX_C.map(o=>`<tr><td>${dot(o.c)}${o.n}</td>${rows.map(r=>cell(r,o.k)).join('')}</tr>`).join('')}
     ${SMX_P.map(o=>`<tr><td style="padding-left:30px;color:var(--mute)">${o.n}</td>${rows.map(r=>cell(r,o.k,1)).join('')}</tr>`).join('')}</table></div>`;
-  return head+`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="สัดส่วนช่องทางขายรายเดือน">${g}</svg>`+leg+pills+detail+smxDeliHtml(last,codes,lyM)+smxChgHtml(last,codes,lyM);
+  return head+`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="สัดส่วนช่องทางขายรายเดือน">${g}</svg>`+leg+pills+detail+smxDeliHtml(last,codes,lyM)+smxChgHtml(last,codes,false);   /* เทียบเดือนก่อน (LM) เสมอ ไม่ตามปุ่ม vs LY */
 }
 /* Biggest Delivery Changes by Branch: 5 สาขาที่เพิ่มมากสุด (ซ้าย) และลดมากสุด (ขวา)
-   รวมทุก Platform หรือแยก Grab · Line Man · Shopee Food · เทียบตามปุ่ม vs LY / vs LM ของ Delivery by Branch */
+   รวมทุก Platform หรือแยก Grab · Line Man · Shopee Food · เทียบเดือนก่อน (LM) */
 const SMXC={plat:'deli'};
 function smxChgHtml(mm,codes,lyM){
   const cur=filtZone((DETAIL[mm]||{}).branchRows||[]).filter(b=>b.sales>0&&(!codes||codes.has(String(b.code))));
