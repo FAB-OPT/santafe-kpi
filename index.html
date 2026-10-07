@@ -3046,11 +3046,22 @@ function ovBrHtml(){
   const shown=OVB.all?rows:rows.slice(0,10), f=v=>v>0?v.toFixed(2):'—';
   /* ปุ่มตัวเทียบชุดเดียวกับ Performance Trend · กดที่นี่ก็เปลี่ยนทั้งกราฟและตารางด้านบนด้วย */
   const seg=`<span class="ovseg">${[['all','ALL'],['sales','Sales (บาท)'],['bud','vs Budget'],['ly','vs LY'],['ss','vs SSSG']].map(([k,t])=>`<button type="button" class="${OVT.mode===k?'on':''}" data-ovmode="${k}">${t}</button>`).join('')}</span>`;
+  /* การ์ดสรุป: นับสาขาที่ยอดถึงแผนและไม่ถึงแผนในช่วงที่เลือก */
+  const wPlan=rows.filter(r=>r.plan>0), over=wPlan.filter(r=>r.now>=r.plan), under=wPlan.filter(r=>r.now<r.plan);
+  const sumOver=over.reduce((t,r)=>t+(r.now-r.plan),0), sumUnder=under.reduce((t,r)=>t+(r.plan-r.now),0);
+  const noPlan=rows.length-wPlan.length;
+  const MB2=v=>Math.abs(v)>=1e6?(Math.abs(v)/1e6).toFixed(2)+'M':Math.round(Math.abs(v)/1000)+'K';
+  const strip=wPlan.length?`<div class="strip" style="margin:12px 0 0">
+    <div class="st pos"><div class="l">ถึงเป้า (ยอด ≥ แผน)</div><div class="v">${over.length} <span style="font-size:14px;font-weight:600">สาขา</span></div><div class="s">เกินเป้ารวม ${MB2(sumOver)} บาท</div></div>
+    <div class="st neg"><div class="l">ไม่ถึงเป้า</div><div class="v">${under.length} <span style="font-size:14px;font-weight:600">สาขา</span></div><div class="s">ขาดอีก ${MB2(sumUnder)} บาท</div></div>
+    <div class="st"><div class="l">สาขาที่มีแผน</div><div class="v">${wPlan.length} / ${rows.length}</div><div class="s">${noPlan?noPlan+' สาขายังไม่มีแผนในช่วงนี้':'มีแผนครบทุกสาขา'}</div></div>
+  </div>`:'';
   const DB=v=>(v>=0?'+':'-')+(Math.abs(v)>=1e6?(Math.abs(v)/1e6).toFixed(2)+'M':Math.round(Math.abs(v)/1000)+'K');
   const many=months.length>1, rangeTxt=many?`${MS(months[0])} to ${MS(months[months.length-1])}`:MS(months[0]);
   const refTxt=(BM==='lm'&&refMs!==months)?`${MS(refMs[0])}–${MS(refMs[refMs.length-1])}`:rangeTxt.replace(' to ','–');
   return `<div class="ovth"><h3>Branch detail Sales — ${rangeTxt} ${YEAR}${inZ?' · โซน '+OVT.zone:''}</h3>${seg}</div>
     <div class="ovsub">${SALES?'เรียงตามยอดขายมาก → น้อย':'เรียงตาม % เทียบ '+ML+' มาก → น้อย'} · ล้านบาท · ${rows.length} สาขาที่มียอดในช่วงนี้ · กดชื่อสาขาเพื่อดูรายละเอียด</div>
+    ${strip}
     <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th><th>Branch</th>${(ALLM&&!many)?'':months.map(mm=>`<th class="n">${MS(mm)}</th>`).join('')}${many?'<th class="n">Avg</th>':''}${ALLM?`<th class="n">Total Sales ${YEAR}</th><th class="n">Total Sales ${YEAR-1}</th><th class="n">YoY</th><th class="n">Budget ${YEAR}</th><th class="n">vs Budget</th><th class="n">ขาด / เกินแผน</th><th class="n">SSSG %</th>`
       :`<th class="n">${SALES?'ขาด / เกินแผน':'vs '+ML+' '+refTxt}</th>`}${lmMs.length?`<th class="n">vs LM ${MS(lmMs[0])}${lmMs.length>1?'–'+MS(lmMs[lmMs.length-1]):''}</th>`:''}</tr>
     ${shown.map((r,i)=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td><td>${r.b.code} ${r.b.name}${(w=>w?`<div class="brwhy">${w}</div>`:'')(why(r.b))}</td>${(ALLM&&!many)?'':r.v.map(v=>`<td class="n">${f(v)}</td>`).join('')}${many?`<td class="n"><b>${f(r.avg)}</b></td>`:''}${ALLM?`<td class="n"><b>${f(r.now/1e6)}</b></td><td class="n">${r.ly>0?f(r.ly/1e6):'—'}</td><td class="n">${pill(r.ly>0?(r.now/r.ly-1)*100:null)}</td>
