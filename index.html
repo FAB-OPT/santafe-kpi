@@ -5328,7 +5328,7 @@ $('#exportBtn').onclick=e=>{e.stopPropagation();$('#exportDd').classList.toggle(
 (function(){
 const TOPICS=[
   {k:'sales',ic:'📈',n:'Sales Performance',groups:[
-    {cap:'ภาพรวม',ids:['overview']},
+    {cap:'Overview',ids:['overview']},
     {cap:'สาขา',ids:['plan','mall','zone','branches','branchdetail']},
     {cap:'ช่องทางขาย',ids:['salesmix','delivery','decline']}]},
   {k:'cust',ic:'👥',n:'Customer Traffic',ids:['customers']},
@@ -5416,7 +5416,8 @@ function hubApply(){
     secs.forEach(x=>x.classList.toggle('hhide',x.id!==TSEC));
     place('<div id="topicBar"><div class="tb-row"><button type="button" class="tb-back" data-hub>‹ ภาพรวม</button><span class="tb-ic">'+t.ic+'</span><h1 class="tb-t">'+t.n+'</h1>'
       +(ids.length>1?'<button type="button" class="btn small tb-pres" data-tpres>▶ พรีเซนต์หมวดนี้</button>':'')+'</div>'
-      +(ids.length>1?'<div class="tb-nav">'+segHtml(t,ids)+'<div class="tb-tabs" role="tablist">'+tabsHtml(t,ids)+'</div></div>':'')+'</div>');
+      +((g=>g?'<div class="tb-nav">'+segHtml(t,ids)+(g>1?'<div class="tb-tabs" role="tablist">'+tabsHtml(t,ids)+'</div>':'')+'</div>':'')
+          ((G=>G?G.cur.ids.length:(ids.length>1?ids.length:0))(tabGroups(t,ids))))+'</div>');
     const hb=document.querySelector('[data-hub]'); if(hb) hb.onclick=goHub;
     document.querySelectorAll('[data-tsec]').forEach(x=>x.onclick=()=>{ TSEC=x.dataset.tsec; hubApply(); window.scrollTo({top:0}); });
     document.querySelectorAll('[data-tgrp]').forEach(x=>x.onclick=()=>{ const g=t.groups[+x.dataset.tgrp], first=g&&g.ids.find(id=>ids.includes(id)); if(first){ TSEC=first; hubApply(); window.scrollTo({top:0}); } });
