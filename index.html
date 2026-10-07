@@ -1244,6 +1244,13 @@ body.present .cmpchip{font-size:15px}
 .cph{display:flex;align-items:center;gap:12px;margin-top:6px}.cph b{font-size:14px}
 .cchip{color:#fff;font-size:12px;font-weight:700;border-radius:99px;padding:2px 10px}
 .clg{margin-left:auto;font-size:12px;color:var(--mute);display:flex;align-items:center;gap:6px}.clg i{width:10px;height:10px;border-radius:3px;display:inline-block}.clg i.ds{width:18px;height:0;border-top:2px dashed #B6BDC9;border-radius:0;margin-left:10px}
+.bvl{margin-bottom:6px}
+.bvr{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 62px;grid-template-areas:"n t b" "n s s";gap:0 10px;align-items:center;padding:6px 4px;border-bottom:1px solid var(--hair);cursor:pointer}
+.bvr:hover{background:var(--accent-2)}
+.bvr .bn{grid-area:n;font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bvr .bt{grid-area:t;height:10px;background:var(--hair);border-radius:99px;overflow:hidden}.bvr .bt i{display:block;height:100%;border-radius:99px}
+.bvr b{grid-area:b;text-align:right;font-size:13.5px;font-variant-numeric:tabular-nums}
+.bvr small{grid-area:s;font-size:11px;color:var(--faint);margin-top:2px}
 .kcs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
 .kc{background:var(--card,#fff);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
 .kc.pos{border-left-color:var(--good)} .kc.neg{border-left-color:var(--bad,#E11D48)}
@@ -2264,7 +2271,22 @@ function customersSection(m){
     <div class="scroll"><table class="${list.some(b=>BRQ.has(String(b.code)))?'qon':''}"><tr><th>#</th><th>สาขา</th><th class="n">Total Trans</th><th class="n">Ticket Avg.</th>${CUS_CH.map(o=>`<th class="n">Ticket ${o.n}</th>`).join('')}<th class="n">Customers</th><th class="n">Customer Avg.</th><th class="n">Per Bill</th></tr>
     ${list.map((b,i)=>{ const p=pMap[b.code];
       return `<tr class="clk${BRQ.has(String(b.code))?' qyes':''}" data-ssbr="${b.code}"><td>${i+1}</td><td>${b.code} ${b.name}</td><td class="n">${fN(b.tr)}${vsL(p&&p.tr,b.tr)}</td><td class="n"><b>${fB(b.tk)}</b>${vsL(p&&p.tk,b.tk)}</td>${CUS_CH.map((o,j)=>`<td class="n">${fB(tkc(b,j))}${vsL(tkc(p,j),tkc(b,j))}</td>`).join('')}<td class="n">${fN(b.cust||null)}${vsL(p&&p.cust,b.cust)}</td><td class="n">${ca(b)==null?'—':f2(ca(b))}${vsL(ca(p),ca(b))}</td><td class="n">${fB(pb(b))}${vsL(pb(p),pb(b))}</td></tr>`; }).join('')}</table></div><div class="hint brqnone" hidden>ไม่พบสาขาที่ค้นหา</div>${chHint}`; }
-  return sec('customers',T,'',strip+chTiles+trend+btbl);
+  /* ---- กราฟรายสาขา: บิลเทียบ LY (สาขาที่มีทั้งบิลปีนี้และ LY) ---- */
+  let brChart='';
+  if(bRows.length){ const lyBr={}, mss=S.multi?S.ms:[m];
+    filtZone(EXTRA.branchYears||[]).forEach(b=>{ const h=b.h&&b.h[YEAR-1]; if(!h) return; let t=0, ok=true;
+      mss.forEach(x=>{ const K=(h.k||[])[x-1]; if(K>0) t+=K; else ok=false; }); if(ok&&t>0) lyBr[String(b.code)]=t; });
+    const rs=bRows.filter(b=>lyBr[String(b.code)]).map(b=>({b,ly:lyBr[String(b.code)],pc:(b.tr/lyBr[String(b.code)]-1)*100}));
+    if(rs.length>=2){ const mxA=Math.max(...rs.map(r=>Math.abs(r.pc)),1);
+      const row=r=>`<div class="bvr" data-ssbr="${r.b.code}"><span class="bn">${r.b.code} ${r.b.name}</span><span class="bt"><i style="width:${(Math.abs(r.pc)/mxA*100).toFixed(1)}%;background:${r.pc>=0?'#10B981':'#F43F5E'}"></i></span><b class="${r.pc>=0?'pos':'neg'}">${sgn(r.pc)}</b><small>${fN(r.b.tr)} vs ${fN(r.ly)}</small></div>`;
+      const up=rs.filter(r=>r.pc>=0).sort((a,b)=>b.pc-a.pc).slice(0,10), dn=rs.filter(r=>r.pc<0).sort((a,b)=>a.pc-b.pc).slice(0,10);
+      const nUp=rs.filter(r=>r.pc>=0).length;
+      brChart=`<div class="grp big">Total Trans รายสาขา เทียบ LY</div>
+        <div class="hint" style="margin:-4px 0 10px">${nUp} จาก ${rs.length} สาขา บิลสูงกว่า LY · เทียบสาขาที่มีข้อมูลปีก่อน</div>
+        <div class="two bvl"><div><h3>เพิ่มขึ้นมากสุด ${up.length} สาขา</h3>${up.map(row).join('')||'<div class="empty">ไม่มีสาขาที่เพิ่มขึ้น</div>'}</div>
+        <div><h3>ลดลงมากสุด ${dn.length} สาขา</h3>${dn.map(row).join('')||'<div class="empty">ไม่มีสาขาที่ลดลง</div>'}</div></div>`; } }
+  const tI=trend.indexOf('<div class="grp big">รายเดือน'), tCharts=tI>0?trend.slice(0,tI):trend, tTable=tI>0?trend.slice(tI):'';
+  return sec('customers',T,'',strip+tCharts+chTiles+tTable+brChart+btbl);
 }
 
 /* ========================= CEM / OSS: กลุ่มคะแนน · เทียบเดือน/LY · เจาะรายสาขา ========================= */
