@@ -1229,6 +1229,19 @@ body.present .cmpchip{font-size:15px}
 /* ---- ช่วงเวลา + ลูกค้าและบิลเฉลี่ย ---- */
 .kcov{font-size:11px;color:var(--faint);margin-top:6px}
 .pcov{display:inline-block;margin-left:8px;font-size:11px;font-weight:600;color:#92400E;background:#FEF3C7;border-radius:999px;padding:1px 8px;vertical-align:middle}
+.kcs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.kc{background:var(--card,#fff);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.kc.pos{border-left-color:var(--good)} .kc.neg{border-left-color:var(--bad,#E11D48)}
+.kc .kl{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.kc .kv{font-size:30px;font-weight:800;line-height:1.1;color:var(--ink);font-variant-numeric:tabular-nums}
+.kc.neg .kv{color:var(--bad,#E11D48)} .kc.pos .kv{color:var(--good)}
+.kc .ks{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--mute)} .kc .ks b{color:var(--ink-2);font-weight:600}
+.chrt{font-size:13px;font-weight:800;color:var(--ink);margin:18px 0 8px}
+.cmw{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cm{display:flex;flex-direction:column;gap:3px;align-items:flex-start} .cm span{font-size:12px;color:var(--mute)}
+.cm b{font-size:22px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.cm .pill{font-size:10.5px;padding:0 6px}
+@media (max-width:1000px){.kcs{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .custiles{margin-bottom:10px}
 .custiles .smt{display:flex;flex-direction:column;gap:6px;padding:12px 14px}
 .cuk{display:flex;align-items:baseline;gap:8px;font-size:12.5px;color:var(--mute);flex-wrap:wrap}
@@ -2150,24 +2163,26 @@ function customersSection(m){
   const vsL=(a,b)=>{ if(a==null||b==null||!a) return ''; const g=pct(a,b);
     return `<span class="tiny ${Math.abs(g)<0.05?'':cls(g)}">${sgn(g)} vs LM</span>`; };
   const tile=(l,a,b,f,note)=>`<div class="st ${a!=null&&b!=null&&PV?cls(pct(a,b)):''}"><div class="l">${l}</div><div class="v">${f(b)}</div><div class="s">${a!=null&&b!=null&&PV?`${pill(pct(a,b))} vs ${PV} (${f(a)})`:(note||(S.multi?'ไม่มีช่วงก่อนหน้าให้เทียบ':''))}</div></div>`;
-  const strip=`<div class="strip">
-    ${tile('Total Trans',P.trans,now.trans,fN)}
-    ${tile('Ticket Avg.',P.ticket,now.ticket,fB)}
-    ${tile('Customers',P.customer,now.customer,fN,now.customer==null?'ไม่มีข้อมูลลูกค้า':'')}
-    ${tile('Customer Avg.',P.custAvg,now.custAvg,f2)}
-    ${tile('Per Bill',spend(prv),spend(now),fB)}
+  const kc=(l,a,b,f,note)=>{ const ok=a!=null&&b!=null&&PV&&a; const g=ok?pct(a,b):null;
+    return `<div class="kc ${ok?cls(g):''}"><div class="kl">${l}</div><div class="kv">${f(b)}</div>
+      <div class="ks">${ok?`${pill(g)}<span>vs ${PV} <b>${f(a)}</b></span>`:`<span>${note||(S.multi?'ไม่มีช่วงก่อนหน้าให้เทียบ':'')}</span>`}</div></div>`; };
+  const strip=`<div class="kcs">
+    ${kc('Total Trans',P.trans,now.trans,fN)}
+    ${kc('Customers',P.customer,now.customer,fN,now.customer==null?'ไม่มีข้อมูลลูกค้า':'')}
+    ${kc('Ticket Avg.',P.ticket,now.ticket,fB)}
+    ${kc('Customer Avg.',P.custAvg,now.custAvg,f2)}
+    ${kc('Per Bill',spend(prv),spend(now),fB)}
   </div>`;
-  /* ---- แยกช่องทาง ---- */
+  /* ---- แยกช่องทาง: แถว 1 Total Trans/Ticket Avg. · แถว 2 Customers/Customer Avg. ---- */
   const totTr=now.ch.reduce((a,c)=>a+(c.trans||0),0);
-  const chTiles=`<div class="smtiles custiles">${CUS_CH.map(o=>{ const c=findCh(now,o.k), p=findCh(prv,o.k);
+  const met=(l,v,pl)=>`<div class="cm"><span>${l}</span><b>${v}</b>${pl||''}</div>`;
+  const chRow=(title,fn)=>`<div class="chrt">${title}</div><div class="smtiles custiles">${CUS_CH.map(o=>{ const c=findCh(now,o.k), p=findCh(prv,o.k);
       const sty=`background:${o.bg};border-color:${o.bd};box-shadow:inset 0 3px 0 ${o.c}`;
-      if(!c) return `<div class="smt" style="${sty}"><div class="smh"><i style="background:${o.c}"></i>${o.n}</div><div class="cuk dim"><span>ไม่มีข้อมูล</span></div></div>`;
-      return `<div class="smt" style="${sty}" data-tip="${o.n}\nบิลเฉลี่ย ${fB(c.ticket)}\nจำนวนบิล ${fN(c.trans)}${p?`\n${PV}: ${fB(p.ticket)} · ${fN(p.trans)} บิล`:''}">
-        <div class="smh"><i style="background:${o.c}"></i>${o.n}</div>
-        <div class="cuk"><span>Total Trans</span><b>${fN(c.trans)}</b>${p&&p.trans?pill(pct(p.trans,c.trans)):''}</div>
-        <div class="cuk"><span>Ticket Avg.</span><b>${fB(c.ticket)}</b>${p&&p.ticket?pill(pct(p.ticket,c.ticket)):''}</div>
-        <div class="sms"><b style="color:${o.tx}">${totTr?(c.trans/totTr*100).toFixed(1)+'%':'—'}</b> of Total Trans</div>
-        </div>`; }).join('')}</div>`;
+      return `<div class="smt" style="${sty}"><div class="smh"><i style="background:${o.c}"></i>${o.n}</div>${c?fn(c,p,o):'<div class="cuk dim"><span>ไม่มีข้อมูล</span></div>'}</div>`; }).join('')}</div>`;
+  const chTiles=chRow('Total Trans · Ticket Avg. แยกตามช่องทาง',(c,p,o)=>`<div class="cmw">${met('Total Trans',fN(c.trans),p&&p.trans?pill(pct(p.trans,c.trans)):'')}${met('Ticket Avg.',fB(c.ticket),p&&p.ticket?pill(pct(p.ticket,c.ticket)):'')}</div>
+        <div class="sms"><b style="color:${o.tx}">${totTr?(c.trans/totTr*100).toFixed(1)+'%':'—'}</b> of Total Trans</div>`)
+    +chRow('Customers · Customer Avg. แยกตามช่องทาง',(c,p,o)=>`<div class="cmw">${met('Customers','—')}${met('Customer Avg.','—')}</div>
+        <div class="sms">ยังไม่มีข้อมูลลูกค้าแยกช่องทาง</div>`);
   /* ---- รายเดือน ---- */
   const tm=(S.multi&&S.n>=2?S.ms:MONTHLY.map(r=>r.m).filter(x=>x<=m)).map(x=>({m:x,v:trOf(x)})).filter(r=>r.v);
   let trend='';
