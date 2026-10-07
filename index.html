@@ -3447,8 +3447,9 @@ function buildMain(m){
             <div><div class="ovlab">Actual Sales${S.multi?' · '+S.lab:''}</div><div class="ovbig">${M1(cur.sales)}</div><div class="ovsub">LY ${M1(cur.ly)}${cur.salesSrc==='pl'?' · จากงบ P&L (รายได้ขายอาหารและเครื่องดื่ม)':''}</div></div>
             ${''/* เอาแท่งแยกช่องทางออกจากการ์ด Actual Sales · ดูสัดส่วนช่องทางได้ที่หัวข้อ Sales Mix */}
             <div class="ovkpis">
-              ${kpiB('YoY',M1(cur.ly),cur.ly!=null?yoy:null,'vs LY')}
               ${kpiB('Budget',BA?M1(BA.b):'—',BA?vbA:null,'vs Budget'+(BA?BA.note:''),'vs Budget')}
+              ${kpiB('YoY',M1(cur.ly),cur.ly!=null?yoy:null,'vs LY')}
+              ${kpiB('LM',prevSales!=null?M1(prevSales):'—',cur.mom,'vs LM')}
               ${kpiB('SSSG',cur.sssgLy!=null?M1(cur.sssgLy):'—',cur.sssg,'same-store','Same Store')}
             </div></div>
           </div>`;
