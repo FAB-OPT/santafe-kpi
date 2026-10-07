@@ -2933,7 +2933,18 @@ function ovTrendHtml(){
   const MAIN=ss?{k:'ssA',name:'Same-store '+YEAR}:{k:'a',name:'Sales '+YEAR};
   const REFS=OVT.mode==='lm'?[{k:'lm',name:'LM (เดือนก่อน)',c:'#A3AEBB'}]
     :(ss?[{k:'ssL',name:'Same-store '+(YEAR-1),c:'#A3AEBB'}]:[{k:'ly',name:'Last year '+(YEAR-1),c:'#A3AEBB'},{k:'bud',name:'Budget '+YEAR,c:'#38BDF8',dash:1}]);
-  return head+`<div class="ovcap">${cap}</div><div class="ovchart">${ovChart(rows,MAIN,REFS)}</div>`+pills+note;
+  /* ใต้กราฟ: ตารางรายเดือนเต็ม (ยอด · ปีก่อน · YoY · แผน · vs Budget · Same Store · MoM) แทนแถวป้าย % เดิม */
+  const tbl=`<div class="scroll" style="margin-top:16px"><table>
+    <tr><th>เดือน</th><th class="n">Total Sales ${YEAR}</th><th class="n">Total Sales ${YEAR-1}</th><th class="n">YoY</th>
+      <th class="n">Budget ${YEAR}</th><th class="n">vs Budget</th><th class="n">SSSG Sales</th><th class="n">SSSG %</th><th class="n">MoM %</th></tr>
+    ${rows.map((r,i)=>{ const cm=(SCP&&SCP.multi)?null:curM, ssg=(r.ssA!=null&&r.ssL)?pct(r.ssL,r.ssA):null, mom=(r.a!=null&&r.lm)?pct(r.lm,r.a):null;
+      return `<tr class="${r.m===cm?'hi':''}"><td>${r.m===cm?'★ ':''}${MONTH_TH[r.m-1]}</td>
+        <td class="n">${fmtM(r.a)}</td><td class="n">${fmtM(r.ly)}</td><td class="n ${cls(pct(r.ly,r.a))}">${sgn(pct(r.ly,r.a))}</td>
+        <td class="n">${fmtM(r.bud)}</td><td class="n ${cls(pct(r.bud,r.a))}">${sgn(pct(r.bud,r.a))}</td>
+        <td class="n">${fmtM(r.ssA)}</td><td class="n ${cls(ssg)}">${sgn(ssg)}</td>
+        <td class="n ${cls(mom)}">${sgn(mom)}</td></tr>`; }).join('')}
+  </table></div>`;
+  return head+`<div class="ovcap">${cap}</div><div class="ovchart">${ovChart(rows,MAIN,REFS)}</div>`+tbl+note;
 }
 /* ยอดขายรายสาขารายเดือน เรียงตามเดือนล่าสุด · แสดง 10 อันดับ กดดูทั้งหมดได้ */
 const OVB={dir:'top',all:false};
