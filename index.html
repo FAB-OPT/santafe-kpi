@@ -2957,9 +2957,9 @@ function ovTrendHtml(){
          ['Budget '+YEAR,r=>fmtM(r.bud)],['vs Budget',r=>pct(r.bud,r.a),1],
          ['SSSG Sales',r=>fmtM(r.ssA)],['SSSG %',r=>(r.ssA!=null&&r.ssL)?pct(r.ssL,r.ssA):null,1],
          ['MoM %',r=>(r.a!=null&&r.lm)?pct(r.lm,r.a):null,1]],
-    sales:[['Total Sales '+YEAR,r=>fmtM(r.a)],['MoM %',r=>(r.a!=null&&r.lm)?pct(r.lm,r.a):null,1]],
+    sales:[['Total Sales '+YEAR,r=>fmtM(r.a)],['Budget '+YEAR,r=>fmtM(r.bud)],['ขาด / เกินแผน',r=>(r.a!=null&&r.bud!=null)?r.a-r.bud:null,2],['MoM %',r=>(r.a!=null&&r.lm)?pct(r.lm,r.a):null,1]],
     ly:[['Total Sales '+YEAR,r=>fmtM(r.a)],['Total Sales '+(YEAR-1),r=>fmtM(r.ly)],['YoY',r=>pct(r.ly,r.a),1],['MoM %',r=>(r.a!=null&&r.lm)?pct(r.lm,r.a):null,1]],
-    bud:[['Total Sales '+YEAR,r=>fmtM(r.a)],['Budget '+YEAR,r=>fmtM(r.bud)],['vs Budget',r=>pct(r.bud,r.a),1],['MoM %',r=>(r.a!=null&&r.lm)?pct(r.lm,r.a):null,1]],
+    bud:[['Total Sales '+YEAR,r=>fmtM(r.a)],['Budget '+YEAR,r=>fmtM(r.bud)],['ขาด / เกินแผน',r=>(r.a!=null&&r.bud!=null)?r.a-r.bud:null,2],['vs Budget',r=>pct(r.bud,r.a),1],['MoM %',r=>(r.a!=null&&r.lm)?pct(r.lm,r.a):null,1]],
     lm:[['Total Sales '+YEAR,r=>fmtM(r.a)],['LM (เดือนก่อน)',r=>fmtM(r.lm)],['MoM %',r=>(r.a!=null&&r.lm)?pct(r.lm,r.a):null,1]],
     ss:[['Same-store '+YEAR,r=>fmtM(r.ssA)],['Same-store '+(YEAR-1),r=>fmtM(r.ssL)],['SSSG %',r=>(r.ssA!=null&&r.ssL)?pct(r.ssL,r.ssA):null,1],['MoM %',r=>(r.a!=null&&r.lm)?pct(r.lm,r.a):null,1]]
   }[OVT.mode]||[];
@@ -2967,7 +2967,10 @@ function ovTrendHtml(){
     <tr><th>เดือน</th>${COLS.map(c=>`<th class="n">${c[0]}</th>`).join('')}</tr>
     ${rows.map(r=>{ const cm=(SCP&&SCP.multi)?null:curM;
       return `<tr class="${r.m===cm?'hi':''}"><td>${r.m===cm?'★ ':''}${MONTH_TH[r.m-1]}</td>${
-        COLS.map(c=>{ const v=c[1](r); return c[2]?`<td class="n ${cls(v)}">${sgn(v)}</td>`:`<td class="n">${v}</td>`; }).join('')}</tr>`; }).join('')}
+        COLS.map(c=>{ const v=c[1](r);
+          if(c[2]===1) return `<td class="n ${cls(v)}">${sgn(v)}</td>`;
+          if(c[2]===2) return `<td class="n ${cls(v)}">${v==null?'—':(v>=0?'+':'-')+Math.abs(v).toFixed(2)+'M'}</td>`;
+          return `<td class="n">${v}</td>`; }).join('')}</tr>`; }).join('')}
   </table></div>`;
   return head+`<div class="ovcap">${cap}</div><div class="ovchart">${ovChart(rows,MAIN,REFS)}</div>`+tbl+note;
 }
