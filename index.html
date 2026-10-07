@@ -3237,7 +3237,9 @@ function smxHtml(){
     if(r.seg){ let base=0;
       r.seg.forEach((sg,j)=>{ const p=sg.v/r.tot*100, y0=y(base+p), h=y(base)-y0;
         g+=`<rect x="${cx-bw/2}" y="${y0}" width="${bw}" height="${Math.max(0,h)}" fill="${sg.o.c}" ${j===r.seg.length-1?'rx="3"':''}/>`;
+        /* ช่องที่หนาพอ ใส่ตัวเลขในแท่ง · ช่องบางเกินไป เขียนไว้ข้างแท่งด้วยสีของช่องนั้น จะได้เห็นครบทุกช่อง */
         if(h>=16) g+=`<text x="${cx}" y="${y0+h/2+4}" font-size="${now?13:12}" font-weight="${now?800:700}" fill="#fff" text-anchor="middle">${Math.round(p)}%</text>`;
+        else if(p>=0.5) g+=`<text x="${cx+bw/2+5}" y="${y0+h/2+4}" font-size="11" font-weight="700" fill="${sg.o.c}" text-anchor="start">${Math.round(p)}%</text>`;
         base+=p; }); }
     else if(r.tot!=null) g+=`<rect x="${cx-bw/2}" y="${y(100)}" width="${bw}" height="${y(0)-y(100)}" fill="#E2E8F0" rx="3"/><text x="${cx}" y="${y(50)+4}" font-size="11" fill="#64748B" text-anchor="middle">ไม่มียอดแยก</text>`;
     g+=`<text x="${cx}" y="${H-14}" font-size="12.5" fill="${now?'#0F172A':'#64748B'}" font-weight="${now?700:400}" text-anchor="middle">${MONTH_TH[r.m-1]}</text>`; });
