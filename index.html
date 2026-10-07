@@ -1237,7 +1237,7 @@ body.present .cmpchip{font-size:15px}
 .mx .rl small{text-transform:none;font-weight:500;letter-spacing:0}
 .mxc{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .mxc b{font-size:24px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
-.mxc small{flex-basis:100%;font-size:11.5px;color:var(--mute)} .mxc small b{font-size:inherit;font-weight:600;color:var(--ink-2)} .mxc .mute{color:#B6BDC9}
+.mxc small{flex-basis:100%;font-size:11.5px;color:var(--mute)} .mxc small.lyr{display:flex;align-items:center;gap:6px} .mxc small b{font-size:inherit;font-weight:600;color:var(--ink-2)} .mxc .mute{color:#B6BDC9}
 @media (max-width:760px){.mx{grid-template-columns:90px repeat(3,minmax(0,1fr));padding:6px 8px}.mx>div{padding:10px 6px}.mxc b{font-size:17px}}
 .kcs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
 .kc{background:var(--card,#fff);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
@@ -2161,13 +2161,23 @@ const CUS_CH=[{k:'Dine In',n:'Dine in',c:'#D9822D',bg:'#FFF5EB',bd:'#F7DDC2',tx:
   {k:'Take away',n:'Takeaway',c:'#7C5CFC',bg:'#F5F3FF',bd:'#DDD6FE',tx:'#6D28D9'},
   {k:'Delivery',n:'Delivery',c:'#0F9488',bg:'#EEF8F6',bd:'#CBEAE5',tx:'#0B6E66'}];
 const chKey=v=>String(v||'').toLowerCase().replace(/[\s_\-]/g,'');
-/* LY ระดับรวม จากประวัติรายสาขา (ไฟล์ STF): บิล = ยอดขาย ÷ เช็คเฉลี่ย · ลูกค้ารวมเฉพาะสาขาที่มีครบ */
+/* LY จากประวัติรายสาขา (ไฟล์ STF): ชีต Ticket = จำนวนบิล · เช็คเฉลี่ย = ยอดขาย ÷ บิล · ลูกค้ารวมเฉพาะสาขาที่มีครบ
+   แยกช่องทาง: Delivery = Grab+Line Man+Shopee · Dine in = รวม − Takeaway − Delivery (ต้องนำเข้าไฟล์ STF ใหม่เพื่อให้มีบิลแยกช่องทาง) */
 function lyTrAgg(ms){ let sales=0,trans=0,cu=0,cuS=0,cuT=0,any=false;
+  const CH={dine:[0,0],take:[0,0],deli:[0,0]}; let chOk=true;
   filtZone(EXTRA.branchYears||[]).forEach(b=>{ const h=b.h&&b.h[YEAR-1]; if(!h) return;
     ms.forEach(m=>{ const i=m-1, S=(h.s||[])[i], K=(h.k||[])[i], C=(h.c||[])[i]; if(!(S>0&&K>0)) return;
-      any=true; sales+=S; trans+=S/K; if(C>0){ cu+=C; cuS+=S; cuT+=S/K; } }); });
+      any=true; sales+=S; trans+=K; if(C>0){ cu+=C; cuS+=S; cuT+=K; }
+      const tS=(h.t||[])[i]||0, dS=((h.g||[])[i]||0)+((h.l||[])[i]||0)+((h.p||[])[i]||0);
+      const tK=(h.kt||[])[i], dK=((h.kg||[])[i]||0)+((h.kl||[])[i]||0)+((h.kp||[])[i]||0);
+      const kg=(h.kg||[])[i], kl=(h.kl||[])[i], kp=(h.kp||[])[i];
+      /* ไฟล์ STF บางเดือนมีบิลแต่ละช่องทางเป็นค่าเดียวกันหมด (ข้อมูลยังไม่กรอกจริง) → ไม่แสดง LY แยกช่องทาง */
+      if((tK==null&&!dK&&(tS||dS))||(tK>0&&tK===kg&&kg===kl&&kl===kp)){ chOk=false; return; }
+      CH.take[0]+=tS; CH.take[1]+=tK||0; CH.deli[0]+=dS; CH.deli[1]+=dK;
+      CH.dine[0]+=Math.max(0,S-tS-dS); CH.dine[1]+=Math.max(0,K-(tK||0)-dK); }); });
   if(!any||!trans) return null;
-  return {trans, ticket:sales/trans, customer:cu||null, custAvg:cu?cu/cuT:null, perBill:cu?cuS/cu:null}; }
+  const ch=chOk?Object.fromEntries(Object.entries(CH).map(([k,[sl,tr]])=>[k,tr>0?{trans:tr,ticket:sl/tr}:null])):null;
+  return {trans, ticket:sales/trans, customer:cu||null, custAvg:cu?cu/cuT:null, perBill:cu?cuS/cu:null, ch}; }
 function customersSection(m){
   const S=SCP||{multi:false}, T='Customers & Average Ticket';
   const now=aggTr(S.multi?S.ms:[m]), prv=S.multi?S.tP:aggTr(m>1?[m-1]:null);
@@ -2194,13 +2204,13 @@ function customersSection(m){
   </div>`;
   /* ---- แยกช่องทาง: แถว 1 Total Trans/Ticket Avg. · แถว 2 Customers/Customer Avg. ---- */
   const totTr=now.ch.reduce((a,c)=>a+(c.trans||0),0);
-  const mc=(c,p,k,f)=>{ if(!c) return '<div class="mxc"><span class="mute">ไม่มีข้อมูล</span></div>';
-    const has=p&&p[k]; return `<div class="mxc"><b>${f(c[k])}</b>${has?pill(pct(p[k],c[k])):''}<small>${has&&PV?`vs ${PV} <b>${f(p[k])}</b>`:''}${k==='trans'&&totTr?`${has&&PV?' · ':''}<em style="color:var(--ink-2)">${(c.trans/totTr*100).toFixed(1)}%</em> of Total Trans`:''}</small></div>`; };
-  const mxRow=(lab,sub,fn)=>`<div class="rl">${lab}<small>${sub}</small></div>${CUS_CH.map(o=>fn(findCh(now,o.k),findCh(prv,o.k))).join('')}`;
+  const mc=(c,p,k,f,ly)=>{ if(!c) return '<div class="mxc"><span class="mute">ไม่มีข้อมูล</span></div>';
+    const has=p&&p[k]; return `<div class="mxc"><b>${f(c[k])}</b>${has?pill(pct(p[k],c[k])):''}<small>${has&&PV?`vs ${PV} <b>${f(p[k])}</b>`:''}${k==='trans'&&totTr?`${has&&PV?' · ':''}<em style="color:var(--ink-2)">${(c.trans/totTr*100).toFixed(1)}%</em> of Total Trans`:''}</small>${ly&&ly[k]?`<small class="lyr">${pill(pct(ly[k],c[k]))} vs LY <b>${f(ly[k])}</b></small>`:''}</div>`; };
+  const mxRow=(lab,sub,fn)=>`<div class="rl">${lab}<small>${sub}</small></div>${CUS_CH.map((o,i)=>fn(findCh(now,o.k),findCh(prv,o.k),i)).join('')}`;
   const chTiles=`<div class="mx">
     <div class="h"></div>${CUS_CH.map(o=>`<div class="h"><i class="d" style="background:${o.c}"></i>${o.n}</div>`).join('')}
-    ${mxRow('Total Trans','ต่อช่องทาง',(c,p)=>mc(c,p,'trans',fN))}
-    ${mxRow('Ticket Avg.','ต่อช่องทาง',(c,p)=>mc(c,p,'ticket',fB))}
+    ${mxRow('Total Trans','ต่อช่องทาง',(c,p,i)=>mc(c,p,'trans',fN,LYA&&LYA.ch&&LYA.ch[['dine','take','deli'][i]]))}
+    ${mxRow('Ticket Avg.','ต่อช่องทาง',(c,p,i)=>mc(c,p,'ticket',fB,LYA&&LYA.ch&&LYA.ch[['dine','take','deli'][i]]))}
   </div>`;
   /* ---- รายเดือน ---- */
   const tm=(S.multi&&S.n>=2?S.ms:MONTHLY.map(r=>r.m).filter(x=>x<=m)).map(x=>({m:x,v:trOf(x)})).filter(r=>r.v);
@@ -4826,8 +4836,9 @@ function parsePL(wb){
    แถว = สาขา (Code · Name · Opening Date · Brand · Owner · Territory · Region)
    คอลัมน์แบ่งเป็นบล็อกตามตัวชี้วัด (Sales Total / Grab / Line Man / Shopee / Takeaway · Ticket · Cust.) แต่ละบล็อกเรียงเป็นเดือน (วันที่ของ Excel)
    เก็บเป็นประวัติรายสาขา b.h[ปี] = {s,g,l,p,t,k,c} ปีละ 12 ช่อง (ยอด · Grab · Line Man · Shopee · Takeaway · เช็คเฉลี่ย · ลูกค้า) */
-const STF_MET={'sales/total':'s','sales/grab':'g','sales/line man':'l','sales/shopee':'p','sales/takeaway':'t','ticket/total':'k','cust./total':'c'};
-const STF_MN={s:'ยอดขาย',g:'Grab',l:'Line Man',p:'Shopee',t:'Takeaway',k:'เช็คเฉลี่ย',c:'ลูกค้า'};
+const STF_MET={'sales/total':'s','sales/grab':'g','sales/line man':'l','sales/shopee':'p','sales/takeaway':'t','ticket/total':'k','cust./total':'c',
+  'ticket/grab':'kg','ticket/line man':'kl','ticket/shopee':'kp','ticket/takeaway':'kt'};
+const STF_MN={s:'ยอดขาย',g:'Grab',l:'Line Man',p:'Shopee',t:'Takeaway',k:'จำนวนบิล',c:'ลูกค้า',kg:'บิล Grab',kl:'บิล Line Man',kp:'บิล Shopee',kt:'บิล Takeaway'};
 function stfSheet(wb,name){ const sh=wb.Sheets[name]; if(!sh) return null;
   const rs=XLSX.utils.sheet_to_json(sh,{header:1,defval:null,blankrows:false});
   const hi=rs.findIndex(r=>r&&r.some(v=>typeof v==='string'&&String(v).trim()==='Code'));
