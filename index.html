@@ -3179,7 +3179,7 @@ const SMX_C=[{k:'dine',n:'Dine in',c:'#D9822D'},{k:'take',n:'Takeaway',c:'#7C5CF
 const SMX_P=[{k:'grab',n:'Grab'},{k:'lm',n:'Line Man'},{k:'sp',n:'Shopee Food'}];
 /* Delivery รายสาขาของเดือนล่าสุด: Grab · Line Man · Shopee Food · รวม · เทียบตามปุ่ม vs LY / vs LM ของการ์ด Sales Mix
    ยอดจากแบบฟอร์มส่งยอดขาย (บาท) · ยอด Delivery รายสาขาของปีก่อนไม่มีในข้อมูล → vs LY แสดง — */
-const SMXD={sort:'deli',dir:'desc',by:'val'};
+const SMXD={sort:'code',dir:'asc',by:'val'};
 function smxDeliHtml(mm,codes,lyM){
   const cur=filtZone((DETAIL[mm]||{}).branchRows||[]).filter(b=>b.sales>0&&(!codes||codes.has(String(b.code))));
   if(!cur.length) return '';
@@ -3200,9 +3200,9 @@ function smxDeliHtml(mm,codes,lyM){
   /* ติ๊กเลือก: เรียงตามยอดเงิน หรือ % เทียบ LM ของช่องที่เลือก · vs LY ยังไม่มียอดรายสาขาปีก่อน จึงเรียงได้เฉพาะยอด */
   const byPct=SMXD.by==='pct'&&hasRef;
   const gOf=k=>b=>{ if(!byPct) return b[k]||0; const p=ref(b,k); return p?pct(p,b[k]||0):null; };
-  const S={deli:gOf('deli'), grab:gOf('grab'), lm:gOf('lm'), sp:gOf('sp'), pc:b=>b.sales?(b.deli||0)/b.sales:0};
+  const S={code:b=>+b.code||0, deli:gOf('deli'), grab:gOf('grab'), lm:gOf('lm'), sp:gOf('sp'), pc:b=>b.sales?(b.deli||0)/b.sales:0};
   /* มาก → น้อย หรือ น้อย → มาก · สาขาที่ไม่มีค่าเทียบอยู่ท้ายเสมอ */
-  const f=S[SMXD.sort]||S.deli, up=SMXD.dir==='asc';
+  const f=S[SMXD.sort]||S.code, up=SMXD.dir==='asc';
   const list=cur.slice().sort((a,b)=>{ const x=f(a), y=f(b); if(x==null||y==null) return (x==null)-(y==null); return up?x-y:y-x; });
   /* การ์ดสรุปด้านบน: เรียง Total → Grab → Line Man → Shopee Food · เทียบทั้งเดือนก่อนและปีก่อน */
   const prevMap={}; filtZone((DETAIL[mm-1]||{}).branchRows||[]).forEach(b=>prevMap[String(b.code)]=b);
@@ -3228,7 +3228,8 @@ function smxDeliHtml(mm,codes,lyM){
   /* ปุ่ม vs LY / vs LM อยู่บนหัวกรอบ (ชุดเดียวกับการ์ด Sales Mix) */
   const seg=`<span class="ovseg">${[['ly','vs LY'],['lm','vs LM']].map(([k,t])=>`<button type="button" class="${(lyM?'ly':'lm')===k?'on':''}" data-smxmode="${k}">${t}</button>`).join('')}</span>`;
   return `<div class="ovth dlh" style="margin-top:22px"><div class="grp" style="margin:0">Delivery by Branch — ${label(mm)} · ${cur.length} สาขา</div>${seg}</div>`+strip+
-    `<div class="scroll"><table><tr><th>สาขา</th>${P.map(([,n])=>`<th class="n">${n}</th>`).join('')}<th class="n">% ของยอดขาย</th></tr>
+    `<div class="scroll"><table><tr>${[['code','สาขา',''],...P.map(([k,n])=>[k,n,'n ']),['pc','% ของยอดขาย','n ']].map(([k,n,c])=>
+      `<th class="${c}srth${SMXD.sort===k?' on':''}" data-dsort="${k}">${n}<i class="srt${SMXD.sort===k?'':' off'}">${SMXD.sort===k?(up?'▲':'▼'):'↕'}</i></th>`).join('')}</tr>
     <tr class="hi"><td><b>รวม ${cur.length} สาขา</b></td>${P.map(([k])=>{ const p=TP(k); return `<td class="n"><b>${MB(T(k))}</b>${p?`<span class="tiny ${cls(pct(p,TC(k)))}">${sgn(pct(p,TC(k)))} vs ${RN}</span>`:`<span class="tiny">— vs ${RN}</span>`}</td>`; }).join('')}<td class="n">${pc(T('deli'),T('sales'))}</td></tr>
     ${list.map(row).join('')}</table></div>`;
 }
@@ -3308,6 +3309,11 @@ function smxHtml(){
   return head+`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="สัดส่วนช่องทางขายรายเดือน">${g}</svg>`+leg+pills+detail+smxDeliHtml(last,codes,lyM);
 }
 document.addEventListener('click',e=>{
+  const dsr=e.target.closest('[data-dsort]');
+  if(dsr){ const k=dsr.dataset.dsort;
+    if(SMXD.sort===k) SMXD.dir=SMXD.dir==='asc'?'desc':'asc';
+    else { SMXD.sort=k; SMXD.dir=(k==='code')?'asc':'desc'; }
+    ovRender('smxChart',smxHtml); return; }
   const md=e.target.closest('[data-smxmode]'); if(md){ SMX.mode=md.dataset.smxmode; ovRender('smxChart',smxHtml); return; }
   const sc=e.target.closest('[data-smxscope]'); if(sc){ SMX.scope=sc.dataset.smxscope; ovRender('smxChart',smxHtml); } });
 document.addEventListener('change',e=>{
