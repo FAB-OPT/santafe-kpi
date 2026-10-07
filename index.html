@@ -1377,6 +1377,11 @@ body.hub #salesmix .ovbottom > .panel:nth-child(2){display:none}
 .hv-badge{font-size:14px;font-weight:800;border-radius:999px;padding:4px 12px;white-space:nowrap;background:var(--surface);color:var(--ink-2)}
 .hv-badge.neg{background:#FDE7EA;color:var(--bad)} .hv-badge.pos{background:#E7F6EE;color:var(--good)}
 .brwhy{font-size:11.5px;color:var(--faint);margin-top:2px;line-height:1.35}
+th.srth{cursor:pointer;user-select:none;white-space:nowrap}
+th.srth:hover{color:var(--accent-ink)}
+th.srth .srt{font-style:normal;font-size:9px;margin-left:4px;color:var(--accent)}
+th.srth .srt.off{color:var(--line)}
+th.srth:hover .srt.off{color:var(--faint)}
 .brwhy b{color:var(--accent-ink);font-weight:700}
 .hv-chip{align-self:flex-start;margin-top:10px;font-size:12.5px;font-weight:700;color:var(--mute);background:var(--surface);border-radius:999px;padding:4px 12px}
 .hv-rows{display:flex;flex-direction:column;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--hair)}
@@ -2982,7 +2987,7 @@ function ovTrendHtml(){
   return head+`<div class="ovcap">${cap}</div><div class="ovchart">${ovChart(rows,MAIN,REFS)}</div>`+tbl+note;
 }
 /* ยอดขายรายสาขารายเดือน เรียงตามเดือนล่าสุด · แสดง 10 อันดับ กดดูทั้งหมดได้ */
-const OVB={all:false};
+const OVB={all:false,sort:'code',dir:'asc'};
 function ovBrHtml(){
   const S=SCP||{}, m=S.multi?S.last:curM, by0=brOfYear(); if(!by0.length) return '';
   /* เลือก Zone ใน Performance Trend: ตารางแสดงเฉพาะสาขาในโซนนั้น */
@@ -3088,9 +3093,7 @@ function ovBrHtml(){
   };
   const refNameOf=()=>({ly:'ปีก่อน',ss:'ปีก่อน',bud:'แผน',lm:(months.length>1?'ช่วงก่อนหน้า':'เดือนก่อน')}[BM]||'ตัวเทียบ');
   /* เรียงตาม % เทียบค่าที่เลือกของเดือนล่าสุด · สาขาที่ไม่มีค่าเทียบ (เช่น เปิดใหม่ไม่มียอด LY) อยู่ท้ายสุด */
-  rows.sort((p,q)=>{ if(SALES) return q.now-p.now;
-    if(p.g==null||q.g==null) return (p.g==null)-(q.g==null)||q.now-p.now; return q.g-p.g; });
-  const shown=OVB.all?rows:rows.slice(0,10), f=v=>v>0?v.toFixed(2):'—';
+  const f=v=>v>0?v.toFixed(2):'—';
   /* ปุ่มตัวเทียบชุดเดียวกับ Performance Trend · กดที่นี่ก็เปลี่ยนทั้งกราฟและตารางด้านบนด้วย */
   const seg=`<span class="ovseg">${[['all','ALL'],['sales','Sales (บาท)'],['bud','vs Budget'],['ly','vs LY'],['ss','vs SSSG']].map(([k,t])=>`<button type="button" class="${OVT.mode===k?'on':''}" data-ovmode="${k}">${t}</button>`).join('')}</span>`;
   /* การ์ดสรุปเหนือตาราง · เปลี่ยนชุดตามปุ่มที่เลือก */
@@ -3114,16 +3117,38 @@ function ovBrHtml(){
   const DB=v=>(v>=0?'+':'-')+(Math.abs(v)>=1e6?(Math.abs(v)/1e6).toFixed(2)+'M':Math.round(Math.abs(v)/1000)+'K');
   const many=months.length>1, rangeTxt=many?`${MS(months[0])} to ${MS(months[months.length-1])}`:MS(months[0]);
   const refTxt=(BM==='lm'&&refMs!==months)?`${MS(refMs[0])}–${MS(refMs[refMs.length-1])}`:rangeTxt.replace(' to ','–');
+  /* ---- คอลัมน์ของตาราง · กดหัวคอลัมน์เพื่อเรียงมาก/น้อยได้ทุกช่อง ---- */
+  const M1=v=>v>0?f(v/1e6):'—';
+  const COL=[{k:'code',t:'Branch',cell:r=>`${r.b.code} ${r.b.name}${(w=>w?`<div class="brwhy">${w}</div>`:'')(why(r))}`,get:r=>+r.b.code||0,asc:1}];
+  if(!(ALLM&&!many)) months.forEach((mm,ix)=>COL.push({k:'m'+mm,t:MS(mm),n:1,get:r=>r.v[ix],cell:r=>f(r.v[ix])}));
+  if(many) COL.push({k:'avg',t:'Avg',n:1,get:r=>r.avg,cell:r=>`<b>${f(r.avg)}</b>`});
+  if(ALLM){
+    COL.push({k:'now',t:`Total Sales ${YEAR}`,n:1,get:r=>r.now,cell:r=>`<b>${M1(r.now)}</b>`});
+    COL.push({k:'ly',t:`Total Sales ${YEAR-1}`,n:1,get:r=>r.ly,cell:r=>M1(r.ly)});
+    COL.push({k:'yoy',t:'YoY',n:1,get:r=>r.ly>0?(r.now/r.ly-1)*100:null,cell:r=>pill(r.ly>0?(r.now/r.ly-1)*100:null)});
+    COL.push({k:'plan',t:`Budget ${YEAR}`,n:1,get:r=>r.plan,cell:r=>M1(r.plan)});
+    COL.push({k:'vsb',t:'vs Budget',n:1,get:r=>r.plan>0?(r.now/r.plan-1)*100:null,cell:r=>pill(r.plan>0?(r.now/r.plan-1)*100:null)});
+    COL.push({k:'diff',t:'ขาด / เกินแผน',n:1,get:r=>r.plan>0?r.now-r.plan:null,
+      cell:r=>r.plan>0?`<b class="${cls(r.now-r.plan)}">${DB(r.now-r.plan)}</b>`:'<span class="mute">—</span>'});
+    COL.push({k:'sssg',t:'SSSG %',n:1,get:r=>r.ly>0?(r.now/r.ly-1)*100:null,cell:r=>pill(r.ly>0?(r.now/r.ly-1)*100:null)});
+  } else if(SALES){
+    COL.push({k:'diff',t:'ขาด / เกินแผน',n:1,get:r=>r.plan>0?r.now-r.plan:null,
+      cell:r=>r.plan>0?`<b class="${cls(r.now-r.plan)}">${DB(r.now-r.plan)}</b>`:'<span class="mute">ไม่มีแผน</span>'});
+  } else COL.push({k:'g',t:'vs '+ML+' '+refTxt,n:1,get:r=>r.g,cell:r=>pill(r.g)});
+  if(lmMs.length) COL.push({k:'gl',t:`vs LM ${MS(lmMs[0])}${lmMs.length>1?'–'+MS(lmMs[lmMs.length-1]):''}`,n:1,get:r=>r.gl,cell:r=>pill(r.gl)});
+  /* เริ่มต้นเรียงตามรหัสสาขาน้อยไปมาก · ค่าว่างอยู่ท้ายเสมอ */
+  const SK=COL.find(c=>c.k===OVB.sort)||COL[0], SD=OVB.dir==='asc'?1:-1;
+  rows.sort((p,q)=>{ const a=SK.get(p), b=SK.get(q);
+    if(a==null||b==null) return (a==null)-(b==null);
+    return (a>b?1:a<b?-1:0)*SD; });
+  const shown=OVB.all?rows:rows.slice(0,10);
+  const arrow=c=>c.k===SK.k?`<i class="srt">${OVB.dir==='asc'?'▲':'▼'}</i>`:'<i class="srt off">↕</i>';
   return `<div class="ovth"><h3>Branch detail Sales — ${rangeTxt} ${YEAR}${inZ?' · โซน '+OVT.zone:''}</h3>${seg}</div>
-    
     ${strip}
-    <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th><th>Branch</th>${(ALLM&&!many)?'':months.map(mm=>`<th class="n">${MS(mm)}</th>`).join('')}${many?'<th class="n">Avg</th>':''}${ALLM?`<th class="n">Total Sales ${YEAR}</th><th class="n">Total Sales ${YEAR-1}</th><th class="n">YoY</th><th class="n">Budget ${YEAR}</th><th class="n">vs Budget</th><th class="n">ขาด / เกินแผน</th><th class="n">SSSG %</th>`
-      :`<th class="n">${SALES?'ขาด / เกินแผน':'vs '+ML+' '+refTxt}</th>`}${lmMs.length?`<th class="n">vs LM ${MS(lmMs[0])}${lmMs.length>1?'–'+MS(lmMs[lmMs.length-1]):''}</th>`:''}</tr>
-    ${shown.map((r,i)=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td><td>${r.b.code} ${r.b.name}${(w=>w?`<div class="brwhy">${w}</div>`:'')(why(r))}</td>${(ALLM&&!many)?'':r.v.map(v=>`<td class="n">${f(v)}</td>`).join('')}${many?`<td class="n"><b>${f(r.avg)}</b></td>`:''}${ALLM?`<td class="n"><b>${f(r.now/1e6)}</b></td><td class="n">${r.ly>0?f(r.ly/1e6):'—'}</td><td class="n">${pill(r.ly>0?(r.now/r.ly-1)*100:null)}</td>
-        <td class="n">${r.plan>0?f(r.plan/1e6):'—'}</td><td class="n">${pill(r.plan>0?(r.now/r.plan-1)*100:null)}</td>
-        <td class="n">${r.plan>0?`<b class="${cls(r.now-r.plan)}">${DB(r.now-r.plan)}</b>`:'<span class="mute">—</span>'}</td>
-        <td class="n">${pill(r.ly>0?(r.now/r.ly-1)*100:null)}</td>`
-      :`<td class="n">${SALES?(r.plan>0?`<b class="${cls(r.now-r.plan)}">${DB(r.now-r.plan)}</b>`:'<span class="mute">ไม่มีแผน</span>'):pill(r.g)}</td>`}${lmMs.length?`<td class="n">${pill(r.gl)}</td>`:''}</tr>`).join('')}</table></div>
+    <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th>${
+      COL.map(c=>`<th class="${c.n?'n ':''}srth" data-brsort="${c.k}">${c.t}${arrow(c)}</th>`).join('')}</tr>
+    ${shown.map((r,i)=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td>${
+      COL.map(c=>`<td class="${c.n?'n':''}">${c.cell(r)}</td>`).join('')}</tr>`).join('')}</table></div>
     ${rows.length>10?`<button type="button" class="ovmore ${OVB.all?'on':''}" data-ovbrall="1">${OVB.all?'แสดงแค่ 10 อันดับ':'ดูทั้งหมด '+rows.length+' สาขา'} <i>⌄</i></button>`:''}`;
 }
 /* วาดใหม่เฉพาะการ์ด · เลือกโซนอยู่ต้องใช้ข้อมูลของโซนเหมือนตอนสร้างหน้า */
@@ -3137,6 +3162,11 @@ document.addEventListener('click',e=>{
   if(x){ const card=x.closest('.ovc'), p=card&&card.querySelector('[data-ovp="'+x.dataset.ovx+'"]'); if(!p) return;
     p.hidden=!p.hidden; card.querySelectorAll('[data-ovx="'+x.dataset.ovx+'"]').forEach(b=>b.classList.toggle('on',!p.hidden)); return; }
   const md=e.target.closest('[data-ovmode]'); if(md){ OVT.mode=md.dataset.ovmode; ovTrendRender(); ovRender('ovBranch',ovBrHtml); return; }
+  const sh=e.target.closest('[data-brsort]');
+  if(sh){ const k=sh.dataset.brsort;
+    if(OVB.sort===k) OVB.dir=OVB.dir==='asc'?'desc':'asc';
+    else { OVB.sort=k; OVB.dir=(k==='code')?'asc':'desc'; }   /* ตัวเลขเริ่มที่มาก → น้อย */
+    ovRender('ovBranch',ovBrHtml); return; }
   if(e.target.closest('[data-ovbrall]')){ OVB.all=!OVB.all; ovRender('ovBranch',ovBrHtml); return; }
   const sc=e.target.closest('[data-ovscope]');
   if(sc){ OVT.scope=sc.dataset.ovscope; const by=brOfYear();
