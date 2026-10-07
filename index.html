@@ -2161,6 +2161,13 @@ const CUS_CH=[{k:'Dine In',n:'Dine in',c:'#D9822D',bg:'#FFF5EB',bd:'#F7DDC2',tx:
   {k:'Take away',n:'Takeaway',c:'#7C5CFC',bg:'#F5F3FF',bd:'#DDD6FE',tx:'#6D28D9'},
   {k:'Delivery',n:'Delivery',c:'#0F9488',bg:'#EEF8F6',bd:'#CBEAE5',tx:'#0B6E66'}];
 const chKey=v=>String(v||'').toLowerCase().replace(/[\s_\-]/g,'');
+/* LY ระดับรวม จากประวัติรายสาขา (ไฟล์ STF): บิล = ยอดขาย ÷ เช็คเฉลี่ย · ลูกค้ารวมเฉพาะสาขาที่มีครบ */
+function lyTrAgg(ms){ let sales=0,trans=0,cu=0,cuS=0,cuT=0,any=false;
+  filtZone(EXTRA.branchYears||[]).forEach(b=>{ const h=b.h&&b.h[YEAR-1]; if(!h) return;
+    ms.forEach(m=>{ const i=m-1, S=(h.s||[])[i], K=(h.k||[])[i], C=(h.c||[])[i]; if(!(S>0&&K>0)) return;
+      any=true; sales+=S; trans+=S/K; if(C>0){ cu+=C; cuS+=S; cuT+=S/K; } }); });
+  if(!any||!trans) return null;
+  return {trans, ticket:sales/trans, customer:cu||null, custAvg:cu?cu/cuT:null, perBill:cu?cuS/cu:null}; }
 function customersSection(m){
   const S=SCP||{multi:false}, T='Customers & Average Ticket';
   const now=aggTr(S.multi?S.ms:[m]), prv=S.multi?S.tP:aggTr(m>1?[m-1]:null);
@@ -2173,15 +2180,17 @@ function customersSection(m){
   const vsL=(a,b)=>{ if(a==null||b==null||!a) return ''; const g=pct(a,b);
     return `<span class="tiny ${Math.abs(g)<0.05?'':cls(g)}">${sgn(g)} vs LM</span>`; };
   const tile=(l,a,b,f,note)=>`<div class="st ${a!=null&&b!=null&&PV?cls(pct(a,b)):''}"><div class="l">${l}</div><div class="v">${f(b)}</div><div class="s">${a!=null&&b!=null&&PV?`${pill(pct(a,b))} vs ${PV} (${f(a)})`:(note||(S.multi?'ไม่มีช่วงก่อนหน้าให้เทียบ':''))}</div></div>`;
-  const kc=(l,a,b,f,note)=>{ const ok=a!=null&&b!=null&&PV&&a; const g=ok?pct(a,b):null;
+  const LYA=lyTrAgg(S.multi?S.ms:[m]);
+  const kc=(l,a,b,f,note,ly)=>{ const ok=a!=null&&b!=null&&PV&&a; const g=ok?pct(a,b):null;
+    const lyl=ly!=null&&b!=null?`<div class="ks ly">${pill(pct(ly,b))}<span>vs LY <b>${f(ly)}</b></span></div>`:'';
     return `<div class="kc ${ok?cls(g):''}"><div class="kl">${l}</div><div class="kv">${f(b)}</div>
-      <div class="ks">${ok?`${pill(g)}<span>vs ${PV} <b>${f(a)}</b></span>`:`<span>${note||(S.multi?'ไม่มีช่วงก่อนหน้าให้เทียบ':'')}</span>`}</div></div>`; };
+      <div class="ks">${ok?`${pill(g)}<span>vs ${PV} <b>${f(a)}</b></span>`:`<span>${note||(S.multi?'ไม่มีช่วงก่อนหน้าให้เทียบ':'')}</span>`}</div>${lyl}</div>`; };
   const strip=`<div class="kcs">
-    ${kc('Total Trans',P.trans,now.trans,fN)}
-    ${kc('Customers',P.customer,now.customer,fN,now.customer==null?'ไม่มีข้อมูลลูกค้า':'')}
-    ${kc('Ticket Avg.',P.ticket,now.ticket,fB)}
-    ${kc('Customer Avg.',P.custAvg,now.custAvg,f2)}
-    ${kc('Per Bill',spend(prv),spend(now),fB)}
+    ${kc('Total Trans',P.trans,now.trans,fN,'',LYA&&LYA.trans)}
+    ${kc('Customers',P.customer,now.customer,fN,now.customer==null?'ไม่มีข้อมูลลูกค้า':'',LYA&&LYA.customer)}
+    ${kc('Ticket Avg.',P.ticket,now.ticket,fB,'',LYA&&LYA.ticket)}
+    ${kc('Customer Avg.',P.custAvg,now.custAvg,f2,'',LYA&&LYA.custAvg)}
+    ${kc('Per Bill',spend(prv),spend(now),fB,'',LYA&&LYA.perBill)}
   </div>`;
   /* ---- แยกช่องทาง: แถว 1 Total Trans/Ticket Avg. · แถว 2 Customers/Customer Avg. ---- */
   const totTr=now.ch.reduce((a,c)=>a+(c.trans||0),0);
