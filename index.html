@@ -3140,7 +3140,7 @@ function ovBrHtml(){
     return (a>b?1:a<b?-1:0)*SD; });
   const shown=OVB.all?rows:rows.slice(0,10);
   const arrow=c=>c.k===SK.k?`<i class="srt">${OVB.dir==='asc'?'▲':'▼'}</i>`:'<i class="srt off">↕</i>';
-  return `<div class="ovth"><h3>Branch detail Sales — ${rangeTxt} ${YEAR}${inZ?' · โซน '+OVT.zone:''}</h3>${seg}</div>
+  return `<div class="ovth"><h3>Branch detail Sales</h3>${seg}</div>
     ${strip}
     <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th>${
       COL.map(c=>`<th class="${c.n?'n ':''}srth${c.k===SK.k?' on':''}" data-brsort="${c.k}">${c.t}${arrow(c)}</th>`).join('')}</tr>
@@ -3272,7 +3272,7 @@ function smxHtml(){
     :(SMX.scope==='zone'?`<select class="smxsel" data-smxsel="zone" aria-label="โซน">${zones.map(z=>`<option ${z===SMX.zone?'selected':''}>${z}</option>`).join('')}</select>`:'');
   const who=SMX.scope==='zone'?' · โซน '+SMX.zone:(SMX.scope==='branch'&&pick&&pick[0]?' · '+pick[0].code+' '+pick[0].name:'');
   const ytd=rows.reduce((a,r)=>a+(r.tot||0),0), ytdL=rows.every(r=>r.tot==null||r.ly!=null)?rows.reduce((a,r)=>a+(r.tot!=null?r.ly||0:0),0):null;
-  const head=`<div class="ovth"><h3>Sales Mix — ${months.length?RNG(months):''} ${YEAR}${who}</h3><span class="ovseg">${[['ly','vs LY'],['lm','vs LM']].map(([k,t])=>`<button type="button" class="${SMX.mode===k?'on':''}" data-smxmode="${k}">${t}</button>`).join('')}</span></div>`+
+  const head=`<div class="ovth"><span></span><span class="ovseg">${[['ly','vs LY'],['lm','vs LM']].map(([k,t])=>`<button type="button" class="${SMX.mode===k?'on':''}" data-smxmode="${k}">${t}</button>`).join('')}</span></div>`+
     (by.length?`<div class="ovscope"><span class="ovseg">${[['all','All Stores'],['branch','Branch'],['zone','Zone']].map(([k,t])=>`<button type="button" class="${SMX.scope===k?'on':''}" data-smxscope="${k}">${t}</button>`).join('')}</span>${sel}</div>`:'')+
     `<div class="ovsub" style="margin-top:8px">${months.length?RNG(months)+' '+YEAR:''}: <b>${ytd.toFixed(2)}M</b>${ytdL?` · ${YEAR-1}: <b>${ytdL.toFixed(2)}M</b> ${pill(pct(ytdL,ytd))}`:''} · แท่งแสดงสัดส่วนช่องทางของแต่ละเดือน (รวม 100%)</div>`;
   if(!rows.some(r=>r.tot!=null)) return head+'<div class="empty">ยังไม่มียอดขาย</div>';
@@ -3313,7 +3313,7 @@ function smxHtml(){
     else if(lyM&&r.lyCh&&r.lyCh[k]>0){ const p=pct(r.lyCh[k],v); dd=`<span class="tiny ${cls(p)}">${sgn(p)} vs LY</span>`; }
     return `<td class="n"><b>${fm(v)}</b><span class="tiny">${sh}</span>${dd}</td>`; };
   const dot=c=>`<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${c};margin-right:7px"></span>`;
-  const detail=`<div class="grp" style="margin-top:18px">รายละเอียดช่องทางรายเดือน · ล้านบาท${lyM?(anyLyCh?` · เทียบ LY ของแต่ละช่องทาง (ยอดปี ${YEAR-1} จากไฟล์ประวัติรายสาขา)`:` · ยังไม่มียอดแยกช่องทางของปี ${YEAR-1} (นำเข้าไฟล์ STF - Data เพื่อเทียบ LY รายช่องทาง)`):' · เทียบ LM ของแต่ละช่องทาง'}</div>
+  const detail=`<div class="grp" style="margin-top:18px">รายละเอียดช่องทางรายเดือน${lyM?(anyLyCh?' เทียบ LY ของแต่ละช่องทาง':` · ยังไม่มียอดแยกช่องทางของปี ${YEAR-1} (นำเข้าไฟล์ STF - Data เพื่อเทียบ LY รายช่องทาง)`):' เทียบ LM ของแต่ละช่องทาง'}</div>
     <div class="scroll"><table><tr><th>ช่องทาง</th>${rows.map(r=>`<th class="n">${MS(r.m)}</th>`).join('')}</tr>
     <tr class="hi"><td><b>ยอดรวม</b></td>${rows.map(r=>{ const b=ref(r); return `<td class="n"><b>${fm(r.tot)}</b>${b&&r.tot!=null?`<span class="tiny ${cls(pct(b,r.tot))}">${sgn(pct(b,r.tot))} vs ${RN}</span>`:''}</td>`; }).join('')}</tr>
     ${SMX_C.map(o=>`<tr><td>${dot(o.c)}${o.n}</td>${rows.map(r=>cell(r,o.k)).join('')}</tr>`).join('')}
@@ -3660,7 +3660,7 @@ function buildMain(m){
     const storesNow = d.stores?d.stores.now:null;
     /* จำนวนสาขา LY: ใช้ของแบบฟอร์มก่อน ถ้าไม่มีนับจากยอดรายสาขา 2 ปี */
     const storesLy = (d.stores&&d.stores.ly) || (brOfYear().filter(b=>b.m&&b.m[m]&&b.m[m].ly>0).length||null);
-    out.push(sec('overview',(S.multi?'Sales KPI — ':'Monthly KPI — ')+S.titleEn+(FILT.zone!=='all'?' · โซน '+FILT.zone:' · '+((BRANDS.find(b=>b.k===BRAND)||{n:'Santa Fe'}).n)),subLine,`
+    out.push(sec('overview',(S.multi?'Sales KPI':'Monthly KPI'),subLine,`
       ${(()=>{
         const M1=v=>v==null?'—':v.toFixed(1)+'M', M2=v=>v==null?'—':v.toFixed(2)+'M';
         /* แท่งเทียบแนวนอน 2 แถว: แถวที่ dim = ค่าอ้างอิง (LY/LM) สีเทา */
