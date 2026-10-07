@@ -1254,6 +1254,8 @@ body.present .cmpchip{font-size:15px}
 .cuh{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px}.cuh h3{margin:0}
 .cusel{margin-left:auto;font-size:12.5px;color:var(--mute);display:flex;align-items:center;gap:8px}
 .cusel select{border:1px solid var(--line);border-radius:10px;background:var(--card);padding:6px 10px;font:inherit;font-weight:600;color:var(--ink);max-width:280px}
+.dtbtn{border:1px solid var(--accent-3);background:var(--accent-2);color:var(--accent-ink);border-radius:999px;padding:3px 12px;font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer;transition:.15s}
+.dtbtn:hover{background:var(--accent);border-color:var(--accent);color:#fff}
 .kcs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
 .kc{background:var(--card,#fff);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
 .kc.pos{border-left-color:var(--good)} .kc.neg{border-left-color:var(--bad,#E11D48)}
@@ -2289,10 +2291,10 @@ function customersSection(m){
     const hasCh=list.some(b=>b.trDine||b.trTake||b.trDeli);
     const chHint=hasCh?'':`<div class="hint" style="margin-top:8px">Ticket แยกช่องทางรายสาขา: ข้อมูล ${label(m)} ในเครื่องนี้มีบิลแยกช่องทาง 0 จาก ${list.length} สาขา — นำเข้าไฟล์แบบฟอร์มส่งยอดขายอีกครั้ง แล้วดูข้อความหลังนำเข้าว่า "บิลแยกช่องทางรายสาขา" ได้กี่สาขา</div>`;
     btbl=`<div class="grp big"><span>รายสาขา</span></div>
-    <div class="scroll"><table class="cubtbl"><tr><th>#</th><th>สาขา</th><th class="n">Total Trans</th><th class="n">Ticket Avg.</th>${CUS_CH.map(o=>`<th class="n">Ticket ${o.n}</th>`).join('')}<th class="n">Customers</th><th class="n">Customer Avg.</th><th class="n">Per Bill</th></tr>
+    <div class="scroll"><table class="cubtbl"><tr><th>#</th><th>สาขา</th><th class="n">Total Trans</th><th class="n">Ticket Avg.</th>${CUS_CH.map(o=>`<th class="n">Ticket ${o.n}</th>`).join('')}<th class="n">Customers</th><th class="n">Customer Avg.</th><th class="n">Per Bill</th><th></th></tr>
     ${list.map((b,i)=>{ const p=pMap[b.code];
       const hid=CUC.br!=='all'&&String(b.code)!==CUC.br;
-      return `<tr class="clk" data-ssbr="${b.code}"${hid?' hidden':''}><td>${CUC.br==='all'?i+1:1}</td><td>${b.code} ${b.name}</td><td class="n">${fN(b.tr)}${vsL(p&&p.tr,b.tr)}</td><td class="n"><b>${fB(b.tk)}</b>${vsL(p&&p.tk,b.tk)}</td>${CUS_CH.map((o,j)=>`<td class="n">${fB(tkc(b,j))}${vsL(tkc(p,j),tkc(b,j))}</td>`).join('')}<td class="n">${fN(b.cust||null)}${vsL(p&&p.cust,b.cust)}</td><td class="n">${ca(b)==null?'—':f2(ca(b))}${vsL(ca(p),ca(b))}</td><td class="n">${fB(pb(b))}${vsL(pb(p),pb(b))}</td></tr>`; }).join('')}</table></div><div class="hint brqnone" hidden>ไม่พบสาขาที่ค้นหา</div>${chHint}`; }
+      return `<tr class="clk" data-ssbr="${b.code}"${hid?' hidden':''}><td>${CUC.br==='all'?i+1:1}</td><td>${b.code} ${b.name}</td><td class="n">${fN(b.tr)}${vsL(p&&p.tr,b.tr)}</td><td class="n"><b>${fB(b.tk)}</b>${vsL(p&&p.tk,b.tk)}</td>${CUS_CH.map((o,j)=>`<td class="n">${fB(tkc(b,j))}${vsL(tkc(p,j),tkc(b,j))}</td>`).join('')}<td class="n">${fN(b.cust||null)}${vsL(p&&p.cust,b.cust)}</td><td class="n">${ca(b)==null?'—':f2(ca(b))}${vsL(ca(p),ca(b))}</td><td class="n">${fB(pb(b))}${vsL(pb(p),pb(b))}</td><td class="n"><button type="button" class="dtbtn" title="ดูรายละเอียดสาขา ${b.code}">ดูรายละเอียด ›</button></td></tr>`; }).join('')}</table></div><div class="hint brqnone" hidden>ไม่พบสาขาที่ค้นหา</div>${chHint}`; }
   const cuBr=CUC.ctx?`<div class="grp big">รายสาขา · ลูกค้าและจำนวนบิล</div><div class="cuh"><label class="cusel" style="margin-left:0">แสดง <select data-cubr><option value="all">All · ทุกสาขา</option>${Object.keys(CUC.ctx.nm).sort().map(c=>`<option value="${c}"${CUC.br===c?' selected':''}>${c} ${CUC.ctx.nm[c]}</option>`).join('')}</select></label></div><div id="cuCharts">${cuChartsHtml(CUC.br)}</div>`:'';
   const tI=trend.indexOf('<div class="grp big">รายเดือน'), tCharts=tI>0?trend.slice(0,tI):trend, tTable=tI>0?trend.slice(tI):'';
   return sec('customers',T,'',strip+tCharts+chTiles+tTable+cuBr+btbl);
