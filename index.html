@@ -1239,6 +1239,11 @@ body.present .cmpchip{font-size:15px}
 .mxc b{font-size:24px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
 .mxc small{flex-basis:100%;font-size:11.5px;color:var(--mute)} .mxc small.lyr{display:flex;align-items:center;gap:6px} .mxc small b{font-size:inherit;font-weight:600;color:var(--ink-2)} .mxc .mute{color:#B6BDC9}
 @media (max-width:760px){.mx{grid-template-columns:90px repeat(3,minmax(0,1fr));padding:6px 8px}.mx>div{padding:10px 6px}.mxc b{font-size:17px}}
+.cpns{border:1px solid var(--line);border-radius:14px;padding:6px 14px;background:var(--card,#fff)}
+.cpn+.cpn{border-top:1px solid var(--line);margin-top:4px;padding-top:6px}
+.cph{display:flex;align-items:center;gap:12px;margin-top:6px}.cph b{font-size:14px}
+.cchip{color:#fff;font-size:12px;font-weight:700;border-radius:99px;padding:2px 10px}
+.clg{margin-left:auto;font-size:12px;color:var(--mute);display:flex;align-items:center;gap:6px}.clg i{width:10px;height:10px;border-radius:3px;display:inline-block}.clg i.ds{width:18px;height:0;border-top:2px dashed #B6BDC9;border-radius:0;margin-left:10px}
 .kcs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
 .kc{background:var(--card,#fff);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
 .kc.pos{border-left-color:var(--good)} .kc.neg{border-left-color:var(--bad,#E11D48)}
@@ -2180,6 +2185,23 @@ function lyTrAgg(ms){ let sales=0,trans=0,cu=0,cuS=0,cuT=0,any=false;
   if(!any||!trans) return null;
   const ch=chOk?Object.fromEntries(Object.entries(CH).map(([k,[sl,tr]])=>[k,tr>0?{trans:tr,ticket:sl/tr}:null])):null;
   return {trans, ticket:sales/trans, customer:cu||null, custAvg:cu?cu/cuT:null, perBill:cu?cuS/cu:null, ch}; }
+/* กราฟรายเดือนแยกสเกล: เส้นปีนี้ + เส้น LY ประ + % vs LY ใต้แต่ละเดือน (LY เทียบสาขาเดียวกับที่ส่งบิลในเดือนนั้น) */
+function cuPanel(title,labs,cur,ly,color,unit){
+  const W=1180,H=210,L=56,R=24,T=34,B=30,n=cur.length, X=i=>L+(W-L-R)*(i+.5)/n;
+  const vs=cur.concat(ly).filter(v=>v!=null); if(!vs.length) return '';
+  const mn=Math.min(...vs)*.94, mx=Math.max(...vs)*1.04, Y=v=>T+(H-T-B)*(1-(v-mn)/(mx-mn||1));
+  const K=v=>Math.round(v/1000)+'K', col=d=>d>=0?'#10B981':'#F43F5E', sg=d=>(d>=0?'+':'')+d.toFixed(1)+'%';
+  const seg=a=>{ let d='',pen=false; a.forEach((v,i)=>{ if(v==null){pen=false;return;} d+=(pen?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1); pen=true; }); return d; };
+  let g=''; for(let k=0;k<3;k++){ const v=mn+(mx-mn)*k/2; g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#EEF1F5"/><text x="${L-8}" y="${Y(v)+4}" font-size="11" fill="#98A1AE" text-anchor="end">${K(v)}</text>`; }
+  if(ly.some(v=>v!=null)) g+=`<path d="${seg(ly)}" fill="none" stroke="#B6BDC9" stroke-width="2" stroke-dasharray="5 4"/>`;
+  g+=`<path d="${seg(cur)}" fill="none" stroke="${color}" stroke-width="3"/>`;
+  let lastD=null;
+  cur.forEach((v,i)=>{ if(v==null) return; const last=i===n-1, d=ly[i]!=null&&ly[i]>0?(v/ly[i]-1)*100:null; if(last) lastD=d;
+    g+=`<circle cx="${X(i)}" cy="${Y(v)}" r="${last?6:3.5}" fill="${last?color:'#fff'}" stroke="${color}" stroke-width="2.5"/>`
+      +`<text x="${X(i)}" y="${Y(v)-12}" font-size="${last?14:12}" font-weight="${last?800:600}" fill="${last?color:'#475569'}" text-anchor="middle">${K(v)}</text>`
+      +(d!=null?`<text x="${X(i)}" y="${H-8}" font-size="11" font-weight="700" fill="${col(d)}" text-anchor="middle">${sg(d)}</text>`:''); });
+  labs.forEach((m,i)=>{ g+=`<text x="${X(i)}" y="14" font-size="11.5" fill="${i===n-1?'#0F172A':'#98A1AE'}" font-weight="${i===n-1?700:500}" text-anchor="middle">${m}</text>`; });
+  return `<div class="cpn"><div class="cph"><b>${title}</b>${lastD!=null?`<span class="cchip" style="background:${col(lastD)}">${labs[n-1]} ${sg(lastD)} vs LY</span>`:''}<span class="clg"><i style="background:${color}"></i>ปีนี้${ly.some(v=>v!=null)?'<i class="ds"></i>LY':''}</span></div><svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block">${g}</svg></div>`; }
 function customersSection(m){
   const S=SCP||{multi:false}, T='Customers & Average Ticket';
   const now=aggTr(S.multi?S.ms:[m]), prv=S.multi?S.tP:aggTr(m>1?[m-1]:null);
@@ -2219,8 +2241,8 @@ function customersSection(m){
   let trend='';
   if(tm.length>=2){
     const labs=tm.map(r=>MONTH_TH[r.m-1]);
-    const cSer=[{name:'ลูกค้า',color:'#D9822D',w:3,label:1,vals:tm.map(r=>r.v.customer)},{name:'บิล',color:'#94A3B8',label:1,vals:tm.map(r=>r.v.trans)}];
-    trend=`<div class="stack1"><div><h3>ลูกค้าและจำนวนบิล รายเดือน</h3>${lineSeries(labs,cSer,{w:1180,h:260,fmt:v=>(v/1000).toFixed(0)+'K',tipFmt:v=>fmtN(Math.round(v))})}${legendOf(cSer)}</div></div>
+    const lyM=tm.map(r=>lyTrAgg([r.m]));
+    trend=`<div class="stack1"><div><h3>ลูกค้าและจำนวนบิล รายเดือน</h3><div class="cpns">${cuPanel('Customers (ลูกค้า)',labs,tm.map(r=>r.v.customer),lyM.map(x=>x&&x.customer),'#D9822D')}${cuPanel('Total Trans (บิล)',labs,tm.map(r=>r.v.trans),lyM.map(x=>x&&x.trans),'#475569')}</div></div></div>
       <div class="grp big">รายเดือน</div>
       <div class="scroll"><table><tr><th>เดือน</th><th class="n">Total Trans</th><th class="n">Ticket Avg.</th>${CUS_CH.map(o=>`<th class="n">Ticket ${o.n}</th>`).join('')}<th class="n">Customers</th><th class="n">Customer Avg.</th><th class="n">Per Bill</th></tr>
       ${tm.map((r,i)=>{ const v=r.v, q=i>0&&tm[i-1].m===r.m-1?tm[i-1].v:null, ca=x=>x&&x.customer&&x.trans?x.customer/x.trans:null;
