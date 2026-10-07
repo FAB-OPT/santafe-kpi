@@ -1338,7 +1338,7 @@ body.present .secfull{display:none}
 
 /* ================= UX ใหม่: หน้ารวมหัวข้อ → หน้าหมวด ================= */
 body.hub #nav, body.hub .tabbar{display:none!important}
-body.hub .wrap{grid-template-columns:minmax(0,1fr);max-width:1320px;margin-left:auto;margin-right:auto}
+body.hub .wrap{grid-template-columns:minmax(0,1fr);max-width:1640px;margin-left:auto;margin-right:auto}
 body:not(.present) .hhide{display:none!important}
 body.present #hubView, body.present #topicBar{display:none}
 #hubView{padding:6px 0 12px}
@@ -1377,6 +1377,8 @@ body.hub #salesmix .ovbottom > .panel:nth-child(2){display:none}
 .hv-badge{font-size:14px;font-weight:800;border-radius:999px;padding:4px 12px;white-space:nowrap;background:var(--surface);color:var(--ink-2)}
 .hv-badge.neg{background:#FDE7EA;color:var(--bad)} .hv-badge.pos{background:#E7F6EE;color:var(--good)}
 .brwhy{font-size:11.5px;color:var(--faint);margin-top:2px;line-height:1.35}
+tr.whyr td{border-top:0;padding-top:0;padding-bottom:9px}
+tr.whyr:hover td{background:transparent}
 th.srth{cursor:pointer;user-select:none;white-space:nowrap}
 th.srth:hover{color:var(--accent-ink)}
 th.srth .srt{font-style:normal;font-size:9px;margin-left:4px;color:var(--accent)}
@@ -3119,7 +3121,7 @@ function ovBrHtml(){
   const refTxt=(BM==='lm'&&refMs!==months)?`${MS(refMs[0])}–${MS(refMs[refMs.length-1])}`:rangeTxt.replace(' to ','–');
   /* ---- คอลัมน์ของตาราง · กดหัวคอลัมน์เพื่อเรียงมาก/น้อยได้ทุกช่อง ---- */
   const M1=v=>v>0?f(v/1e6):'—';
-  const COL=[{k:'code',t:'Branch',cell:r=>`${r.b.code} ${r.b.name}${(w=>w?`<div class="brwhy">${w}</div>`:'')(why(r))}`,get:r=>+r.b.code||0,asc:1}];
+  const COL=[{k:'code',t:'Branch',cell:r=>`${r.b.code} ${r.b.name}`,get:r=>+r.b.code||0,asc:1}];
   if(!(ALLM&&!many)) months.forEach((mm,ix)=>COL.push({k:'m'+mm,t:MS(mm),n:1,get:r=>r.v[ix],cell:r=>f(r.v[ix])}));
   if(many) COL.push({k:'avg',t:'Avg',n:1,get:r=>r.avg,cell:r=>`<b>${f(r.avg)}</b>`});
   if(ALLM){
@@ -3147,8 +3149,10 @@ function ovBrHtml(){
     ${strip}
     <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th>${
       COL.map(c=>`<th class="${c.n?'n ':''}srth" data-brsort="${c.k}">${c.t}${arrow(c)}</th>`).join('')}</tr>
-    ${shown.map((r,i)=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td>${
-      COL.map(c=>`<td class="${c.n?'n':''}">${c.cell(r)}</td>`).join('')}</tr>`).join('')}</table></div>
+    ${shown.map((r,i)=>{ const w=why(r);
+      return `<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td>${
+        COL.map(c=>`<td class="${c.n?'n':''}">${c.cell(r)}</td>`).join('')}</tr>`+
+        (w?`<tr class="clk whyr" data-ssbr="${r.b.code}"><td></td><td colspan="${COL.length}" class="brwhy">${w}</td></tr>`:''); }).join('')}</table></div>
     ${rows.length>10?`<button type="button" class="ovmore ${OVB.all?'on':''}" data-ovbrall="1">${OVB.all?'แสดงแค่ 10 อันดับ':'ดูทั้งหมด '+rows.length+' สาขา'} <i>⌄</i></button>`:''}`;
 }
 /* วาดใหม่เฉพาะการ์ด · เลือกโซนอยู่ต้องใช้ข้อมูลของโซนเหมือนตอนสร้างหน้า */
