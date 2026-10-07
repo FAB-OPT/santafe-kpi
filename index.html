@@ -2849,7 +2849,7 @@ function storeMoves(m){ const by=brOfYear(), opened={}, closed={}, add=(o,k,x)=>
     if(codes.has(c)||seen.has(c)||!(r.sales>0)) return; seen.add(c); add(opened,mm,{code:r.code,name:r.name,note:'ยังไม่อยู่ในไฟล์ยอด 2 ปี'}); });
   return {opened,closed}; }
 /* ===== Performance Trend บนหน้ายอดขาย: vs LY · vs Budget · vs LM · ขอบเขต All Stores / Branch / Zone ===== */
-const OVT={mode:'ly',scope:'all',code:'',zone:''};
+const OVT={mode:'all',scope:'all',code:'',zone:''};
 function ovTrendData(){
   const S=SCP||{}, last=S.multi?S.last:curM, by=brOfYear(), nm=v=>String(v||'').replace(/\s+/g,'');
   const months=MONTHLY.filter(r=>r.m<=last&&r.sales!=null).map(r=>r.m).sort((a,b)=>a-b);
@@ -2914,10 +2914,12 @@ function ovChart(rows,main,refs){
 }
 function ovTrendHtml(){
   const by=brOfYear(), rows=ovTrendData();
-  const MODES=[['ly','vs LY'],['bud','vs Budget'],['lm','vs LM'],['ss','vs SSSG']];
+  /* ALL = เห็นทุกตัวเทียบพร้อมกัน · โหมดอื่นเจาะทีละตัว กราฟและตารางด้านล่างเปลี่ยนตามปุ่มนี้ */
+  const MODES=[['all','ALL'],['ly','vs LY'],['bud','vs Budget'],['lm','vs LM'],['ss','vs SSSG']];
+  const ALL=OVT.mode==='all', M0=ALL?'ly':OVT.mode;
   const ss=OVT.mode==='ss', act=r=>ss?r.ssA:r.a;
-  const ref=r=>({ly:r.ly,bud:r.bud,lm:r.lm,ss:r.ssL})[OVT.mode];
-  const cap={ly:`${YEAR} vs ${YEAR-1} (Last Year)`,bud:`${YEAR} vs Budget`,lm:`${YEAR} vs LM (Month-over-Month)`,ss:`${YEAR} vs ${YEAR-1} Same-store (SSSG)`}[OVT.mode];
+  const ref=r=>({ly:r.ly,bud:r.bud,lm:r.lm,ss:r.ssL})[M0];
+  const cap={all:`${YEAR} เทียบ ${YEAR-1} · แผน · เดือนก่อน`,ly:`${YEAR} vs ${YEAR-1} (Last Year)`,bud:`${YEAR} vs Budget`,lm:`${YEAR} vs LM (Month-over-Month)`,ss:`${YEAR} vs ${YEAR-1} Same-store (SSSG)`}[OVT.mode];
   const zones=[...new Set(by.map(b=>b.zone).filter(Boolean))];
   const sel=OVT.scope==='branch'?`<select data-ovsel="code" aria-label="สาขา">${by.slice().sort((p,q)=>String(p.code).localeCompare(String(q.code))).map(b=>`<option value="${b.code}" ${String(b.code)===String(OVT.code)?'selected':''}>${b.code} ${b.name}</option>`).join('')}</select>`
     :(OVT.scope==='zone'?`<select data-ovsel="zone" aria-label="โซน">${zones.map(z=>`<option ${z===OVT.zone?'selected':''}>${z}</option>`).join('')}</select>`:'');
@@ -2927,22 +2929,29 @@ function ovTrendHtml(){
   const R=rows.map(ref), MS=mm=>MONTH_EN[mm-1].slice(0,3);
   const gr=r=>{ const a=act(r), b=ref(r); return (a!=null&&b)?(a/b-1)*100:null; };
   const pills=`<div class="ovpw"><div class="ovpills" style="--n:${rows.length}"><span></span>${rows.map(r=>`<span class="mh">${MS(r.m)}</span>`).join('')}<span class="rl">${MODES.find(q=>q[0]===OVT.mode)[1]}</span>${rows.map(r=>`<span>${pill(gr(r))}</span>`).join('')}</div></div>`;
-  const miss=OVT.mode==='lm'?[]:rows.filter((r,i)=>R[i]==null).map(r=>MS(r.m));
-  const note=miss.length?`<div class="note">ไม่มี${OVT.mode==='bud'?'แผน':(ss?'ยอด Same Store ':'ยอด LY ')}${OVT.scope==='all'?'':'รายสาขา'}ของ ${miss.join(', ')}${OVT.mode==='bud'&&OVT.scope!=='all'?' (แผนรายสาขาในไฟล์ส่งยอดเริ่มเดือน เม.ย.)':''}</div>`:'';
-  /* vs LY / vs Budget แสดงครบ 3 เส้น (ยอดขาย · LY · แผน) · vs LM เทียบเดือนก่อน · vs SSSG เฉพาะยอด Same Store */
+  const miss=M0==='lm'?[]:rows.filter((r,i)=>R[i]==null).map(r=>MS(r.m));
+  const note=miss.length?`<div class="note">ไม่มี${M0==='bud'?'แผน':(ss?'ยอด Same Store ':'ยอด LY ')}${OVT.scope==='all'?'':'รายสาขา'}ของ ${miss.join(', ')}${M0==='bud'&&OVT.scope!=='all'?' (แผนรายสาขาในไฟล์ส่งยอดเริ่มเดือน เม.ย.)':''}</div>`:'';
+  /* ALL เห็นครบ 4 เส้น · vs LY / vs Budget แสดงยอดขาย+LY+แผน · vs LM เทียบเดือนก่อน · vs SSSG เฉพาะยอด Same Store */
   const MAIN=ss?{k:'ssA',name:'Same-store '+YEAR}:{k:'a',name:'Sales '+YEAR};
-  const REFS=OVT.mode==='lm'?[{k:'lm',name:'LM (เดือนก่อน)',c:'#A3AEBB'}]
-    :(ss?[{k:'ssL',name:'Same-store '+(YEAR-1),c:'#A3AEBB'}]:[{k:'ly',name:'Last year '+(YEAR-1),c:'#A3AEBB'},{k:'bud',name:'Budget '+YEAR,c:'#38BDF8',dash:1}]);
-  /* ใต้กราฟ: ตารางรายเดือนเต็ม (ยอด · ปีก่อน · YoY · แผน · vs Budget · Same Store · MoM) แทนแถวป้าย % เดิม */
+  const REFS=ALL?[{k:'ly',name:'Last year '+(YEAR-1),c:'#A3AEBB'},{k:'bud',name:'Budget '+YEAR,c:'#38BDF8',dash:1},{k:'ssL',name:'Same-store '+(YEAR-1),c:'#94A3B8',dash:1}]
+    :(OVT.mode==='lm'?[{k:'lm',name:'LM (เดือนก่อน)',c:'#A3AEBB'}]
+    :(ss?[{k:'ssL',name:'Same-store '+(YEAR-1),c:'#A3AEBB'}]:[{k:'ly',name:'Last year '+(YEAR-1),c:'#A3AEBB'},{k:'bud',name:'Budget '+YEAR,c:'#38BDF8',dash:1}]));
+  /* ใต้กราฟ: ตารางรายเดือน · คอลัมน์เปลี่ยนตามปุ่มที่เลือก (ALL = ครบทุกตัวเทียบ) */
+  const COLS={
+    all:[['Total Sales '+YEAR,r=>fmtM(r.a)],['Total Sales '+(YEAR-1),r=>fmtM(r.ly)],['YoY',r=>pct(r.ly,r.a),1],
+         ['Budget '+YEAR,r=>fmtM(r.bud)],['vs Budget',r=>pct(r.bud,r.a),1],
+         ['SSSG Sales',r=>fmtM(r.ssA)],['SSSG %',r=>(r.ssA!=null&&r.ssL)?pct(r.ssL,r.ssA):null,1],
+         ['MoM %',r=>(r.a!=null&&r.lm)?pct(r.lm,r.a):null,1]],
+    ly:[['Total Sales '+YEAR,r=>fmtM(r.a)],['Total Sales '+(YEAR-1),r=>fmtM(r.ly)],['YoY',r=>pct(r.ly,r.a),1]],
+    bud:[['Total Sales '+YEAR,r=>fmtM(r.a)],['Budget '+YEAR,r=>fmtM(r.bud)],['vs Budget',r=>pct(r.bud,r.a),1]],
+    lm:[['Total Sales '+YEAR,r=>fmtM(r.a)],['LM (เดือนก่อน)',r=>fmtM(r.lm)],['MoM %',r=>(r.a!=null&&r.lm)?pct(r.lm,r.a):null,1]],
+    ss:[['Same-store '+YEAR,r=>fmtM(r.ssA)],['Same-store '+(YEAR-1),r=>fmtM(r.ssL)],['SSSG %',r=>(r.ssA!=null&&r.ssL)?pct(r.ssL,r.ssA):null,1]]
+  }[OVT.mode]||[];
   const tbl=`<div class="scroll" style="margin-top:16px"><table>
-    <tr><th>เดือน</th><th class="n">Total Sales ${YEAR}</th><th class="n">Total Sales ${YEAR-1}</th><th class="n">YoY</th>
-      <th class="n">Budget ${YEAR}</th><th class="n">vs Budget</th><th class="n">SSSG Sales</th><th class="n">SSSG %</th><th class="n">MoM %</th></tr>
-    ${rows.map((r,i)=>{ const cm=(SCP&&SCP.multi)?null:curM, ssg=(r.ssA!=null&&r.ssL)?pct(r.ssL,r.ssA):null, mom=(r.a!=null&&r.lm)?pct(r.lm,r.a):null;
-      return `<tr class="${r.m===cm?'hi':''}"><td>${r.m===cm?'★ ':''}${MONTH_TH[r.m-1]}</td>
-        <td class="n">${fmtM(r.a)}</td><td class="n">${fmtM(r.ly)}</td><td class="n ${cls(pct(r.ly,r.a))}">${sgn(pct(r.ly,r.a))}</td>
-        <td class="n">${fmtM(r.bud)}</td><td class="n ${cls(pct(r.bud,r.a))}">${sgn(pct(r.bud,r.a))}</td>
-        <td class="n">${fmtM(r.ssA)}</td><td class="n ${cls(ssg)}">${sgn(ssg)}</td>
-        <td class="n ${cls(mom)}">${sgn(mom)}</td></tr>`; }).join('')}
+    <tr><th>เดือน</th>${COLS.map(c=>`<th class="n">${c[0]}</th>`).join('')}</tr>
+    ${rows.map(r=>{ const cm=(SCP&&SCP.multi)?null:curM;
+      return `<tr class="${r.m===cm?'hi':''}"><td>${r.m===cm?'★ ':''}${MONTH_TH[r.m-1]}</td>${
+        COLS.map(c=>{ const v=c[1](r); return c[2]?`<td class="n ${cls(v)}">${sgn(v)}</td>`:`<td class="n">${v}</td>`; }).join('')}</tr>`; }).join('')}
   </table></div>`;
   return head+`<div class="ovcap">${cap}</div><div class="ovchart">${ovChart(rows,MAIN,REFS)}</div>`+tbl+note;
 }
@@ -2955,9 +2964,10 @@ function ovBrHtml(){
   const MS=mm=>MONTH_EN[mm-1].slice(0,3), months=MONTHLY.filter(r=>r.m<=m&&r.sales!=null).map(r=>r.m).sort((a,b)=>a-b);
   /* เทียบตามปุ่มของ Performance Trend: LY · Budget (แผนรายสาขา จับด้วยรหัส) · LM (เดือนก่อน) */
   const dd=DETAIL[m]||{}, br=dd.branchRows||[], pb=dd.planBranches||[], nm=x=>String(x||'').replace(/\s+/g,'');
-  const ML={ly:'LY',bud:'Budget',lm:'LM',ss:'SSSG'}[OVT.mode];
-  const refOf=b=>{ if(OVT.mode==='ly'||OVT.mode==='ss') return ((b.m&&b.m[m])||{}).ly||0;
-    if(OVT.mode==='lm') return m>1?brTy(b,m-1):0;
+  const BM=OVT.mode==='all'?'ly':OVT.mode;   /* ALL: ตารางรายสาขาเทียบ LY เป็นหลัก */
+  const ML={ly:'LY',bud:'Budget',lm:'LM',ss:'SSSG'}[BM];
+  const refOf=b=>{ if(BM==='ly'||BM==='ss') return ((b.m&&b.m[m])||{}).ly||0;
+    if(BM==='lm') return m>1?brTy(b,m-1):0;
     const r=br.find(x=>String(x.code)===String(b.code)); return (r&&r.plan)||(pb.find(x=>nm(x.name)===nm(b.name))||{}).plan||0; };
   const rows=by.map(b=>{ const v=months.map(mm=>brTy(b,mm)/1e6), has=v.filter(x=>x>0), now=brTy(b,m), ref=refOf(b);
     return {b,v,now,avg:has.length?has.reduce((a,c)=>a+c,0)/has.length:0,g:ref>0&&now>0?(now/ref-1)*100:null}; }).filter(r=>r.now>0);
