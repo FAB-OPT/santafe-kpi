@@ -2261,7 +2261,7 @@ function customersSection(m){
   </div>`;
   /* ---- รายเดือน ---- */
   const tm=(S.multi&&S.n>=2?S.ms:MONTHLY.map(r=>r.m).filter(x=>x<=m)).map(x=>({m:x,v:trOf(x)})).filter(r=>r.v);
-  let trend='';
+  let trend=''; CUC.ctx=null;
   if(tm.length>=2){
     const labs=tm.map(r=>MONTH_TH[r.m-1]);
     const nm={}; tm.forEach(r=>filtZone((DETAIL[r.m]||{}).branchRows||[]).forEach(x=>{ if(x.tr>0) nm[String(x.code)]=x.name; }));
