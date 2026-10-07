@@ -1020,8 +1020,10 @@ body.present #overview .headline{flex:0 0 auto}
 .ovth{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .ovth h3{margin:0;font-size:15px;font-weight:700;color:var(--ink)}
 .ovseg{display:inline-flex;background:var(--hair);border-radius:9px;padding:3px;gap:2px;flex-wrap:wrap}
-.ovseg button{border:0;background:transparent;border-radius:7px;padding:5px 12px;font:inherit;font-size:12.5px;font-weight:600;color:var(--faint);cursor:pointer}
-.ovseg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(15,23,42,.1)}
+.ovseg button{border:0;background:transparent;border-radius:7px;padding:6px 14px;font:inherit;font-size:13px;font-weight:700;color:var(--mute);cursor:pointer;transition:background .12s,color .12s}
+.ovseg button:hover{color:var(--ink)}
+/* ปุ่มที่เลือกอยู่ให้เห็นชัดจากระยะไกล (ใช้ตอนพรีเซนต์) */
+.ovseg button.on{background:var(--accent);color:#fff;box-shadow:0 2px 8px -2px rgba(217,130,45,.55)}
 .ovscope{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
 .ovscope select,.smxsel{border:1px solid var(--line);border-radius:8px;padding:5px 8px;font:inherit;font-size:12.5px;background:#fff;max-width:100%}
 .ovcap{font-size:13px;font-weight:600;color:var(--ink-2);margin:14px 0 4px;padding-top:12px;border-top:1px solid var(--hair)}
@@ -3046,16 +3048,24 @@ function ovBrHtml(){
   const shown=OVB.all?rows:rows.slice(0,10), f=v=>v>0?v.toFixed(2):'—';
   /* ปุ่มตัวเทียบชุดเดียวกับ Performance Trend · กดที่นี่ก็เปลี่ยนทั้งกราฟและตารางด้านบนด้วย */
   const seg=`<span class="ovseg">${[['all','ALL'],['sales','Sales (บาท)'],['bud','vs Budget'],['ly','vs LY'],['ss','vs SSSG']].map(([k,t])=>`<button type="button" class="${OVT.mode===k?'on':''}" data-ovmode="${k}">${t}</button>`).join('')}</span>`;
-  /* การ์ดสรุป: นับสาขาที่ยอดถึงแผนและไม่ถึงแผนในช่วงที่เลือก */
+  /* การ์ดสรุปเหนือตาราง · เปลี่ยนชุดตามปุ่มที่เลือก */
+  const MB2=v=>Math.abs(v)>=1e6?(Math.abs(v)/1e6).toFixed(2)+'M':Math.round(Math.abs(v)/1000)+'K';
+  const card=(cl,lab,n,sub)=>`<div class="st ${cl}"><div class="l">${lab}</div><div class="v">${n}</div><div class="s">${sub}</div></div>`;
+  const brN=n=>`${n} <span style="font-size:14px;font-weight:600">สาขา</span>`;
   const wPlan=rows.filter(r=>r.plan>0), over=wPlan.filter(r=>r.now>=r.plan), under=wPlan.filter(r=>r.now<r.plan);
   const sumOver=over.reduce((t,r)=>t+(r.now-r.plan),0), sumUnder=under.reduce((t,r)=>t+(r.plan-r.now),0);
-  const noPlan=rows.length-wPlan.length;
-  const MB2=v=>Math.abs(v)>=1e6?(Math.abs(v)/1e6).toFixed(2)+'M':Math.round(Math.abs(v)/1000)+'K';
-  const strip=wPlan.length?`<div class="strip" style="margin:12px 0 0">
-    <div class="st pos"><div class="l">ถึงเป้า (ยอด ≥ แผน)</div><div class="v">${over.length} <span style="font-size:14px;font-weight:600">สาขา</span></div><div class="s">เกินเป้ารวม ${MB2(sumOver)} บาท</div></div>
-    <div class="st neg"><div class="l">ไม่ถึงเป้า</div><div class="v">${under.length} <span style="font-size:14px;font-weight:600">สาขา</span></div><div class="s">ขาดอีก ${MB2(sumUnder)} บาท</div></div>
-    <div class="st"><div class="l">สาขาที่มีแผน</div><div class="v">${wPlan.length} / ${rows.length}</div><div class="s">${noPlan?noPlan+' สาขายังไม่มีแผนในช่วงนี้':'มีแผนครบทุกสาขา'}</div></div>
-  </div>`:'';
+  const net=wPlan.reduce((t,r)=>t+(r.now-r.plan),0);
+  const wLy=rows.filter(r=>r.ly>0), grew=wLy.filter(r=>r.now>=r.ly), fell=wLy.filter(r=>r.now<r.ly);
+  const planCards=wPlan.length?[card('pos','ถึงเป้า (ยอด ≥ แผน)',brN(over.length),'เกินเป้ารวม '+MB2(sumOver)+' บาท'),
+      card('neg','ไม่ถึงเป้า',brN(under.length),'ขาดอีก '+MB2(sumUnder)+' บาท')]:[];
+  const lyCards=wLy.length?[card('pos','โตขึ้นเทียบปีก่อน',brN(grew.length),'จาก '+wLy.length+' สาขาที่มียอดปีก่อน'),
+      card('neg','ลดลงเทียบปีก่อน',brN(fell.length),(rows.length-wLy.length)+' สาขาไม่มีปีก่อนให้เทียบ')]:[];
+  let cards=[];
+  if(SALES) cards=planCards.concat(wPlan.length?[card('','ส่วนต่างรวมจากแผน',(net>=0?'+':'-')+MB2(net),wPlan.length+' จาก '+rows.length+' สาขาที่มีแผน')]:[]);
+  else if(BM==='bud') cards=planCards.concat(wPlan.length?[card('','ส่วนต่างรวมจากแผน',(net>=0?'+':'-')+MB2(net),'สุทธิทั้งหมดในช่วงนี้')]:[]);
+  else if(ALLM) cards=planCards.concat(lyCards);
+  else cards=lyCards;
+  const strip=cards.length?`<div class="strip" style="margin:12px 0 0">${cards.join('')}</div>`:'';
   const DB=v=>(v>=0?'+':'-')+(Math.abs(v)>=1e6?(Math.abs(v)/1e6).toFixed(2)+'M':Math.round(Math.abs(v)/1000)+'K');
   const many=months.length>1, rangeTxt=many?`${MS(months[0])} to ${MS(months[months.length-1])}`:MS(months[0]);
   const refTxt=(BM==='lm'&&refMs!==months)?`${MS(refMs[0])}–${MS(refMs[refMs.length-1])}`:rangeTxt.replace(' to ','–');
