@@ -3259,12 +3259,12 @@ function smxHtml(){
   const cell=(r,k,deli)=>{ const v=r.val(k); if(v==null) return '<td class="n">—</td>';
     const base=deli?r.val('deli'):r.tot, sh=base?Math.round(v/base*100)+'%'+(deli?' ของ Delivery':''):'';
     let dd=''; if(!lyM&&r.prev&&r.prev.val(k)){ const p=pct(r.prev.val(k),v); dd=`<span class="tiny ${cls(p)}">${sgn(p)} vs LM</span>`; }
-    else if(lyM&&r.lyCh&&r.lyCh[k]>0){ const p=pct(r.lyCh[k],v); dd=`<span class="tiny mute">LY ${fm(r.lyCh[k])}</span><span class="tiny ${cls(p)}">${sgn(p)} vs LY</span>`; }
+    else if(lyM&&r.lyCh&&r.lyCh[k]>0){ const p=pct(r.lyCh[k],v); dd=`<span class="tiny ${cls(p)}">${sgn(p)} vs LY</span>`; }
     return `<td class="n"><b>${fm(v)}</b><span class="tiny">${sh}</span>${dd}</td>`; };
   const dot=c=>`<span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${c};margin-right:7px"></span>`;
   const detail=`<div class="grp" style="margin-top:18px">รายละเอียดช่องทางรายเดือน · ล้านบาท${lyM?(anyLyCh?` · เทียบ LY ของแต่ละช่องทาง (ยอดปี ${YEAR-1} จากไฟล์ประวัติรายสาขา)`:` · ยังไม่มียอดแยกช่องทางของปี ${YEAR-1} (นำเข้าไฟล์ STF - Data เพื่อเทียบ LY รายช่องทาง)`):' · เทียบ LM ของแต่ละช่องทาง'}</div>
     <div class="scroll"><table><tr><th>ช่องทาง</th>${rows.map(r=>`<th class="n">${MS(r.m)}</th>`).join('')}</tr>
-    <tr class="hi"><td><b>ยอดรวม</b></td>${rows.map(r=>{ const b=ref(r); return `<td class="n"><b>${fm(r.tot)}</b>${b&&r.tot!=null?`${lyM?`<span class="tiny mute">LY ${fm(b)}</span>`:''}<span class="tiny ${cls(pct(b,r.tot))}">${sgn(pct(b,r.tot))} vs ${RN}</span>`:''}</td>`; }).join('')}</tr>
+    <tr class="hi"><td><b>ยอดรวม</b></td>${rows.map(r=>{ const b=ref(r); return `<td class="n"><b>${fm(r.tot)}</b>${b&&r.tot!=null?`<span class="tiny ${cls(pct(b,r.tot))}">${sgn(pct(b,r.tot))} vs ${RN}</span>`:''}</td>`; }).join('')}</tr>
     ${SMX_C.map(o=>`<tr><td>${dot(o.c)}${o.n}</td>${rows.map(r=>cell(r,o.k)).join('')}</tr>`).join('')}
     ${SMX_P.map(o=>`<tr><td style="padding-left:30px;color:var(--mute)">${o.n}</td>${rows.map(r=>cell(r,o.k,1)).join('')}</tr>`).join('')}</table></div>`;
   return head+`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="สัดส่วนช่องทางขายรายเดือน">${g}</svg>`+leg+pills+detail+smxDeliHtml(last,codes,lyM);
