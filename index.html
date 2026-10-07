@@ -1378,9 +1378,12 @@ body.hub #salesmix .ovbottom > .panel:nth-child(2){display:none}
 .hv-badge.neg{background:#FDE7EA;color:var(--bad)} .hv-badge.pos{background:#E7F6EE;color:var(--good)}
 th.srth{cursor:pointer;user-select:none;white-space:nowrap}
 th.srth:hover{color:var(--accent-ink)}
-th.srth .srt{font-style:normal;font-size:9px;margin-left:4px;color:var(--accent)}
-th.srth .srt.off{color:var(--line)}
-th.srth:hover .srt.off{color:var(--faint)}
+/* หัวคอลัมน์ที่กำลังเรียงอยู่: ตัวอักษรเข้มและลูกศรชัด */
+th.srth.on{color:var(--accent-ink)}
+th.srth .srt{font-style:normal;font-size:12px;line-height:1;margin-left:6px;color:var(--accent);font-weight:800;vertical-align:1px}
+th.srth.on .srt{background:var(--accent);color:#fff;border-radius:5px;padding:2px 4px;font-size:10px}
+th.srth .srt.off{color:#C3C8D2;font-weight:600;font-size:11px}
+th.srth:hover .srt.off{color:var(--accent)}
 .hv-chip{align-self:flex-start;margin-top:10px;font-size:12.5px;font-weight:700;color:var(--mute);background:var(--surface);border-radius:999px;padding:4px 12px}
 .hv-rows{display:flex;flex-direction:column;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--hair)}
 .hv-r{display:flex;align-items:baseline;gap:12px;font-size:13.5px;color:var(--mute)}
@@ -3087,7 +3090,7 @@ function ovBrHtml(){
   return `<div class="ovth"><h3>Branch detail Sales — ${rangeTxt} ${YEAR}${inZ?' · โซน '+OVT.zone:''}</h3>${seg}</div>
     ${strip}
     <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th>${
-      COL.map(c=>`<th class="${c.n?'n ':''}srth" data-brsort="${c.k}">${c.t}${arrow(c)}</th>`).join('')}</tr>
+      COL.map(c=>`<th class="${c.n?'n ':''}srth${c.k===SK.k?' on':''}" data-brsort="${c.k}">${c.t}${arrow(c)}</th>`).join('')}</tr>
     ${shown.map((r,i)=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td>${
       COL.map(c=>`<td class="${c.n?'n':''}">${c.cell(r)}</td>`).join('')}</tr>`).join('')}</table></div>
     ${rows.length>10?`<button type="button" class="ovmore ${OVB.all?'on':''}" data-ovbrall="1">${OVB.all?'แสดงแค่ 10 อันดับ':'ดูทั้งหมด '+rows.length+' สาขา'} <i>⌄</i></button>`:''}`;
