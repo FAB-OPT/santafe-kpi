@@ -1376,16 +1376,11 @@ body.hub #salesmix .ovbottom > .panel:nth-child(2){display:none}
 .hv-mv{font-size:30px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.15;letter-spacing:-.01em;white-space:nowrap}
 .hv-badge{font-size:14px;font-weight:800;border-radius:999px;padding:4px 12px;white-space:nowrap;background:var(--surface);color:var(--ink-2)}
 .hv-badge.neg{background:#FDE7EA;color:var(--bad)} .hv-badge.pos{background:#E7F6EE;color:var(--good)}
-.brwhy{font-size:12px;color:var(--faint);margin-top:3px;line-height:1.75;letter-spacing:.01em}
-tr.whyr td{border-top:0;padding-top:0;padding-bottom:14px;padding-left:4px}
-tr.whyr:hover td{background:transparent}
 th.srth{cursor:pointer;user-select:none;white-space:nowrap}
 th.srth:hover{color:var(--accent-ink)}
 th.srth .srt{font-style:normal;font-size:9px;margin-left:4px;color:var(--accent)}
 th.srth .srt.off{color:var(--line)}
 th.srth:hover .srt.off{color:var(--faint)}
-/* เว้นช่วงก่อนท่อน "ควรโฟกัส" ให้แยกจากเหตุผลชัดเจน */
-.brwhy b{color:var(--accent-ink);font-weight:700;margin-left:14px}
 .hv-chip{align-self:flex-start;margin-top:10px;font-size:12.5px;font-weight:700;color:var(--mute);background:var(--surface);border-radius:999px;padding:4px 12px}
 .hv-rows{display:flex;flex-direction:column;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--hair)}
 .hv-r{display:flex;align-items:baseline;gap:12px;font-size:13.5px;color:var(--mute)}
@@ -3022,79 +3017,6 @@ function ovBrHtml(){
     return {b,v,now,plan,ly:lyv,avg:has.length?has.reduce((a,c)=>a+c,0)/has.length:0,g:ref>0&&now>0?(now/ref-1)*100:null,
       gl:lmv>0&&now>0?(now/lmv-1)*100:null}; }).filter(r=>r.now>0);
   /* คำอธิบายสั้น ๆ ว่าสาขานั้นโต/ลดมาจากอะไร · ใช้ประวัติรายสาขา (ยอดแยกช่องทาง · เช็คเฉลี่ย · ลูกค้า) */
-  /* คอมเมนต์รายสาขา: บอกว่าไม่ถึงเป้า/เกินเป้า หรือยอดตก/โต "เพราะอะไร"
-     ไล่หาสาเหตุจากประวัติรายสาขา (ไฟล์ STF) ก่อน ถ้าไม่มีใช้ยอดรายสาขาจากแบบฟอร์มส่งยอดขายแทน */
-  const why=r=>{
-    if(SALES) return '';
-    const b=r.b, lab=months.length>1?'ช่วงก่อนหน้า':'เดือนก่อน';
-    const MB=v=>Math.abs(v)>=1e6?(Math.abs(v)/1e6).toFixed(2)+'M':Math.round(Math.abs(v)/1000)+'K';
-    const PC=(a,c)=>Math.abs((c/a-1)*100).toFixed(1)+'%';
-    const dir=v=>v>=0?'เพิ่ม':'ลด';
-    /* ----- หาสาเหตุ: ช่องทางที่ขยับมากสุด + ลูกค้า/เช็คเฉลี่ย ----- */
-    let cause=null;
-    const H=b.h||{}, hNow=H[YEAR], hBase=(BM==='ly'||BM==='ss')?H[YEAR-1]:(BM==='lm'?H[YEAR]:H[YEAR-1]);
-    if(hNow&&hBase){
-      const Ms=(BM==='lm')?months:months.filter(mm=>(hBase.s||[])[mm-1]>0);
-      const Rs=(BM==='lm')?lmMs:Ms;
-      if(Ms.length&&Rs.length){
-        const sum=(src,k,ms)=>ms.reduce((t,mm)=>t+((src&&src[k]&&src[k][mm-1])||0),0);
-        const ch=(src,ms)=>{ const sv=sum(src,'s',ms), tv=sum(src,'t',ms), dv=sum(src,'g',ms)+sum(src,'l',ms)+sum(src,'p',ms);
-          return {s:sv,'Dine in':sv-tv-dv,'Takeaway':tv,'Delivery':dv}; };
-        const A=ch(hNow,Ms), B=ch(hBase,Rs);
-        if(A.s&&B.s){
-          const avg=(src,k,ms)=>{ const a=ms.map(mm=>(src&&src[k]&&src[k][mm-1])||0).filter(x=>x>0);
-            return a.length?a.reduce((t,x)=>t+x,0)/a.length:0; };
-          cause={base:'เทียบ'+(BM==='lm'?lab:'ปีก่อน'),
-            ch:['Dine in','Takeaway','Delivery'].map(n=>[n,A[n]-B[n]]),
-            cu:[sum(hBase,'c',Rs),sum(hNow,'c',Ms)], tk:[avg(hBase,'k',Rs),avg(hNow,'k',Ms)]};
-        }
-      }
-    }
-    if(!cause&&lmMs.length){   /* ไม่มีประวัติ: ใช้ยอดรายสาขาจากแบบฟอร์ม เทียบกับเดือนก่อน */
-      const agg=ms=>{ let o={s:0,dine:0,take:0,deli:0,tr:0,cu:0,n:0};
-        ms.forEach(mm=>{ const br=(DETAIL[mm]||{}).branchRows||[], x=br.find(q=>String(q.code)===String(b.code)); if(!x) return;
-          o.s+=x.sales||0; o.dine+=x.dine||0; o.take+=x.take||0; o.deli+=x.deli||0; o.tr+=x.tr||0; o.cu+=x.cust||0; o.n++; });
-        return o.n?o:null; };
-      const A=agg(months), B=agg(lmMs);
-      if(A&&B&&A.s&&B.s) cause={base:'เทียบ'+lab,
-        ch:[['Dine in',A.dine-B.dine],['Takeaway',A.take-B.take],['Delivery',A.deli-B.deli]],
-        cu:[B.cu,A.cu], tk:[B.tr?B.s/B.tr:0, A.tr?A.s/A.tr:0]};
-    }
-    /* ----- ขึ้นต้น: ไม่ถึงเป้า / เกินเป้า ถ้ามีแผน · ไม่มีแผนใช้ทิศทางยอด ----- */
-    let head='';
-    if(r.plan>0){ const d=r.now-r.plan; head=(d>=0?'ทำเกินเป้า ':'ไม่ถึงเป้า ')+MB(d); }
-    else if(r.g!=null) head=(r.g>=0?'ยอดโต ':'ยอดตก ')+Math.abs(r.g).toFixed(1)+'% เทียบ'+refNameOf();
-    else if(r.gl!=null) head=(r.gl>=0?'ยอดโต ':'ยอดตก ')+Math.abs(r.gl).toFixed(1)+'% เทียบ'+lab;
-    /* ----- เหตุผล ----- */
-    let txt=head;
-    if(cause){
-      const sign=(r.plan>0?(r.now-r.plan):(r.g!=null?r.g:0))>=0?1:-1;
-      const same=cause.ch.filter(x=>Math.abs(x[1])>0&&(x[1]>=0?1:-1)===sign).sort((x,y)=>Math.abs(y[1])-Math.abs(x[1]));
-      const opp =cause.ch.filter(x=>Math.abs(x[1])>0&&(x[1]>=0?1:-1)!==sign).sort((x,y)=>Math.abs(y[1])-Math.abs(x[1]));
-      const bits=[];
-      if(same[0]) bits.push(same[0][0]+' '+dir(same[0][1])+' '+MB(same[0][1]));
-      const [c0,c1]=cause.cu, [k0,k1]=cause.tk;
-      if(c0&&c1&&Math.abs(c1/c0-1)>=0.01) bits.push('ลูกค้า'+dir(c1-c0)+' '+PC(c0,c1));
-      if(k0&&k1&&Math.abs(k1/k0-1)>=0.01) bits.push('เช็คเฉลี่ย'+dir(k1-k0)+' '+PC(k0,k1));
-      const joined=bits.length>1?bits.slice(0,-1).join(' · ')+' และ'+bits[bits.length-1]:bits[0];
-      if(bits.length) txt+=(txt?' ':'')+'เพราะ '+joined+' ('+cause.base+')';
-      if(opp[0]&&Math.abs(opp[0][1])>=Math.abs((same[0]||[0,0])[1])*0.25)
-        txt+=' แม้ '+opp[0][0]+' จะ'+dir(opp[0][1])+' '+MB(opp[0][1]);
-    } else if(r.gl!=null&&BM!=='lm') txt+=(txt?' ':'')+'เทียบ'+lab+(r.gl>=0?' ยังโตต่อ ':' แผ่วลง ')+Math.abs(r.gl).toFixed(1)+'%';
-    /* ----- ควรโฟกัส ----- */
-    let fc='';
-    if(cause){
-      const worst=cause.ch.filter(x=>x[1]<0).sort((x,y)=>x[1]-y[1])[0];
-      const [c0,c1]=cause.cu, [k0,k1]=cause.tk, f2=[];
-      if(worst) f2.push(worst[0]);
-      if(c0&&c1&&c1/c0-1<-0.01) f2.push('ดึงลูกค้าเข้าร้าน');
-      if(k0&&k1&&k1/k0-1<-0.01) f2.push('เพิ่มยอดต่อบิล');
-      fc=f2.join(' · ');
-    }
-    if(!fc) fc=(r.plan>0&&r.now<r.plan)?'เร่งยอดให้ถึงแผน':(r.g!=null&&r.g<0?'หาสาเหตุที่ยอดหาย':'รักษาระดับนี้ไว้');
-    return txt+(fc?' <b>ควรโฟกัส: '+fc+'</b>':'');
-  };
-  const refNameOf=()=>({ly:'ปีก่อน',ss:'ปีก่อน',bud:'แผน',lm:(months.length>1?'ช่วงก่อนหน้า':'เดือนก่อน')}[BM]||'ตัวเทียบ');
   /* เรียงตาม % เทียบค่าที่เลือกของเดือนล่าสุด · สาขาที่ไม่มีค่าเทียบ (เช่น เปิดใหม่ไม่มียอด LY) อยู่ท้ายสุด */
   const f=v=>v>0?v.toFixed(2):'—';
   /* ปุ่มตัวเทียบชุดเดียวกับ Performance Trend · กดที่นี่ก็เปลี่ยนทั้งกราฟและตารางด้านบนด้วย */
@@ -3150,10 +3072,8 @@ function ovBrHtml(){
     ${strip}
     <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th>${
       COL.map(c=>`<th class="${c.n?'n ':''}srth" data-brsort="${c.k}">${c.t}${arrow(c)}</th>`).join('')}</tr>
-    ${shown.map((r,i)=>{ const w=why(r);
-      return `<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td>${
-        COL.map(c=>`<td class="${c.n?'n':''}">${c.cell(r)}</td>`).join('')}</tr>`+
-        (w?`<tr class="clk whyr" data-ssbr="${r.b.code}"><td></td><td colspan="${COL.length}" class="brwhy">${w}</td></tr>`:''); }).join('')}</table></div>
+    ${shown.map((r,i)=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td>${
+      COL.map(c=>`<td class="${c.n?'n':''}">${c.cell(r)}</td>`).join('')}</tr>`).join('')}</table></div>
     ${rows.length>10?`<button type="button" class="ovmore ${OVB.all?'on':''}" data-ovbrall="1">${OVB.all?'แสดงแค่ 10 อันดับ':'ดูทั้งหมด '+rows.length+' สาขา'} <i>⌄</i></button>`:''}`;
 }
 /* วาดใหม่เฉพาะการ์ด · เลือกโซนอยู่ต้องใช้ข้อมูลของโซนเหมือนตอนสร้างหน้า */
