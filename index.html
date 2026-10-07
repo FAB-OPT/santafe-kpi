@@ -5591,7 +5591,8 @@ function tile(t){
         rows:[ok&&['ถึงเป้าหมาย',ok.v+' สาขา','pos'], q&&['ต่ำกว่าแผนมากกว่า 10%',q.v+' สาขา','neg']].filter(Boolean)}; }
     case 'branch': { const p=st('plan',0), ok=st('plan',1), q=st('plan',2);
       return {v:p&&p.v, l:'ทำได้ตามแผน (ทั้งเครือข่าย)', sub:[ok&&('ถึงแผน '+B(ok.v+' สาขา','pos')), q&&('ต่ำกว่าแผน 10%+ '+B(q.v+' สาขา','neg'))].filter(Boolean).join(' · ')}; }
-    case 'cust': { const a=st('customers',2), b=st('customers',1), c=st('customers',3);   // การ์ด: Total Trans · Ticket Avg. · Customers · Customer Avg. · Per Bill
+    case 'cust': { const g=i=>{ const x=document.querySelectorAll('#customers .kcs .kc')[i]; return x?{v:T('.kv',x)}:null; };
+      const a=g(1), b=g(2), c=g(3);   // การ์ด: Total Trans · Customers · Ticket Avg. · Customer Avg. · Per Bill
       return {l:'ลูกค้ารวม', v:a&&(a.v+' คน'),
         rows:[b&&['ยอดเฉลี่ยต่อบิล',b.v], c&&['ลูกค้าเฉลี่ยต่อบิล',c.v+' คน']].filter(Boolean)}; }
     case 'cost': { const xs=document.querySelectorAll('#pl .strip .st'), n=xs[xs.length-1], p=st('cos',3), rv=n&&T('.s',n);
