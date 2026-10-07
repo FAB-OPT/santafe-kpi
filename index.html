@@ -3442,19 +3442,10 @@ function buildMain(m){
           ${stM.length>1||mv?`<button type="button" class="ovmore" data-ovx="st">See ${MS(stM[0]?stM[0].m:m)}–${MS(m)} comparison${Object.keys(OC.closed).length?' & closures':''} <i>⌄</i></button>
           <div class="ovx one" data-ovp="st" hidden>${stTbl}${mv}</div>`:''}</div>`;
 
-        /* ยอดแยกช่องทาง: Dine in · Takeaway · Delivery (ไฟล์เดือนที่ไม่มียอดแยก ใช้ 2 ก้อน) · คำอธิบายเรียงลงมา */
-        const split3=ch&&ch.store>0&&ch.take!=null;
-        const pc3=v=>Math.round(v/(split3?ch.sales/1e6:cur.sales)*100)+'%';   // v เป็นล้านบาท
-        const segs=split3
-          ? [{c:'dine',v:ch.dine/1e6,n:'Dine in'},{c:'take',v:ch.take/1e6,n:'Takeaway'},{c:'dim',v:ch.deli/1e6,n:'Delivery'}]
-          : (inStore!=null&&deliv!=null?[{c:'dine',v:inStore,n:'Dine in + Takeaway'},{c:'dim',v:deliv,n:'Delivery'}]:[]);
-        const stack=segs.length?`<div class="kstack">${segs.map(g=>`<span class="${g.c}" style="flex:${g.v}" data-tip="${g.n}\n${M2(g.v)} · ${pc3(g.v)} ของยอดขาย"></span>`).join('')}</div>
-          <div class="klegend">${segs.map(g=>`<span class="${g.c}"><i></i><b>${M2(g.v)}</b> ${g.n} ${pc3(g.v)}</span>`).join('')}</div>`:'';
-        const cov=S.multi&&S.br&&S.br.ms.length<S.n?`<div class="kcov">แยกช่องทางจากยอดรายสาขา ${RNG(S.br.ms)} (${S.br.ms.length} จาก ${S.n} เดือน)</div>`:'';
         const cSales=`<div class="ovc acc" data-kc="Total Sales"><span class="kv" hidden>฿${cur.sales.toFixed(1)}M</span>
           <div class="ovrow">
             <div><div class="ovlab">Actual Sales${S.multi?' · '+S.lab:''}</div><div class="ovbig">${M1(cur.sales)}</div><div class="ovsub">LY ${M1(cur.ly)}${cur.salesSrc==='pl'?' · จากงบ P&L (รายได้ขายอาหารและเครื่องดื่ม)':''}</div></div>
-            ${stack?`<div class="ovmix">${stack}${cov}</div>`:''}
+            ${''/* เอาแท่งแยกช่องทางออกจากการ์ด Actual Sales · ดูสัดส่วนช่องทางได้ที่หัวข้อ Sales Mix */}
             <div class="ovkpis">
               ${kpiB('YoY',M1(cur.ly),cur.ly!=null?yoy:null,'vs LY')}
               ${kpiB('Budget',BA?M1(BA.b):'—',BA?vbA:null,'vs Budget'+(BA?BA.note:''),'vs Budget')}
