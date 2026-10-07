@@ -2930,11 +2930,11 @@ function ovChart(rows,main,refs){
 function ovTrendHtml(){
   const by=brOfYear(), rows=ovTrendData();
   /* ALL = เห็นทุกตัวเทียบพร้อมกัน · โหมดอื่นเจาะทีละตัว กราฟและตารางด้านล่างเปลี่ยนตามปุ่มนี้ */
-  const MODES=[['all','ALL'],['ly','vs LY'],['bud','vs Budget'],['lm','vs LM'],['ss','vs SSSG']];
-  const ALL=OVT.mode==='all', M0=ALL?'ly':OVT.mode;
+  const MODES=[['all','ALL'],['sales','Sales (บาท)'],['bud','vs Budget'],['ly','vs LY'],['ss','vs SSSG']];
+  const ALL=OVT.mode==='all', SALES=OVT.mode==='sales', M0=(ALL||SALES)?'ly':OVT.mode;
   const ss=OVT.mode==='ss', act=r=>ss?r.ssA:r.a;
   const ref=r=>({ly:r.ly,bud:r.bud,lm:r.lm,ss:r.ssL})[M0];
-  const cap={all:`${YEAR} เทียบ ${YEAR-1} · แผน · เดือนก่อน`,ly:`${YEAR} vs ${YEAR-1} (Last Year)`,bud:`${YEAR} vs Budget`,lm:`${YEAR} vs LM (Month-over-Month)`,ss:`${YEAR} vs ${YEAR-1} Same-store (SSSG)`}[OVT.mode];
+  const cap={all:`${YEAR} เทียบ ${YEAR-1} · แผน · เดือนก่อน`,sales:`ยอดขาย ${YEAR} รายเดือน`,ly:`${YEAR} vs ${YEAR-1} (Last Year)`,bud:`${YEAR} vs Budget`,lm:`${YEAR} vs LM (Month-over-Month)`,ss:`${YEAR} vs ${YEAR-1} Same-store (SSSG)`}[OVT.mode];
   const zones=[...new Set(by.map(b=>b.zone).filter(Boolean))];
   const sel=OVT.scope==='branch'?`<select data-ovsel="code" aria-label="สาขา">${by.slice().sort((p,q)=>String(p.code).localeCompare(String(q.code))).map(b=>`<option value="${b.code}" ${String(b.code)===String(OVT.code)?'selected':''}>${b.code} ${b.name}</option>`).join('')}</select>`
     :(OVT.scope==='zone'?`<select data-ovsel="zone" aria-label="โซน">${zones.map(z=>`<option ${z===OVT.zone?'selected':''}>${z}</option>`).join('')}</select>`:'');
@@ -2944,11 +2944,11 @@ function ovTrendHtml(){
   const R=rows.map(ref), MS=mm=>MONTH_EN[mm-1].slice(0,3);
   const gr=r=>{ const a=act(r), b=ref(r); return (a!=null&&b)?(a/b-1)*100:null; };
   const pills=`<div class="ovpw"><div class="ovpills" style="--n:${rows.length}"><span></span>${rows.map(r=>`<span class="mh">${MS(r.m)}</span>`).join('')}<span class="rl">${MODES.find(q=>q[0]===OVT.mode)[1]}</span>${rows.map(r=>`<span>${pill(gr(r))}</span>`).join('')}</div></div>`;
-  const miss=M0==='lm'?[]:rows.filter((r,i)=>R[i]==null).map(r=>MS(r.m));
+  const miss=(SALES||M0==='lm')?[]:rows.filter((r,i)=>R[i]==null).map(r=>MS(r.m));
   const note=miss.length?`<div class="note">ไม่มี${M0==='bud'?'แผน':(ss?'ยอด Same Store ':'ยอด LY ')}${OVT.scope==='all'?'':'รายสาขา'}ของ ${miss.join(', ')}${M0==='bud'&&OVT.scope!=='all'?' (แผนรายสาขาในไฟล์ส่งยอดเริ่มเดือน เม.ย.)':''}</div>`:'';
   /* ALL เห็นครบ 4 เส้น · vs LY / vs Budget แสดงยอดขาย+LY+แผน · vs LM เทียบเดือนก่อน · vs SSSG เฉพาะยอด Same Store */
   const MAIN=ss?{k:'ssA',name:'Same-store '+YEAR}:{k:'a',name:'Sales '+YEAR};
-  const REFS=ALL?[{k:'ly',name:'Last year '+(YEAR-1),c:'#A3AEBB'},{k:'bud',name:'Budget '+YEAR,c:'#38BDF8',dash:1},{k:'ssL',name:'Same-store '+(YEAR-1),c:'#94A3B8',dash:1}]
+  const REFS=SALES?[]:ALL?[{k:'ly',name:'Last year '+(YEAR-1),c:'#A3AEBB'},{k:'bud',name:'Budget '+YEAR,c:'#38BDF8',dash:1},{k:'ssL',name:'Same-store '+(YEAR-1),c:'#94A3B8',dash:1}]
     :(OVT.mode==='lm'?[{k:'lm',name:'LM (เดือนก่อน)',c:'#A3AEBB'}]
     :(ss?[{k:'ssL',name:'Same-store '+(YEAR-1),c:'#A3AEBB'}]:[{k:'ly',name:'Last year '+(YEAR-1),c:'#A3AEBB'},{k:'bud',name:'Budget '+YEAR,c:'#38BDF8',dash:1}]));
   /* ใต้กราฟ: ตารางรายเดือน · คอลัมน์เปลี่ยนตามปุ่มที่เลือก (ALL = ครบทุกตัวเทียบ) */
@@ -2957,6 +2957,7 @@ function ovTrendHtml(){
          ['Budget '+YEAR,r=>fmtM(r.bud)],['vs Budget',r=>pct(r.bud,r.a),1],
          ['SSSG Sales',r=>fmtM(r.ssA)],['SSSG %',r=>(r.ssA!=null&&r.ssL)?pct(r.ssL,r.ssA):null,1],
          ['MoM %',r=>(r.a!=null&&r.lm)?pct(r.lm,r.a):null,1]],
+    sales:[['Total Sales '+YEAR,r=>fmtM(r.a)],['MoM %',r=>(r.a!=null&&r.lm)?pct(r.lm,r.a):null,1]],
     ly:[['Total Sales '+YEAR,r=>fmtM(r.a)],['Total Sales '+(YEAR-1),r=>fmtM(r.ly)],['YoY',r=>pct(r.ly,r.a),1]],
     bud:[['Total Sales '+YEAR,r=>fmtM(r.a)],['Budget '+YEAR,r=>fmtM(r.bud)],['vs Budget',r=>pct(r.bud,r.a),1]],
     lm:[['Total Sales '+YEAR,r=>fmtM(r.a)],['LM (เดือนก่อน)',r=>fmtM(r.lm)],['MoM %',r=>(r.a!=null&&r.lm)?pct(r.lm,r.a):null,1]],
@@ -2981,6 +2982,7 @@ function ovBrHtml(){
   const months=((S.ms&&S.ms.length)?S.ms:[m]).filter(mm=>MONTHLY.some(r=>r.m===mm&&r.sales!=null)).sort((a,b)=>a-b);
   if(!months.length) return '';
   const nm=x=>String(x||'').replace(/\s+/g,'');
+  const SALES=OVT.mode==='sales';            /* Sales (บาท): ดูยอดอย่างเดียว เรียงจากยอดมากไปน้อย */
   const BM=OVT.mode==='all'?'ly':OVT.mode;   /* ALL: ตารางรายสาขาเทียบ LY เป็นหลัก */
   const ML={ly:'LY',bud:'Budget',lm:'LM',ss:'SSSG'}[BM];
   /* ค่าเทียบของเดือนเดียว · ถ้าเลือกหลายเดือนจะรวมทั้งช่วงให้ตรงกับยอดที่แสดง */
@@ -2995,6 +2997,7 @@ function ovBrHtml(){
     return {b,v,now,avg:has.length?has.reduce((a,c)=>a+c,0)/has.length:0,g:ref>0&&now>0?(now/ref-1)*100:null}; }).filter(r=>r.now>0);
   /* คำอธิบายสั้น ๆ ว่าสาขานั้นโต/ลดมาจากอะไร · ใช้ประวัติรายสาขา (ยอดแยกช่องทาง · เช็คเฉลี่ย · ลูกค้า) */
   const why=b=>{
+    if(SALES) return '';
     const H=b.h||{}, now=H[YEAR], base=(BM==='ly'||BM==='ss')?H[YEAR-1]:(BM==='lm'?H[YEAR]:null);
     if(!now||!base) return '';
     /* เทียบเฉพาะเดือนที่ตัวเทียบมียอดจริง ไม่งั้นเดือนที่ปีก่อนยังไม่เปิดจะทำให้ % เพี้ยน */
@@ -3027,16 +3030,17 @@ function ovBrHtml(){
     return s;
   };
   /* เรียงตาม % เทียบค่าที่เลือกของเดือนล่าสุด · สาขาที่ไม่มีค่าเทียบ (เช่น เปิดใหม่ไม่มียอด LY) อยู่ท้ายสุด */
-  rows.sort((p,q)=>{ if(p.g==null||q.g==null) return (p.g==null)-(q.g==null)||q.now-p.now; return q.g-p.g; });
+  rows.sort((p,q)=>{ if(SALES) return q.now-p.now;
+    if(p.g==null||q.g==null) return (p.g==null)-(q.g==null)||q.now-p.now; return q.g-p.g; });
   const shown=OVB.all?rows:rows.slice(0,10), f=v=>v>0?v.toFixed(2):'—';
   /* ปุ่มตัวเทียบชุดเดียวกับ Performance Trend · กดที่นี่ก็เปลี่ยนทั้งกราฟและตารางด้านบนด้วย */
-  const seg=`<span class="ovseg">${[['all','ALL'],['ly','vs LY'],['bud','vs Budget'],['lm','vs LM'],['ss','vs SSSG']].map(([k,t])=>`<button type="button" class="${OVT.mode===k?'on':''}" data-ovmode="${k}">${t}</button>`).join('')}</span>`;
+  const seg=`<span class="ovseg">${[['all','ALL'],['sales','Sales (บาท)'],['bud','vs Budget'],['ly','vs LY'],['ss','vs SSSG']].map(([k,t])=>`<button type="button" class="${OVT.mode===k?'on':''}" data-ovmode="${k}">${t}</button>`).join('')}</span>`;
   const many=months.length>1, rangeTxt=many?`${MS(months[0])} to ${MS(months[months.length-1])}`:MS(months[0]);
   const refTxt=(BM==='lm'&&refMs!==months)?`${MS(refMs[0])}–${MS(refMs[refMs.length-1])}`:rangeTxt.replace(' to ','–');
   return `<div class="ovth"><h3>Branch detail Sales — ${rangeTxt} ${YEAR}${inZ?' · โซน '+OVT.zone:''}</h3>${seg}</div>
-    <div class="ovsub">เรียงตาม % เทียบ ${ML} มาก → น้อย · ล้านบาท · ${rows.length} สาขาที่มียอดในช่วงนี้ · กดชื่อสาขาเพื่อดูรายละเอียด</div>
-    <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th><th>Branch</th>${months.map(mm=>`<th class="n">${MS(mm)}</th>`).join('')}${many?'<th class="n">Avg</th>':''}<th class="n">vs ${ML} ${refTxt}</th></tr>
-    ${shown.map((r,i)=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td><td>${r.b.code} ${r.b.name}${(w=>w?`<div class="brwhy">${w}</div>`:'')(why(r.b))}</td>${r.v.map(v=>`<td class="n">${f(v)}</td>`).join('')}${many?`<td class="n"><b>${f(r.avg)}</b></td>`:''}<td class="n">${pill(r.g)}</td></tr>`).join('')}</table></div>
+    <div class="ovsub">${SALES?'เรียงตามยอดขายมาก → น้อย':'เรียงตาม % เทียบ '+ML+' มาก → น้อย'} · ล้านบาท · ${rows.length} สาขาที่มียอดในช่วงนี้ · กดชื่อสาขาเพื่อดูรายละเอียด</div>
+    <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th><th>Branch</th>${months.map(mm=>`<th class="n">${MS(mm)}</th>`).join('')}${many?'<th class="n">Avg</th>':''}<th class="n">${SALES?'รวมช่วงนี้':'vs '+ML+' '+refTxt}</th></tr>
+    ${shown.map((r,i)=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${i+1}</td><td>${r.b.code} ${r.b.name}${(w=>w?`<div class="brwhy">${w}</div>`:'')(why(r.b))}</td>${r.v.map(v=>`<td class="n">${f(v)}</td>`).join('')}${many?`<td class="n"><b>${f(r.avg)}</b></td>`:''}<td class="n">${SALES?`<b>${f(r.now/1e6)}</b>`:pill(r.g)}</td></tr>`).join('')}</table></div>
     ${rows.length>10?`<button type="button" class="ovmore ${OVB.all?'on':''}" data-ovbrall="1">${OVB.all?'แสดงแค่ 10 อันดับ':'ดูทั้งหมด '+rows.length+' สาขา'} <i>⌄</i></button>`:''}`;
 }
 /* วาดใหม่เฉพาะการ์ด · เลือกโซนอยู่ต้องใช้ข้อมูลของโซนเหมือนตอนสร้างหน้า */
