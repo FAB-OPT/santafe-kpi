@@ -2216,14 +2216,14 @@ const CUC={br:'all',ctx:null};
 /* กราฟรายเดือนของส่วนลูกค้า: All = ทั้งบริษัท · เลือกสาขา = เฉพาะสาขานั้น (LY จากประวัติรายสาขา STF) */
 function cuChartsHtml(br){ const c=CUC.ctx; if(!c) return ''; const {tm,labs,nm}=c; if(br==null) br=CUC.br;
   if(br==='all'){ const lyM=tm.map(r=>lyTrAgg([r.m]));
-    return `<div class="cpns">${cuPanel('Customers (ลูกค้า)',labs,tm.map(r=>r.v.customer),lyM.map(x=>x&&x.customer),'#D9822D')}${cuPanel('Total Trans (บิล)',labs,tm.map(r=>r.v.trans),lyM.map(x=>x&&x.trans),'#475569')}</div>`; }
+    return `<div class="cpns">${cuPanel('Total Trans (บิล)',labs,tm.map(r=>r.v.trans),lyM.map(x=>x&&x.trans),'#475569')}${cuPanel('Customers (ลูกค้า)',labs,tm.map(r=>r.v.customer),lyM.map(x=>x&&x.customer),'#D9822D')}</div>`; }
   const code=br, rows=tm.map(r=>filtZone((DETAIL[r.m]||{}).branchRows||[]).find(x=>String(x.code)===code&&x.tr>0)||null);
   const by=filtZone(EXTRA.branchYears||[]).find(x=>String(x.code)===code), h=by&&by.h&&by.h[YEAR-1];
   const lyv=(k,i)=>{ const v=h&&(h[k]||[])[tm[i].m-1]; return v>0?v:null; };
   const cu=rows.map(r=>r&&r.cust>0?r.cust:null), tr=rows.map(r=>r?r.tr:null);
   if(!tr.some(v=>v!=null)) return '<div class="empty">ไม่มีข้อมูลสาขานี้</div>';
   const t=nm[code]||'';
-  return `<div class="cpns">${cuPanel('Customers · '+code+' '+t,labs,cu,tm.map((_,i)=>lyv('c',i)),'#D9822D')}${cuPanel('Total Trans · '+code+' '+t,labs,tr,tm.map((_,i)=>lyv('k',i)),'#475569')}</div>`; }
+  return `<div class="cpns">${cuPanel('Total Trans · '+code+' '+t,labs,tr,tm.map((_,i)=>lyv('k',i)),'#475569')}${cuPanel('Customers · '+code+' '+t,labs,cu,tm.map((_,i)=>lyv('c',i)),'#D9822D')}</div>`; }
 document.addEventListener('change',e=>{ const s2=e.target.closest&&e.target.closest('[data-cubr]'); if(!s2) return; CUC.br=s2.value; ovRender('cuCharts',()=>cuChartsHtml(CUC.br));
   const t=document.querySelector('#customers .cubtbl'); if(!t) return; let k=0;
   t.querySelectorAll('tr[data-ssbr]').forEach(r=>{ const show=CUC.br==='all'||r.dataset.ssbr===CUC.br; r.hidden=!show; if(show) r.firstElementChild.textContent=++k; }); });
