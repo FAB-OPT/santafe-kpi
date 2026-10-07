@@ -2165,8 +2165,10 @@ const chKey=v=>String(v||'').toLowerCase().replace(/[\s_\-]/g,'');
    แยกช่องทาง: Delivery = Grab+Line Man+Shopee · Dine in = รวม − Takeaway − Delivery (ต้องนำเข้าไฟล์ STF ใหม่เพื่อให้มีบิลแยกช่องทาง) */
 function lyTrAgg(ms){ let sales=0,trans=0,cu=0,cuS=0,cuT=0,any=false;
   const CH={dine:[0,0],take:[0,0],deli:[0,0]}; let chOk=true;
+  /* เทียบเฉพาะสาขาที่มีบิลในแบบฟอร์มของเดือนนั้น (STF มีทุกสาขา แบบฟอร์มอาจส่งมาแค่บางส่วน) */
+  const inForm={}; ms.forEach(m=>{ inForm[m]=new Set(filtZone((DETAIL[m]||{}).branchRows||[]).filter(r=>r.tr>0).map(r=>String(r.code))); });
   filtZone(EXTRA.branchYears||[]).forEach(b=>{ const h=b.h&&b.h[YEAR-1]; if(!h) return;
-    ms.forEach(m=>{ const i=m-1, S=(h.s||[])[i], K=(h.k||[])[i], C=(h.c||[])[i]; if(!(S>0&&K>0)) return;
+    ms.forEach(m=>{ if(!inForm[m].has(String(b.code))) return; const i=m-1, S=(h.s||[])[i], K=(h.k||[])[i], C=(h.c||[])[i]; if(!(S>0&&K>0)) return;
       any=true; sales+=S; trans+=K; if(C>0){ cu+=C; cuS+=S; cuT+=K; }
       const tS=(h.t||[])[i]||0, dS=((h.g||[])[i]||0)+((h.l||[])[i]||0)+((h.p||[])[i]||0);
       const tK=(h.kt||[])[i], dK=((h.kg||[])[i]||0)+((h.kl||[])[i]||0)+((h.kp||[])[i]||0);
