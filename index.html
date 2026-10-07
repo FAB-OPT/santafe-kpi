@@ -1363,6 +1363,20 @@ body.hub #salesmix .ovbottom{grid-template-columns:minmax(0,1fr)}
 body.hub #salesmix .ovbottom > .panel:nth-child(2){display:none}
 .hv-sub{font-size:13px;color:var(--mute);line-height:1.45}
 .hv-sub b.pos{color:var(--good)} .hv-sub b.neg{color:var(--bad)}
+/* การ์ดหน้ารวม: ตัวเลขหลักชิดขวา · ป้ายเทียบแผน · รายละเอียดใต้เส้นคั่น */
+.hv-main{display:flex;align-items:center;gap:12px;margin-top:8px}
+.hv-main+.hv-main{margin-top:4px}
+.hv-ml{font-size:14px;color:var(--mute);flex:1 1 auto;min-width:0}
+.hv-mv{font-size:30px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.15;letter-spacing:-.01em;white-space:nowrap}
+.hv-badge{font-size:14px;font-weight:800;border-radius:999px;padding:4px 12px;white-space:nowrap;background:var(--surface);color:var(--ink-2)}
+.hv-badge.neg{background:#FDE7EA;color:var(--bad)} .hv-badge.pos{background:#E7F6EE;color:var(--good)}
+.hv-chip{align-self:flex-start;margin-top:10px;font-size:12.5px;font-weight:700;color:var(--mute);background:var(--surface);border-radius:999px;padding:4px 12px}
+.hv-rows{display:flex;flex-direction:column;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--hair)}
+.hv-r{display:flex;align-items:baseline;gap:12px;font-size:13.5px;color:var(--mute)}
+.hv-r>span{flex:1 1 auto;min-width:0}
+.hv-r>b{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.hv-r>b.pos{color:var(--good)} .hv-r>b.neg{color:var(--bad)}
+@media (max-width:560px){ .hv-mv{font-size:24px} }
 .hv-tile.off{background:var(--surface)}
 .hv-tile.off .hv-v{color:var(--faint)}
 /* หมวดที่ยังไม่เปิดใช้งาน: แสดงไว้ให้เห็นโครง แต่กดไม่ได้ */
@@ -5229,20 +5243,25 @@ const st=(id,i)=>{ const x=document.querySelectorAll('#'+id+' .strip .st')[i]; i
 const kc=lab=>{ const k=[...document.querySelectorAll('#overview [data-kc]')].find(x=>(x.dataset.kc||'').indexOf(lab)===0); const v=k&&k.querySelector('.kv');
   return k?{v:T('.kv',k),tone:v&&/neg/.test(v.className)?'neg':(v&&/pos/.test(v.className)?'pos':'')}:null; };
 const B=(t,tone)=>t?'<b class="'+(tone||'')+'">'+t+'</b>':'';
+/* การ์ดหน้ารวม: ตัวเลขหลัก 1 ตัว + ป้ายเทียบแผน + รายละเอียด 2 บรรทัด */
 function tile(t){
   switch(t.k){
-    case 'sales': { const a=kc('Total Sales'), b=kc('vs Budget'), c=kc('Same Store'), ok=st('plan',1), q=st('plan',2);
-      const l1=[b&&('vs แผน '+B(b.v,b.tone)), c&&('SSSG '+B(c.v,c.tone))].filter(Boolean).join(' · ');
-      const l2=[ok&&('ถึงแผน '+B(ok.v+' สาขา','pos')), q&&('ต่ำกว่าแผน 10%+ '+B(q.v+' สาขา','neg'))].filter(Boolean).join(' · ');
-      return {v:a&&a.v, l:'ยอดขายรวม', sub:l1+(l2?'<br>'+l2:'')}; }
+    case 'sales': { const a=kc('Total Sales'), b=kc('vs Budget'), ok=st('plan',1), q=st('plan',2);
+      const neg=b&&/^-/.test(b.v);
+      return {l:'ยอดขายรวม', v:a&&a.v,
+        badge:b?{l:neg?'ต่ำกว่าแผน':'สูงกว่าแผน', v:b.v.replace(/^[+-]/,''), tone:b.tone||(neg?'neg':'pos'), dir:neg?'▾':'▴'}:null,
+        rows:[ok&&['ถึงเป้าหมาย',ok.v+' สาขา','pos'], q&&['ต่ำกว่าแผนมากกว่า 10%',q.v+' สาขา','neg']].filter(Boolean)}; }
     case 'branch': { const p=st('plan',0), ok=st('plan',1), q=st('plan',2);
       return {v:p&&p.v, l:'ทำได้ตามแผน (ทั้งเครือข่าย)', sub:[ok&&('ถึงแผน '+B(ok.v+' สาขา','pos')), q&&('ต่ำกว่าแผน 10%+ '+B(q.v+' สาขา','neg'))].filter(Boolean).join(' · ')}; }
     case 'cust': { const a=st('customers',2), b=st('customers',1), c=st('customers',3);   // การ์ด: Total Trans · Ticket Avg. · Customers · Customer Avg. · Per Bill
-      return {v:a&&a.v, l:'ลูกค้า', sub:[b&&('บิลเฉลี่ย '+B(b.v)), c&&('ลูกค้า/บิล '+B(c.v))].filter(Boolean).join(' · ')}; }
+      return {l:'ลูกค้ารวม', v:a&&(a.v+' คน'),
+        rows:[b&&['ยอดเฉลี่ยต่อบิล',b.v], c&&['ลูกค้าเฉลี่ยต่อบิล',c.v+' คน']].filter(Boolean)}; }
     case 'cost': { const xs=document.querySelectorAll('#pl .strip .st'), n=xs[xs.length-1], p=st('cos',3), rv=n&&T('.s',n);
-      return {v:n&&T('.v',n), l:'กำไรสุทธิ', sub:[rv&&B(rv.replace(' ของรายได้','')+' ของรายได้'), p&&('Prime cost '+B(p.v))].filter(Boolean).join(' · ')}; }
+      return {l:'กำไรสุทธิ', v:n&&T('.v',n),
+        rows:[rv&&['อัตรากำไรสุทธิ',rv.replace('ของรายได้','').trim()], p&&['ต้นทุนหลัก (Prime Cost)',p.v]].filter(Boolean)}; }
     case 'quality': { const c=st('cem',0), o=st('oss',0);
-      return {v:c&&c.v, l:'CEM เฉลี่ย', sub:[c&&('CEM '+c.s), o&&('OSS '+B(o.v))].filter(Boolean).join(' · ')}; }
+      return {l:'คะแนน CEM เฉลี่ย', v:c&&c.v,
+        rows:[c&&c.s&&['ประเมิน CEM แล้ว',c.s], o&&['คะแนน OSS',o.v]].filter(Boolean)}; }
   }
 }
 /* แท็บ: ถ้าหมวดมีกลุ่มย่อย ใส่ป้ายกลุ่มคั่น (ภาพรวม · สาขา · ช่องทางขาย) */
@@ -5274,13 +5293,16 @@ function hubApply(){
       +'<div class="hv-grid">'+TOPICS.map(t=>{
         /* หมวดที่ยังไม่เปิดใช้งาน: การ์ดรอข้อมูล กดไม่ได้ */
         if(t.soon) return '<span class="hv-tile soon"><span class="hv-top"><span class="hv-ic">'+t.ic+'</span><span class="hv-n">'+t.n+'</span></span>'
-          +'<span class="hv-l">เร็ว ๆ นี้</span><span class="hv-v">—</span><span class="hv-sub">'+t.soon+'</span></span>';
+          +'<span class="hv-chip">เร็ว ๆ นี้</span><span class="hv-rows"><span class="hv-r"><span>'+t.soon+'</span></span></span></span>';
         /* แบรนด์ที่มีข้อมูลบางส่วน: การ์ดหมวดที่ยังไม่มีข้อมูล กดแล้วเปิดหน้าต่างนำเข้า */
         if(!avail.includes(t)) return '<button type="button" class="hv-tile off" data-imp-t="'+t.k+'"><span class="hv-top"><span class="hv-ic">'+t.ic+'</span><span class="hv-n">'+t.n+'</span><span class="hv-go">⤒</span></span>'
           +'<span class="hv-l">ยังไม่มีข้อมูล</span><span class="hv-v">—</span><span class="hv-sub">ต้องใช้: '+needT(t.k)+'</span></button>';
         const d=tile(t)||{};
         return '<button type="button" class="hv-tile" data-topic="'+t.k+'"><span class="hv-top"><span class="hv-ic">'+t.ic+'</span><span class="hv-n">'+t.n+'</span><span class="hv-go">›</span></span>'
-          +'<span class="hv-l">'+(d.l||'')+'</span><span class="hv-v">'+(d.v||'—')+'</span><span class="hv-sub">'+(d.sub||'')+'</span></button>'; }).join('')+'</div></div>');
+          +'<span class="hv-main"><span class="hv-ml">'+(d.l||'')+'</span><span class="hv-mv">'+(d.v||'—')+'</span></span>'
+          +(d.badge?'<span class="hv-main"><span class="hv-ml">'+d.badge.l+'</span><span class="hv-badge '+(d.badge.tone||'')+'">'+d.badge.dir+' '+d.badge.v+'</span></span>':'')
+          +((d.rows&&d.rows.length)?'<span class="hv-rows">'+d.rows.map(r=>'<span class="hv-r"><span>'+r[0]+'</span><b class="'+(r[2]||'')+'">'+r[1]+'</b></span>').join('')+'</span>':'')
+          +'</button>'; }).join('')+'</div></div>');
     document.querySelectorAll('[data-topic]').forEach(x=>x.onclick=()=>openTopic(x.dataset.topic));
     document.querySelectorAll('[data-imp-t]').forEach(x=>x.onclick=()=>$('#importBtn').click());
   } else {
@@ -5316,7 +5338,7 @@ function emptyApply(){
     main.innerHTML='<div id="hubView"><div class="hv-head"><div><div class="hv-t">'+b.n+'</div><div class="hv-s">ยังไม่มีข้อมูลในระบบ · เลือกหัวข้อเพื่อดูว่าต้องใช้ข้อมูลอะไร</div></div><button type="button" class="btn primary" data-imp>⤒ นำเข้าข้อมูล '+b.n+'</button></div>'
       +'<div class="hv-grid">'+TOPICS.map(t=>t.soon
         ?'<span class="hv-tile soon"><span class="hv-top"><span class="hv-ic">'+t.ic+'</span><span class="hv-n">'+t.n+'</span></span>'
-          +'<span class="hv-l">เร็ว ๆ นี้</span><span class="hv-v">—</span><span class="hv-sub">'+t.soon+'</span></span>'
+          +'<span class="hv-chip">เร็ว ๆ นี้</span><span class="hv-rows"><span class="hv-r"><span>'+t.soon+'</span></span></span></span>'
         :'<button type="button" class="hv-tile off" data-topic="'+t.k+'"><span class="hv-top"><span class="hv-ic">'+t.ic+'</span><span class="hv-n">'+t.n+'</span><span class="hv-go">›</span></span>'
           +'<span class="hv-l">ยังไม่มีข้อมูล</span><span class="hv-v">—</span><span class="hv-sub">ต้องใช้: '+needT(t.k)+'</span></button>').join('')+'</div></div>';
     main.querySelectorAll('[data-topic]').forEach(x=>x.onclick=()=>openTopic(x.dataset.topic));
