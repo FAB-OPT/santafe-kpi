@@ -1988,9 +1988,9 @@ table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD
 #salesmix>.body{padding:0!important}
 #smxChart.ovc{background:transparent;border:0;box-shadow:none;padding:0}
 #smxChart .smblk{background:#fff;border:1px solid rgba(15,23,42,.05);border-radius:24px;padding:20px 24px;margin-top:18px;box-shadow:0 14px 34px -26px rgba(70,45,20,.4)}
-#smxChart .smblk>.grp.big{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:800;color:var(--ink);text-transform:none;letter-spacing:-.01em;margin:0 0 14px;padding:0 0 12px;border-bottom:2px solid var(--accent-3)}
-#smxChart .smblk>.grp.big::before{content:"";width:6px;height:22px;border-radius:3px;background:var(--accent)}
-#smxChart .smblk>.grp.big .gr{margin-left:auto;font-size:13px;font-weight:500;color:var(--mute)}
+#smxChart .smblk .grp.big{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:800;color:var(--ink);text-transform:none;letter-spacing:-.01em;margin:0 0 14px;padding:0 0 12px;border-bottom:2px solid var(--accent-3)}
+#smxChart .smblk .grp.big::before{content:"";width:6px;height:22px;border-radius:3px;background:var(--accent)}
+#smxChart .smblk .grp.big .gr{margin-left:auto;font-size:13px;font-weight:500;color:var(--mute)}
 #smxChart .smblk .sh{margin-top:0}
 .smkg{display:grid;grid-template-columns:1.15fr 1fr 1fr 1fr;gap:14px}
 @media (max-width:1100px){.smkg{grid-template-columns:repeat(2,1fr)}}
@@ -2003,6 +2003,39 @@ table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD
 .smk.dark{background:linear-gradient(145deg,#0F172A,#1E293B);border-color:transparent}
 .smk.dark .smkh{color:#B7C0CF}.smk.dark .smkv{color:#fff}.smk.dark .smks{color:#A9B3C4}
 #smxChart .cuins{margin-top:16px}
+
+/* ===== Sales Mix: Delivery cards / table / diverging bars ===== */
+#smxChart .dcards{grid-template-columns:repeat(4,1fr);margin-bottom:14px}
+#smxChart .dcard{border-radius:18px;padding:16px 20px}
+#smxChart .dc-big{font-size:34px;font-weight:800}
+.smpc{background:#fff;border:1px solid rgba(15,23,42,.05);border-radius:18px;padding:16px 18px 6px;margin-top:4px}
+.smpch{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:13px;color:#5B6678;margin-bottom:6px}
+.smpch b{font-size:15px;color:var(--ink)}.smpch i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+.dbt .dbs{display:flex;height:12px;border-radius:99px;overflow:hidden;gap:1px;min-width:60px}
+.dbt .dbs i{display:block;height:100%}
+.dbt .dpc{display:inline-flex;align-items:center;gap:10px}.dbt .dpc b{min-width:48px;text-align:right}
+.dbt .dpc u{display:inline-block;width:64px;height:7px;border-radius:99px;background:rgba(15,23,42,.08);text-decoration:none;overflow:hidden}
+.dbt .dpc u i{display:block;height:100%;background:#12A58E;border-radius:99px}
+.dbt tr.dbx{display:none}.smblk.dball .dbt tr.dbx{display:table-row}
+.dbnote{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12.5px;color:#8A93A3;margin-top:12px}
+.dbmore{border:0;background:transparent;font:inherit;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer}
+#smxChart .smblk>.grp.big .gr{display:inline-flex;align-items:center;gap:12px}
+.dvh,.dvr{display:grid;grid-template-columns:minmax(180px,1.3fr) 130px minmax(0,3fr) 90px;gap:12px;align-items:center;padding:9px 6px}
+.dvh{font-size:11.5px;color:#98A1AE;letter-spacing:.04em;border-bottom:1px solid rgba(15,23,42,.06)}
+.dvhb{display:grid;grid-template-columns:1fr 1fr}.dvhb span:last-child{text-align:left;padding-left:8px}.dvhb span:first-child{text-align:right;padding-right:8px}
+.dvr{border-bottom:1px solid rgba(15,23,42,.04);font-size:14.5px}
+.dvr:hover{background:rgba(246,107,33,.05)}
+.dvf{color:#8A93A3;font-size:13px}
+.dvb{display:grid;grid-template-columns:1fr 1fr;align-items:center;height:22px}
+.dvl,.dvr2{display:flex;align-items:center;gap:8px;height:22px}
+.dvl{justify-content:flex-end;border-right:1px solid rgba(15,23,42,.18);padding-right:0}
+.dvl i,.dvr2 i{display:block;height:16px;border-radius:5px}
+.dvl i.neg{background:#EF8484}.dvr2 i.pos{background:#4DB886}
+.dvl{flex-direction:row}.dvl em,.dvr2 em{font-style:normal;font-weight:800;font-size:13.5px}
+.dvl em.neg{color:#D13447;order:0}.dvr2 em.pos{color:#12804F}
+.dvp{text-align:right}
+.dvsep{border-top:1px dashed rgba(15,23,42,.18);margin:4px 0}
+@media (max-width:1000px){.dvh,.dvr{grid-template-columns:1fr 100px 1fr 70px}.dvf{display:none}.dvh span:nth-child(2){display:none}}
 </style>
 </head>
 <body>
@@ -3558,7 +3591,7 @@ function frameBlocks(){
 const CAPROWS=12;
 function capTables(){
   document.querySelectorAll('#main .scroll > table').forEach(t=>{
-    if(t.classList.contains('pltable')||t.classList.contains('cubtbl')) return;
+    if(t.classList.contains('pltable')||t.classList.contains('cubtbl')||t.classList.contains('dbt')) return;
     const rows=[...t.rows].filter(r=>r.cells.length&&r.cells[0].tagName==='TD');
     if(rows.length<=CAPROWS+3) return;
     const wrap=t.parentElement;
@@ -4020,7 +4053,7 @@ document.addEventListener('change',e=>{ const s2=e.target.closest('[data-ovsel]'
 /* ===== Sales Mix รายเดือน: แท่งสัดส่วน 100% Dine in · Takeaway · Delivery · ทั้งบริษัท หรือเลือกสาขา =====
    ทั้งบริษัท: ความสูงแท่ง = ยอดขายเดียวกับหน้า Overview (งบ P&L ถ้ามี) แบ่งตามสัดส่วนช่องทางจากแบบฟอร์มส่งยอดขาย
    เดือนที่ยังไม่มียอดแยกช่องทาง แสดงเป็นแท่งเทาก้อนเดียว */
-const SMX={mode:'ly',scope:'all',code:'',zone:''};
+const SMX={mode:'ly',scope:'all',code:'',zone:'',view:'amt',pv:'pct'};
 const SMX_C=[{k:'dine',n:'Dine in',c:'#D9822D'},{k:'take',n:'Takeaway',c:'#7C5CFC'},{k:'deli',n:'Delivery',c:'#0F9488'}];
 const SMX_P=[{k:'grab',n:'Grab'},{k:'lm',n:'Line Man'},{k:'sp',n:'Shopee Food'}];
 /* Delivery รายสาขาของเดือนล่าสุด: Grab · Line Man · Shopee Food · รวม · เทียบตามปุ่ม vs LY / vs LM ของการ์ด Sales Mix
@@ -4069,15 +4102,21 @@ function smxDeliHtml(mm,codes,lyM){
       ${share!=null?`<div class="dc-bar"><i style="width:${Math.min(100,share).toFixed(1)}%;background:${c}"></i></div>
       <div class="dc-share"><b>${share.toFixed(1)}%</b> ${shareTxt}</div>`:''}
       <div class="dc-cmp">${cmpRow('เดือนก่อน',L&&L.ref,L&&L.now)}${cmpRow('ปีก่อน',Y&&Y.ref,Y&&Y.now)}</div></div>`; }).join('')}</div>`;
-  const opts=[['deli','Total Delivery'],['grab','Grab'],['lm','Line Man'],['sp','Shopee Food'],['pc','% Delivery ของยอดขาย']];
-  const row=b=>`<tr><td>${b.code} ${b.name}</td>${P.map(([k])=>`<td class="n">${k==='deli'?'<b>':''}${KB(b[k]||0)}${k==='deli'?'</b>':''}${chg(ref(b,k),b[k]||0)}</td>`).join('')}<td class="n">${pc(b.deli||0,b.sales)}</td></tr>`;
-  /* ปุ่ม vs LY / vs LM อยู่บนหัวกรอบ (ชุดเดียวกับการ์ด Sales Mix) */
+  const PC3=[['grab','#1FA463'],['lm','#0F7F8E'],['sp','#EF5B3A']];
+  const shBar=b=>{ const t=(b.grab||0)+(b.lm||0)+(b.sp||0); if(!t) return '<span class="dbs"></span>';
+    const mx=Math.max(...cur.map(x=>(x.grab||0)+(x.lm||0)+(x.sp||0)),1);
+    return `<span class="dbs" style="width:${Math.max(18,t/mx*100).toFixed(1)}%">${PC3.map(([k,c])=>`<i style="flex:${b[k]||0};background:${c}"></i>`).join('')}</span>`; };
+  const pcBar=(v,t)=>{ const x=t?v/t*100:0; return `<span class="dpc"><b>${x.toFixed(1)}%</b><u><i style="width:${Math.min(100,x*2.5).toFixed(1)}%"></i></u></span>`; };
+  const row=b=>`<tr class="clk" data-ssbr="${b.code}"><td>${b.code} ${b.name}</td><td>${shBar(b)}</td>${P.map(([k])=>`<td class="n">${k==='deli'?'<b>':''}${KB(b[k]||0)}${k==='deli'?'</b>':''}${chg(ref(b,k),b[k]||0)}</td>`).join('')}<td class="n">${pcBar(b.deli||0,b.sales)}</td></tr>`;
   const seg=`<span class="ovseg">${[['ly','vs LY'],['lm','vs LM']].map(([k,t])=>`<button type="button" class="${(lyM?'ly':'lm')===k?'on':''}" data-smxmode="${k}">${t}</button>`).join('')}</span>`;
-  return `<div class="ovth dlh" style="margin:36px 0 18px"><div class="sh" style="margin:0"><b>Delivery by Branch</b><span>${label(mm)} · ${cur.length} สาขา</span></div>${seg}</div>`+strip+
-    `<div class="scroll"><table><tr>${[['code','สาขา',''],...P.map(([k,n])=>[k,n,'n ']),['pc','% ของยอดขาย','n ']].map(([k,n,c])=>
-      `<th class="${c}srth${SMXD.sort===k?' on':''}" data-dsort="${k}">${n}<i class="srt${SMXD.sort===k?'':' off'}">${SMXD.sort===k?(up?'▲':'▼'):'↕'}</i></th>`).join('')}</tr>
-    <tr class="hi"><td><b>รวม ${cur.length} สาขา</b></td>${P.map(([k])=>{ const p=TP(k); return `<td class="n"><b>${MB(T(k))}</b>${p?`<span class="tiny ${cls(pct(p,TC(k)))}">${sgn(pct(p,TC(k)))} vs ${RN}</span>`:`<span class="tiny">— vs ${RN}</span>`}</td>`; }).join('')}<td class="n">${pc(T('deli'),T('sales'))}</td></tr>
-    ${list.map(row).join('')}</table></div>`;
+  const shown=Math.min(list.length,12);
+  const table=`<div class="grp big">Delivery รายสาขา<span class="gr">${label(mm)} · % เทียบ ${RN} · กดหัวคอลัมน์เพื่อเรียง ${seg}</span></div>
+    <div class="scroll"><table class="dbt"><tr>${[['code','สาขา',''],['sh','สัดส่วนแพลตฟอร์ม',''],...P.map(([k,n])=>[k,n,'n ']),['pc','% ของยอดขาย','n ']].map(([k,n,c])=>
+      k==='sh'?`<th>${n}</th>`:`<th class="${c}srth${SMXD.sort===k?' on':''}" data-dsort="${k}">${n}<i class="srt${SMXD.sort===k?'':' off'}">${SMXD.sort===k?(up?'▲':'▼'):'↕'}</i></th>`).join('')}</tr>
+    <tr class="hi"><td><b>รวม ${cur.length} สาขาปัจจุบัน</b></td><td></td>${P.map(([k])=>{ const p=TP(k); return `<td class="n"><b>${MB(T(k))}</b>${p?`<span class="tiny ${cls(pct(p,TC(k)))}">${sgn(pct(p,TC(k)))} vs ${RN}</span>`:`<span class="tiny">— vs ${RN}</span>`}</td>`; }).join('')}<td class="n"><b>${pc(T('deli'),T('sales'))}</b></td></tr>
+    ${list.map((b,i)=>row(b).replace('<tr class="clk"',i>=shown?'<tr class="clk dbx"':'<tr class="clk"')).join('')}</table></div>
+    <div class="dbnote"><span>ความยาวแถบ = ยอด Delivery รวมของสาขา · แถวรวมนับเฉพาะ ${cur.length} สาขาที่เปิดอยู่</span>${list.length>shown?`<button type="button" class="dbmore" data-dbmore>แสดงทั้งหมด ${list.length} แถว ⌄</button>`:''}</div>`;
+  return strip+'<!--SPLIT-->'+table;
 }
 function smxHtml(){
   const S=SCP||{}, last=S.multi?S.last:curM, by=brOfYear(), sortC=(p,q)=>String(p.code).localeCompare(String(q.code));
@@ -4111,7 +4150,7 @@ function smxHtml(){
   const who=SMX.scope==='zone'?' · โซน '+SMX.zone:(SMX.scope==='branch'&&pick&&pick[0]?' · '+pick[0].code+' '+pick[0].name:'');
   const ytd=rows.reduce((a,r)=>a+(r.tot||0),0), ytdL=rows.every(r=>r.tot==null||r.ly!=null)?rows.reduce((a,r)=>a+(r.tot!=null?r.ly||0:0),0):null;
   const scopeBtns=by.length?`<div class="ovscope" style="margin:0"><span class="ovseg">${[['all','All Stores'],['branch','Branch'],['zone','Zone']].map(([k,t])=>`<button type="button" class="${SMX.scope===k?'on':''}" data-smxscope="${k}">${t}</button>`).join('')}</span>${sel}</div>`:'<span></span>';
-  const head=`<div class="ovth">${scopeBtns}<span class="ovseg">${[['ly','vs LY'],['lm','vs LM']].map(([k,t])=>`<button type="button" class="${SMX.mode===k?'on':''}" data-smxmode="${k}">${t}</button>`).join('')}</span></div>`+
+  const head=`<div class="ovth">${scopeBtns}<span class="ovseg">${[['ly','vs LY'],['lm','vs LM']].map(([k,t])=>`<button type="button" class="${SMX.mode===k?'on':''}" data-smxmode="${k}">${t}</button>`).join('')}</span><span class="ovseg">${[['amt','ยอดเงิน (M)'],['pct','สัดส่วน %']].map(([k,t])=>`<button type="button" class="${SMX.view===k?'on':''}" data-smxview="${k}">${t}</button>`).join('')}</span></div>`+
     `<div class="ovsub" style="margin-top:10px">${months.length?RNG(months)+' '+YEAR:''}: <b>${ytd.toFixed(2)}M</b>${ytdL?` · ${YEAR-1}: <b>${ytdL.toFixed(2)}M</b> ${pill(pct(ytdL,ytd))}`:''} · แท่งแสดงสัดส่วนช่องทางของแต่ละเดือน (รวม 100%)</div>`;
   if(!rows.some(r=>r.tot!=null)) return head+'<div class="empty">ยังไม่มียอดขาย</div>';
   const W=1180,H=340,L=48,R=20,T=14,B=40, n=rows.length, colW=(W-L-R)/n, bw=Math.min(84,colW*.62);
@@ -4182,8 +4221,38 @@ function smxHtml(){
     if(deli&&lsD!=null) parts.push(`<b>Delivery</b> ${deli.g>=0?'โต':'ลด'} <b class="${deli.g>=0?'pos':'neg'}">${sgn(deli.g)}</b> vs LY ทำให้สัดส่วน Delivery ${shD>=lsD?'เพิ่มจาก':'ลดจาก'} ${Math.round(lsD)}% เป็น ${Math.round(shD)}%`);
     if(parts.length) ins=`<div class="cuins"><b class="cuins-t">สรุป:</b> ${parts.join(' · ')}</div>`;
   }
-  const chartCard=`<div class="smblk"><div class="grp big">สัดส่วนช่องทางขาย รายเดือน<span class="gr">${months.length?RNG(months)+' '+YEAR:''}</span></div>`+head+`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="สัดส่วนช่องทางขายรายเดือน">${g}</svg>`+leg+pills+ins+`</div>`;
-  return topCards+chartCard+`<div class="smblk">${detail}</div><div class="smblk">${smxDeliHtml(last,codes,lyM)}</div>`+(SMXC.ctx={mm:last,codes},'<div class="smblk"><div id="smxChg">'+smxChgHtml(last,codes,false)+'</div></div>');   /* เทียบเดือนก่อน (LM) เสมอ ไม่ตามปุ่ม vs LY */
+  /* กราฟแท่งแบบยอดเงิน (M): ยอดรวมบนหัวแท่ง · เส้นประ = ยอดรวมปีก่อน · ป้าย % ใต้เดือน */
+  const amtSvg=(()=>{ const W2=1180,H2=360,L2=24,R2=24,T2=34,B2=74,n2=rows.length, cw=(W2-L2-R2)/n2, bw2=Math.min(86,cw*.62);
+    const mxv=Math.max(...rows.map(r=>Math.max(r.tot||0,r.ly||0)),1)*1.06, Y2=v=>T2+(H2-T2-B2)*(1-v/mxv), X2=i=>L2+cw*(i+.5);
+    const LI={dine:['#F5C09A','#E8751A','#8A4B16'],take:['#CDB7FA','#8B5CF6','#4C2CB0'],deli:['#97D6CB','#12A58E','#0B6B5C']};
+    let g2=`<line x1="${L2}" x2="${W2-R2}" y1="${Y2(0)}" y2="${Y2(0)}" stroke="#E4E8EE"/>`;
+    rows.forEach((r,i)=>{ const cx=X2(i), now=i===n2-1; if(r.tot==null) return;
+      if(r.seg){ let yb=Y2(0);
+        r.seg.forEach(sg=>{ const h=Math.max(1,Y2(0)-Y2(sg.v)), y0=yb-h, c=LI[sg.o.k];
+          g2+=`<rect x="${cx-bw2/2}" y="${y0}" width="${bw2}" height="${h}" fill="${now?c[1]:c[0]}"/>`;
+          if(h>=15) g2+=`<text x="${cx}" y="${y0+h/2+4}" font-size="${now?13:12}" font-weight="800" fill="${now?'#fff':c[2]}" text-anchor="middle">${sg.v>=10?sg.v.toFixed(1):sg.v.toFixed(1)}</text>`;
+          yb=y0; }); }
+      else g2+=`<rect x="${cx-bw2/2}" y="${Y2(r.tot)}" width="${bw2}" height="${Y2(0)-Y2(r.tot)}" fill="#E2E8F0" rx="3"/><text x="${cx}" y="${(Y2(r.tot)+Y2(0))/2+4}" font-size="11" fill="#64748B" text-anchor="middle">ไม่มียอดแยก</text>`;
+      g2+=`<text x="${cx}" y="${Y2(Math.max(r.tot,r.ly||0))-10}" font-size="${now?15:13.5}" font-weight="800" fill="#0F172A" text-anchor="middle">${r.tot.toFixed(1)}</text>`;
+      if(r.ly!=null) g2+=`<line x1="${cx-bw2/2-8}" x2="${cx+bw2/2+8}" y1="${Y2(r.ly)}" y2="${Y2(r.ly)}" stroke="#475569" stroke-width="1.6" stroke-dasharray="3 3"/>`;
+      const b2=ref(r); if(b2!=null){ const d=pct(b2,r.tot), pos=d>=0;
+        g2+=`<rect x="${cx-31}" y="${H2-34}" width="62" height="22" rx="11" fill="${pos?'#DDF3E7':'#FBE3E6'}"/><text x="${cx}" y="${H2-19}" font-size="12" font-weight="800" fill="${pos?'#12804F':'#D13447'}" text-anchor="middle">${pos?'↗':'↘'} ${sgn(d)}</text>`; }
+      g2+=`<text x="${cx}" y="${H2-48}" font-size="13" fill="${now?'#0F172A':'#64748B'}" font-weight="${now?800:500}" text-anchor="middle">${MONTH_TH[r.m-1]}</text>`;
+      const t=[`${MONTH_TH[r.m-1]} ${YEAR} · รวม ${fm(r.tot)}`]; if(r.seg) r.seg.forEach(sg=>t.push(`${sg.o.n} ${fm(sg.v)} · ${Math.round(sg.v/r.tot*100)}%`)); if(b2!=null) t.push(`${RN} ${fm(b2)} (${sgn(pct(b2,r.tot))})`);
+      g2+=`<rect x="${L2+cw*i}" y="${T2-10}" width="${cw}" height="${H2-T2-B2+10}" fill="transparent" data-tip="${t.join('\n')}"/>`; });
+    return `<svg class="chart" viewBox="0 0 ${W2} ${H2}" role="img" aria-label="ยอดขายรายเดือนแยกช่องทาง">${g2}</svg>`; })();
+  const isAmt=SMX.view==='amt';
+  const legA=`<div class="legend lcleg">${SMX_C.map(o=>`<span><i style="background:${o.c}"></i>${o.n}</span>`).join('')}<span><i style="background:none;border-top:2px dashed #475569;border-radius:0;height:0;width:16px;margin-top:5px"></i>ยอดรวมปีก่อน (LY)</span></div>`;
+  const chartCard=`<div class="smblk"><div class="grp big">สัดส่วนช่องทางขาย รายเดือน<span class="gr">${months.length?RNG(months)+' '+YEAR:''}</span></div>`+head+(isAmt?legA+amtSvg:`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="สัดส่วนช่องทางขายรายเดือน">${g}</svg>`+leg+pills)+ins+`</div>`;
+  /* Delivery แยกแพลตฟอร์ม: การ์ด 4 ใบ + กราฟเส้นรายเดือน */
+  const dsplit=smxDeliHtml(last,codes,lyM).split('<!--SPLIT-->'), dCards=dsplit[0]||'', dTable=dsplit[1]||'';
+  const PL3=[['grab','Grab','#1FA463'],['lm','Line Man','#0F7F8E'],['sp','Shopee Food','#EF5B3A']];
+  const pvAmt=SMX.pv==='amt';
+  const dRows=rows.filter(r=>r.seg);
+  const platSer=PL3.map(([k,nm,c])=>({name:nm,color:c,w:2.8,label:'all',vals:dRows.map(r=>{ const v=r.val(k), d=r.val('deli'); return v==null?null:(pvAmt?+v.toFixed(2):(d?+(v/d*100).toFixed(0):null)); })}));
+  const platChart=dRows.length>1?`<div class="smpc"><div class="smpch"><b>แพลตฟอร์ม Delivery รายเดือน</b>${PL3.map(([k,nm,c])=>`<span><i style="background:${c}"></i>${nm}</span>`).join('')}<span class="ovseg" style="margin-left:auto">${[['amt','ยอดเงิน (M)'],['pct','% ของ Delivery']].map(([k,t])=>`<button type="button" class="${SMX.pv===k?'on':''}" data-smxpv="${k}">${t}</button>`).join('')}</span></div>${lineSeries(dRows.map(r=>MONTH_TH[r.m-1]),platSer,{w:1180,h:300,R:60,fmt:v=>pvAmt?v.toFixed(1)+'M':Math.round(v)+'%',tipFmt:v=>pvAmt?v.toFixed(2)+'M':v+'%'})}</div>`:'';
+  const platBlock=dCards?`<div class="smblk"><div class="grp big">Delivery แยกแพลตฟอร์ม<span class="gr">${label(last)}${who}</span></div>${dCards}${platChart}</div>`:'';
+  return topCards+chartCard+`<div class="smblk">${detail}</div>`+platBlock+(dTable?`<div class="smblk">${dTable}</div>`:'')+(SMXC.ctx={mm:last,codes},'<div class="smblk"><div id="smxChg">'+smxChgHtml(last,codes,false)+'</div></div>');   /* เทียบเดือนก่อน (LM) เสมอ ไม่ตามปุ่ม vs LY */
 }
 /* Biggest Delivery Changes by Branch: 5 สาขาที่เพิ่มมากสุด (ซ้าย) และลดมากสุด (ขวา)
    รวมทุก Platform หรือแยก Grab · Line Man · Shopee Food · เทียบเดือนก่อน (LM) */
@@ -4205,13 +4274,17 @@ function smxChgHtml(mm,codes,lyM){
   const KB2=v=>Math.round(Math.abs(v)/1000).toLocaleString('th-TH')+'K';
   const up=rows.filter(r=>r.d>0).sort((x,y)=>y.d-x.d).slice(0,5);
   const dn=rows.filter(r=>r.d<0).sort((x,y)=>x.d-y.d).slice(0,5);
-  const tbl=(list,cl,emp)=>list.length?`<table><tr><th>สาขา</th><th class="n">${RN}</th><th class="n">เดือนนี้</th><th class="n">เปลี่ยนแปลง</th><th class="n">%</th></tr>
-    ${list.map(r=>`<tr class="clk" data-ssbr="${r.b.code}"><td>${r.b.code} ${r.b.name}</td><td class="n">${KB2(r.a)}</td><td class="n">${KB2(r.c)}</td>
-      <td class="n ${cl}"><b>${r.d>0?'+':'-'}${KB2(r.d)}</b></td><td class="n">${pill(r.p)}</td></tr>`).join('')}</table>`:`<div class="empty">${emp}</div>`;
   const btns=`<span class="ovseg">${PL.map(([k,t])=>`<button type="button" class="${key===k?'on':''}" data-smxc="${k}">${t}</button>`).join('')}</span>`;
-  return `<div class="ovth dlh" style="margin:36px 0 18px"><div class="sh" style="margin:0"><b>Biggest Delivery Changes by Branch</b><span>${pname} · เทียบ ${RN}</span></div>${btns}</div>
-    ${rows.length?`<div class="two" style="margin-top:4px"><div><h3 class="g">เพิ่มขึ้นมากสุด 5 อันดับ</h3>${tbl(up,'pos','ไม่มีสาขาที่เพิ่มขึ้น')}</div>
-      <div><h3 class="r">ลดลงมากสุด 5 อันดับ</h3>${tbl(dn,'neg','ไม่มีสาขาที่ลดลง')}</div></div>`
+  const all=up.concat(dn), mx=Math.max(...all.map(r=>Math.abs(r.d)),1);
+  const dv=r=>{ const w=Math.abs(r.d)/mx*100, pos=r.d>0;
+    return `<div class="dvr clk" data-ssbr="${r.b.code}"><span class="dvn">${r.b.code} ${r.b.name}</span><span class="dvf">${KB2(r.a)} → ${KB2(r.c)}</span>
+      <span class="dvb"><span class="dvl">${pos?'':`<em class="neg">−${KB2(r.d)}</em><i class="neg" style="width:${w.toFixed(1)}%"></i>`}</span><span class="dvr2">${pos?`<i class="pos" style="width:${w.toFixed(1)}%"></i><em class="pos">+${KB2(r.d)}</em>`:''}</span></span>
+      <span class="dvp">${pill(r.p)}</span></div>`; };
+  const note=all.filter(r=>r.p!=null&&Math.abs(r.p)>300&&Math.min(r.a,r.c)<20000).map(r=>`${r.b.code} ${r.b.name} ${sgn(r.p,0)} เพราะ ${r.d>0?RN:'เดือนนี้'} มียอดเพียง ${KB2(Math.min(r.a,r.c))}`).join(' · ');
+  return `<div class="grp big">สาขาที่ Delivery เปลี่ยนมากที่สุด<span class="gr">เทียบ ${RN} · ${pname} ${btns}</span></div>
+    ${rows.length?`<div class="dvh"><span>สาขา</span><span>${RN} → เดือนนี้</span><span class="dvhb"><span>← ลดลง</span><span>เพิ่มขึ้น →</span></span><span>%</span></div>
+      ${up.map(dv).join('')||'<div class="empty">ไม่มีสาขาที่เพิ่มขึ้น</div>'}${up.length&&dn.length?'<div class="dvsep"></div>':''}${dn.map(dv).join('')}
+      ${note?`<div class="dbnote"><span>${note}</span></div>`:''}`
       :`<div class="empty" style="margin-top:12px">ยังไม่มีข้อมูลสำหรับเทียบ ${RN} ในเดือนนี้</div>`}`;
 }
 document.addEventListener('click',e=>{
@@ -4227,6 +4300,9 @@ document.addEventListener('click',e=>{
     if(SMXD.sort===k) SMXD.dir=SMXD.dir==='asc'?'desc':'asc';
     else { SMXD.sort=k; SMXD.dir=(k==='code')?'asc':'desc'; }
     anchorRender(dsr,'[data-dsort="'+k+'"]',()=>ovRender('smxChart',smxHtml)); return; }
+  const sv=e.target.closest('[data-smxview]'); if(sv){ SMX.view=sv.dataset.smxview; ovRender('smxChart',smxHtml); return; }
+  const spv=e.target.closest('[data-smxpv]'); if(spv){ SMX.pv=spv.dataset.smxpv; ovRender('smxChart',smxHtml); return; }
+  const dbm=e.target.closest('[data-dbmore]'); if(dbm){ const bl=dbm.closest('.smblk'); const on=!bl.classList.contains('dball'); bl.classList.toggle('dball',on); dbm.textContent=on?'แสดงน้อยลง ⌃':'แสดงทั้งหมด '+bl.querySelectorAll('.dbt tr[data-ssbr]').length+' แถว ⌄'; return; }
   const md=e.target.closest('[data-smxmode]'); if(md){ SMX.mode=md.dataset.smxmode; ovRender('smxChart',smxHtml); return; }
   const sc=e.target.closest('[data-smxscope]'); if(sc){ SMX.scope=sc.dataset.smxscope; ovRender('smxChart',smxHtml); } });
 document.addEventListener('change',e=>{
