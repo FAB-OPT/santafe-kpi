@@ -1296,6 +1296,10 @@ body.present .cmpchip{font-size:15px}
 .scopebar2 u{font-weight:700;cursor:pointer}
 .plblock{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:16px;box-shadow:var(--sh)}
 .plblock>.grp:first-child,.plblock>.grp.big:first-child{margin-top:0}
+.plblock{margin-top:30px;padding:20px 22px 22px}
+#pl .plblock>.grp.big,#pl .plblock>#plbr>.grp.big{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:800;color:var(--ink);letter-spacing:-.01em;text-transform:none;margin:0 0 14px;padding:0 0 12px;border-bottom:2px solid var(--accent-3)}
+#pl .plblock>.grp.big::before,#pl .plblock>#plbr>.grp.big::before{content:"";width:6px;height:22px;border-radius:3px;background:var(--accent);flex:0 0 auto}
+#pl .plblock>.grp.big{margin-top:0}
 .kcs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
 .kc{background:var(--card,#fff);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
 .kc.pos{border-left-color:var(--good)} .kc.neg{border-left-color:var(--bad,#E11D48)}
@@ -2031,7 +2035,7 @@ function plSection(m){
     .map(([id,c])=>{ const it=idx(id); return it?{it,name:plLabel(it),color:c}:null; }).filter(Boolean);
   const yrSer=YC.map(o=>({name:o.name,color:o.color,w:2.8,label:'all',
     vals:yrMs.map(mm=>{ const a=yrSrc[PL_MONKEY[mm-1]]; return a[0]>0&&a[o.it.index]!=null?a[o.it.index]/a[0]*100:null; })}));
-  const yearChart=yrMs.length>1&&yrSer.length?`<div class="plblock"><div class="grp">ต้นทุนและค่าใช้จ่าย เทียบทั้งปี ${YEAR} (% ของรายได้)</div>`
+  const yearChart=yrMs.length>1&&yrSer.length?`<div class="plblock"><div class="grp big">ต้นทุนและค่าใช้จ่าย เทียบทั้งปี ${YEAR} (% ของรายได้)</div>`
     +lineSeries(yrMs.map(mm=>MONTH_TH[mm-1]),yrSer,{w:1180,h:400,fmt:v=>v.toFixed(1)+'%',tipFmt:v=>v.toFixed(1)+'%'})+legendOf(yrSer)+'</div>':'';
   const chartRows=(PLS.branch==='all')?months.map(mm=>{const a=F.actual[PL_MONKEY[mm-1]];return {m:mm,revenue:a[0]*1e6,food:a[idx('cogs').index]*1e6,labor:a[idx('labor').index]*1e6,rent:a[idx('sga').index]*1e6,admin:a[idx('opex').index]*1e6,profit:a[idx('net').index]*1e6};}):[];
   return sec('pl','Profit & Loss — full chart of accounts',sub,`
@@ -2046,7 +2050,8 @@ function plSection(m){
       ${tile('กำไรสุทธิ (บรรทัดสุดท้าย)',g('net'),cls(g('net')))}
     </div>`}
     ${yearChart}
-    ${chartRows.length>1?`<div class="plblock"><div class="grp">สัดส่วนต้นทุนต่อรายได้ รายเดือน (%)</div>`+costStack(chartRows.map(r=>({m:r.m,revenue:r.revenue,food:r.food,labor:r.labor,rent:r.rent,admin:r.admin,profit:r.profit})))+'</div>':''}
+    ${chartRows.length>1?`<div class="plblock"><div class="grp big">สัดส่วนต้นทุนต่อรายได้ รายเดือน (%)</div>`+costStack(chartRows.map(r=>({m:r.m,revenue:r.revenue,food:r.food,labor:r.labor,rent:r.rent,admin:r.admin,profit:r.profit})))+'</div>':''}
+    <div class="plblock"><div class="grp big">งบกำไรขาดทุน (P&amp;L) · ผังบัญชีเต็ม</div>
     ${head}
     <div class="scroll" style="margin-top:12px"><table class="pltable">
       ${cmpMode?`<tr><th>รายการ · ${RNG(months)} ${YEAR}<button type="button" class="pltall" id="plToggleAll" title="พับ/กางหมวดย่อยทั้งหมด"><span>${PLS.showSub?'▾':'▸'}</span>${PLS.showSub?'ซ่อนหมวดย่อย':'แสดงหมวดย่อย'}</button></th>${ents.map(e=>`<th class="n cmpth">${e.name}</th>`).join('')}</tr>`
@@ -2054,7 +2059,7 @@ function plSection(m){
       ${prev?`<th class="n">${RNG(pm)} ${YEAR}</th><th class="n">Δ</th>`:''}
       ${ly?`<th class="n">${RNG(months)} ${YEAR-1}</th><th class="n">Δ</th>`:''}</tr>`}
       ${rowsOut.join('')}
-    </table></div>
+    </table></div></div>
     ${(mx=>mx?`<div class="plblock">${mx}</div>`:'')(plMatrix(items))}
     ${cosBody()||''}
     <div class="note">ตัวเลขเต็มหน่วยบาทจากไฟล์ PL · Δ = ส่วนต่างเป็นบาท${ly?" · LY มีความละเอียดถึงหลักพันบาท":""} · สีเขียว/แดงตามทิศทางที่ดี (ต้นทุนลดลง = เขียว, กำไรเพิ่มขึ้น = เขียว) · กดปุ่ม ▸ หน้าหมวดเพื่อพับ/กางรายการย่อย</div>`);
@@ -2694,7 +2699,7 @@ function plMatrix(items){
     const t=(v-lo)/((hi-lo)||1); const ok=M.good(v);
     const a=(ok?0.10+t*0.30:0.12+(1-t)*0.30);
     return `<td class="n plc" style="background:${ok?`rgba(16,185,129,${a.toFixed(2)})`:`rgba(244,63,94,${a.toFixed(2)})`}">${M.fmt(v)}</td>`; };
-  return `<div class="grp" style="margin-top:18px">Branch × Month Matrix — ${M.t}</div>
+  return `<div class="grp big">Branch × Month Matrix — ${M.t}</div>
     <div class="plbar"><label>ตัวเลข <select id="plmMetric">${Object.entries(MET).map(([k,v])=>`<option value="${k}" ${PLM.metric===k?'selected':''}>${v.t}</option>`).join('')}</select></label>
       <span class="hint">เขียว = ดี · แดง = ต้องดู · คลิกชื่อสาขาเพื่อดูงบเต็มของสาขานั้น · ${rows.length} สาขา</span></div>
     <div class="scroll"><table class="plmx"><tr><th>สาขา</th><th>โซน</th>${mons.map(o=>`<th class="n">${MONTH_TH[o.m-1]}</th>`).join('')}</tr>
