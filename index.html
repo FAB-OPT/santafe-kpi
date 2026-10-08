@@ -2010,7 +2010,6 @@ function plSection(m){
     +lineSeries(yrMs.map(mm=>MONTH_TH[mm-1]),yrSer,{w:1180,h:400,fmt:v=>v.toFixed(1)+'%',tipFmt:v=>v.toFixed(1)+'%'})+legendOf(yrSer):'';
   const chartRows=(PLS.branch==='all')?months.map(mm=>{const a=F.actual[PL_MONKEY[mm-1]];return {m:mm,revenue:a[0]*1e6,food:a[idx('cogs').index]*1e6,labor:a[idx('labor').index]*1e6,rent:a[idx('sga').index]*1e6,admin:a[idx('opex').index]*1e6,profit:a[idx('net').index]*1e6};}):[];
   return sec('pl','Profit & Loss — full chart of accounts',sub,`
-    ${head}
     ${cmpMode?`<div class="strip">${ents.map(e=>{ const ni=idx('net').index; if(!e.v) return `<div class="st"><div class="l">${e.name}</div><div class="v">—</div><div class="s">ไม่มีงบช่วงนี้</div></div>`;
         const np=e.v[0]?e.v[ni]/e.v[0]*100:null;
         return `<div class="st ${np==null?'':cls(np)}"><div class="l">${e.name}</div><div class="v">${np==null?'—':np.toFixed(1)+'%'}</div><div class="s">กำไรสุทธิ ${fmOf(e.br)(e.v[ni])} · รายได้ ${fmOf(e.br)(e.v[0])}</div></div>`; }).join('')}</div>`
@@ -2023,6 +2022,7 @@ function plSection(m){
     </div>`}
     ${yearChart}
     ${chartRows.length>1?`<div class="grp">สัดส่วนต้นทุนต่อรายได้ รายเดือน (%)</div>`+costStack(chartRows.map(r=>({m:r.m,revenue:r.revenue,food:r.food,labor:r.labor,rent:r.rent,admin:r.admin,profit:r.profit}))):''}
+    ${head}
     <div class="scroll" style="margin-top:12px"><table class="pltable">
       ${cmpMode?`<tr><th>รายการ · ${RNG(months)} ${YEAR}</th>${ents.map(e=>`<th class="n cmpth">${e.name}</th>`).join('')}</tr>`
       :`<tr><th>รายการ</th>${split?months.map(mm=>`<th class="n">${MONTH_TH[mm-1]} ${YEAR}</th><th class="n">%</th>`).join(''):''}<th class="n">${split?'รวม ':''}${RNG(months)} ${YEAR}</th><th class="n">% รายได้</th>
