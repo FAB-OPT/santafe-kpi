@@ -1869,7 +1869,7 @@ table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD
 .plccv small{font-size:14px;color:#8A93A3}
 .plccp{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .plccp small{font-size:12.5px;color:#8A93A3;margin-right:8px}
-.plleg{display:flex;flex-wrap:wrap;gap:6px 22px;margin:16px 2px 12px;font-size:13px;color:#5B6678}
+.plleg{display:flex;flex-wrap:wrap;gap:4px 18px;margin:2px 0 6px;font-size:12.5px;color:#5B6678}
 .plleg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px}
 .plch2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media (max-width:1000px){.plch2{grid-template-columns:1fr}}
@@ -1913,9 +1913,8 @@ table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD
 /* ===== P&L table bars / COS-COL bars / modal ===== */
 .pbw{display:inline-block;width:92px;height:6px;border-radius:99px;background:rgba(15,23,42,.07);margin-right:12px;vertical-align:middle;overflow:hidden}
 .pbw i{display:block;height:100%;border-radius:99px}
-.pltable tr.plhl td{background:#EAF6EF!important}
-.pltable tr.plhl:hover td{background:#E0F1E8!important}
-.pltable tr.plmain td{background:#FFF6EC}
+.pltable tr[data-id]:not(.plsub) td:not([style]){background:#FFF6EC}
+.pltable tr[data-id="gp1"]:not(.plsub) td:not([style]),.pltable tr[data-id="gp2"]:not(.plsub) td:not([style]),.pltable tr[data-id="gp3"]:not(.plsub) td:not([style]),.pltable tr[data-id="op"]:not(.plsub) td:not([style]),.pltable tr[data-id="net-bd"]:not(.plsub) td:not([style]),.pltable tr[data-id="net"]:not(.plsub) td:not([style]){background:#EAF6EF}
 .cobt .cob{white-space:nowrap}
 .cobw{position:relative;display:inline-block;width:150px;height:8px;border-radius:99px;background:rgba(15,23,42,.07);vertical-align:middle;margin-right:12px}
 .cobw i{position:absolute;left:0;top:0;height:100%;border-radius:99px}
@@ -2341,7 +2340,7 @@ const EMPTY = t => `<div class="empty">ยังไม่มีข้อมู�
 
 
 /* ========================= P&L ผังบัญชีเต็ม (ข้อ 5) ========================= */
-const PLS={showSub:true, cmpLM:true, cmpLY:false, sort:'chart', branch:'all', open:{}, cmp:[], closed:false};
+const PLS={showSub:false, cmpLM:true, cmpLY:false, sort:'chart', branch:'all', open:{}, cmp:[], closed:false};
 const PL_TH={revenue:'รายได้รวม','rev-food':'รายได้อาหารและเครื่องดื่ม','rev-other':'รายได้อื่น',
   cogs:'ต้นทุนขาย (COGS)','cogs-fresh':'วัตถุดิบสด','cogs-semi':'กึ่งสำเร็จรูป','cogs-frozen':'แช่แข็ง','cogs-dry':'ของแห้ง','cogs-bev':'เครื่องดื่มและของหวาน','cogs-misc':'ค่าใช้จ่ายเบ็ดเตล็ด','cogs-pack':'บรรจุภัณฑ์','cogs-finished':'สินค้าสำเร็จรูป','cogs-gas':'แก๊ส','cogs-transport':'ขนส่ง',
   gp1:'กำไรขั้นต้น (หลัง COGS)', labor:'ค่าแรง','labor-mgr':'เงินเดือนผู้จัดการ','labor-staff':'เงินเดือนพนักงาน','labor-edu':'สนับสนุนการศึกษา','labor-bonus':'โบนัส','labor-contrib':'สมทบกองทุน','labor-uniform':'ยูนิฟอร์ม','labor-training':'ฝึกอบรม','labor-welfare':'สวัสดิการ',
@@ -2414,7 +2413,7 @@ function plSection(m){
   const sortKids=(kids)=> PLS.sort==='desc' ? kids.slice().sort((a,b)=>Math.abs(cur[b.index])-Math.abs(cur[a.index])) : kids;
   mains.forEach(mn=>{
     const kids=sortKids(items.filter(x=>x.parent===mn.id));
-    const open=PLS.showSub && (PLS.open[mn.id]!==false);
+    const open=(mn.id in PLS.open)?!!PLS.open[mn.id]:PLS.showSub;
     const PROFIT_IDS=['gp1','gp2','gp3','op','net-bd','net'];          // บรรทัดกำไร (ระวัง opex ขึ้นต้นด้วย op แต่เป็นต้นทุน)
     const isProfit=mn.id==='revenue'||PROFIT_IDS.includes(mn.id);   // รายได้/กำไร เพิ่ม = ดี · ต้นทุน ลด = ดี
     const good=d=>d===0?'':((isProfit?d>0:d<0)?'pos':'neg');
@@ -2510,9 +2509,8 @@ function plSection(m){
     if(parts.length) insightCost=`<div class="plins"><b>ข้อสังเกต:</b> ${parts.join(' · ')}</div>`; })();
   const costCard=(cmpMode||yrMs.length<2)?'':`<div class="plblock"><div class="grp big">ต้นทุนและค่าใช้จ่าย (% ของรายได้)<span class="gr">${RNG(yrMs)} ${YEAR} · ${isCo?'ทุกสาขา':'สาขา '+brName(PLS.branch)}</span></div>
     <div class="plcc2">${ccard('cogs','%COS ต้นทุนอาหาร','#F0954F')}${ccard('labor','%COL ค่าแรง','#5B8DEF')}</div>
-    <div class="plleg">${legendCost}</div>
-    <div class="plch2"><div class="plcp"><div class="plcpt">ต้นทุนหลัก</div>${lineSeries(yrMs.map(mm=>MONTH_TH[mm-1]),serMain,{w:560,h:300,fmt:v=>v.toFixed(0)+'%',tipFmt:v=>v.toFixed(1)+'%'})}</div>
-      <div class="plcp"><div class="plcpt">ค่าใช้จ่ายรอง</div>${lineSeries(yrMs.map(mm=>MONTH_TH[mm-1]),serSub,{w:560,h:300,fmt:v=>v.toFixed(1)+'%',tipFmt:v=>v.toFixed(1)+'%'})}</div></div>${insightCost}</div>`;
+    <div class="plch2"><div class="plcp"><div class="plcpt">ต้นทุนหลัก</div><div class="plleg">${serMain.map(o=>`<span><i style="background:${o.color}"></i>${o.name}</span>`).join('')}</div>${lineSeries(yrMs.map(mm=>MONTH_TH[mm-1]),serMain,{w:560,h:300,fmt:v=>v.toFixed(0)+'%',tipFmt:v=>v.toFixed(1)+'%'})}</div>
+      <div class="plcp"><div class="plcpt">ค่าใช้จ่ายรอง</div><div class="plleg">${serSub.map(o=>`<span><i style="background:${o.color}"></i>${o.name}</span>`).join('')}</div>${lineSeries(yrMs.map(mm=>MONTH_TH[mm-1]),serSub,{w:560,h:300,fmt:v=>v.toFixed(1)+'%',tipFmt:v=>v.toFixed(1)+'%'})}</div></div>${insightCost}</div>`;
   const chartRows=(PLS.branch==='all')?months.map(mm=>{const a=F.actual[PL_MONKEY[mm-1]];return {m:mm,revenue:a[0]*1e6,food:a[idx('cogs').index]*1e6,labor:a[idx('labor').index]*1e6,rent:a[idx('sga').index]*1e6,admin:a[idx('opex').index]*1e6,profit:a[idx('net').index]*1e6};}):[];
   return sec('pl','Profit & Loss — full chart of accounts',sub,`
     ${topCard}
@@ -2551,7 +2549,7 @@ function bindPL(){
   const ly=$('#plLY'); if(ly) ly.onchange=e=>{ PLS.cmpLY=e.target.checked; r(); };
   const so=$('#plSort'); if(so) so.onchange=e=>{ PLS.sort=e.target.value; r(); };
   const ta=$('#plToggleAll'); if(ta) ta.onclick=()=>{ PLS.showSub=!PLS.showSub; PLS.open={}; r(); };
-  document.querySelectorAll('.pltg').forEach(btn=>btn.onclick=()=>{ const id=btn.dataset.tg; PLS.showSub=true; PLS.open[id]=!(PLS.open[id]!==false); r(); });
+  document.querySelectorAll('.pltg').forEach(btn=>btn.onclick=()=>{ const id=btn.dataset.tg, cur=(id in PLS.open)?!!PLS.open[id]:PLS.showSub; PLS.open[id]=!cur; r(); });
   const ad=$('#plAdd'); if(ad) ad.onchange=e=>{ const c=e.target.value; PLS.cmp=PLS.cmp||[]; if(c&&!PLS.cmp.includes(c)&&PLS.cmp.length<4) PLS.cmp.push(c); r(); };
   document.querySelectorAll('[data-plrm]').forEach(bt=>bt.onclick=()=>{ PLS.cmp=(PLS.cmp||[]).filter(x=>x!==bt.dataset.plrm); r(); });
   const cc=$('#plCmpClear'); if(cc) cc.onclick=()=>{ PLS.cmp=[]; r(); };
