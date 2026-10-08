@@ -1346,6 +1346,24 @@ body:not(.tools) .top .brandsw,body:not(.tools) .top #fMode,body:not(.tools) .to
 .top .btn.primary{order:7}
 .top .month{background:rgba(255,255,255,.7);border:1px solid rgba(15,23,42,.06);border-radius:12px}
 .top .month select{font-weight:700}
+/* ===== แถบบนแบบปรับละเอียด (แบบ 1) ===== */
+.top{gap:14px;padding:10px 16px;border-radius:20px}
+.top .logo{width:40px;height:40px;border-radius:12px;box-shadow:0 6px 12px -6px rgba(246,107,33,.6)}
+.top h1{font-size:15.5px}
+.top .syncst{display:inline-flex;align-items:center;gap:7px;margin-left:0;padding-right:14px;border-right:1px solid rgba(15,23,42,.1);font-size:12.5px;font-weight:600}
+.top .syncst::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px color-mix(in srgb,currentColor 18%,transparent);flex:0 0 auto}
+.top .syncst.ok{color:#14935B}.top .syncst.err{color:var(--bad)}
+.top .scopeseg{background:rgba(15,23,42,.06);border-radius:14px;padding:4px;gap:2px}
+.top .scopeseg button{display:inline-flex;align-items:center;gap:7px;padding:7px 15px;border-radius:10px;font-size:13px}
+.top .scopeseg button svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+.top .scopeseg button.on{box-shadow:0 2px 6px rgba(15,23,42,.14)}
+.top .month{background:rgba(255,255,255,.85);border:1px solid rgba(15,23,42,.07);border-radius:14px;padding:3px;overflow:visible}
+.top .month button{width:30px;height:30px;padding:0;border-radius:10px;display:grid;place-items:center;font-size:16px;color:#6B7280}
+.top .month select{color:var(--ink);font-weight:700;font-size:14px;min-width:100px;text-align:center;text-align-last:center;color-scheme:light;padding:5px 6px}
+.top .month select option{background:#fff;color:var(--ink)}
+.top #presentBtn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(180deg,#FF7A33,#F0601A);border:0;color:#fff;border-radius:13px;padding:10px 18px;font-weight:700;font-size:14px;box-shadow:0 10px 20px -10px rgba(246,107,33,.85)}
+.top #presentBtn svg{width:14px;height:14px;fill:#fff}
+.top #presentBtn:hover{filter:brightness(1.05);transform:translateY(-1px)}
 /* ===== ธีมใหม่: กระจกฝ้า พื้นหลังไล่สีพีช-ลาเวนเดอร์-เขียวอ่อน ===== */
 body:not(.brand-home){background:#F3EEE8}
 body:not(.brand-home)::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
@@ -1661,7 +1679,7 @@ body.hub section.slide .bar h2[data-n]::before{display:none}
     <select id="fQuarter" aria-label="ไตรมาส" hidden></select>
     <span id="fRangeBox" hidden><select id="fFrom" aria-label="ตั้งแต่เดือน"></select>
       <span class="dash">–</span><select id="fTo" aria-label="ถึงเดือน"></select></span>
-    <span class="scopeseg" id="fScope" role="group" aria-label="ขอบเขตข้อมูล"><button type="button" data-sc="all">All Stores</button><button type="button" data-sc="branch">Branch</button><button type="button" data-sc="zone">Zone</button></span>
+    <span class="scopeseg" id="fScope" role="group" aria-label="ขอบเขตข้อมูล"><button type="button" data-sc="all"><svg viewBox="0 0 24 24"><path d="M3 9l9-6 9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/></svg>All Stores</button><button type="button" data-sc="branch"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Branch</button><button type="button" data-sc="zone"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Zone</button></span>
     <select id="fZone" aria-label="โซนผู้จัดการเขต" hidden><option value="all">ทุกโซน</option></select>
     <select id="fBranch" aria-label="สาขา" hidden></select>
   </div>
@@ -1680,7 +1698,7 @@ body.hub section.slide .bar h2[data-n]::before{display:none}
         <option value="1" selected>ขนาด 100%</option><option value="1.1">ขนาด 110%</option>
       </select>
     </div></div>
-  <button class="btn primary" id="presentBtn">▶ โหมดพรีเซนต์</button>
+  <button class="btn primary" id="presentBtn"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2l11 6-11 6z"/></svg>โหมดพรีเซนต์</button>
 </header>
 <div id="scopeBar" class="scopebar2" hidden></div>
 
@@ -4535,7 +4553,7 @@ async function syncDec(blob){ const o=JSON.parse(blob); let p=new Uint8Array(awa
   if(o.z) p=await syncGz(p,1); return JSON.parse(new TextDecoder().decode(p)); }
 const sbH=()=>({apikey:SB_KEY,'Content-Type':'application/json'});
 function syncBadge(st){ const el=document.getElementById('syncSt'); if(!el) return; el.hidden=false; el.className='syncst '+st;
-  el.textContent=st==='ok'?'● ข้อมูลล่าสุด':'● ซิงก์ไม่สำเร็จ';
+  el.textContent=st==='ok'?'ข้อมูลล่าสุด':'ซิงก์ไม่สำเร็จ';
   el.title=st==='ok'?'ข้อมูลที่นำเข้าเก็บในฐานข้อมูลกลาง ทุกเครื่องเห็นชุดเดียวกัน':'ต่อฐานข้อมูลกลางไม่ได้ (ใช้ข้อมูลในเครื่องนี้แทน): '+((SYNC.err&&SYNC.err.message)||''); }
 async function syncPush(id,s){ if(!SYNC.key||!SYNC.token) return;
   try{ const r=await fetch(SB_URL+'/rest/v1/rpc/sfkpi_save',{method:'POST',headers:sbH(),
