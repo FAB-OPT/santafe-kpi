@@ -1361,6 +1361,10 @@ body:not(.tools) .top .brandsw,body:not(.tools) .top #fMode,body:not(.tools) .to
 .top .month button{width:30px;height:30px;padding:0;border-radius:10px;display:grid;place-items:center;font-size:16px;color:#6B7280}
 .top .month select{color:var(--ink);font-weight:700;font-size:14px;min-width:100px;text-align:center;text-align-last:center;color-scheme:light;padding:5px 6px}
 .top .month select option{background:#fff;color:var(--ink)}
+.top .month select{-webkit-appearance:none;appearance:none;border:0!important;outline:0;box-shadow:none!important;background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%236B7280' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 8px center/12px;padding:6px 26px 6px 14px;min-width:128px;text-align:left;text-align-last:center;cursor:pointer;border-radius:10px}
+.top .month select:hover{background-color:rgba(246,107,33,.08)}
+.top .month select:focus-visible{box-shadow:0 0 0 2px var(--accent-3)!important}
+.top .month button{flex:0 0 30px}
 .top #presentBtn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(180deg,#FF7A33,#F0601A);border:0;color:#fff;border-radius:13px;padding:10px 18px;font-weight:700;font-size:14px;box-shadow:0 10px 20px -10px rgba(246,107,33,.85)}
 .top #presentBtn svg{width:14px;height:14px;fill:#fff}
 .top #presentBtn:hover{filter:brightness(1.05);transform:translateY(-1px)}
