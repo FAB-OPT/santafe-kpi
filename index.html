@@ -1361,7 +1361,7 @@ body:not(.tools) .top .brandsw,body:not(.tools) .top #fMode,body:not(.tools) .to
 .top .month button{width:30px;height:30px;padding:0;border-radius:10px;display:grid;place-items:center;font-size:16px;color:#6B7280}
 .top .month select{color:var(--ink);font-weight:700;font-size:14px;min-width:100px;text-align:center;text-align-last:center;color-scheme:light;padding:5px 6px}
 .top .month select option{background:#fff;color:var(--ink)}
-.top .month select{-webkit-appearance:none;appearance:none;border:0!important;outline:0;box-shadow:none!important;background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%236B7280' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 8px center/12px;padding:6px 26px 6px 14px;min-width:128px;text-align:left;text-align-last:center;cursor:pointer;border-radius:10px}
+.top .month select{-webkit-appearance:none;appearance:none;border:0!important;outline:0;box-shadow:none!important;background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5l3 3 3-3' fill='none' stroke='%236B7280' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 8px center/12px;padding:6px 28px 6px 14px;min-width:158px;text-align:left;text-align-last:center;cursor:pointer;border-radius:10px}
 .top .month select:hover{background-color:rgba(246,107,33,.08)}
 .top .month select:focus-visible{box-shadow:0 0 0 2px var(--accent-3)!important}
 .top .month button{flex:0 0 30px}
@@ -1797,6 +1797,8 @@ const sgn = (v,d=1,suffix='%') => v==null ? '—' : (v>0?'+':'')+v.toFixed(d)+su
 const pill = (v,d=1,suffix='%') => v==null ? '<span class="pill">—</span>' : `<span class="pill ${v>=0?'pos':'neg'}">${sgn(v,d,suffix)}</span>`;
 const cls = v => v==null?'':(v>=0?'pos':'neg');
 const label = m => MONTH_TH[m-1]+' '+YEAR;
+const MONTH_FULL=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const labelFull = m => MONTH_FULL[m-1]+' '+YEAR;
 
 /* ========================= charts (SVG) ========================= */
 function lineChart(rows){
@@ -4274,7 +4276,7 @@ function scopeTotals(){
 }
 function renderFilters(){
   const months=MONTHLY.map(r=>r.m).sort((a,b)=>a-b);
-  const mk=(sel,list,val)=>{ if(!sel) return; sel.innerHTML=list.map(m=>`<option value="${m}">${label(m)}</option>`).join(''); sel.value=val; };
+  const mk=(sel,list,val)=>{ if(!sel) return; sel.innerHTML=list.map(m=>`<option value="${m}">${labelFull(m)}</option>`).join(''); sel.value=val; };
   const mode=$('#fMode'); if(mode) mode.value=FILT.mode;
   const box=$('#fMonthBox'), qs=$('#fQuarter'), rb=$('#fRangeBox');
   if(box) box.hidden=FILT.mode!=='month';
@@ -4338,7 +4340,7 @@ function fillLyFromBranches(){
 function refreshMonths(){
   fillLyFromBranches();
   months=MONTHLY.map(r=>r.m).sort((a,b)=>a-b);
-  sel.innerHTML=''; months.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=label(m);sel.appendChild(o);});
+  sel.innerHTML=''; months.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=labelFull(m);sel.appendChild(o);});
   if(!months.includes(curM)) curM=months[months.length-1];
   $('#monthList').innerHTML=months.map(m=>`<span>${label(m)}<button data-del="${m}" title="ลบเดือนนี้">×</button></span>`).join('')||'<span>ยังไม่มีข้อมูล</span>';
 }
