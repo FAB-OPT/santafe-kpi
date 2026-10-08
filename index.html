@@ -2714,7 +2714,7 @@ function customersSection(m){
   const chShare=o=>{ const c=findCh(now,o.k); return c&&totTr?c.trans/totTr*100:0; };
   const chCard=(o,idx)=>{ const c=findCh(now,o.k), p=findCh(prv,o.k), L=LYA&&LYA.ch&&LYA.ch[['dine','take','deli'][idx]];
     if(!c) return `<div class="chc"><div class="chn"><i style="background:${o.c}"></i>${o.n}</div><div class="mute">ไม่มีข้อมูล</div></div>`;
-    const m1=(lab,k,fm)=>{ const pv=p&&p[k], lv=L&&L[k]; return `<div class="chmm"><small>${lab}</small><b>${fm(c[k])}</b>${pv&&PV?`<div class="kp">${pill(pct(pv,c[k]))}<span>${fm(pv)}</span></div>`:''}${lv?`<div class="kp">${pill(pct(lv,c[k]))}<span>LY ${fm(lv)}</span></div>`:''}</div>`; };
+    const m1=(lab,k,fm)=>{ const pv=p&&p[k], lv=L&&L[k]; return `<div class="chmm"><small>${lab}</small><b>${fm(c[k])}</b>${pv&&PV?`<div class="kp">${pill(pct(pv,c[k]))}<span>vs LM ${fm(pv)}</span></div>`:''}${lv?`<div class="kp">${pill(pct(lv,c[k]))}<span>vs LY ${fm(lv)}</span></div>`:''}</div>`; };
     return `<div class="chc"><div class="chn"><i style="background:${o.c}"></i>${o.n}<span>${chShare(o).toFixed(1)}%</span></div><div class="chm">${m1('จำนวนบิล','trans',fN)}${m1('ยอดเฉลี่ยต่อบิล','ticket',fB)}</div></div>`; };
   const chTiles=`<div class="chsh">สัดส่วนจำนวนบิล</div><div class="chbar">${CUS_CH.map(o=>`<i style="flex:${Math.max(chShare(o),.6)};background:${o.c}"></i>`).join('')}</div>
     <div class="chleg">${CUS_CH.map(o=>`<span><i style="background:${o.c}"></i>${o.n} <b>${chShare(o).toFixed(1)}%</b></span>`).join('')}</div>
