@@ -1272,6 +1272,9 @@ body.present .cmpchip{font-size:15px}
 #brModal table{font-size:15px} #brModal th{font-size:12.5px} #brModal th,#brModal td{padding:11px 14px}
 #brModal td .tiny{display:block;font-size:12px;line-height:1.5}
 @media (max-width:900px){#brModal .bp-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+.pltall{display:inline-flex;align-items:center;gap:6px;margin-left:12px;vertical-align:middle;border:1px solid var(--accent-3);background:var(--accent-2);color:var(--accent-ink);border-radius:999px;padding:3px 12px 3px 9px;font-size:12px;font-weight:700;letter-spacing:0;text-transform:none;cursor:pointer;transition:.15s}
+.pltall span{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;line-height:1}
+.pltall:hover{background:var(--accent);border-color:var(--accent);color:#fff}.pltall:hover span{background:#fff;color:var(--accent-ink)}
 .kcs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
 .kc{background:var(--card,#fff);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
 .kc.pos{border-left-color:var(--good)} .kc.neg{border-left-color:var(--bad,#E11D48)}
@@ -1996,7 +1999,6 @@ function plSection(m){
       <label><input type="checkbox" id="plLY" ${PLS.cmpLY&&lyHas&&!cmpMode?'checked':''} ${!lyHas||cmpMode?'disabled':''}> เทียบ LY (${RNG(months)} ${YEAR-1})${!lyHas?' <span class="hint">(ไม่มีข้อมูล LY ของเดือนนี้)</span>':''}</label>
       ${isJD()&&JD_CLOSED.size?`<label title="สาขาที่ไม่มีงบในเดือนล่าสุดของไฟล์"><input type="checkbox" id="plClosed" ${PLS.closed?'checked':''}> รวมสาขาปิด (${JD_CLOSED.size})</label>`:''}
       <label>หมวดย่อย <select id="plSort"><option value="chart" ${PLS.sort==='chart'?'selected':''}>ตามผังบัญชี</option><option value="desc" ${PLS.sort==='desc'?'selected':''}>มาก → น้อย</option></select></label>
-      <button class="btn small" id="plToggleAll">${PLS.showSub?'ซ่อนหมวดย่อยทั้งหมด':'แสดงหมวดย่อยทั้งหมด'}</button>
     </div>`;
   const sub=`${fallback?label(lastM)+' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':scopeLabel()} · ${PLS.branch==='all'?'ทั้งบริษัท':'สาขา '+brName(PLS.branch)} · หน่วย: บาท`;
   /* กราฟเดียว: ต้นทุนและค่าใช้จ่าย 6 หมวด เทียบทั้งปี (% ของรายได้ รายเดือน) */
@@ -2024,8 +2026,8 @@ function plSection(m){
     ${chartRows.length>1?`<div class="grp">สัดส่วนต้นทุนต่อรายได้ รายเดือน (%)</div>`+costStack(chartRows.map(r=>({m:r.m,revenue:r.revenue,food:r.food,labor:r.labor,rent:r.rent,admin:r.admin,profit:r.profit}))):''}
     ${head}
     <div class="scroll" style="margin-top:12px"><table class="pltable">
-      ${cmpMode?`<tr><th>รายการ · ${RNG(months)} ${YEAR}</th>${ents.map(e=>`<th class="n cmpth">${e.name}</th>`).join('')}</tr>`
-      :`<tr><th>รายการ</th>${split?months.map(mm=>`<th class="n">${MONTH_TH[mm-1]} ${YEAR}</th><th class="n">%</th>`).join(''):''}<th class="n">${split?'รวม ':''}${RNG(months)} ${YEAR}</th><th class="n">% รายได้</th>
+      ${cmpMode?`<tr><th>รายการ · ${RNG(months)} ${YEAR}<button type="button" class="pltall" id="plToggleAll" title="พับ/กางหมวดย่อยทั้งหมด"><span>${PLS.showSub?'▾':'▸'}</span>${PLS.showSub?'ซ่อนหมวดย่อย':'แสดงหมวดย่อย'}</button></th>${ents.map(e=>`<th class="n cmpth">${e.name}</th>`).join('')}</tr>`
+      :`<tr><th>รายการ<button type="button" class="pltall" id="plToggleAll" title="พับ/กางหมวดย่อยทั้งหมด"><span>${PLS.showSub?'▾':'▸'}</span>${PLS.showSub?'ซ่อนหมวดย่อย':'แสดงหมวดย่อย'}</button></th>${split?months.map(mm=>`<th class="n">${MONTH_TH[mm-1]} ${YEAR}</th><th class="n">%</th>`).join(''):''}<th class="n">${split?'รวม ':''}${RNG(months)} ${YEAR}</th><th class="n">% รายได้</th>
       ${prev?`<th class="n">${RNG(pm)} ${YEAR}</th><th class="n">Δ</th>`:''}
       ${ly?`<th class="n">${RNG(months)} ${YEAR-1}</th><th class="n">Δ</th>`:''}</tr>`}
       ${rowsOut.join('')}
