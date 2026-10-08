@@ -2191,7 +2191,7 @@ ol.rank.aud-secs .aud-bar{display:block;width:100%}
   <div class="impstats" id="impStats"></div>
   <div class="impgrid">
     <div class="impL">
-      <label class="drop" id="drop"><span class="dico">⤒</span><b>ลากไฟล์ .xlsx / .xlsb มาวางที่นี่</b><small>หรือแตะเพื่อเลือกไฟล์</small><input type="file" id="file" accept=".xlsx,.xls,.xlsb"></label>
+      <label class="drop" id="drop"><span class="dico">⤒</span><b>ลากไฟล์ .xlsx / .xlsb มาวางที่นี่</b><small>หรือแตะเพื่อเลือกไฟล์</small><input type="file" id="file" accept=".xlsx,.xls,.xlsb" multiple></label>
       <div class="fmt"><span>Daily Sale</span><span>แบบฟอร์มส่งยอดขาย</span><span>PL</span><span>CEM</span><span>OSS</span><span>ไฟล์ข้อมูลเว็บ</span></div>
       <div class="msg" id="msg"></div>
       <div id="impMiss"></div>
@@ -6457,10 +6457,14 @@ $('#importBtn').onclick=()=>{showMsg('','');
 $('#logClear').onclick=()=>{ if(!confirm('ล้างประวัติการนำเข้าในเครื่องนี้?')) return; try{localStorage.removeItem(LOG_KEY)}catch(e){} renderImportPanel(); };
 $('#closeModal').onclick=()=>$('#importModal').classList.remove('open');
 $('#importModal').onclick=e=>{if(e.target.id==='importModal')$('#importModal').classList.remove('open');};
-$('#file').onchange=e=>{if(e.target.files[0])importFile(e.target.files[0]);e.target.value='';};
+/* นำเข้าหลายไฟล์พร้อมกัน: ทำทีละไฟล์ตามลำดับ (ไฟล์ OSS 1 สาขาต่อ 1 ไฟล์ ลากมาทีเดียวได้ทุกสาขา) */
+async function importMany(list){ const fs=[...list]; if(!fs.length) return; const bad=[];
+  for(const f of fs){ await importFile(f); const m=$('#msg'); if(m&&/err/.test(m.className)) bad.push(f.name); }
+  if(fs.length>1) showMsg('นำเข้าครบ '+fs.length+' ไฟล์'+(bad.length?' · ไม่สำเร็จ '+bad.length+': '+bad.join(', '):' · สำเร็จทั้งหมด'),bad.length?'err':'ok'); }
+$('#file').onchange=e=>{ const l=[...e.target.files]; e.target.value=''; importMany(l); };
 const drop=$('#drop'); ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));
 ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over');}));
-drop.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)importFile(f);});
+drop.addEventListener('drop',e=>{ importMany(e.dataTransfer.files); });
 $('#monthList').onclick=async e=>{const m=+e.target.dataset.del; if(!m) return; setTimeout(()=>{renderImportPanel();importBadge();},0); if(!confirm('ลบข้อมูล '+label(m)+' ?')) return; MONTHLY=MONTHLY.filter(r=>r.m!==m); delete DETAIL[m]; if(!MONTHLY.length){MONTHLY=JSON.parse(JSON.stringify(DEFAULT_MONTHLY));DETAIL=JSON.parse(JSON.stringify(DEFAULT_DETAIL));} curM=null; await saveState(); showMsg('ลบ '+label(m)+' แล้ว','ok');};
 
 /* ========================= export ========================= */
