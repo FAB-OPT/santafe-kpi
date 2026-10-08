@@ -1353,6 +1353,13 @@ section.slide{background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(8px)
 .hv-ic-cust{background:#E8E4FB}.hv-ic-cust i{background:#6C5CE0}
 .hv-ic-cost{background:#DCF0E5}.hv-ic-cost i{background:#1F9D63;border-radius:3px;transform:rotate(45deg);width:13px;height:13px}
 .hv-ic-quality{background:#FBEED0}.hv-ic-quality i{background:transparent;border:3px solid #E2A21A;box-sizing:border-box}
+.bar h2[data-n=""]::before,.bar h2:not([data-n])::before{display:none}
+.hv-ic svg{width:22px;height:22px;display:block}
+.hv-ic.sm{width:36px;height:36px;border-radius:11px}.hv-ic.sm svg{width:19px;height:19px}
+.hv-ic-sales{background:#FDE8DA;color:#E8741F}.hv-ic-cust{background:#E8E4FB;color:#6C5CE0}
+.hv-ic-cost{background:#DCF0E5;color:#1F9D63}.hv-ic-quality{background:#FBEED0;color:#D79A12}
+.hv-ic-people,.hv-ic-other{background:rgba(120,105,90,.12);color:#9A9187}
+.hv-tile.soon .hv-ic{color:#A8A096}
 .hv-n{font-size:20px}
 .hv-badge{font-size:13.5px}
 .hv-tile.soon{background:rgba(255,255,255,.35);border:1.5px dashed rgba(120,105,90,.28);box-shadow:none;opacity:1;-webkit-backdrop-filter:none;backdrop-filter:none}
@@ -5722,6 +5729,15 @@ $('#exportBtn').onclick=e=>{e.stopPropagation();$('#exportDd').classList.toggle(
     mb.textContent=n?n.textContent:''; mb.hidden=!n; }; }
 </script>
 <script>
+/* ไอคอนเส้นของหัวข้อ (อยู่ในชิปสีตามหมวด) */
+function hvIcon(k,sm){ const P={
+  sales:'<polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/>',
+  cust:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  cost:'<path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>',
+  quality:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+  people:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  other:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'};
+  return '<span class="hv-ic hv-ic-'+k+(sm?' sm':'')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(P[k]||P.other)+'</svg></span>'; }
 /* ================= UX ใหม่: หน้ารวมหัวข้อ → หน้าหมวด ================= */
 (function(){
 const TOPICS=[
@@ -5797,13 +5813,13 @@ function hubApply(){
     place('<div id="hubView"><div class="hv-head"><div><div class="hv-t">'+b.n+'</div><div class="hv-s">'+((SCP&&SCP.lab)||label(curM))+(FILT.zone!=='all'?' · '+scopeName():'')+' · เลือกหัวข้อที่ต้องการดู</div></div></div>'
       +'<div class="hv-grid">'+TOPICS.map(t=>{
         /* หมวดที่ยังไม่เปิดใช้งาน: การ์ดรอข้อมูล กดไม่ได้ */
-        if(t.soon) return '<span class="hv-tile soon"><span class="hv-top"><span class="hv-ic hv-ic-'+t.k+'"><i></i></span><span class="hv-n">'+t.n+'</span><span class="hv-chip">เร็ว ๆ นี้</span></span>'
+        if(t.soon) return '<span class="hv-tile soon"><span class="hv-top">'+hvIcon(t.k)+'<span class="hv-n">'+t.n+'</span><span class="hv-chip">เร็ว ๆ นี้</span></span>'
           +'<span class="hv-rows"><span class="hv-r"><span>'+t.soon+'</span></span></span></span>';
         /* แบรนด์ที่มีข้อมูลบางส่วน: การ์ดหมวดที่ยังไม่มีข้อมูล กดแล้วเปิดหน้าต่างนำเข้า */
-        if(!avail.includes(t)) return '<button type="button" class="hv-tile off" data-imp-t="'+t.k+'"><span class="hv-top"><span class="hv-ic hv-ic-'+t.k+'"><i></i></span><span class="hv-n">'+t.n+'</span><span class="hv-go">⤒</span></span>'
+        if(!avail.includes(t)) return '<button type="button" class="hv-tile off" data-imp-t="'+t.k+'"><span class="hv-top">'+hvIcon(t.k)+'<span class="hv-n">'+t.n+'</span><span class="hv-go">⤒</span></span>'
           +'<span class="hv-l">ยังไม่มีข้อมูล</span><span class="hv-v">—</span><span class="hv-sub">ต้องใช้: '+needT(t.k)+'</span></button>';
         const d=tile(t)||{};
-        return '<button type="button" class="hv-tile" data-topic="'+t.k+'"><span class="hv-top"><span class="hv-ic hv-ic-'+t.k+'"><i></i></span><span class="hv-n">'+t.n+'</span><span class="hv-go">›</span></span>'
+        return '<button type="button" class="hv-tile" data-topic="'+t.k+'"><span class="hv-top">'+hvIcon(t.k)+'<span class="hv-n">'+t.n+'</span><span class="hv-go">›</span></span>'
           +'<span class="hv-main"><span class="hv-ml">'+(d.l||'')+'</span><span class="hv-mv">'+(d.v||'—')+'</span></span>'
           +(d.badge?'<span class="hv-main"><span class="hv-ml">'+d.badge.l+'</span><span class="hv-badge '+(d.badge.tone||'')+'">'+d.badge.dir+' '+d.badge.v+'</span></span>':'')
           +((d.rows&&d.rows.length)?'<span class="hv-rows">'+d.rows.map(r=>'<span class="hv-r"><span>'+r[0]+'</span><b class="'+(r[2]||'')+'">'+r[1]+'</b></span>').join('')+'</span>':'')
@@ -5814,7 +5830,7 @@ function hubApply(){
     const t=TOPICS.find(x=>x.k===TOPIC), ids=t.ids.filter(id=>document.getElementById(id));
     if(!ids.includes(TSEC)) TSEC=ids[0];
     secs.forEach(x=>x.classList.toggle('hhide',x.id!==TSEC));
-    place('<div id="topicBar"><div class="tb-row"><button type="button" class="tb-back" data-hub>‹ ภาพรวม</button><span class="tb-ic">'+t.ic+'</span><h1 class="tb-t">'+t.n+'</h1>'
+    place('<div id="topicBar"><div class="tb-row"><button type="button" class="tb-back" data-hub>‹ ภาพรวม</button>'+hvIcon(t.k,1)+'<h1 class="tb-t">'+t.n+'</h1>'
       +(ids.length>1?'<button type="button" class="btn small tb-pres" data-tpres>▶ พรีเซนต์หมวดนี้</button>':'')+'</div>'
       +((g=>g?'<div class="tb-nav">'+segHtml(t,ids)+(g>1?'<div class="tb-tabs" role="tablist">'+tabsHtml(t,ids)+'</div>':'')+'</div>':'')
           ((G=>G?G.cur.ids.length:(ids.length>1?ids.length:0))(tabGroups(t,ids))))+'</div>');
@@ -5843,9 +5859,9 @@ function emptyApply(){
   if(!TOPIC){
     main.innerHTML='<div id="hubView"><div class="hv-head"><div><div class="hv-t">'+b.n+'</div><div class="hv-s">ยังไม่มีข้อมูลในระบบ · เลือกหัวข้อเพื่อดูว่าต้องใช้ข้อมูลอะไร</div></div><button type="button" class="btn primary" data-imp>⤒ นำเข้าข้อมูล '+b.n+'</button></div>'
       +'<div class="hv-grid">'+TOPICS.map(t=>t.soon
-        ?'<span class="hv-tile soon"><span class="hv-top"><span class="hv-ic hv-ic-'+t.k+'"><i></i></span><span class="hv-n">'+t.n+'</span><span class="hv-chip">เร็ว ๆ นี้</span></span>'
+        ?'<span class="hv-tile soon"><span class="hv-top">'+hvIcon(t.k)+'<span class="hv-n">'+t.n+'</span><span class="hv-chip">เร็ว ๆ นี้</span></span>'
           +'<span class="hv-rows"><span class="hv-r"><span>'+t.soon+'</span></span></span></span>'
-        :'<button type="button" class="hv-tile off" data-topic="'+t.k+'"><span class="hv-top"><span class="hv-ic hv-ic-'+t.k+'"><i></i></span><span class="hv-n">'+t.n+'</span><span class="hv-go">›</span></span>'
+        :'<button type="button" class="hv-tile off" data-topic="'+t.k+'"><span class="hv-top">'+hvIcon(t.k)+'<span class="hv-n">'+t.n+'</span><span class="hv-go">›</span></span>'
           +'<span class="hv-l">ยังไม่มีข้อมูล</span><span class="hv-v">—</span><span class="hv-sub">ต้องใช้: '+needT(t.k)+'</span></button>').join('')+'</div></div>';
     main.querySelectorAll('[data-topic]').forEach(x=>x.onclick=()=>openTopic(x.dataset.topic));
   } else {
