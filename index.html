@@ -1346,6 +1346,22 @@ body:not(.tools) .top .brandsw,body:not(.tools) .top #fMode,body:not(.tools) .to
 .top .btn.primary{order:7}
 .top .month{background:rgba(255,255,255,.7);border:1px solid rgba(15,23,42,.06);border-radius:12px}
 .top .month select{font-weight:700}
+/* แถบกำลังกรอง (การ์ดลอยใต้แถบบน) */
+.scopebar2{margin:12px 20px 0;padding:10px 12px 10px 14px;border-radius:18px;border:1px solid rgba(246,107,33,.22);
+  background:linear-gradient(90deg,rgba(255,236,222,.9),rgba(255,246,238,.85));-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  box-shadow:0 12px 28px -20px rgba(246,107,33,.6);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.scopebar2 .sc-ic{width:36px;height:36px;border-radius:11px;background:#fff;color:var(--accent);display:grid;place-items:center;box-shadow:0 4px 10px -6px rgba(246,107,33,.6);flex:0 0 auto}
+.scopebar2 .sc-ic svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.scopebar2 .sc-t{display:flex;flex-direction:column;line-height:1.2}
+.scopebar2 .sc-t small{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-ink)}
+.scopebar2 .sc-t b{font-size:16px;font-weight:800;color:var(--ink)}
+.scopebar2 .sc-meta{display:flex;align-items:center;gap:10px;margin-left:6px;padding-left:16px;border-left:1px solid rgba(246,107,33,.25);font-size:13.5px;color:var(--ink-2);flex-wrap:wrap}
+.scopebar2 .sc-meta i{width:4px;height:4px;border-radius:50%;background:rgba(246,107,33,.5)}
+.scopebar2 .sc-meta b{color:var(--ink);font-weight:800}
+.scopebar2 .sc-clear{margin-left:auto;display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(246,107,33,.3);background:#fff;color:var(--accent-ink);border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:.15s}
+.scopebar2 .sc-clear:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.scopebar2 .sc-clear span{font-size:12px;line-height:1}
+@media (max-width:820px){.scopebar2{margin:8px 10px 0}.scopebar2 .sc-meta{border-left:0;padding-left:0;margin-left:0}}
 /* ===== แถบบนแบบปรับละเอียด (แบบ 1) ===== */
 .top{gap:14px;padding:10px 16px;border-radius:20px}
 .top .logo{width:40px;height:40px;border-radius:12px;box-shadow:0 6px 12px -6px rgba(246,107,33,.6)}
@@ -4182,9 +4198,9 @@ function buildMain(m){
   out.push(auditSection('cem','Customer Experience (CEM) Score',m,d));
   out.push(auditSection('oss','Operations & Service Standard (OSS)',m,d));
 
-  if(scopeMonths().length>1 || FILT.zone!=='all'){
+  { const scs=document.querySelector('#scopeBar .scs'); if(scs) scs.textContent=scopeTotals().sales.toFixed(1)+'M'; }
+  if(scopeMonths().length>1 && FILT.zone==='all'){
     const note=`<div class="scopebar">📅 <b>${scopeLabel()}</b>`
-      + (FILT.zone!=='all'?` · 🧭 <b>${scopeName()}</b>`:'')
       + ` · <span>ยอดขายรวมในช่วง <b>${scopeTotals().sales.toFixed(1)}M</b></span></div>`;
     out.unshift(note);
   }
@@ -4302,7 +4318,11 @@ function renderFilters(){
   if(bar){ if(FILT.zone==='all'){ bar.hidden=true; bar.innerHTML=''; }
     else { const n=sc==='zone'?Object.values(BRANCH_META||{}).filter(v=>v&&v.zone===FILT.zone).length:0;
       bar.hidden=false;
-      bar.innerHTML=`<span class="chip2">กำลังกรอง</span><b>${scopeName()}${n?' · '+n+' สาขา':''}</b><span class="hint2">ตัวเลขทุกหัวข้อในหน้านี้เป็นของ${sc==='zone'?'โซน':'สาขา'}นี้ · <u data-scall="1">กลับไป All Stores ✕</u></span>`; } }
+      const per=scopeMonths().length>1?scopeLabel():labelFull(curM), isZ=sc==='zone';
+      bar.innerHTML=`<span class="sc-ic">${isZ?'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>':'<svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>'}</span>
+        <span class="sc-t"><small>กำลังกรอง</small><b>${scopeName()}</b></span>
+        <span class="sc-meta"><span>${per}</span>${n?`<i></i><span>${n} สาขา</span>`:''}<i></i><span>ยอดขายรวม <b class="scs">—</b></span></span>
+        <button type="button" class="sc-clear" data-scall="1">กลับไป All Stores <span>✕</span></button>`; } }
 }
 let ZONES_LIST=[];
 function bindFilters(){
