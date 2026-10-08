@@ -1966,6 +1966,21 @@ table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD
 .cudr-bg{backdrop-filter:blur(3px)}
 .cd-mini{grid-template-columns:repeat(4,1fr)}
 @media (max-width:560px){.cd-mini{grid-template-columns:repeat(2,1fr)}.cd-m:nth-child(4n){border-right:1px solid rgba(15,23,42,.06)}.cd-m:nth-child(2n){border-right:0}.cd-m:nth-child(n+5){border-bottom:1px solid rgba(15,23,42,.06)}.cd-m:nth-child(n+7){border-bottom:0}}
+
+#plbr .plbA{grid-template-columns:minmax(200px,.8fr) minmax(210px,.9fr) minmax(0,2.2fr)}
+@media (max-width:1100px){#plbr .plbA{grid-template-columns:1fr 1fr}#plbr .plbA>.plbc:last-child{grid-column:1/-1}}
+#plbr .plbdn{align-items:center;justify-content:center}
+#plbr .plbring{width:100%;max-width:210px;height:auto}
+#plbr .plbnums{justify-content:center;gap:22px}
+#plbr .plbnums small{display:block;font-size:14px;color:#7B8494;font-weight:600;margin-bottom:2px}
+#plbr .plbnums b{display:flex;align-items:baseline;gap:10px;font-size:60px;font-weight:800;letter-spacing:-.02em;line-height:1.05}
+#plbr .plbnums b.pos{color:#12A367}#plbr .plbnums b.neg{color:#E0364B}
+#plbr .plbnums em{font-style:normal;font-size:15px;font-weight:500;color:#8A93A3;letter-spacing:0}
+
+#plbr .plbh{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#plbr .plbtip{margin-left:auto;font-size:12.5px;font-weight:700;color:#C9490B;background:#FFF1E6;border:1px solid #F9D9C4;border-radius:999px;padding:3px 12px}
+#plbr svg rect[data-bar]{transition:filter .15s,opacity .15s}
+#plbr svg rect[data-bar]:hover{filter:brightness(.92) drop-shadow(0 4px 8px rgba(15,23,42,.25))}
 </style>
 </head>
 <body>
@@ -3389,13 +3404,13 @@ function plbrBody(){
     PLBR={rank,edges:[-10,0,5,10,15,1e9],labels:['ขาดทุน>10%','ขาดทุน 0-10%','0-5%','5-10%','10-15%','>15%'],sel:null};
     const subTxt=`${S.multi?S.lab:label(plbM)}${plbM!==m&&!S.multi?' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':''} · ${rank.length} สาขา`;
     return `<div id="plbr"><div class="grp big">Profit by Branch<span class="gr">${subTxt}</span></div>
-      <div class="plbg">
-        <div class="plbc">
-          <div class="plbn"><div class="plbnb"><small>สาขาที่กำไร</small><b class="pos">${nProfit}</b></div><div class="plbnb"><small>สาขาที่ขาดทุน</small><b class="neg">${loss.length}</b><span>รวม ${MB(loss.reduce((a,b)=>a+b.profit,0))}</span></div></div>
-          <div class="plbsp"><i style="flex:${Math.max(nProfit,.5)}"></i><i class="l" style="flex:${Math.max(loss.length,.5)}"></i></div>
-          <div class="plbsl"><span><i style="background:#12A367"></i>กำไร ${(nProfit/plb.length*100).toFixed(0)}%</span><span><i style="background:#E0364B"></i>ขาดทุน ${(loss.length/plb.length*100).toFixed(0)}%</span><em>จาก ${plb.length} สาขา</em></div>
+      <div class="plbg plbA">
+        <div class="plbc plbdn"><svg viewBox="0 0 120 120" class="plbring"><circle cx="60" cy="60" r="46" fill="none" stroke="#E0364B" stroke-width="16"/>${nProfit?`<circle cx="60" cy="60" r="46" fill="none" stroke="#12A367" stroke-width="16" stroke-dasharray="${(nProfit/plb.length*289.03).toFixed(1)} 289.03" transform="rotate(-90 60 60)"/>`:''}<text x="60" y="58" text-anchor="middle" style="font-size:24px!important" font-weight="800" fill="#0F172A">${(nProfit/plb.length*100).toFixed(0)}%</text><text x="60" y="77" text-anchor="middle" style="font-size:9px!important" fill="#8A93A3">สาขาที่กำไร</text></svg></div>
+        <div class="plbc plbnums">
+          <div><small>สาขาที่กำไร</small><b class="pos">${nProfit}<em>/ ${plb.length}</em></b></div>
+          <div><small>สาขาที่ขาดทุน</small><b class="neg">${loss.length}<em>รวม ${MB(loss.reduce((a,b)=>a+b.profit,0))}</em></b></div>
         </div>
-        <div class="plbc"><div class="plbh">การกระจาย %กำไร (จำนวนสาขา)</div>${histo(rank.map(b=>b.gp),PLBR.edges,PLBR.labels,320)}<div class="plbhint">คลิกแท่งกราฟเพื่อดูรายชื่อสาขาในช่วงนั้น</div></div>
+        <div class="plbc"><div class="plbh">การกระจาย %กำไร (จำนวนสาขา)<span class="plbtip">👆 คลิกแท่งเพื่อดูรายชื่อสาขาในช่วงนั้น</span></div>${histo(rank.map(b=>b.gp),PLBR.edges,PLBR.labels,320)}</div>
       </div>
       <div id="plbrPick"></div>
       <div class="plbg2">
