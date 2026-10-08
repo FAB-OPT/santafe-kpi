@@ -1944,6 +1944,21 @@ table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD
 .cosm-ch{background:#fff;border-radius:18px;padding:16px 18px 6px}
 .cosm-t{font-size:16px;font-weight:700;margin-bottom:4px}.cosm-t small{font-size:12.5px;font-weight:400;color:#8A93A3;margin-left:10px}
 .cosm-note{font-size:12.5px;color:#8A93A3;margin-top:12px}
+
+#plbr .plbc{display:flex;flex-direction:column}
+#plbr .plbc:first-child{justify-content:space-between;padding:22px 26px}
+#plbr .plbnb b{font-size:56px}
+#plbr .plbnb small{font-size:14px}
+#plbr .plbnb span{font-size:13.5px}
+#plbr .plbsp{height:12px;margin-top:26px}
+#plbr .plbsl{display:flex;align-items:center;gap:18px;font-size:13.5px;color:#5B6678;margin-top:14px}
+#plbr .plbsl i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+#plbr .plbsl em{font-style:normal;margin-left:auto;color:#8A93A3}
+#plbr .plbh{font-size:16px;margin-bottom:10px}
+#plbr .plbc svg.chart{height:auto;width:100%;margin-top:6px}
+#plbr .plbc svg.chart text{font-size:16px}
+#plbr .plbc svg.chart text[font-weight="600"]{font-size:19px;font-weight:800}
+#plbr .plbhint{font-size:13px;margin-top:6px}
 </style>
 </head>
 <body>
@@ -2220,10 +2235,10 @@ function costStack(rows){
     <div class="legend">${seg.map(x=>`<span><i style="background:${x[2]}"></i>${x[0]}</span>`).join('')}</div>`;
 }
 /* ---- ฮิสโทแกรม: การกระจาย %กำไรรายสาขา ---- */
-function histo(vals,edges,labels){
+function histo(vals,edges,labels,HH){
   const cnt=edges.map(()=>0);
   vals.forEach(v=>{ let k=edges.findIndex((e,i)=>v<e); if(k<0)k=edges.length-1; cnt[k]++; });
-  const W=1180,H=175,L=34,R=10,T=14,B=36, gw=(W-L-R)/cnt.length, bw=Math.min(74,gw*0.62);
+  const W=1180,H=HH||175,L=34,R=10,T=HH?30:14,B=HH?44:36, gw=(W-L-R)/cnt.length, bw=Math.min(HH?96:74,gw*0.62);
   const mx=Math.max(...cnt,1), y=v=>T+(H-T-B)*(1-v/mx);
   let g=`<line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="var(--line)"/>`;
   cnt.forEach((n,i)=>{ const cx=L+gw*(i+.5), c=i<2?'var(--bad)':(i<3?'var(--amber)':'var(--good)');
@@ -3372,9 +3387,9 @@ function plbrBody(){
         <div class="plbc">
           <div class="plbn"><div class="plbnb"><small>สาขาที่กำไร</small><b class="pos">${nProfit}</b></div><div class="plbnb"><small>สาขาที่ขาดทุน</small><b class="neg">${loss.length}</b><span>รวม ${MB(loss.reduce((a,b)=>a+b.profit,0))}</span></div></div>
           <div class="plbsp"><i style="flex:${Math.max(nProfit,.5)}"></i><i class="l" style="flex:${Math.max(loss.length,.5)}"></i></div>
-          <div class="plbsl">จาก ${plb.length} สาขา</div>
+          <div class="plbsl"><span><i style="background:#12A367"></i>กำไร ${(nProfit/plb.length*100).toFixed(0)}%</span><span><i style="background:#E0364B"></i>ขาดทุน ${(loss.length/plb.length*100).toFixed(0)}%</span><em>จาก ${plb.length} สาขา</em></div>
         </div>
-        <div class="plbc"><div class="plbh">การกระจาย %กำไร (จำนวนสาขา)</div>${histo(rank.map(b=>b.gp),PLBR.edges,PLBR.labels)}<div class="plbhint">คลิกแท่งกราฟเพื่อดูรายชื่อสาขาในช่วงนั้น</div></div>
+        <div class="plbc"><div class="plbh">การกระจาย %กำไร (จำนวนสาขา)</div>${histo(rank.map(b=>b.gp),PLBR.edges,PLBR.labels,320)}<div class="plbhint">คลิกแท่งกราฟเพื่อดูรายชื่อสาขาในช่วงนั้น</div></div>
       </div>
       <div id="plbrPick"></div>
       <div class="plbg2">
