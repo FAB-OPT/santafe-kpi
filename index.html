@@ -2575,7 +2575,7 @@ function cuPanel(title,unit,labs,cur,ly,color){
   let lastD=null;
   cur.forEach((v,i)=>{ const last=i===n-1, d=v!=null&&ly[i]!=null&&ly[i]>0?(v/ly[i]-1)*100:null; if(last) lastD=d;
     if(v!=null) g+=`<circle cx="${X(i)}" cy="${Y(v)}" r="${last?5.5:3.8}" fill="${last?color:'#fff'}" stroke="${color}" stroke-width="2"><title>${labs[i]}: ${K(v)}${ly[i]!=null?' · LY '+K(ly[i]):''}${d!=null?' ('+sg(d)+')':''}</title></circle>`
-      +`<text x="${X(i)}" y="${Y(v)-10}" font-size="${last?12.5:10.5}" font-weight="${last?800:600}" fill="${last?color:'#3B4556'}" text-anchor="middle">${K(v)}</text>`;
+      +`<text x="${X(i)}" y="${(()=>{ const nb=[cur[i-1],cur[i+1]].filter(z=>z!=null).map(z=>Y(z)-Y(v)); const above=nb.every(d=>d>-16), below=nb.every(d=>d<16); return (!above&&below)?Y(v)+(last?24:21):Y(v)-10; })()}" font-size="${last?12.5:10.5}" font-weight="${last?800:600}" fill="${last?color:'#3B4556'}" text-anchor="middle">${K(v)}</text>`;
     g+=`<text x="${X(i)}" y="${H-40}" font-size="10.5" fill="${last?'#0F172A':'#8A93A3'}" font-weight="${last?800:500}" text-anchor="middle">${labs[i]}</text>`;
     if(ly[i]!=null) g+=`<text x="${X(i)}" y="${H-26}" font-size="9.5" fill="#8A93A3" text-anchor="middle">LY ${K(ly[i])}</text>`;
     if(d!=null) g+=`<text x="${X(i)}" y="${H-11}" font-size="10.5" font-weight="800" fill="${col(d)}" text-anchor="middle">${sg(d)}</text>`; });
@@ -2608,13 +2608,18 @@ document.addEventListener('input',e=>{ const inp=e.target.closest&&e.target.clos
   const sel=root.querySelector('[data-cubr]'); if(sel) [...sel.options].forEach(o=>{ o.hidden=!(o.value==='all'||!q||o.textContent.toLowerCase().includes(q)); }); });
 document.addEventListener('click',e=>{
   const th=e.target.closest&&e.target.closest('#customers .cubtbl th.csrt');
-  if(th){ const tb=th.closest('table'), ci=+th.dataset.cs, desc=!(th.classList.contains('on')&&th.dataset.dir==='desc');
+  if(th){ const tb=th.closest('table'), ci=+th.dataset.cs, first=(ci===1||ci===0)?'asc':'desc';
+    const cur=th.classList.contains('on')?th.dataset.dir:'', dir=cur?(cur==='desc'?'asc':'desc'):first, desc=dir==='desc';
     const num=td=>{ const m=(td&&td.textContent||'').replace(/,/g,'').match(/-?\d+(\.\d+)?/); return m?+m[0]:-Infinity; };
     const rows=[...tb.querySelectorAll('tr[data-ssbr]')];
-    rows.sort((a,b)=>desc?num(b.children[ci])-num(a.children[ci]):num(a.children[ci])-num(b.children[ci]));
+    rows.sort((a,b)=>{ let r;
+      if(ci===0) r=(+a.dataset.ri)-(+b.dataset.ri);
+      else if(ci===1) r=String(a.dataset.ssbr).localeCompare(String(b.dataset.ssbr),undefined,{numeric:true});
+      else r=num(a.children[ci])-num(b.children[ci]);
+      return desc?-r:r; });
     rows.forEach((r,i)=>{ tb.firstElementChild.appendChild(r); r.classList.toggle('cuex',i>=12); });
     tb.querySelectorAll('th.csrt').forEach(h=>{ h.classList.remove('on'); h.dataset.dir=''; const ic=h.querySelector('i'); if(ic) ic.textContent=''; });
-    th.classList.add('on'); th.dataset.dir=desc?'desc':'asc'; th.querySelector('i').textContent=desc?'▼':'▲'; cuRenum(); return; }
+    th.classList.add('on'); th.dataset.dir=dir; th.querySelector('i').textContent=desc?'▼':'▲'; cuRenum(); return; }
   const mb=e.target.closest&&e.target.closest('[data-cumore]');
   if(mb){ const bl=mb.closest('.plblock'), on=bl.dataset.all!=='1'; bl.dataset.all=on?'1':''; bl.classList.toggle('cuall',on);
     const n=bl.querySelectorAll('tr[data-ssbr]').length; mb.innerHTML=on?'แสดงน้อยลง <span>⌃</span>':'แสดงทั้งหมด '+n+' สาขา <span>⌄</span>'; } });
@@ -2739,10 +2744,10 @@ function customersSection(m){
     const tkc=(x,j)=>x&&x[TRK[j]]?x[CK[j]]/x[TRK[j]]:null, ca=x=>x&&x.cust&&x.tr?x.cust/x.tr:null, pb=x=>x&&x.cust?x.sales/x.cust:null;
     const hasCh=list.some(b=>b.trDine||b.trTake||b.trDeli);
     const chHint=hasCh?'':`<div class="hint" style="margin-top:8px">Ticket แยกช่องทางรายสาขา: ข้อมูล ${label(m)} ในเครื่องนี้มีบิลแยกช่องทาง 0 จาก ${list.length} สาขา — นำเข้าไฟล์แบบฟอร์มส่งยอดขายอีกครั้ง แล้วดูข้อความหลังนำเข้าว่า "บิลแยกช่องทางรายสาขา" ได้กี่สาขา</div>`;
-    btbl=`<div class="scroll"><table class="cubtbl"><tr><th>#</th><th>สาขา</th><th class="n csrt on" data-cs="2">Total Trans <i>▼</i></th><th class="n csrt" data-cs="3">Ticket Avg. <i></i></th>${CUS_CH.map((o,j)=>`<th class="n csrt" data-cs="${4+j}">Ticket ${o.n} <i></i></th>`).join('')}<th class="n csrt" data-cs="7">Customers <i></i></th><th class="n csrt" data-cs="8">Customer Avg. <i></i></th><th class="n csrt" data-cs="9">Per Bill <i></i></th><th></th></tr>
+    btbl=`<div class="scroll"><table class="cubtbl"><tr><th class="csrt" data-cs="0">ลำดับ <i></i></th><th class="csrt" data-cs="1">สาขา <i></i></th><th class="n csrt on" data-dir="desc" data-cs="2">Total Trans <i>▼</i></th><th class="n csrt" data-cs="3">Ticket Avg. <i></i></th>${CUS_CH.map((o,j)=>`<th class="n csrt" data-cs="${4+j}">Ticket ${o.n} <i></i></th>`).join('')}<th class="n csrt" data-cs="7">Customers <i></i></th><th class="n csrt" data-cs="8">Customer Avg. <i></i></th><th class="n csrt" data-cs="9">Per Bill <i></i></th><th></th></tr>
     ${list.map((b,i)=>{ const p=pMap[b.code];
       const hid=CUC.br!=='all'&&String(b.code)!==CUC.br;
-      return `<tr class="clk${i>=12?' cuex':''}" data-ssbr="${b.code}"${hid?' hidden':''}><td>${CUC.br==='all'?i+1:1}</td><td>${b.code} ${b.name}</td><td class="n">${fN(b.tr)}${vsL(p&&p.tr,b.tr)}</td><td class="n"><b>${fB(b.tk)}</b>${vsL(p&&p.tk,b.tk)}</td>${CUS_CH.map((o,j)=>`<td class="n">${fB(tkc(b,j))}${vsL(tkc(p,j),tkc(b,j))}</td>`).join('')}<td class="n">${fN(b.cust||null)}${vsL(p&&p.cust,b.cust)}</td><td class="n">${ca(b)==null?'—':f2(ca(b))}${vsL(ca(p),ca(b))}</td><td class="n">${fB(pb(b))}${vsL(pb(p),pb(b))}</td><td class="n"><button type="button" class="dtbtn" title="ดูรายละเอียดสาขา ${b.code}">ดูรายละเอียด ›</button></td></tr>`; }).join('')}</table></div>${list.length>12?`<div class="cumore"><button type="button" data-cumore>แสดงทั้งหมด ${list.length} สาขา <span>⌄</span></button></div>`:''}<div class="hint brqnone" hidden>ไม่พบสาขาที่ค้นหา</div>${chHint}`; }
+      return `<tr class="clk${i>=12?' cuex':''}" data-ri="${i+1}" data-ssbr="${b.code}"${hid?' hidden':''}><td>${CUC.br==='all'?i+1:1}</td><td>${b.code} ${b.name}</td><td class="n">${fN(b.tr)}${vsL(p&&p.tr,b.tr)}</td><td class="n"><b>${fB(b.tk)}</b>${vsL(p&&p.tk,b.tk)}</td>${CUS_CH.map((o,j)=>`<td class="n">${fB(tkc(b,j))}${vsL(tkc(p,j),tkc(b,j))}</td>`).join('')}<td class="n">${fN(b.cust||null)}${vsL(p&&p.cust,b.cust)}</td><td class="n">${ca(b)==null?'—':f2(ca(b))}${vsL(ca(p),ca(b))}</td><td class="n">${fB(pb(b))}${vsL(pb(p),pb(b))}</td><td class="n"><button type="button" class="dtbtn" title="ดูรายละเอียดสาขา ${b.code}">ดูรายละเอียด ›</button></td></tr>`; }).join('')}</table></div>${list.length>12?`<div class="cumore"><button type="button" data-cumore>แสดงทั้งหมด ${list.length} สาขา <span>⌄</span></button></div>`:''}<div class="hint brqnone" hidden>ไม่พบสาขาที่ค้นหา</div>${chHint}`; }
   const cuBr=CUC.ctx?`<div class="cuh"><label class="cusel" style="margin-left:0">แสดงกราฟ <select data-cubr><option value="all">All · ทุกสาขา</option>${Object.keys(CUC.ctx.nm).sort().map(c=>`<option value="${c}"${CUC.br===c?' selected':''}>${c} ${CUC.ctx.nm[c]}</option>`).join('')}</select></label></div><div id="cuCharts">${cuChartsHtml(CUC.br)}</div>`:'';
   const tI=trend.indexOf('<div class="grp big">รายเดือน'), tTable=tI>=0?trend.slice(tI):'';
   const W=(h,t)=>h?`<div class="plblock">${t?`<div class="grp big">${t}</div>`:''}${h}</div>`:'';
