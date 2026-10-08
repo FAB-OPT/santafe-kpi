@@ -1797,7 +1797,6 @@ const sgn = (v,d=1,suffix='%') => v==null ? '—' : (v>0?'+':'')+v.toFixed(d)+su
 const pill = (v,d=1,suffix='%') => v==null ? '<span class="pill">—</span>' : `<span class="pill ${v>=0?'pos':'neg'}">${sgn(v,d,suffix)}</span>`;
 const cls = v => v==null?'':(v>=0?'pos':'neg');
 const label = m => MONTH_TH[m-1]+' '+YEAR;
-const MONTH_FULL=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const labelFull = m => MONTH_FULL[m-1]+' '+YEAR;
 
 /* ========================= charts (SVG) ========================= */
