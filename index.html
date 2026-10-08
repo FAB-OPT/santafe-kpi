@@ -1668,6 +1668,37 @@ body.hub section.slide .bar h2[data-n]::before{display:none}
 @media (max-width:760px){.tb-nav{flex-direction:column;align-items:stretch;gap:4px}.tb-seg{display:flex;align-self:stretch}.tb-seg button{flex:1 1 0;text-align:center}}
 @media (max-width:560px){.hv-grid{gap:10px}.hv-tile{min-height:138px;padding:14px 14px 12px}.hv-v{font-size:22px}.hv-d{display:none}.hv-t{font-size:22px}.tb-t{font-size:19px}}
 
+
+/* ===== ธีมหน้าด้านใน (ตามดีไซน์ใหม่) ===== */
+body.hub main{max-width:1000px;margin-left:auto;margin-right:auto;width:100%}
+.pill{box-shadow:none}
+.pill.pos{background:#E3F4EA;color:#14803F}.pill.neg{background:#FCE5E8;color:#CF3347}
+#overview{background:transparent!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+#overview>.bar{padding:4px 4px 12px!important;background:transparent!important}
+#overview .bar h2{font-size:15px}
+#overview>.body{padding:0!important}
+.ovstack{display:grid;grid-template-columns:minmax(250px,.8fr) minmax(0,2.2fr);gap:16px}
+.ovstack>#ovTrend,.ovstack>#ovBranch{grid-column:1/-1}
+@media (max-width:900px){.ovstack{grid-template-columns:1fr}}
+.ovc{background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.95);border-radius:24px;padding:20px 24px;box-shadow:0 18px 40px -30px rgba(70,45,20,.45)}
+.ovc.acc{border-left:1px solid rgba(255,255,255,.95)}
+.ovlab{color:#6B7280;letter-spacing:.07em}
+.ovseg{background:rgba(15,23,42,.05);border-radius:12px;padding:3px}
+.ovseg button{border-radius:9px;padding:6px 14px;color:#8A94A6}
+.ovseg button.on{background:#fff;color:var(--ink);box-shadow:0 2px 6px rgba(15,23,42,.12)}
+.ovth h3{font-size:16px;font-weight:800}
+/* ตาราง: หัวเล็กสีจาง เส้นบาง ไม่มีแถบสลับสี */
+table th{font-size:10.5px;letter-spacing:.07em;color:#98A1AE;border-bottom:1px solid rgba(15,23,42,.08)!important;padding-bottom:9px}
+table td{border-bottom:1px solid rgba(15,23,42,.05)}
+table tr:nth-child(even) td{background:transparent}
+table tr:hover td{background:rgba(246,107,33,.05)}
+table tr.hi td{background:#FFF1E6!important}
+table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD9}
+/* การ์ดสรุปเหนือตารางสาขา: พื้นขาว จุดสีหน้าชื่อ ตัวเลขใหญ่ */
+.st.big{background:#fff!important;border:1px solid rgba(15,23,42,.06);border-left:1px solid rgba(15,23,42,.06)!important;border-radius:18px;box-shadow:0 10px 24px -20px rgba(15,23,42,.35);padding:16px 20px}
+.st.big .l{font-size:12px;font-weight:700;color:var(--ink-2);display:flex;align-items:center;gap:8px}
+.st.big .l::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--faint);flex:0 0 auto}
+.st.big.pos .l::before{background:var(--good)}.st.big.neg .l::before{background:var(--bad)}
 </style>
 </head>
 <body>
