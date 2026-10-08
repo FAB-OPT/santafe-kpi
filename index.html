@@ -2735,8 +2735,7 @@ const GROUPS=[
     {cap:'รายสาขา',ids:['mall','zone','branches','plan','branchdetail']},
     {cap:'ช่องทางขาย',ids:['delivery','decline']}]},
   {k:'cust',ic:'👥',name:'ลูกค้า',subs:[{cap:'',ids:['customers']}]},
-  {k:'cost',ic:'🍳',name:'COL / COS',subs:[{cap:'',ids:['plbr']}]},
-  {k:'pl',ic:'📊',name:'P&L',subs:[{cap:'',ids:['pl']}]},
+  {k:'pl',ic:'📊',name:'P&L',subs:[{cap:'',ids:['pl','plbr']}]},
   {k:'cem',ic:'⭐',name:'CEM',subs:[{cap:'',ids:['cem']}]},
   {k:'oss',ic:'✅',name:'OSS',subs:[{cap:'',ids:['oss']}]}];
 const SEC_GROUP={}, SEC_ORDER=[];
@@ -3946,8 +3945,6 @@ function buildMain(m){
       <div class="strip">
         <div class="st pos"><div class="l">สาขาที่กำไร</div><div class="v">${plb.length-loss.length}</div><div class="s">จาก ${plb.length} สาขา</div></div>
         <div class="st neg"><div class="l">สาขาที่ขาดทุน</div><div class="v">${loss.length}</div><div class="s">รวม ${MB(loss.reduce((a,b)=>a+b.profit,0))}</div></div>
-        <div class="st"><div class="l">%COS เฉลี่ย</div><div class="v">${((rank.length?rank:plb).reduce((a,b)=>a+b.cos,0)/(rank.length?rank:plb).length).toFixed(1)}%</div><div class="s">ต้นทุนอาหาร</div></div>
-        <div class="st"><div class="l">%COL เฉลี่ย</div><div class="v">${((rank.length?rank:plb).reduce((a,b)=>a+b.col,0)/(rank.length?rank:plb).length).toFixed(1)}%</div><div class="s">ค่าแรง</div></div>
       </div>
       <div class="grp">การกระจาย %กำไร (จำนวนสาขา)</div>
       ${histo(rank.map(b=>b.gp),PLBR.edges,PLBR.labels)}
@@ -5330,8 +5327,8 @@ function covTypes(){
       f:m=>Math.max((D(m).branchRows||[]).length,(D(m).planBranches||[]).length)},
     {g:'ยอดขาย',name:'ยอดรายสาขา 2 ปี',src:'ไฟล์ Sales 2025_2026 (เดือนที่ไฟล์ยังไม่มี ใช้แบบฟอร์มส่งยอดขาย)',fixed:1,exp:nBr,
       f:m=>(EXTRA.branchYears||[]).filter(b=>b.m&&b.m[m]&&b.m[m].ty).length},
-    {g:'COL / COS · P&L',name:'งบกำไรขาดทุน',src:'ไฟล์ PL',f:m=>!!((F&&F.actual&&F.actual[K(m)])||D(m).pl)},
-    {g:'COL / COS · P&L',name:'กำไรรายสาขา',src:'ไฟล์ PL (ชีต SUM)',exp:nBr,
+    {g:'P&L',name:'งบกำไรขาดทุน',src:'ไฟล์ PL',f:m=>!!((F&&F.actual&&F.actual[K(m)])||D(m).pl)},
+    {g:'P&L',name:'กำไรรายสาขา',src:'ไฟล์ PL (ชีต SUM)',exp:nBr,
       f:m=>Math.max((D(m).plBranches||[]).length,F&&F.branch?Object.values(F.branch).filter(b=>b&&b[K(m)]).length:0)},
     {g:'CEM · OSS',name:'CEM',src:'ไฟล์ CEM',exp:nBr,
       f:m=>{ const n=Object.keys(D(m).cemStores||{}).length; if(n) return n;
