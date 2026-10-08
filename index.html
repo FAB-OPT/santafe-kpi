@@ -1997,7 +1997,6 @@ function plSection(m){
       ${isJD()&&JD_CLOSED.size?`<label title="สาขาที่ไม่มีงบในเดือนล่าสุดของไฟล์"><input type="checkbox" id="plClosed" ${PLS.closed?'checked':''}> รวมสาขาปิด (${JD_CLOSED.size})</label>`:''}
       <label>หมวดย่อย <select id="plSort"><option value="chart" ${PLS.sort==='chart'?'selected':''}>ตามผังบัญชี</option><option value="desc" ${PLS.sort==='desc'?'selected':''}>มาก → น้อย</option></select></label>
       <button class="btn small" id="plToggleAll">${PLS.showSub?'ซ่อนหมวดย่อยทั้งหมด':'แสดงหมวดย่อยทั้งหมด'}</button>
-      <button class="btn small" id="plmToggle">${PLM.on?'ซ่อนตารางสาขา × เดือน':'ตารางสาขา × เดือน'}</button>
     </div>`;
   const sub=`${fallback?label(lastM)+' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':scopeLabel()} · ${PLS.branch==='all'?'ทั้งบริษัท':'สาขา '+brName(PLS.branch)} · หน่วย: บาท`;
   /* กราฟเดียว: ต้นทุนและค่าใช้จ่าย 6 หมวด เทียบทั้งปี (% ของรายได้ รายเดือน) */
@@ -2031,7 +2030,7 @@ function plSection(m){
       ${ly?`<th class="n">${RNG(months)} ${YEAR-1}</th><th class="n">Δ</th>`:''}</tr>`}
       ${rowsOut.join('')}
     </table></div>
-    ${PLM.on?plMatrix(items):''}
+    ${plMatrix(items)}
     ${cosBody()||''}
     <div class="note">ตัวเลขเต็มหน่วยบาทจากไฟล์ PL · Δ = ส่วนต่างเป็นบาท${ly?" · LY มีความละเอียดถึงหลักพันบาท":""} · สีเขียว/แดงตามทิศทางที่ดี (ต้นทุนลดลง = เขียว, กำไรเพิ่มขึ้น = เขียว) · กดปุ่ม ▸ หน้าหมวดเพื่อพับ/กางรายการย่อย</div>`);
 }
@@ -2643,7 +2642,7 @@ function zoneSection(){
 }
 
 /* ========================= ตาราง P&L สาขา × เดือน ========================= */
-const PLM={on:false, metric:'netPct'};
+const PLM={on:true, metric:'netPct'};
 function plMatrix(items){
   const F=EXTRA&&EXTRA.pnlFull; if(!F||!F.branch) return '';
   const mons=F.months.map((x,i)=>({key:x,m:i+1})).filter(o=>o.m<=curM);
@@ -2723,7 +2722,6 @@ function bindExtra2(){
   on('#zone [data-zfilter]',el=>{ FILT.zone=el.dataset.zfilter; const z=$('#fZone'); if(z) z.value=FILT.zone; ZON.pick=null; r(); });
   document.querySelectorAll('[data-mtab]').forEach(b=>b.onclick=()=>{ MON.tab=b.dataset.mtab; r(); });
   const pm=$('#plmMetric'); if(pm) pm.onchange=e=>{ PLM.metric=e.target.value; rebuildPL(); };
-  const pt=$('#plmToggle'); if(pt) pt.onclick=()=>{ PLM.on=!PLM.on; rebuildPL(); };
   on('tr[data-plbr]',el=>openBranch(el.dataset.plbr));
   const cs=$('#csSort'); if(cs) cs.onchange=e=>{ CST.sort=e.target.value; rebuildPL(); };
 }
