@@ -1998,7 +1998,6 @@ function plSection(m){
       <label><input type="checkbox" id="plLM" ${PLS.cmpLM&&!cmpMode?'checked':''} ${cmpMode?'disabled':''}> เทียบ${months.length===1?'เดือน':'ช่วง'}ก่อน${pm.length?` (${RNG(pm)} ${YEAR})`:''}</label>
       <label><input type="checkbox" id="plLY" ${PLS.cmpLY&&lyHas&&!cmpMode?'checked':''} ${!lyHas||cmpMode?'disabled':''}> เทียบ LY (${RNG(months)} ${YEAR-1})${!lyHas?' <span class="hint">(ไม่มีข้อมูล LY ของเดือนนี้)</span>':''}</label>
       ${isJD()&&JD_CLOSED.size?`<label title="สาขาที่ไม่มีงบในเดือนล่าสุดของไฟล์"><input type="checkbox" id="plClosed" ${PLS.closed?'checked':''}> รวมสาขาปิด (${JD_CLOSED.size})</label>`:''}
-      <label>หมวดย่อย <select id="plSort"><option value="chart" ${PLS.sort==='chart'?'selected':''}>ตามผังบัญชี</option><option value="desc" ${PLS.sort==='desc'?'selected':''}>มาก → น้อย</option></select></label>
     </div>`;
   const sub=`${fallback?label(lastM)+' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':scopeLabel()} · ${PLS.branch==='all'?'ทั้งบริษัท':'สาขา '+brName(PLS.branch)} · หน่วย: บาท`;
   /* กราฟเดียว: ต้นทุนและค่าใช้จ่าย 6 หมวด เทียบทั้งปี (% ของรายได้ รายเดือน) */
