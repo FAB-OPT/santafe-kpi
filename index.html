@@ -6547,9 +6547,10 @@ function tile(t){
       const mg=rv&&rv.split(' ของรายได้')[0];
       return {l:'กำไรสุทธิ', v:n&&T('.plkv',n),
         rows:[mg&&['อัตรากำไรสุทธิ',mg], cc[0]&&['%COS ต้นทุนอาหาร',cc[0]], cc[1]&&['%COL ค่าแรง',cc[1]]].filter(Boolean)}; }
-    case 'quality': { const c=st('cem',0), o=st('oss',0);
-      return {l:'คะแนน CEM เฉลี่ย', v:c&&c.v,
-        rows:[c&&c.s&&['ประเมิน CEM แล้ว',c.s], o&&['คะแนน OSS',o.v]].filter(Boolean)}; }
+    case 'quality': { const dk=id=>document.querySelector('#'+id+' .aud-k.dark'), c=dk('cem'), o=dk('oss');
+      const cv=c&&T('.aud-kv',c), cs=c&&T('.aud-ks',c), ov=o&&T('.aud-kv',o), cn=cs&&(cs.match(/(\d+)\s*สาขา/)||[])[1];
+      return {l:'คะแนน CEM เฉลี่ย', v:cv,
+        rows:[cn&&['ประเมิน CEM แล้ว',cn+' สาขา'], ov&&['คะแนน OSS',ov]].filter(Boolean)}; }
   }
 }
 /* แท็บ: ถ้าหมวดมีกลุ่มย่อย ใส่ป้ายกลุ่มคั่น (ภาพรวม · สาขา · ช่องทางขาย) */
