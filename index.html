@@ -1992,7 +1992,8 @@ table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD
 #smxChart .smblk .grp.big::before{content:"";width:6px;height:22px;border-radius:3px;background:var(--accent)}
 #smxChart .smblk .grp.big .gr{margin-left:auto;font-size:13px;font-weight:500;color:var(--mute)}
 #smxChart .smblk .sh{margin-top:0}
-.smxhd{align-items:flex-start}.smxcol{display:flex;flex-direction:column;align-items:flex-end;gap:8px;margin-bottom:6px}
+.smxhd{align-items:flex-start}
+#smxChart .lcleg{justify-content:center;margin-top:6px}.smxcol{display:flex;flex-direction:column;align-items:flex-end;gap:8px;margin-bottom:6px}
 .smkg{display:grid;grid-template-columns:1.15fr 1fr 1fr 1fr;gap:14px}
 @media (max-width:1100px){.smkg{grid-template-columns:repeat(2,1fr)}}
 .smk{background:#fff;border:1px solid rgba(15,23,42,.05);border-radius:22px;padding:18px 22px;box-shadow:0 14px 34px -26px rgba(70,45,20,.4);display:flex;flex-direction:column;gap:8px}
@@ -4230,9 +4231,11 @@ function smxHtml(){
     let g2=`<line x1="${L2}" x2="${W2-R2}" y1="${Y2(0)}" y2="${Y2(0)}" stroke="#E4E8EE"/>`;
     rows.forEach((r,i)=>{ const cx=X2(i), now=i===n2-1; if(r.tot==null) return;
       if(r.seg){ let yb=Y2(0);
-        r.seg.forEach(sg=>{ const h=Math.max(1,Y2(0)-Y2(sg.v)), y0=yb-h, c=LI[sg.o.k];
+        /* ช่องที่บางเกินไปขยายเป็นอย่างน้อย 17px เพื่อให้ตัวเลขอยู่ในแท่งได้ครบ · หักจาก Dine in ตัวเลขยังเป็นยอดจริง */
+        const MIN=17, hs=r.seg.map(sg=>Math.max(1,Y2(0)-Y2(sg.v))); let need=0; hs.forEach((h,j)=>{ if(j>0&&h<MIN){ need+=MIN-h; hs[j]=MIN; } }); hs[0]=Math.max(MIN,hs[0]-need);
+        r.seg.forEach((sg,j)=>{ const h=hs[j], y0=yb-h, c=LI[sg.o.k];
           g2+=`<rect x="${cx-bw2/2}" y="${y0}" width="${bw2}" height="${h}" fill="${now?c[1]:c[0]}"/>`;
-          if(h>=15) g2+=`<text x="${cx}" y="${y0+h/2+4}" font-size="${now?13:12}" font-weight="800" fill="${now?'#fff':c[2]}" text-anchor="middle">${sg.v>=10?sg.v.toFixed(1):sg.v.toFixed(1)}</text>`;
+          g2+=`<text x="${cx}" y="${y0+h/2+4}" font-size="${now?13:12}" font-weight="800" fill="${now?'#fff':c[2]}" text-anchor="middle">${sg.v.toFixed(1)}</text>`;
           yb=y0; }); }
       else g2+=`<rect x="${cx-bw2/2}" y="${Y2(r.tot)}" width="${bw2}" height="${Y2(0)-Y2(r.tot)}" fill="#E2E8F0" rx="3"/><text x="${cx}" y="${(Y2(r.tot)+Y2(0))/2+4}" font-size="11" fill="#64748B" text-anchor="middle">ไม่มียอดแยก</text>`;
       g2+=`<text x="${cx}" y="${Y2(Math.max(r.tot,r.ly||0))-10}" font-size="${now?15:13.5}" font-weight="800" fill="#0F172A" text-anchor="middle">${r.tot.toFixed(1)}</text>`;
@@ -4245,7 +4248,7 @@ function smxHtml(){
     return `<svg class="chart" viewBox="0 0 ${W2} ${H2}" role="img" aria-label="ยอดขายรายเดือนแยกช่องทาง">${g2}</svg>`; })();
   const isAmt=SMX.view==='amt';
   const legA=`<div class="legend lcleg">${SMX_C.map(o=>`<span><i style="background:${o.c}"></i>${o.n}</span>`).join('')}<span><i style="background:none;border-top:2px dashed #475569;border-radius:0;height:0;width:16px;margin-top:5px"></i>ยอดรวมปีก่อน (LY)</span></div>`;
-  const chartCard=`<div class="smblk"><div class="grp big">สัดส่วนช่องทางขาย รายเดือน<span class="gr">${months.length?RNG(months)+' '+YEAR:''}</span></div>`+head+(isAmt?legA+amtSvg:`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="สัดส่วนช่องทางขายรายเดือน">${g}</svg>`+leg+pills)+ins+`</div>`;
+  const chartCard=`<div class="smblk"><div class="grp big">สัดส่วนช่องทางขาย รายเดือน<span class="gr">${months.length?RNG(months)+' '+YEAR:''}</span></div>`+head+(isAmt?amtSvg+legA:`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="สัดส่วนช่องทางขายรายเดือน">${g}</svg>`+leg+pills)+ins+`</div>`;
   /* Delivery แยกแพลตฟอร์ม: การ์ด 4 ใบ + กราฟเส้นรายเดือน */
   const dsplit=smxDeliHtml(last,codes,lyM).split('<!--SPLIT-->'), dCards=dsplit[0]||'', dTable=dsplit[1]||'';
   const PL3=[['grab','Grab','#1FA463'],['lm','Line Man','#0F7F8E'],['sp','Shopee Food','#EF5B3A']];
