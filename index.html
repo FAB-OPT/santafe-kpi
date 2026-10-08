@@ -6,6 +6,7 @@
 <title>Santa Fe KPI 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 /* ============ BASE : โครงสร้าง (ทุกแบบใช้ร่วมกัน) ============ */
@@ -1743,7 +1744,6 @@ table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD
 .kc .kv{font-size:34px}.kc .kl{font-size:12px}.kc .ks{font-size:13px}
 .mxc b{font-size:25px}.mxc small{font-size:12.5px}
 .bvr .bn,.bvr b{font-size:15px}
-#customers .cpn text{font-size:13px}
 
 /* ===== Customer Traffic: การ์ดแยก ระยะห่างโปร่ง กราฟสูงขึ้น ===== */
 #customers{background:transparent!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
@@ -1758,6 +1758,77 @@ table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD
 #customers .cph b{font-size:16px}
 #customers .kcs{gap:18px;margin-bottom:6px}
 #customers .kc{padding:18px 22px}
+
+/* ===== Customer Traffic (ดีไซน์ใหม่) ===== */
+#customers,#cuDrawer{font-family:'IBM Plex Sans Thai',Sarabun,system-ui,sans-serif}
+#customers .kl,#customers table th,#cuDrawer .cd-l,#customers .cuins-t,#cuDrawer .cd-sub{font-family:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace}
+#customers .kcs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin:0}
+#customers .kc{background:#fff;border:1px solid rgba(15,23,42,.05);border-left:1px solid rgba(15,23,42,.05);border-radius:18px;padding:16px 18px;box-shadow:0 8px 22px -18px rgba(15,23,42,.3);display:flex;flex-direction:column;gap:7px}
+#customers .kc .kl{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:#8A93A3;font-weight:500}
+#customers .kvr{display:flex;align-items:baseline;gap:6px}
+#customers .kc .kv{font-size:32px;font-weight:600;color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+#customers .kc .ku{font-size:13px;color:#8A93A3}
+#customers .kp,#cuDrawer .kp{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:400;color:#7B8494;flex-wrap:wrap;background:transparent;border-radius:0;padding:0;white-space:normal}
+#customers .kp .pill,#cuDrawer .kp .pill{font-size:12px;padding:2px 9px}
+@media (max-width:1100px){#customers .kcs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+#customers .cuins{margin-top:14px;padding:13px 18px;border-radius:14px;background:#FCEBDD;border:1px solid #F6D7BD;color:#3B2F26;font-size:14px;line-height:1.7}
+#customers .cuins .cuins-t{color:#C9490B;font-weight:600;margin-right:4px}
+#customers .cuins b.pos{color:#12804F}#customers .cuins b.neg{color:#D13447}
+#customers .cpns2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:1000px){#customers .cpns2{grid-template-columns:1fr}}
+#customers .cpn{background:#fff;border:1px solid rgba(15,23,42,.05);border-radius:18px;padding:16px 16px 6px}
+#customers .cph{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+#customers .cph b{font-size:15px;font-weight:700}
+#customers .cph small{font-size:12px;color:#8A93A3}
+#customers .cchip{margin-left:auto;font-size:12px;font-weight:700;border-radius:999px;padding:3px 11px}
+#customers .cchip.pos{background:#DDF3E7;color:#12804F}#customers .cchip.neg{background:#FBE3E6;color:#D13447}
+#customers .cusvg{width:100%;display:block}
+#customers .plblock>.grp.big .gr{margin-left:auto;font-size:13px;font-weight:500;color:var(--mute);text-transform:none;letter-spacing:0;display:inline-flex;align-items:center}
+.cu-lg{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:500;color:#6B7280}
+.cu-lg .ln{display:inline-block;width:20px;height:0;border-top:2px solid #3F4A5E}
+.cu-lg .ln.ds{border-top:2px dashed #AEB4BF;margin-left:10px}
+.cu-lg em{font-style:normal;color:#9AA3B0;margin-left:14px}
+.cusearch{border:1px solid rgba(15,23,42,.08);background:#fff;border-radius:12px;padding:8px 14px;font:inherit;font-size:13.5px;min-width:240px;color:var(--ink)}
+#customers .chsh{font-size:13px;color:#7B8494;margin-bottom:8px}
+#customers .chbar{display:flex;gap:3px;height:12px;border-radius:99px;overflow:hidden}
+#customers .chbar i{display:block;height:100%}
+#customers .chleg{display:flex;justify-content:flex-end;gap:18px;font-size:12.5px;color:#7B8494;margin:8px 0 14px;flex-wrap:wrap}
+#customers .chleg i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+#customers .chleg b{color:var(--ink);font-weight:600}
+#customers .chcs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:1000px){#customers .chcs{grid-template-columns:1fr}}
+#customers .chc{background:#fff;border:1px solid rgba(15,23,42,.05);border-radius:18px;padding:16px 20px}
+#customers .chn{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14.5px}
+#customers .chn i{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+#customers .chn span{margin-left:auto;font-weight:500;font-size:13px;color:#8A93A3}
+#customers .chm{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
+#customers .chmm small{display:block;font-size:12px;color:#7B8494;margin-bottom:4px}
+#customers .chmm b{display:block;font-size:28px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-bottom:8px}
+#customers .cumore{text-align:center;margin-top:16px}
+#customers .cumore button{border:1px solid rgba(15,23,42,.08);background:#fff;border-radius:999px;padding:9px 20px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--ink)}
+#customers .cumore button:hover{background:var(--accent-2);border-color:var(--accent-3)}
+.cubtbl tr.cuex{display:none}
+.plblock.cuall .cubtbl tr.cuex{display:table-row}
+.cubtbl tr[data-qh="1"]{display:none!important}
+.cubtbl th.csrt{cursor:pointer;user-select:none}
+.cubtbl th.csrt.on{color:var(--accent-ink)}
+.cubtbl th i{font-style:normal;font-size:9px}
+.cudr{position:fixed;inset:0;z-index:60;pointer-events:none}
+.cudr.open{pointer-events:auto}
+.cudr-bg{position:absolute;inset:0;background:rgba(25,17,12,.35);opacity:0;transition:opacity .25s}
+.cudr.open .cudr-bg{opacity:1}
+.cudr-p{position:absolute;top:10px;right:10px;bottom:10px;width:min(480px,94vw);background:linear-gradient(180deg,#F8F6F3,#F3F1EE);border-radius:26px;box-shadow:-30px 0 70px -30px rgba(0,0,0,.4);padding:22px 22px 26px;overflow:auto;transform:translateX(110%);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.cudr.open .cudr-p{transform:none}
+.cd-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
+.cd-sub{font-size:11.5px;color:#8A93A3;letter-spacing:.04em;margin-bottom:4px}
+.cd-name{font-size:26px;font-weight:700;letter-spacing:-.01em;line-height:1.2;color:var(--ink)}
+.cd-x{width:42px;height:42px;border-radius:13px;border:0;background:#ECE9E5;font-size:18px;cursor:pointer;color:var(--ink);flex:0 0 auto}
+.cd-x:hover{background:#E2DED9}
+.cd-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cd-c{background:#fff;border-radius:18px;padding:14px 16px;box-shadow:0 6px 18px -14px rgba(15,23,42,.3)}
+.cd-l{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:#8A93A3;margin-bottom:8px}
+.cd-v{font-size:28px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-bottom:8px;color:var(--ink)}
+.cd-note{margin-top:16px;font-size:12.5px;color:#8A93A3}
 </style>
 </head>
 <body>
@@ -2474,38 +2545,87 @@ function lyTrAgg(ms){ let sales=0,trans=0,cu=0,cuS=0,cuT=0,any=false;
   const ch=chOk?Object.fromEntries(Object.entries(CH).map(([k,[sl,tr]])=>[k,tr>0?{trans:tr,ticket:sl/tr}:null])):null;
   return {trans, ticket:sales/trans, customer:cu||null, custAvg:cu?cu/cuT:null, perBill:cu?cuS/cu:null, ch}; }
 /* กราฟรายเดือนแยกสเกล: เส้นปีนี้ + เส้น LY ประ + % vs LY ใต้แต่ละเดือน (LY เทียบสาขาเดียวกับที่ส่งบิลในเดือนนั้น) */
-function cuPanel(title,labs,cur,ly,color,unit){
-  const W=1180,H=260,L=64,R=24,T=40,B=36,n=cur.length, X=i=>L+(W-L-R)*(i+.5)/n;
+function cuPanel(title,unit,labs,cur,ly,color){
+  const W=560,H=252,L=46,R=14,T=28,B=64,n=cur.length, colW=(W-L-R)/n, X=i=>L+colW*(i+.5);
   const vs=cur.concat(ly).filter(v=>v!=null); if(!vs.length) return '';
-  const mn=Math.min(...vs)*.94, mx=Math.max(...vs)*1.04, Y=v=>T+(H-T-B)*(1-(v-mn)/(mx-mn||1));
-  const big=Math.max(...vs), K=v=>big<20000?Math.round(v).toLocaleString('en-US'):big<100000?(v/1000).toFixed(1)+'K':Math.round(v/1000)+'K', col=d=>d>=0?'#10B981':'#F43F5E', sg=d=>(d>=0?'+':'')+d.toFixed(1)+'%';
+  const mn=Math.min(...vs)*.94, mx=Math.max(...vs)*1.05, Y=v=>T+(H-T-B)*(1-(v-mn)/(mx-mn||1));
+  const big=Math.max(...vs), K=v=>big<20000?Math.round(v).toLocaleString('en-US'):big<100000?(v/1000).toFixed(1)+'K':Math.round(v/1000)+'K', col=d=>d>=0?'#10A56B':'#E0364B', sg=d=>(d>=0?'+':'')+d.toFixed(1)+'%';
   const seg=a=>{ let d='',pen=false; a.forEach((v,i)=>{ if(v==null){pen=false;return;} d+=(pen?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1); pen=true; }); return d; };
-  let g=''; for(let k=0;k<3;k++){ const v=mn+(mx-mn)*k/2; g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#EEF1F5"/><text x="${L-8}" y="${Y(v)+4}" font-size="12" fill="#98A1AE" text-anchor="end">${K(v)}</text>`; }
-  if(ly.some(v=>v!=null)) g+=`<path d="${seg(ly)}" fill="none" stroke="#B6BDC9" stroke-width="2" stroke-dasharray="5 4"/>`;
-  g+=`<path d="${seg(cur)}" fill="none" stroke="${color}" stroke-width="3"/>`;
+  const hasLy=ly.some(v=>v!=null);
+  let g=`<rect x="${(X(n-1)-colW/2+2).toFixed(1)}" y="${T-12}" width="${(colW-4).toFixed(1)}" height="${H-T+8}" rx="10" fill="rgba(15,23,42,.055)"/>`;
+  for(let k=0;k<3;k++){ const v=mn+(mx-mn)*k/2; g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#E9EDF2"/><text x="${L-8}" y="${Y(v)+3.5}" font-size="10.5" fill="#9AA3B0" text-anchor="end">${K(v)}</text>`; }
+  if(hasLy) g+=`<path d="${seg(ly)}" fill="none" stroke="#AEB4BF" stroke-width="1.8" stroke-dasharray="5 4"/>`;
+  g+=`<path d="${seg(cur)}" fill="none" stroke="${color}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
   let lastD=null;
-  cur.forEach((v,i)=>{ if(v==null) return; const last=i===n-1, d=ly[i]!=null&&ly[i]>0?(v/ly[i]-1)*100:null; if(last) lastD=d;
-    g+=`<circle cx="${X(i)}" cy="${Y(v)}" r="${last?7:4}" fill="${last?color:'#fff'}" stroke="${color}" stroke-width="2.5"/>`
-      +`<text x="${X(i)}" y="${Y(v)-14}" font-size="${last?15.5:13.5}" font-weight="${last?800:600}" fill="${last?color:'#475569'}" text-anchor="middle">${K(v)}</text>`
-      +(d!=null?`<text x="${X(i)}" y="${H-10}" font-size="13" text-anchor="middle"><tspan fill="#64748B" font-weight="600">${K(ly[i])}</tspan><tspan fill="${col(d)}" font-weight="800" dx="6">${sg(d)}</tspan></text>`:''); });
-  if(ly.some(v=>v!=null)) g+=`<text x="${L-8}" y="${H-10}" font-size="12.5" font-weight="800" fill="#64748B" text-anchor="end">LY · %</text>`;
-  labs.forEach((m,i)=>{ g+=`<text x="${X(i)}" y="16" font-size="12.5" fill="${i===n-1?'#0F172A':'#98A1AE'}" font-weight="${i===n-1?700:500}" text-anchor="middle">${m}</text>`; });
-  return `<div class="cpn"><div class="cph"><b>${title}</b>${lastD!=null?`<span class="cchip" style="background:${col(lastD)}">${labs[n-1]} ${sg(lastD)} vs LY</span>`:''}<span class="clg"><i style="background:${color}"></i>ปีนี้${ly.some(v=>v!=null)?'<i class="ds"></i>LY':''}</span></div><svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block">${g}</svg></div>`; }
+  cur.forEach((v,i)=>{ const last=i===n-1, d=v!=null&&ly[i]!=null&&ly[i]>0?(v/ly[i]-1)*100:null; if(last) lastD=d;
+    if(v!=null) g+=`<circle cx="${X(i)}" cy="${Y(v)}" r="${last?5.5:3.8}" fill="${last?color:'#fff'}" stroke="${color}" stroke-width="2"><title>${labs[i]}: ${K(v)}${ly[i]!=null?' · LY '+K(ly[i]):''}${d!=null?' ('+sg(d)+')':''}</title></circle>`
+      +`<text x="${X(i)}" y="${Y(v)-10}" font-size="${last?12.5:10.5}" font-weight="${last?800:600}" fill="${last?color:'#3B4556'}" text-anchor="middle">${K(v)}</text>`;
+    g+=`<text x="${X(i)}" y="${H-40}" font-size="10.5" fill="${last?'#0F172A':'#8A93A3'}" font-weight="${last?800:500}" text-anchor="middle">${labs[i]}</text>`;
+    if(ly[i]!=null) g+=`<text x="${X(i)}" y="${H-26}" font-size="9.5" fill="#8A93A3" text-anchor="middle">LY ${K(ly[i])}</text>`;
+    if(d!=null) g+=`<text x="${X(i)}" y="${H-11}" font-size="10.5" font-weight="800" fill="${col(d)}" text-anchor="middle">${sg(d)}</text>`; });
+  const chip=lastD!=null?`<span class="cchip ${lastD>=0?'pos':'neg'}">${labs[n-1]} ${sg(lastD)} vs LY</span>`:'';
+  return `<div class="cpn"><div class="cph"><b>${title}</b><small>${unit}</small>${chip}</div><svg class="cusvg" viewBox="0 0 ${W} ${H}">${g}</svg></div>`; }
 const CUC={br:'all',ctx:null};
 /* กราฟรายเดือนของส่วนลูกค้า: All = ทั้งบริษัท · เลือกสาขา = เฉพาะสาขานั้น (LY จากประวัติรายสาขา STF) */
 function cuChartsHtml(br){ const c=CUC.ctx; if(!c) return ''; const {tm,labs,nm}=c; if(br==null) br=CUC.br;
   if(br==='all'){ const lyM=tm.map(r=>lyTrAgg([r.m]));
-    return `<div class="cpns">${cuPanel('Total Trans (บิล)',labs,tm.map(r=>r.v.trans),lyM.map(x=>x&&x.trans),'#475569')}${cuPanel('Customers (ลูกค้า)',labs,tm.map(r=>r.v.customer),lyM.map(x=>x&&x.customer),'#D9822D')}</div>`; }
+    return `<div class="cpns2">${cuPanel('Total Trans','บิล · ทุกสาขา',labs,tm.map(r=>r.v.trans),lyM.map(x=>x&&x.trans),'#3F4A5E')}${cuPanel('Customers','คน · ทุกสาขา',labs,tm.map(r=>r.v.customer),lyM.map(x=>x&&x.customer),'#E07B1F')}</div>`; }
   const code=br, rows=tm.map(r=>filtZone((DETAIL[r.m]||{}).branchRows||[]).find(x=>String(x.code)===code&&x.tr>0)||null);
   const by=filtZone(EXTRA.branchYears||[]).find(x=>String(x.code)===code), h=by&&by.h&&by.h[YEAR-1];
   const lyv=(k,i)=>{ const v=h&&(h[k]||[])[tm[i].m-1]; return v>0?v:null; };
   const cu=rows.map(r=>r&&r.cust>0?r.cust:null), tr=rows.map(r=>r?r.tr:null);
   if(!tr.some(v=>v!=null)) return '<div class="empty">ไม่มีข้อมูลสาขานี้</div>';
-  const t=nm[code]||'';
-  return `<div class="cpns">${cuPanel('Total Trans · '+code+' '+t,labs,tr,tm.map((_,i)=>lyv('k',i)),'#475569')}${cuPanel('Customers · '+code+' '+t,labs,cu,tm.map((_,i)=>lyv('c',i)),'#D9822D')}</div>`; }
+  const t=code+' '+(nm[code]||'');
+  return `<div class="cpns2">${cuPanel('Total Trans','บิล · '+t,labs,tr,tm.map((_,i)=>lyv('k',i)),'#3F4A5E')}${cuPanel('Customers','คน · '+t,labs,cu,tm.map((_,i)=>lyv('c',i)),'#E07B1F')}</div>`; }
 document.addEventListener('change',e=>{ const s2=e.target.closest&&e.target.closest('[data-cubr]'); if(!s2) return; CUC.br=s2.value; ovRender('cuCharts',()=>cuChartsHtml(CUC.br));
-  const t=document.querySelector('#customers .cubtbl'); if(!t) return; let k=0;
-  t.querySelectorAll('tr[data-ssbr]').forEach(r=>{ const show=CUC.br==='all'||r.dataset.ssbr===CUC.br; r.hidden=!show; if(show) r.firstElementChild.textContent=++k; }); });
+  const t=document.querySelector('#customers .cubtbl'); if(!t) return;
+  t.querySelectorAll('tr[data-ssbr]').forEach(r=>{ r.hidden=!(CUC.br==='all'||r.dataset.ssbr===CUC.br); }); cuRenum(); });
+
+/* ---- ตารางรายสาขา (Customers): เลขลำดับ · ค้นหา · เรียงคอลัมน์ · แสดงทั้งหมด ---- */
+function cuRenum(){ const t=document.querySelector('#customers .cubtbl'); if(!t) return; let k=0;
+  t.querySelectorAll('tr[data-ssbr]').forEach(r=>{ if(!r.hidden&&r.dataset.qh!=='1') r.firstElementChild.textContent=++k; }); }
+document.addEventListener('input',e=>{ const inp=e.target.closest&&e.target.closest('[data-cusearch]'); if(!inp) return;
+  const q=inp.value.trim().toLowerCase(), root=document.getElementById('customers'); if(!root) return;
+  const tb=root.querySelector('.cubtbl');
+  if(tb){ tb.querySelectorAll('tr[data-ssbr]').forEach(r=>{ r.dataset.qh=(!q||r.textContent.toLowerCase().includes(q))?'':'1'; });
+    const bl=tb.closest('.plblock'); if(bl) bl.classList.toggle('cuall',!!q||bl.dataset.all==='1'); cuRenum(); }
+  const sel=root.querySelector('[data-cubr]'); if(sel) [...sel.options].forEach(o=>{ o.hidden=!(o.value==='all'||!q||o.textContent.toLowerCase().includes(q)); }); });
+document.addEventListener('click',e=>{
+  const th=e.target.closest&&e.target.closest('#customers .cubtbl th.csrt');
+  if(th){ const tb=th.closest('table'), ci=+th.dataset.cs, desc=!(th.classList.contains('on')&&th.dataset.dir==='desc');
+    const num=td=>{ const m=(td&&td.textContent||'').replace(/,/g,'').match(/-?\d+(\.\d+)?/); return m?+m[0]:-Infinity; };
+    const rows=[...tb.querySelectorAll('tr[data-ssbr]')];
+    rows.sort((a,b)=>desc?num(b.children[ci])-num(a.children[ci]):num(a.children[ci])-num(b.children[ci]));
+    rows.forEach((r,i)=>{ tb.firstElementChild.appendChild(r); r.classList.toggle('cuex',i>=12); });
+    tb.querySelectorAll('th.csrt').forEach(h=>{ h.classList.remove('on'); h.dataset.dir=''; const ic=h.querySelector('i'); if(ic) ic.textContent=''; });
+    th.classList.add('on'); th.dataset.dir=desc?'desc':'asc'; th.querySelector('i').textContent=desc?'▼':'▲'; cuRenum(); return; }
+  const mb=e.target.closest&&e.target.closest('[data-cumore]');
+  if(mb){ const bl=mb.closest('.plblock'), on=bl.dataset.all!=='1'; bl.dataset.all=on?'1':''; bl.classList.toggle('cuall',on);
+    const n=bl.querySelectorAll('tr[data-ssbr]').length; mb.innerHTML=on?'แสดงน้อยลง <span>⌃</span>':'แสดงทั้งหมด '+n+' สาขา <span>⌄</span>'; } });
+/* ---- แผงรายละเอียดสาขา (เลื่อนเข้าจากขวา) ---- */
+function cuDrawerEl(){ let el=document.getElementById('cuDrawer'); if(el) return el;
+  el=document.createElement('div'); el.id='cuDrawer'; el.className='cudr';
+  el.innerHTML='<div class="cudr-bg" data-cudclose></div><aside class="cudr-p" role="dialog" aria-modal="true" aria-label="รายละเอียดสาขา"><div id="cudrBody"></div></aside>';
+  document.body.appendChild(el); el.addEventListener('click',ev=>{ if(ev.target.closest('[data-cudclose]')) closeCuDrawer(); }); return el; }
+function closeCuDrawer(){ const el=document.getElementById('cuDrawer'); if(el) el.classList.remove('open'); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeCuDrawer(); });
+function openCuDrawer(code){ code=String(code); const el=cuDrawerEl();
+  const S=SCP||{}, m=S.multi?S.last:curM;
+  const rows=filtZone((S.multi?(S.br?S.br.rows:[]):(DETAIL[m]||{}).branchRows)||[]).filter(b=>b.tr>0);
+  const prevRows=(S.multi?(S.prevBr?S.prevBr.rows:[]):(DETAIL[m-1]||{}).branchRows)||[];
+  const b=rows.find(x=>String(x.code)===code), p=prevRows.find(x=>String(x.code)===code);
+  const fN=v=>v==null?'—':fmtN(Math.round(v)), fB=v=>v==null?'—':'฿'+fmtN(Math.round(v)), f2=v=>v==null?'—':(+v).toFixed(2);
+  const body=document.getElementById('cudrBody');
+  if(!b){ body.innerHTML='<div class="cd-top"><div><div class="cd-name">'+code+'</div></div><button type="button" class="cd-x" data-cudclose aria-label="ปิด">✕</button></div><div class="empty">ยังไม่มีบิลและลูกค้าของสาขานี้</div>'; el.classList.add('open'); return; }
+  const rank=rows.slice().sort((a,c)=>c.tr-a.tr).findIndex(x=>String(x.code)===code)+1;
+  const CK=['dine','take','deli'], TRK=['trDine','trTake','trDeli'];
+  const tk=(x,j)=>x&&x[TRK[j]]?x[CK[j]]/x[TRK[j]]:null, ca=x=>x&&x.cust&&x.tr?x.cust/x.tr:null, pb=x=>x&&x.cust?x.sales/x.cust:null;
+  const card=(l,v,pv,f)=>`<div class="cd-c"><div class="cd-l">${l}</div><div class="cd-v">${f(v)}</div>${pv!=null&&v!=null&&pv?`<div class="kp">${pill(pct(pv,v))}</div>`:''}</div>`;
+  const nmx=(BRANCH_META&&BRANCH_META[code]&&BRANCH_META[code].name)||b.name||'';
+  body.innerHTML=`<div class="cd-top"><div><div class="cd-sub">สาขา ${code} · อันดับ ${rank}</div><div class="cd-name">${b.name||nmx}</div></div><button type="button" class="cd-x" data-cudclose aria-label="ปิด">✕</button></div>
+    <div class="cd-grid">${card('Total Trans',b.tr,p&&p.tr,fN)}${card('Ticket Avg.',b.tk,p&&p.tk,fB)}${card('Ticket Dine in',tk(b,0),tk(p,0),fB)}${card('Ticket Takeaway',tk(b,1),tk(p,1),fB)}${card('Ticket Delivery',tk(b,2),tk(p,2),fB)}${card('Customers',b.cust||null,p&&p.cust,fN)}${card('Customer Avg.',ca(b),ca(p),f2)}${card('Per Bill',pb(b),pb(p),fB)}</div>
+    <div class="cd-note">% เทียบเดือนก่อน (vs LM) · ${S.multi?S.lab:label(m)}</div>`;
+  el.classList.add('open'); }
 function customersSection(m){
   const S=SCP||{multi:false}, T='Customers & Average Ticket';
   const now=aggTr(S.multi?S.ms:[m]), prv=S.multi?S.tP:aggTr(m>1?[m-1]:null);
@@ -2519,27 +2639,34 @@ function customersSection(m){
     return `<span class="tiny ${Math.abs(g)<0.05?'':cls(g)}">${sgn(g)} vs LM</span>`; };
   const tile=(l,a,b,f,note)=>`<div class="st ${a!=null&&b!=null&&PV?cls(pct(a,b)):''}"><div class="l">${l}</div><div class="v">${f(b)}</div><div class="s">${a!=null&&b!=null&&PV?`${pill(pct(a,b))} vs ${PV} (${f(a)})`:(note||(S.multi?'ไม่มีช่วงก่อนหน้าให้เทียบ':''))}</div></div>`;
   const LYA=lyTrAgg(S.multi?S.ms:[m]);
-  const kc=(l,a,b,f,note,ly)=>{ const ok=a!=null&&b!=null&&PV&&a; const g=ok?pct(a,b):null;
-    const lyl=ly!=null&&b!=null?`<div class="ks ly">${pill(pct(ly,b))}<span>vs LY <b>${f(ly)}</b></span></div>`:'';
-    return `<div class="kc ${ok?cls(g):''}"><div class="kl">${l}</div><div class="kv">${f(b)}</div>
-      <div class="ks">${ok?`${pill(g)}<span>vs ${PV} <b>${f(a)}</b></span>`:`<span>${note||(S.multi?'ไม่มีช่วงก่อนหน้าให้เทียบ':'')}</span>`}</div>${lyl}</div>`; };
+  const kc=(l,a,b,f,note,ly,unit)=>{ const ok=a!=null&&b!=null&&PV&&a; const g=ok?pct(a,b):null;
+    const row=(g2,txt)=>`<div class="kp">${pill(g2)}<span>${txt}</span></div>`;
+    return `<div class="kc"><div class="kl">${l}</div><div class="kvr"><span class="kv">${f(b)}</span>${unit?`<small class="ku">${unit}</small>`:''}</div>
+      ${ok?row(g,`vs ${PV} ${f(a)}`):`<div class="kp"><span>${note||(S.multi?'ไม่มีช่วงก่อนหน้าให้เทียบ':'')}</span></div>`}
+      ${ly!=null&&b!=null?row(pct(ly,b),`vs LY ${f(ly)}`):''}</div>`; };
   const strip=`<div class="kcs">
-    ${kc('Total Trans',P.trans,now.trans,fN,'',LYA&&LYA.trans)}
-    ${kc('Customers',P.customer,now.customer,fN,now.customer==null?'ไม่มีข้อมูลลูกค้า':'',LYA&&LYA.customer)}
+    ${kc('Total Trans',P.trans,now.trans,fN,'',LYA&&LYA.trans,'บิล')}
+    ${kc('Customers',P.customer,now.customer,fN,now.customer==null?'ไม่มีข้อมูลลูกค้า':'',LYA&&LYA.customer,'คน')}
     ${kc('Ticket Avg.',P.ticket,now.ticket,fB,'',LYA&&LYA.ticket)}
-    ${kc('Customer Avg.',P.custAvg,now.custAvg,f2,'',LYA&&LYA.custAvg)}
+    ${kc('Customer Avg.',P.custAvg,now.custAvg,f2,'',LYA&&LYA.custAvg,'คน/บิล')}
     ${kc('Per Bill',spend(prv),spend(now),fB,'',LYA&&LYA.perBill)}
   </div>`;
+  /* สรุปสั้นๆ เทียบ LY */
+  let ins='';
+  if(LYA&&LYA.trans&&LYA.customer!=null&&now.customer!=null&&LYA.ticket){
+    const gT=pct(LYA.trans,now.trans), gC=pct(LYA.customer,now.customer), gA=(LYA.custAvg&&now.custAvg)?pct(LYA.custAvg,now.custAvg):null, gK=pct(LYA.ticket,now.ticket);
+    const B=g=>`<b class="${g>=0?'pos':'neg'}">${sgn(g)}</b>`, ud=g=>g>=0?'เพิ่มขึ้น':'ลดลง';
+    ins=`<div class="cuins"><b class="cuins-t">สรุป:</b> จำนวนบิล${gT>=0&&gA!=null&&gA<0?'ยัง':''}${gT>=0?'สูงกว่า':'ต่ำกว่า'}ปีก่อน ${B(gT)}${gA!=null?` ${(gT>=0)===(gA>=0)?'และ':'แต่'}ลูกค้าต่อบิล${ud(gA)} ${B(gA)} ทำให้จำนวนลูกค้ารวม ${B(gC)} vs LY`:` · จำนวนลูกค้ารวม ${B(gC)} vs LY`} · ยอดเฉลี่ยต่อบิล${ud(gK)} ${B(gK)} vs LY</div>`; }
   /* ---- แยกช่องทาง: แถว 1 Total Trans/Ticket Avg. · แถว 2 Customers/Customer Avg. ---- */
   const totTr=now.ch.reduce((a,c)=>a+(c.trans||0),0);
-  const mc=(c,p,k,f,ly)=>{ if(!c) return '<div class="mxc"><span class="mute">ไม่มีข้อมูล</span></div>';
-    const has=p&&p[k]; return `<div class="mxc"><b>${f(c[k])}</b>${has?pill(pct(p[k],c[k])):''}<small>${has&&PV?`vs ${PV} <b>${f(p[k])}</b>`:''}${k==='trans'&&totTr?`${has&&PV?' · ':''}<em style="color:var(--ink-2)">${(c.trans/totTr*100).toFixed(1)}%</em> of Total Trans`:''}</small>${ly&&ly[k]?`<small class="lyr">${pill(pct(ly[k],c[k]))} vs LY <b>${f(ly[k])}</b></small>`:''}</div>`; };
-  const mxRow=(lab,sub,fn)=>`<div class="rl">${lab}<small>${sub}</small></div>${CUS_CH.map((o,i)=>fn(findCh(now,o.k),findCh(prv,o.k),i)).join('')}`;
-  const chTiles=`<div class="mx">
-    <div class="h"></div>${CUS_CH.map(o=>`<div class="h"><i class="d" style="background:${o.c}"></i>${o.n}</div>`).join('')}
-    ${mxRow('Total Trans','ต่อช่องทาง',(c,p,i)=>mc(c,p,'trans',fN,LYA&&LYA.ch&&LYA.ch[['dine','take','deli'][i]]))}
-    ${mxRow('Ticket Avg.','ต่อช่องทาง',(c,p,i)=>mc(c,p,'ticket',fB,LYA&&LYA.ch&&LYA.ch[['dine','take','deli'][i]]))}
-  </div>`;
+  const chShare=o=>{ const c=findCh(now,o.k); return c&&totTr?c.trans/totTr*100:0; };
+  const chCard=(o,idx)=>{ const c=findCh(now,o.k), p=findCh(prv,o.k), L=LYA&&LYA.ch&&LYA.ch[['dine','take','deli'][idx]];
+    if(!c) return `<div class="chc"><div class="chn"><i style="background:${o.c}"></i>${o.n}</div><div class="mute">ไม่มีข้อมูล</div></div>`;
+    const m1=(lab,k,fm)=>{ const pv=p&&p[k], lv=L&&L[k]; return `<div class="chmm"><small>${lab}</small><b>${fm(c[k])}</b>${pv&&PV?`<div class="kp">${pill(pct(pv,c[k]))}<span>${fm(pv)}</span></div>`:''}${lv?`<div class="kp">${pill(pct(lv,c[k]))}<span>LY ${fm(lv)}</span></div>`:''}</div>`; };
+    return `<div class="chc"><div class="chn"><i style="background:${o.c}"></i>${o.n}<span>${chShare(o).toFixed(1)}%</span></div><div class="chm">${m1('จำนวนบิล','trans',fN)}${m1('ยอดเฉลี่ยต่อบิล','ticket',fB)}</div></div>`; };
+  const chTiles=`<div class="chsh">สัดส่วนจำนวนบิล</div><div class="chbar">${CUS_CH.map(o=>`<i style="flex:${Math.max(chShare(o),.6)};background:${o.c}"></i>`).join('')}</div>
+    <div class="chleg">${CUS_CH.map(o=>`<span><i style="background:${o.c}"></i>${o.n} <b>${chShare(o).toFixed(1)}%</b></span>`).join('')}</div>
+    <div class="chcs">${CUS_CH.map(chCard).join('')}</div>`;
   /* ---- รายเดือน ---- */
   const tm=(S.multi&&S.n>=2?S.ms:MONTHLY.map(r=>r.m).filter(x=>x<=m)).map(x=>({m:x,v:trOf(x)})).filter(r=>r.v);
   let trend=''; CUC.ctx=null;
@@ -2548,8 +2675,7 @@ function customersSection(m){
     const nm={}; tm.forEach(r=>filtZone((DETAIL[r.m]||{}).branchRows||[]).forEach(x=>{ if(x.tr>0) nm[String(x.code)]=x.name; }));
     const codes=Object.keys(nm).sort(); if(CUC.br!=='all'&&!nm[CUC.br]) CUC.br='all';
     CUC.ctx={tm,labs,nm};
-    trend=`<div class="grp big">ลูกค้าและจำนวนบิล รายเดือน</div>${cuChartsHtml('all')}
-      <div class="grp big">รายเดือน</div>
+    trend=`<div class="grp big">รายเดือน<span class="gr">% เทียบเดือนก่อน (vs LM)</span></div>
       <div class="scroll"><table><tr><th>เดือน</th><th class="n">Total Trans</th><th class="n">Ticket Avg.</th>${CUS_CH.map(o=>`<th class="n">Ticket ${o.n}</th>`).join('')}<th class="n">Customers</th><th class="n">Customer Avg.</th><th class="n">Per Bill</th></tr>
       ${tm.map((r,i)=>{ const v=r.v, q=i>0&&tm[i-1].m===r.m-1?tm[i-1].v:null, ca=x=>x&&x.customer&&x.trans?x.customer/x.trans:null;
         return `<tr class="${r.m===m&&!S.multi?'hi':''}"><td>${r.m===m&&!S.multi?'★ ':''}${MONTH_TH[r.m-1]}</td><td class="n">${fN(v.trans)}${vsL(q&&q.trans,v.trans)}</td><td class="n"><b>${fB(v.ticket)}</b>${vsL(q&&q.ticket,v.ticket)}</td>${CUS_CH.map(o=>{ const c=findCh(v,o.k), pc=findCh(q,o.k); return `<td class="n">${c?fB(c.ticket):'—'}${c&&pc?vsL(pc.ticket,c.ticket):''}</td>`; }).join('')}<td class="n">${fN(v.customer)}${vsL(q&&q.customer,v.customer)}</td><td class="n">${ca(v)==null?'—':f2(ca(v))}${vsL(ca(q),ca(v))}</td><td class="n">${fB(spend(v))}${vsL(spend(q),spend(v))}</td></tr>`; }).join('')}
@@ -2566,15 +2692,17 @@ function customersSection(m){
     const tkc=(x,j)=>x&&x[TRK[j]]?x[CK[j]]/x[TRK[j]]:null, ca=x=>x&&x.cust&&x.tr?x.cust/x.tr:null, pb=x=>x&&x.cust?x.sales/x.cust:null;
     const hasCh=list.some(b=>b.trDine||b.trTake||b.trDeli);
     const chHint=hasCh?'':`<div class="hint" style="margin-top:8px">Ticket แยกช่องทางรายสาขา: ข้อมูล ${label(m)} ในเครื่องนี้มีบิลแยกช่องทาง 0 จาก ${list.length} สาขา — นำเข้าไฟล์แบบฟอร์มส่งยอดขายอีกครั้ง แล้วดูข้อความหลังนำเข้าว่า "บิลแยกช่องทางรายสาขา" ได้กี่สาขา</div>`;
-    btbl=`<div class="grp big"><span>รายสาขา</span></div>
-    <div class="scroll"><table class="cubtbl"><tr><th>#</th><th>สาขา</th><th class="n">Total Trans</th><th class="n">Ticket Avg.</th>${CUS_CH.map(o=>`<th class="n">Ticket ${o.n}</th>`).join('')}<th class="n">Customers</th><th class="n">Customer Avg.</th><th class="n">Per Bill</th><th></th></tr>
+    btbl=`<div class="scroll"><table class="cubtbl"><tr><th>#</th><th>สาขา</th><th class="n csrt on" data-cs="2">Total Trans <i>▼</i></th><th class="n csrt" data-cs="3">Ticket Avg. <i></i></th>${CUS_CH.map((o,j)=>`<th class="n csrt" data-cs="${4+j}">Ticket ${o.n} <i></i></th>`).join('')}<th class="n csrt" data-cs="7">Customers <i></i></th><th class="n csrt" data-cs="8">Customer Avg. <i></i></th><th class="n csrt" data-cs="9">Per Bill <i></i></th><th></th></tr>
     ${list.map((b,i)=>{ const p=pMap[b.code];
       const hid=CUC.br!=='all'&&String(b.code)!==CUC.br;
-      return `<tr class="clk" data-ssbr="${b.code}"${hid?' hidden':''}><td>${CUC.br==='all'?i+1:1}</td><td>${b.code} ${b.name}</td><td class="n">${fN(b.tr)}${vsL(p&&p.tr,b.tr)}</td><td class="n"><b>${fB(b.tk)}</b>${vsL(p&&p.tk,b.tk)}</td>${CUS_CH.map((o,j)=>`<td class="n">${fB(tkc(b,j))}${vsL(tkc(p,j),tkc(b,j))}</td>`).join('')}<td class="n">${fN(b.cust||null)}${vsL(p&&p.cust,b.cust)}</td><td class="n">${ca(b)==null?'—':f2(ca(b))}${vsL(ca(p),ca(b))}</td><td class="n">${fB(pb(b))}${vsL(pb(p),pb(b))}</td><td class="n"><button type="button" class="dtbtn" title="ดูรายละเอียดสาขา ${b.code}">ดูรายละเอียด ›</button></td></tr>`; }).join('')}</table></div><div class="hint brqnone" hidden>ไม่พบสาขาที่ค้นหา</div>${chHint}`; }
-  const cuBr=CUC.ctx?`<div class="grp big">รายสาขา · ลูกค้าและจำนวนบิล</div><div class="cuh"><label class="cusel" style="margin-left:0">แสดง <select data-cubr><option value="all">All · ทุกสาขา</option>${Object.keys(CUC.ctx.nm).sort().map(c=>`<option value="${c}"${CUC.br===c?' selected':''}>${c} ${CUC.ctx.nm[c]}</option>`).join('')}</select></label></div><div id="cuCharts">${cuChartsHtml(CUC.br)}</div>`:'';
-  const tI=trend.indexOf('<div class="grp big">รายเดือน'), tCharts=tI>0?trend.slice(0,tI):trend, tTable=tI>0?trend.slice(tI):'';
+      return `<tr class="clk${i>=12?' cuex':''}" data-ssbr="${b.code}"${hid?' hidden':''}><td>${CUC.br==='all'?i+1:1}</td><td>${b.code} ${b.name}</td><td class="n">${fN(b.tr)}${vsL(p&&p.tr,b.tr)}</td><td class="n"><b>${fB(b.tk)}</b>${vsL(p&&p.tk,b.tk)}</td>${CUS_CH.map((o,j)=>`<td class="n">${fB(tkc(b,j))}${vsL(tkc(p,j),tkc(b,j))}</td>`).join('')}<td class="n">${fN(b.cust||null)}${vsL(p&&p.cust,b.cust)}</td><td class="n">${ca(b)==null?'—':f2(ca(b))}${vsL(ca(p),ca(b))}</td><td class="n">${fB(pb(b))}${vsL(pb(p),pb(b))}</td><td class="n"><button type="button" class="dtbtn" title="ดูรายละเอียดสาขา ${b.code}">ดูรายละเอียด ›</button></td></tr>`; }).join('')}</table></div>${list.length>12?`<div class="cumore"><button type="button" data-cumore>แสดงทั้งหมด ${list.length} สาขา <span>⌄</span></button></div>`:''}<div class="hint brqnone" hidden>ไม่พบสาขาที่ค้นหา</div>${chHint}`; }
+  const cuBr=CUC.ctx?`<div class="cuh"><label class="cusel" style="margin-left:0">แสดงกราฟ <select data-cubr><option value="all">All · ทุกสาขา</option>${Object.keys(CUC.ctx.nm).sort().map(c=>`<option value="${c}"${CUC.br===c?' selected':''}>${c} ${CUC.ctx.nm[c]}</option>`).join('')}</select></label></div><div id="cuCharts">${cuChartsHtml(CUC.br)}</div>`:'';
+  const tI=trend.indexOf('<div class="grp big">รายเดือน'), tTable=tI>=0?trend.slice(tI):'';
   const W=(h,t)=>h?`<div class="plblock">${t?`<div class="grp big">${t}</div>`:''}${h}</div>`:'';
-  return sec('customers',T,'',strip+W(tCharts)+W(chTiles,'แยกตามช่องทาง')+W(tTable)+W(cuBr)+W(btbl));
+  const per=S.multi?S.labS:labelFull(m)+(PV?' · เทียบ '+PV:'');
+  const lgd='<span class="cu-lg"><i class="ln"></i>ปีนี้<i class="ln ds"></i>ปีก่อน (LY)<em>ชี้ที่กราฟเพื่อดูรายละเอียด</em></span>';
+  const searchBox='<span class="gr"><input class="cusearch" type="search" data-cusearch placeholder="ค้นหาสาขา หรือรหัส" autocomplete="off"></span>';
+  return sec('customers',T,'',W(strip+ins)+W(CUC.ctx?cuChartsHtml('all'):'','ลูกค้าและจำนวนบิล รายเดือน<span class="gr">'+lgd+'</span>')+W(chTiles,'ช่องทางการขาย<span class="gr">'+per+'</span>')+W(tTable)+W(cuBr,'รายสาขา · ลูกค้าและจำนวนบิล'+searchBox)+W(btbl,'รายสาขา'));
 }
 
 /* ========================= CEM / OSS: กลุ่มคะแนน · เทียบเดือน/LY · เจาะรายสาขา ========================= */
@@ -3148,7 +3276,7 @@ function frameBlocks(){
 const CAPROWS=12;
 function capTables(){
   document.querySelectorAll('#main .scroll > table').forEach(t=>{
-    if(t.classList.contains('pltable')) return;
+    if(t.classList.contains('pltable')||t.classList.contains('cubtbl')) return;
     const rows=[...t.rows].filter(r=>r.cells.length&&r.cells[0].tagName==='TD');
     if(rows.length<=CAPROWS+3) return;
     const wrap=t.parentElement;
@@ -4579,8 +4707,8 @@ function drawBranchCust(code,box){
   /* กราฟรายเดือน: Total Trans ก่อน แล้ว Customers · เส้นปีนี้ + เส้น LY ประ + % vs LY */
   const labs=hist.map(h=>MONTH_TH[h.m-1]);
   const chart=hist.length>1?`<div class="bp-card"><div class="bp-h"><span>Total Trans และ Customers รายเดือน เทียบ LY</span></div><div class="cpns" style="border:0;padding:0">`
-    +cuPanel('Total Trans (บิล)',labs,hist.map(h=>h.r.tr||null),hist.map(h=>lyv('k',h.m)),'#475569')
-    +cuPanel('Customers (ลูกค้า)',labs,hist.map(h=>h.r.cust||null),hist.map(h=>lyv('c',h.m)),'#D9822D')+`</div></div>`:'';
+    +cuPanel('Total Trans','บิล',labs,hist.map(h=>h.r.tr||null),hist.map(h=>lyv('k',h.m)),'#475569')
+    +cuPanel('Customers','คน',labs,hist.map(h=>h.r.cust||null),hist.map(h=>lyv('c',h.m)),'#D9822D')+`</div></div>`:'';
   const hasLy=hist.some(h=>lyv('k',h.m)||lyv('c',h.m));
   const ly2=(a,v,f)=>(a!=null&&v!=null&&a)?`<span class="tiny ${Math.abs(pct(a,v))<0.05?'':cls(pct(a,v))}">${sgn(pct(a,v))} vs LY ${f(a)}</span>`:'';
   const tbl=`<div class="bp-card"><div class="bp-h"><span>รายเดือน</span></div><div class="scroll"><table>
@@ -4593,6 +4721,7 @@ function drawBranchCust(code,box){
     +(hasLy?'':'<div class="hint">ยังไม่มีข้อมูลปีก่อน (LY) ของสาขานี้ในไฟล์ STF ที่นำเข้า</div>')+tbl+`</div>`;
 }
 function openBranch(code,mode){ code=String(code);
+  if(mode==='cust'){ openCuDrawer(code); return; }
   const meta=(BRANCH_META&&BRANCH_META[code])||{}, r=BR_CTX&&BR_CTX.rows.find(x=>String(x.code)===code);
   $('#brmTitle').textContent=code+' '+((r&&r.name)||meta.name||'');
   $('#brmSub').textContent=[meta.zone?'โซน '+meta.zone:'', (SCP&&SCP.lab)||label(curM)].filter(Boolean).join(' · ');
