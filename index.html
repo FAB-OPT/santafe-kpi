@@ -1283,6 +1283,17 @@ body.present .cmpchip{font-size:15px}
 .plchip:has(input:checked)::before{border-color:#fff;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.8 2.8L12 5.5' fill='none' stroke='%23F66B21' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat}
 .plchip:has(input:disabled){opacity:.45;cursor:not-allowed;background:var(--surface)}
 .plchip .hint{font-weight:500;font-size:11.5px}
+.scopeseg{display:inline-flex;background:#EEF1F6;border-radius:12px;padding:3px;gap:2px;flex:0 0 auto}
+.scopeseg button{border:0;background:transparent;color:#94A3B8;font:inherit;font-weight:700;font-size:13px;padding:5px 13px;border-radius:9px;cursor:pointer;white-space:nowrap}
+.scopeseg button:hover{color:var(--ink)}
+.scopeseg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(15,23,42,.14)}
+#fBranch{max-width:210px}
+.scopebar2{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--accent-2);border-bottom:1px solid var(--accent-3);padding:8px 22px}
+.scopebar2[hidden]{display:none}
+.scopebar2 .chip2{background:#fff;border:1px solid var(--accent-3);color:var(--accent-ink);border-radius:999px;padding:2px 12px;font-size:12.5px;font-weight:700}
+.scopebar2 b{font-size:14px;color:var(--ink)}
+.scopebar2 .hint2{margin-left:auto;font-size:12.5px;color:var(--accent-ink)}
+.scopebar2 u{font-weight:700;cursor:pointer}
 .kcs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
 .kc{background:var(--card,#fff);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
 .kc.pos{border-left-color:var(--good)} .kc.neg{border-left-color:var(--bad,#E11D48)}
@@ -1317,7 +1328,7 @@ body.present .brandsw{display:none}
 body.brand-empty .wrap{grid-template-columns:minmax(0,1fr)}
 body.brand-empty #nav,body.brand-empty .filters,body.brand-empty .find,
 body.brand-empty #presentBtn,body.brand-empty .tabbar{display:none!important}
-body.brand-nokt #fZone{display:none!important}
+body.brand-nokt #fZone,body.brand-nokt #fScope,body.brand-nokt #fBranch,body.brand-nokt #scopeBar{display:none!important}
 body.brand-nokt #moreBadge,body.brand-nokt #importBtn .nbadge{display:none!important}
 .be-act{display:flex;gap:8px;flex-wrap:wrap}
 .hv-head .btn.primary{align-self:center}
@@ -1556,7 +1567,9 @@ body.hub section.slide .bar h2[data-n]::before{display:none}
     <select id="fQuarter" aria-label="ไตรมาส" hidden></select>
     <span id="fRangeBox" hidden><select id="fFrom" aria-label="ตั้งแต่เดือน"></select>
       <span class="dash">–</span><select id="fTo" aria-label="ถึงเดือน"></select></span>
-    <select id="fZone" aria-label="โซนผู้จัดการเขต"><option value="all">ทุกโซน</option></select>
+    <span class="scopeseg" id="fScope" role="group" aria-label="ขอบเขตข้อมูล"><button type="button" data-sc="all">All Stores</button><button type="button" data-sc="branch">Branch</button><button type="button" data-sc="zone">Zone</button></span>
+    <select id="fZone" aria-label="โซนผู้จัดการเขต" hidden><option value="all">ทุกโซน</option></select>
+    <select id="fBranch" aria-label="สาขา" hidden></select>
   </div>
   <div class="find"><input id="secFind" type="search" placeholder="ค้นหาหัวข้อ" autocomplete="off" aria-label="ค้นหาหัวข้อ">
     <div class="findlist" id="findList"></div></div>
@@ -1575,6 +1588,7 @@ body.hub section.slide .bar h2[data-n]::before{display:none}
     </div></div>
   <button class="btn primary" id="presentBtn">▶ โหมดพรีเซนต์</button>
 </header>
+<div id="scopeBar" class="scopebar2" hidden></div>
 
 <div class="wrap">
   <nav id="nav"></nav>
@@ -1913,10 +1927,10 @@ function plVals(src, months){ const F=EXTRA.pnlFull; if(!src) return null;
 function plSection(m){
   const F=EXTRA&&EXTRA.pnlFull; if(!F||!F.meta) return null;
   /* เปลี่ยนโซนแล้วสาขาที่เลือกไว้ไม่อยู่ในโซน → กลับไปดูรวมทั้งโซน */
-  const zOk=c=>FILT.zone==='all'||(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone===FILT.zone);
+  const zOk=c=>FILT.zone==='all'||inScopeCode(c);
   if(PLS.branch!=='all'&&!zOk(PLS.branch)) PLS.branch='all';
   PLS.cmp=(PLS.cmp||[]).filter(zOk);
-  const ALLN=FILT.zone==='all'?'ทั้งบริษัท':'ทั้งโซน '+FILT.zone;
+  const ALLN=FILT.zone==='all'?'ทั้งบริษัท':(brOfScope()?scopeName():'ทั้งโซน '+FILT.zone);
   const items=plFlat();
   let months=scopeMonths().filter(mm=>F.actual[PL_MONKEY[mm-1]]);
   let fallback=false;
@@ -1996,10 +2010,10 @@ function plSection(m){
   const tile=(l,v,cl)=>`<div class="st ${cl||''}"><div class="l">${l}</div><div class="v">${fm(v)}</div><div class="s">${pc(v,rev)} ของรายได้</div></div>`;
   const brs=F.branch?Object.keys(F.branch):[];
   const brName=c=>(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].name)||c;
-  const brOpts=brs.filter(c=>FILT.zone==='all'||(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone===FILT.zone))
+  const brOpts=brs.filter(c=>FILT.zone==='all'||inScopeCode(c))
     .sort((a,b)=>String(a).localeCompare(String(b)));
   const head=`<div class="plbar">
-      <label>สาขา <select id="plBranch"><option value="all">${FILT.zone==='all'?'ทั้งบริษัท ('+((typeof BRANDS!=='undefined'&&BRANDS.find(b=>b.k===BRAND))||{n:'Santa Fe'}).n+')':'ทั้งโซน '+FILT.zone+' (รวมงบสาขาในโซน)'}</option>${brOpts.map(c=>`<option value="${c}" ${PLS.branch===c?'selected':''}>${c} ${brName(c)}</option>`).join('')}</select></label>
+      <label>สาขา <select id="plBranch"><option value="all">${FILT.zone==='all'?'ทั้งบริษัท ('+((typeof BRANDS!=='undefined'&&BRANDS.find(b=>b.k===BRAND))||{n:'Santa Fe'}).n+')':(brOfScope()?scopeName():'ทั้งโซน '+FILT.zone+' (รวมงบสาขาในโซน)')}</option>${brOpts.map(c=>`<option value="${c}" ${PLS.branch===c?'selected':''}>${c} ${brName(c)}</option>`).join('')}</select></label>
       <label>เทียบกับสาขา <select id="plAdd" ${(PLS.cmp||[]).length>=4?'disabled':''}><option value="">${(PLS.cmp||[]).length>=4?'เทียบได้สูงสุด 4 สาขา':'+ เพิ่มสาขา'}</option>${brOpts.filter(c=>c!==PLS.branch&&!(PLS.cmp||[]).includes(c)).map(c=>`<option value="${c}">${c} ${brName(c)}</option>`).join('')}</select></label>
       ${cmpCodes.map(c=>`<span class="cmpchip">${c} ${brName(c)}<button data-plrm="${c}" title="เอาออก">×</button></span>`).join('')}
       ${cmpMode?'<button class="btn small" id="plCmpClear">ล้างการเทียบ</button>':''}
@@ -2101,7 +2115,7 @@ function sssgSection(m,rows){
   const S=SCP||{}, inScope=S.multi&&S.n>=2;
   const months=inScope?S.ms.slice():MONTHLY.map(r=>r.m).filter(x=>x<=m);
   const M2=MB, K2=KB;
-  const bar=`<div class="plbar"><label>สาขา <select id="ssBranch"><option value="all">${FILT.zone==='all'?'ทั้งบริษัท ('+((typeof BRANDS!=='undefined'&&BRANDS.find(b=>b.k===BRAND))||{n:'Santa Fe'}).n+')':'ทั้งโซน '+FILT.zone}</option>${BY.map(b=>`<option value="${b.code}" ${SSS.branch===b.code?'selected':''}>${b.code} ${b.name}</option>`).join('')}</select></label>
+  const bar=`<div class="plbar"><label>สาขา <select id="ssBranch"><option value="all">${FILT.zone==='all'?'ทั้งบริษัท ('+((typeof BRANDS!=='undefined'&&BRANDS.find(b=>b.k===BRAND))||{n:'Santa Fe'}).n+')':(brOfScope()?scopeName():'ทั้งโซน '+FILT.zone)}</option>${BY.map(b=>`<option value="${b.code}" ${SSS.branch===b.code?'selected':''}>${b.code} ${b.name}</option>`).join('')}</select></label>
     ${SSS.branch==='all'?'<span class="hint">คลิกแท่งเดือนในกราฟ เพื่อดู SSSG รายสาขาของเดือนนั้น</span>':'<button class="btn small" id="ssBack">← กลับภาพรวม</button>'}</div>`;
   const b=SSS.branch!=='all'&&BY.find(x=>x.code===SSS.branch);
   if(b){ // ---- รายสาขา ----
@@ -2122,7 +2136,7 @@ function sssgSection(m,rows){
   // ---- ภาพรวม (ทั้งบริษัท หรือเฉพาะโซน) ----
   let rowsC=inScope?rows.filter(r=>S.ms.includes(r.m)):rows, subT='Same-store sales growth เทียบเดือนเดียวกันปีก่อน';
   if(FILT.zone!=='all'){ rowsC=months.map(mm=>{ let ly=0,ty=0,n=0; BY.forEach(x=>{const v=x.m&&x.m[mm]; if(v&&v.ly>0&&v.ty>0){ly+=v.ly;ty+=v.ty;n++;}}); return {m:mm,sssg:n?+((ty/ly-1)*100).toFixed(1):null}; });
-    subT=`โซน ${FILT.zone} · คำนวณจากยอดรายสาขาที่มีทั้ง 2 ปี (${BY.length} สาขา)`; }
+    subT=`${scopeName()} · คำนวณจากยอดรายสาขาที่มีทั้ง 2 ปี (${BY.length} สาขา)`; }
   let panel='';
   /* คลิกแท่งเดือน = SSSG รายสาขาของเดือนนั้น · โหมดช่วงเวลา = แสดง SSSG รายสาขาของทั้งช่วงให้เลย */
   const pickL=SSS.pickM?[SSS.pickM]:(S.multi?S.ms:null);
@@ -2370,7 +2384,7 @@ function auditSection(id,title,m,d){
     <label><input type="checkbox" id="${kind}LY" ${A.ly&&lyAll?'checked':''} ${lyAll?'':'disabled'}> เทียบ LY (เดือนเดียวกัน)${lyAll?'':' <span class="hint">(ไม่มีข้อมูล)</span>'}</label>
     <span class="hint">คลิกแท่งในกราฟ เพื่อดูว่าสาขาไหนอยู่กลุ่มไหน</span></div>`;
   const strip=`<div class="strip">
-    <div class="st" style="border-color:var(--orange)"><div class="l">เฉลี่ย ${label(m)}</div><div class="v" style="color:var(--orange)">${avC}${u}</div><div class="s">${n} สาขา${FILT.zone!=='all'?' · โซน '+FILT.zone:''}</div></div>
+    <div class="st" style="border-color:var(--orange)"><div class="l">เฉลี่ย ${label(m)}</div><div class="v" style="color:var(--orange)">${avC}${u}</div><div class="s">${n} สาขา${FILT.zone!=='all'?' · '+scopeName():''}</div></div>
     ${lm?`<div class="st ${cls(avC-avL)}"><div class="l">LM (${MONTH_TH[m-2]})</div><div class="v">${avL}${u}</div><div class="s">${sgn(avC-avL,1,' ppt')} จาก LM · ${Object.keys(lm).length} สาขา</div></div>`:''}
     ${ly?`<div class="st ${cls(avC-avY)}"><div class="l">LY (${MONTH_TH[m-1]} ${YEAR-1})</div><div class="v">${avY}${u}</div><div class="s">${sgn(avC-avY,1,' ppt')} จาก LY · ${Object.keys(ly).length} สาขา</div></div>`:''}
     <div class="st pos"><div class="l">${GN[0]}</div><div class="v">${gc[0].length}</div><div class="s">สาขา (${(gc[0].length/n*100).toFixed(0)}% ของที่ตรวจ)</div></div>
@@ -2423,7 +2437,7 @@ function auditSection(id,title,m,d){
   const brHtml=brs.length?`<div class="grp" style="margin-top:18px">สาขาที่ตรวจแล้ว (${brs.length})</div>
     <div class="scroll"><table><tr><th>สาขา</th><th class="n">คะแนน</th><th class="n">ข้อที่ถูกหัก</th><th>วันที่ตรวจ</th></tr>
     ${brs.map(b=>`<tr><td>${b[0]}</td><td class="n" style="color:${GC[grp(+b[1])]};font-weight:600">${(+b[1]).toFixed(1)}%</td><td class="n">${b[2]}</td><td style="white-space:normal">${b[3]}</td></tr>`).join('')}</table></div>`:'';
-  return sec(id,title,`ซานตาเฟ่ สเต็ก · ${label(m)} · ${n} สาขาที่ตรวจแล้ว${FILT.zone!=='all'?' · โซน '+FILT.zone:''}`,
+  return sec(id,title,`ซานตาเฟ่ สเต็ก · ${label(m)} · ${n} สาขาที่ตรวจแล้ว${FILT.zone!=='all'?' · '+scopeName():''}`,
     bar+strip+chart+panel+secHtml+secPanel+qHtml+qPanel+fHtml+fPanel+brHtml);
 }
 
@@ -2537,7 +2551,7 @@ function rankSection(m0){
   const bar=`<div class="plbar"><label>เรียงตาม <select id="rkBy"><option value="sales" ${RNK.by==='sales'?'selected':''}>ยอดขาย</option><option value="sssg" ${RNK.by==='sssg'?'selected':''}>%SSSG (โตเทียบ LY)</option></select></label>
     <label>จำนวน <select id="rkN">${[5,10,15,20].map(n=>`<option value="${n}" ${RNK.n===n?'selected':''}>${n} สาขา</option>`).join('')}</select></label>
     <span class="hint">จุดท้ายแถว = ติดอันดับกี่เดือนจาก ${hist.length} เดือนล่าสุด · คลิกแถวเพื่อดู SSSG รายเดือนของสาขานั้น</span></div>`;
-  return sec('rank','Top & Bottom Branches — sales ranking',`${S.multi?S.lab:label(m)} · ${cur.length} สาขาที่มียอด${FILT.zone!=='all'?' · โซน '+FILT.zone:''}${S.multi?'':brNote(m,m0)}`,
+  return sec('rank','Top & Bottom Branches — sales ranking',`${S.multi?S.lab:label(m)} · ${cur.length} สาขาที่มียอด${FILT.zone!=='all'?' · '+scopeName():''}${S.multi?'':brNote(m,m0)}`,
     bar+`<div class="two"><div><h3 class="g">${RNK.by==='sssg'?'โตสูงสุด':'ยอดสูงสุด'} ${N} สาขา</h3>${tbl(top,setsT)}</div>
     <div><h3 class="r">${RNK.by==='sssg'?'ลดมากสุด':'ยอดต่ำสุด'} ${N} สาขา</h3>${tbl(bot,setsB)}</div></div>`);
 }
@@ -2659,7 +2673,7 @@ function plMatrix(items){
   const iRev=items.find(x=>x.id==='revenue').index, iNet=items.find(x=>x.id==='net').index,
         iCogs=items.find(x=>x.id==='cogs').index, iLab=items.find(x=>x.id==='labor').index;
   const brName=c=>(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].name)||c;
-  const codes=Object.keys(F.branch).filter(c=>FILT.zone==='all'||(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone===FILT.zone));
+  const codes=Object.keys(F.branch).filter(c=>FILT.zone==='all'||inScopeCode(c));
   if(!codes.length) return '';
   const MET={netPct:{t:'%กำไรสุทธิ',f:(a)=>a[iRev]?a[iNet]/a[iRev]*100:null,fmt:v=>v.toFixed(1)+'%',good:v=>v>=0},
              net:{t:'กำไรสุทธิ',f:a=>a[iNet],fmt:KM,good:v=>v>=0},
@@ -2826,7 +2840,7 @@ function cosBody(){
   const plbrHtml=plbrBody();
   /* รายสาขา */
   const brName=c=>(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].name)||c;
-  const codes=Object.keys(F.branch||{}).filter(c=>FILT.zone==='all'||(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone===FILT.zone));
+  const codes=Object.keys(F.branch||{}).filter(c=>FILT.zone==='all'||inScopeCode(c));
   const brs=codes.map(c=>{ const a=S.multi?plVals(F.branch[c],inS):F.branch[c][last.k]; if(!a||!a[iRev]) return null; const o=P(a);
       const pa=S.multi?(keysOk(F.branch[c],S.prevMs)?plVals(F.branch[c],S.prevMs):null):(mons.length>1?F.branch[c][mons[mons.length-2].k]:null); const po=pa&&pa[iRev]?P(pa):null;
       return {c,name:brName(c),zone:(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone)||'',...o,
@@ -2850,7 +2864,7 @@ function cosBody(){
       </table></div>`;
   }
   return `<div class="grp big">Food Cost (COS) &amp; Labor Cost (COL)</div>
-    <div class="hint" style="margin:-4px 0 12px">${S.multi?S.lab:label(last.m)}${fb&&!S.multi?' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':''} · ${brs.length} สาขา${FILT.zone!=='all'?' · โซน '+FILT.zone:''} · ยิ่งต่ำยิ่งดี</div>`
+    <div class="hint" style="margin:-4px 0 12px">${S.multi?S.lab:label(last.m)}${fb&&!S.multi?' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':''} · ${brs.length} สาขา${FILT.zone!=='all'?' · '+scopeName():''} · ยิ่งต่ำยิ่งดี</div>`
     +strip+charts+plbrHtml+tbl+`<div class="note">ป้ายเขียวหมายถึงลดลง (ดีขึ้น) ป้ายแดงหมายถึงเพิ่มขึ้น</div>`;
 }
 
@@ -3033,7 +3047,7 @@ function syncPnl(){
   /* เลือกโซน: ตัวเลข "ทั้งบริษัท" ของงบ = รวมงบรายสาขาในโซน (ปีนี้และ LY) */
   let actZ=actual, lyZ=ly;
   if(FILT.zone!=='all'){
-    const codes=Object.keys(branch).concat(Object.keys(branchLY)).filter((c,i,a)=>a.indexOf(c)===i&&BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone===FILT.zone);
+    const codes=Object.keys(branch).concat(Object.keys(branchLY)).filter((c,i,a)=>a.indexOf(c)===i&&inScopeCode(c));
     const sum=(src,k)=>{ let o=null; codes.forEach(c=>{ const a=src[c]&&src[c][k]; if(!a) return; if(!o) o=new Array(a.length).fill(0); a.forEach((v,i)=>o[i]+=(typeof v==='number'?v:0)); }); return o; };
     actZ={}; lyZ={}; K.forEach(k=>{ const a=sum(branch,k); if(a) actZ[k]=a; const l=sum(branchLY,k); if(l) lyZ[k]=l; });
   }
@@ -3695,11 +3709,11 @@ function zoneData(){
       platforms:[['Grab','grab'],['Line Man','lm'],['Shopee Food','sp']].map(([nm,k])=>({name:nm, now:Sum(br,k)/1e6, prev:pbr.length?Sum(pbr,k)/1e6:null})),
       shareNow:bs?Sum(br,'deli')/bs*100:null, sharePrev:bsP?Sum(pbr,'deli')/bsP*100:null,
       topDecline:(dl0.topDecline||[]).filter(inZ), lineManDecline:(dl0.lineManDecline||[]).filter(inZ),
-      note:'โซน '+Z+' · รวมจากยอดรายสาขาในโซน'}:null;
+      note:scopeName()+' · รวมจากยอดรายสาขา'}:null;
     const tn=trRows(br), tp=trRows(pbr), R0=v=>v==null?null:Math.round(v);
     const trans=tn?{compare:(d0.trans&&d0.trans.compare)||label(m), trans:[tp?tp.tr:null,tn.tr], ticket:[tp?R0(tp.tk):null,R0(tn.tk)],
       customer:tn.cu?[tp&&tp.cu?tp.cu:null,tn.cu]:null, custAvg:tn.cu?[tp&&tp.cu?+(tp.cu/tp.tr).toFixed(2):null,+(tn.cu/tn.tr).toFixed(2)]:null,
-      channels:[], note:'โซน '+Z+' · รวมจากยอดรายสาขาในโซน (แบบฟอร์มไม่มีบิลแยกช่องทางรายสาขา)'}:null;
+      channels:[], note:scopeName()+' · รวมจากยอดรายสาขา (แบบฟอร์มไม่มีบิลแยกช่องทางรายสาขา)'}:null;
     const b0=d0.branches;
     det[m]=Object.assign({},d0,{branchRows:br, planBranches:filtZone(d0.planBranches), plBranches:filtZone(d0.plBranches),
       stores:{now:br.filter(b=>b.sales>0).length||n||null, ly:nly||null, sameStore:ssN||null},
@@ -3788,6 +3802,7 @@ function syncBranchYears(){
       if(!(v.ty>0)||v.src==='form'){ v.ty=r.sales; v.src='form'; } }); });
 }
 function build(m){
+  renderFilters();
   const hasData=BRAND==='kt'||brandHasData();
   renderBrands(); document.body.classList.toggle('brand-home', HOME); document.body.classList.toggle('brand-empty', !HOME&&!hasData);
   document.body.classList.toggle('brand-nokt', !HOME&&BRAND!=='kt');
@@ -4042,7 +4057,7 @@ function buildMain(m){
 
   if(scopeMonths().length>1 || FILT.zone!=='all'){
     const note=`<div class="scopebar">📅 <b>${scopeLabel()}</b>`
-      + (FILT.zone!=='all'?` · 🧭 โซน <b>${FILT.zone}</b>`:'')
+      + (FILT.zone!=='all'?` · 🧭 <b>${scopeName()}</b>`:'')
       + ` · <span>ยอดขายรวมในช่วง <b>${scopeTotals().sales.toFixed(1)}M</b></span></div>`;
     out.unshift(note);
   }
@@ -4095,7 +4110,16 @@ function zoneOfRow(r){
   const nm=(r&&(r.name||r[0])||'').toString().replace(/\s+/g,'');
   return ZONE_BY_NAME?ZONE_BY_NAME[nm]:null;
 }
-function inZone(r){ if(FILT.zone==='all') return true; return zoneOfRow(r)===FILT.zone; }
+/* ขอบเขตทั้งหน้า: FILT.zone = 'all' · ชื่อโซน · 'b:รหัสสาขา' (เลือกรายสาขา ใช้กลไกเดียวกับโซน) */
+const brOfScope=()=>(typeof FILT.zone==='string'&&FILT.zone.indexOf('b:')===0)?FILT.zone.slice(2):null;
+let CODE_BY_NAME=null;
+function codeOfRow(r){ initMeta(); if(r&&r.code!=null) return String(r.code);
+  if(!CODE_BY_NAME&&BRANCH_META){ CODE_BY_NAME={}; Object.entries(BRANCH_META).forEach(([c,v])=>{ if(v&&v.name) CODE_BY_NAME[v.name.replace(/\s+/g,'')]=c; }); }
+  const nm=(r&&(r.name||r[0])||'').toString().replace(/\s+/g,''); return CODE_BY_NAME?CODE_BY_NAME[nm]:null; }
+function inScopeCode(c){ if(FILT.zone==='all') return true; const b=brOfScope(); if(b) return String(c)===b;
+  return !!(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone===FILT.zone); }
+function scopeName(){ const b=brOfScope(); if(b){ const m=BRANCH_META&&BRANCH_META[b]; return 'สาขา '+b+(m&&m.name?' '+m.name:''); } return 'โซน '+FILT.zone; }
+function inZone(r){ if(FILT.zone==='all') return true; const b=brOfScope(); if(b) return codeOfRow(r)===b; return zoneOfRow(r)===FILT.zone; }
 function filtZone(list){ return (list||[]).filter(inZone); }
 
 /* เดือนทั้งหมดในขอบเขตที่เลือก */
@@ -4139,7 +4163,19 @@ function renderFilters(){
   if(z&&ZONES_LIST&&ZONES_LIST.length&&z.options.length<=1){
     z.innerHTML='<option value="all">ทุกโซน</option>'+ZONES_LIST.map(x=>`<option value="${x}">โซน ${x}</option>`).join('');
   }
-  if(z) z.value=FILT.zone;
+  const sc=FILT.zone==='all'?'all':(brOfScope()?'branch':'zone');
+  document.querySelectorAll('#fScope [data-sc]').forEach(b=>b.classList.toggle('on',b.dataset.sc===sc));
+  if(z){ z.hidden=sc!=='zone'; if(sc==='zone') z.value=FILT.zone; }
+  const fb=$('#fBranch');
+  if(fb){ fb.hidden=sc!=='branch'; const codes=Object.keys(BRANCH_META||{}).sort();
+    if(fb.dataset.n!==String(codes.length)){ fb.dataset.n=String(codes.length);
+      fb.innerHTML=codes.map(c=>`<option value="${c}">${c} ${(BRANCH_META[c]&&BRANCH_META[c].name)||''}</option>`).join(''); }
+    if(sc==='branch') fb.value=brOfScope(); }
+  const bar=$('#scopeBar');
+  if(bar){ if(FILT.zone==='all'){ bar.hidden=true; bar.innerHTML=''; }
+    else { const n=sc==='zone'?Object.values(BRANCH_META||{}).filter(v=>v&&v.zone===FILT.zone).length:0;
+      bar.hidden=false;
+      bar.innerHTML=`<span class="chip2">กำลังกรอง</span><b>${scopeName()}${n?' · '+n+' สาขา':''}</b><span class="hint2">ตัวเลขทุกหัวข้อในหน้านี้เป็นของ${sc==='zone'?'โซน':'สาขา'}นี้ · <u data-scall="1">กลับไป All Stores ✕</u></span>`; } }
 }
 let ZONES_LIST=[];
 function bindFilters(){
@@ -4152,7 +4188,14 @@ function bindFilters(){
   const f=$('#fFrom'), t=$('#fTo');
   if(f) f.onchange=e=>{ FILT.from=+e.target.value; const ms=scopeMonths(); if(ms.length) setMonth(ms[ms.length-1]); else build(curM); };
   if(t) t.onchange=e=>{ FILT.to=+e.target.value; const ms=scopeMonths(); if(ms.length) setMonth(ms[ms.length-1]); else build(curM); };
-  const z=$('#fZone'); if(z) z.onchange=e=>{ FILT.zone=e.target.value; build(curM); };
+  const z=$('#fZone'); if(z) z.onchange=e=>{ FILT.zone=e.target.value; renderFilters(); build(curM); };
+  const fb=$('#fBranch'); if(fb) fb.onchange=e=>{ FILT.zone='b:'+e.target.value; renderFilters(); build(curM); };
+  document.querySelectorAll('#fScope [data-sc]').forEach(b=>b.onclick=()=>{ const k=b.dataset.sc;
+    if(k==='all') FILT.zone='all';
+    else if(k==='zone'){ if(FILT.zone==='all'||brOfScope()) FILT.zone=(ZONES_LIST&&ZONES_LIST[0])||'all'; }
+    else if(!brOfScope()){ const cs=Object.keys(BRANCH_META||{}).sort(); if(cs.length) FILT.zone='b:'+cs[0]; }
+    renderFilters(); build(curM); });
+  const bar=$('#scopeBar'); if(bar) bar.onclick=e=>{ if(e.target.closest('[data-scall]')){ FILT.zone='all'; renderFilters(); build(curM); } };
 }
 
 /* ========================= month selector ========================= */
@@ -5680,7 +5723,7 @@ function hubApply(){
   if(!TOPIC){
     secs.forEach(x=>x.classList.add('hhide'));
     const b=(typeof BRANDS!=='undefined'&&BRANDS.find(x=>x.k===BRAND))||{n:'Santa Fe'};
-    place('<div id="hubView"><div class="hv-head"><div><div class="hv-t">'+b.n+'</div><div class="hv-s">'+((SCP&&SCP.lab)||label(curM))+(FILT.zone!=='all'?' · โซน '+FILT.zone:'')+' · เลือกหัวข้อที่ต้องการดู</div></div></div>'
+    place('<div id="hubView"><div class="hv-head"><div><div class="hv-t">'+b.n+'</div><div class="hv-s">'+((SCP&&SCP.lab)||label(curM))+(FILT.zone!=='all'?' · '+scopeName():'')+' · เลือกหัวข้อที่ต้องการดู</div></div></div>'
       +'<div class="hv-grid">'+TOPICS.map(t=>{
         /* หมวดที่ยังไม่เปิดใช้งาน: การ์ดรอข้อมูล กดไม่ได้ */
         if(t.soon) return '<span class="hv-tile soon"><span class="hv-top"><span class="hv-ic">'+t.ic+'</span><span class="hv-n">'+t.n+'</span></span>'
