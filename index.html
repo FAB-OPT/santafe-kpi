@@ -4241,7 +4241,7 @@ function smxHtml(){
       g2+=`<text x="${cx}" y="${Y2(Math.max(r.tot,r.ly||0))-10}" font-size="${now?15:13.5}" font-weight="800" fill="#0F172A" text-anchor="middle">${r.tot.toFixed(1)}</text>`;
       if(r.ly!=null) g2+=`<line x1="${cx-bw2/2-8}" x2="${cx+bw2/2+8}" y1="${Y2(r.ly)}" y2="${Y2(r.ly)}" stroke="#475569" stroke-width="1.6" stroke-dasharray="3 3"/>`;
       const b2=ref(r); if(b2!=null){ const d=pct(b2,r.tot), pos=d>=0;
-        g2+=`<rect x="${cx-31}" y="${H2-34}" width="62" height="22" rx="11" fill="${pos?'#DDF3E7':'#FBE3E6'}"/><text x="${cx}" y="${H2-19}" font-size="12" font-weight="800" fill="${pos?'#12804F':'#D13447'}" text-anchor="middle">${pos?'↗':'↘'} ${sgn(d)}</text>`; }
+        g2+=`<rect x="${cx-52}" y="${H2-34}" width="104" height="22" rx="11" fill="${pos?'#DDF3E7':'#FBE3E6'}"/><text x="${cx}" y="${H2-19}" font-size="10.5" font-weight="800" fill="${pos?'#12804F':'#D13447'}" text-anchor="middle">${sgn(d)} <tspan font-weight="600" font-size="9.5">vs ${RN}</tspan></text>`; }
       g2+=`<text x="${cx}" y="${H2-48}" font-size="13" fill="${now?'#0F172A':'#64748B'}" font-weight="${now?800:500}" text-anchor="middle">${MONTH_TH[r.m-1]}</text>`;
       const t=[`${MONTH_TH[r.m-1]} ${YEAR} · รวม ${fm(r.tot)}`]; if(r.seg) r.seg.forEach(sg=>t.push(`${sg.o.n} ${fm(sg.v)} · ${Math.round(sg.v/r.tot*100)}%`)); if(b2!=null) t.push(`${RN} ${fm(b2)} (${sgn(pct(b2,r.tot))})`);
       g2+=`<rect x="${L2+cw*i}" y="${T2-10}" width="${cw}" height="${H2-T2-B2+10}" fill="transparent" data-tip="${t.join('\n')}"/>`; });
