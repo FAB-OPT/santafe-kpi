@@ -1275,6 +1275,14 @@ body.present .cmpchip{font-size:15px}
 .pltall{display:inline-flex;align-items:center;gap:6px;margin-left:12px;vertical-align:middle;border:1px solid var(--accent-3);background:var(--accent-2);color:var(--accent-ink);border-radius:999px;padding:3px 12px 3px 9px;font-size:12px;font-weight:700;letter-spacing:0;text-transform:none;cursor:pointer;transition:.15s}
 .pltall span{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;line-height:1}
 .pltall:hover{background:var(--accent);border-color:var(--accent);color:#fff}.pltall:hover span{background:#fff;color:var(--accent-ink)}
+.plchip{position:relative;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card);color:var(--ink-2);border-radius:999px;padding:6px 14px 6px 10px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;user-select:none}
+.plchip input{position:absolute;opacity:0;pointer-events:none}
+.plchip::before{content:"";width:16px;height:16px;border-radius:50%;border:2px solid var(--faint);background:#fff;flex:0 0 auto;transition:.15s}
+.plchip:hover{border-color:var(--accent-3);background:var(--accent-2)}
+.plchip:has(input:checked){background:var(--accent);border-color:var(--accent);color:#fff}
+.plchip:has(input:checked)::before{border-color:#fff;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.8 2.8L12 5.5' fill='none' stroke='%23F66B21' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat}
+.plchip:has(input:disabled){opacity:.45;cursor:not-allowed;background:var(--surface)}
+.plchip .hint{font-weight:500;font-size:11.5px}
 .kcs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
 .kc{background:var(--card,#fff);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
 .kc.pos{border-left-color:var(--good)} .kc.neg{border-left-color:var(--bad,#E11D48)}
@@ -1995,9 +2003,9 @@ function plSection(m){
       <label>เทียบกับสาขา <select id="plAdd" ${(PLS.cmp||[]).length>=4?'disabled':''}><option value="">${(PLS.cmp||[]).length>=4?'เทียบได้สูงสุด 4 สาขา':'+ เพิ่มสาขา'}</option>${brOpts.filter(c=>c!==PLS.branch&&!(PLS.cmp||[]).includes(c)).map(c=>`<option value="${c}">${c} ${brName(c)}</option>`).join('')}</select></label>
       ${cmpCodes.map(c=>`<span class="cmpchip">${c} ${brName(c)}<button data-plrm="${c}" title="เอาออก">×</button></span>`).join('')}
       ${cmpMode?'<button class="btn small" id="plCmpClear">ล้างการเทียบ</button>':''}
-      <label><input type="checkbox" id="plLM" ${PLS.cmpLM&&!cmpMode?'checked':''} ${cmpMode?'disabled':''}> เทียบ${months.length===1?'เดือน':'ช่วง'}ก่อน${pm.length?` (${RNG(pm)} ${YEAR})`:''}</label>
-      <label><input type="checkbox" id="plLY" ${PLS.cmpLY&&lyHas&&!cmpMode?'checked':''} ${!lyHas||cmpMode?'disabled':''}> เทียบ LY (${RNG(months)} ${YEAR-1})${!lyHas?' <span class="hint">(ไม่มีข้อมูล LY ของเดือนนี้)</span>':''}</label>
-      ${isJD()&&JD_CLOSED.size?`<label title="สาขาที่ไม่มีงบในเดือนล่าสุดของไฟล์"><input type="checkbox" id="plClosed" ${PLS.closed?'checked':''}> รวมสาขาปิด (${JD_CLOSED.size})</label>`:''}
+      <label class="plchip"><input type="checkbox" id="plLM" ${PLS.cmpLM&&!cmpMode?'checked':''} ${cmpMode?'disabled':''}> เทียบ${months.length===1?'เดือน':'ช่วง'}ก่อน${pm.length?` (${RNG(pm)} ${YEAR})`:''}</label>
+      <label class="plchip"><input type="checkbox" id="plLY" ${PLS.cmpLY&&lyHas&&!cmpMode?'checked':''} ${!lyHas||cmpMode?'disabled':''}> เทียบ LY (${RNG(months)} ${YEAR-1})${!lyHas?' <span class="hint">(ไม่มีข้อมูล LY ของเดือนนี้)</span>':''}</label>
+      ${isJD()&&JD_CLOSED.size?`<label class="plchip" title="สาขาที่ไม่มีงบในเดือนล่าสุดของไฟล์"><input type="checkbox" id="plClosed" ${PLS.closed?'checked':''}> รวมสาขาปิด (${JD_CLOSED.size})</label>`:''}
     </div>`;
   const sub=`${fallback?label(lastM)+' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':scopeLabel()} · ${PLS.branch==='all'?'ทั้งบริษัท':'สาขา '+brName(PLS.branch)} · หน่วย: บาท`;
   /* กราฟเดียว: ต้นทุนและค่าใช้จ่าย 6 หมวด เทียบทั้งปี (% ของรายได้ รายเดือน) */
