@@ -1992,6 +1992,7 @@ table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD
 #smxChart .smblk .grp.big::before{content:"";width:6px;height:22px;border-radius:3px;background:var(--accent)}
 #smxChart .smblk .grp.big .gr{margin-left:auto;font-size:13px;font-weight:500;color:var(--mute)}
 #smxChart .smblk .sh{margin-top:0}
+.smxhd{align-items:flex-start}.smxcol{display:flex;flex-direction:column;align-items:flex-end;gap:8px;margin-bottom:6px}
 .smkg{display:grid;grid-template-columns:1.15fr 1fr 1fr 1fr;gap:14px}
 @media (max-width:1100px){.smkg{grid-template-columns:repeat(2,1fr)}}
 .smk{background:#fff;border:1px solid rgba(15,23,42,.05);border-radius:22px;padding:18px 22px;box-shadow:0 14px 34px -26px rgba(70,45,20,.4);display:flex;flex-direction:column;gap:8px}
@@ -4107,15 +4108,15 @@ function smxDeliHtml(mm,codes,lyM){
     const mx=Math.max(...cur.map(x=>(x.grab||0)+(x.lm||0)+(x.sp||0)),1);
     return `<span class="dbs" style="width:${Math.max(18,t/mx*100).toFixed(1)}%">${PC3.map(([k,c])=>`<i style="flex:${b[k]||0};background:${c}"></i>`).join('')}</span>`; };
   const pcBar=(v,t)=>{ const x=t?v/t*100:0; return `<span class="dpc"><b>${x.toFixed(1)}%</b><u><i style="width:${Math.min(100,x*2.5).toFixed(1)}%"></i></u></span>`; };
-  const row=b=>`<tr class="clk" data-ssbr="${b.code}"><td>${b.code} ${b.name}</td><td>${shBar(b)}</td>${P.map(([k])=>`<td class="n">${k==='deli'?'<b>':''}${KB(b[k]||0)}${k==='deli'?'</b>':''}${chg(ref(b,k),b[k]||0)}</td>`).join('')}<td class="n">${pcBar(b.deli||0,b.sales)}</td></tr>`;
+  const row=b=>`<tr class="clk" data-ssbr="${b.code}"><td>${b.code} ${b.name}</td>${P.map(([k])=>`<td class="n">${k==='deli'?'<b>':''}${KB(b[k]||0)}${k==='deli'?'</b>':''}${chg(ref(b,k),b[k]||0)}</td>`).join('')}<td class="n">${pcBar(b.deli||0,b.sales)}</td></tr>`;
   const seg=`<span class="ovseg">${[['ly','vs LY'],['lm','vs LM']].map(([k,t])=>`<button type="button" class="${(lyM?'ly':'lm')===k?'on':''}" data-smxmode="${k}">${t}</button>`).join('')}</span>`;
   const shown=Math.min(list.length,12);
   const table=`<div class="grp big">Delivery รายสาขา<span class="gr">${label(mm)} · % เทียบ ${RN} · กดหัวคอลัมน์เพื่อเรียง ${seg}</span></div>
-    <div class="scroll"><table class="dbt"><tr>${[['code','สาขา',''],['sh','สัดส่วนแพลตฟอร์ม',''],...P.map(([k,n])=>[k,n,'n ']),['pc','% ของยอดขาย','n ']].map(([k,n,c])=>
+    <div class="scroll"><table class="dbt"><tr>${[['code','สาขา',''],...P.map(([k,n])=>[k,n,'n ']),['pc','% ของยอดขาย','n ']].map(([k,n,c])=>
       k==='sh'?`<th>${n}</th>`:`<th class="${c}srth${SMXD.sort===k?' on':''}" data-dsort="${k}">${n}<i class="srt${SMXD.sort===k?'':' off'}">${SMXD.sort===k?(up?'▲':'▼'):'↕'}</i></th>`).join('')}</tr>
-    <tr class="hi"><td><b>รวม ${cur.length} สาขาปัจจุบัน</b></td><td></td>${P.map(([k])=>{ const p=TP(k); return `<td class="n"><b>${MB(T(k))}</b>${p?`<span class="tiny ${cls(pct(p,TC(k)))}">${sgn(pct(p,TC(k)))} vs ${RN}</span>`:`<span class="tiny">— vs ${RN}</span>`}</td>`; }).join('')}<td class="n"><b>${pc(T('deli'),T('sales'))}</b></td></tr>
+    <tr class="hi"><td><b>รวม ${cur.length} สาขาปัจจุบัน</b></td>${P.map(([k])=>{ const p=TP(k); return `<td class="n"><b>${MB(T(k))}</b>${p?`<span class="tiny ${cls(pct(p,TC(k)))}">${sgn(pct(p,TC(k)))} vs ${RN}</span>`:`<span class="tiny">— vs ${RN}</span>`}</td>`; }).join('')}<td class="n"><b>${pc(T('deli'),T('sales'))}</b></td></tr>
     ${list.map((b,i)=>row(b).replace('<tr class="clk"',i>=shown?'<tr class="clk dbx"':'<tr class="clk"')).join('')}</table></div>
-    <div class="dbnote"><span>ความยาวแถบ = ยอด Delivery รวมของสาขา · แถวรวมนับเฉพาะ ${cur.length} สาขาที่เปิดอยู่</span>${list.length>shown?`<button type="button" class="dbmore" data-dbmore>แสดงทั้งหมด ${list.length} แถว ⌄</button>`:''}</div>`;
+    <div class="dbnote"><span>แถวรวมนับเฉพาะ ${cur.length} สาขาที่เปิดอยู่</span>${list.length>shown?`<button type="button" class="dbmore" data-dbmore>แสดงทั้งหมด ${list.length} แถว ⌄</button>`:''}</div>`;
   return strip+'<!--SPLIT-->'+table;
 }
 function smxHtml(){
@@ -4150,8 +4151,9 @@ function smxHtml(){
   const who=SMX.scope==='zone'?' · โซน '+SMX.zone:(SMX.scope==='branch'&&pick&&pick[0]?' · '+pick[0].code+' '+pick[0].name:'');
   const ytd=rows.reduce((a,r)=>a+(r.tot||0),0), ytdL=rows.every(r=>r.tot==null||r.ly!=null)?rows.reduce((a,r)=>a+(r.tot!=null?r.ly||0:0),0):null;
   const scopeBtns=by.length?`<div class="ovscope" style="margin:0"><span class="ovseg">${[['all','All Stores'],['branch','Branch'],['zone','Zone']].map(([k,t])=>`<button type="button" class="${SMX.scope===k?'on':''}" data-smxscope="${k}">${t}</button>`).join('')}</span>${sel}</div>`:'<span></span>';
-  const head=`<div class="ovth">${scopeBtns}<span class="ovseg">${[['ly','vs LY'],['lm','vs LM']].map(([k,t])=>`<button type="button" class="${SMX.mode===k?'on':''}" data-smxmode="${k}">${t}</button>`).join('')}</span><span class="ovseg">${[['amt','ยอดเงิน (M)'],['pct','สัดส่วน %']].map(([k,t])=>`<button type="button" class="${SMX.view===k?'on':''}" data-smxview="${k}">${t}</button>`).join('')}</span></div>`+
-    `<div class="ovsub" style="margin-top:10px">${months.length?RNG(months)+' '+YEAR:''}: <b>${ytd.toFixed(2)}M</b>${ytdL?` · ${YEAR-1}: <b>${ytdL.toFixed(2)}M</b> ${pill(pct(ytdL,ytd))}`:''} · แท่งแสดงสัดส่วนช่องทางของแต่ละเดือน (รวม 100%)</div>`;
+  const modeSeg=`<span class="ovseg">${[['ly','vs LY'],['lm','vs LM']].map(([k,t])=>`<button type="button" class="${SMX.mode===k?'on':''}" data-smxmode="${k}">${t}</button>`).join('')}</span>`;
+  const viewSeg=`<span class="ovseg">${[['amt','ยอดเงิน (M)'],['pct','สัดส่วน %']].map(([k,t])=>`<button type="button" class="${SMX.view===k?'on':''}" data-smxview="${k}">${t}</button>`).join('')}</span>`;
+  const head=`<div class="ovth smxhd">${scopeBtns}<div class="smxcol">${viewSeg}${modeSeg}</div></div>`;
   if(!rows.some(r=>r.tot!=null)) return head+'<div class="empty">ยังไม่มียอดขาย</div>';
   const W=1180,H=340,L=48,R=20,T=14,B=40, n=rows.length, colW=(W-L-R)/n, bw=Math.min(84,colW*.62);
   const x=i=>L+colW*(i+.5), y=p=>T+(H-T-B)*(1-p/100);
