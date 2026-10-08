@@ -1959,6 +1959,14 @@ table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD
 #plbr .plbc svg.chart text{font-size:16px}
 #plbr .plbc svg.chart text[font-weight="600"]{font-size:19px;font-weight:800}
 #plbr .plbhint{font-size:13px;margin-top:6px}
+
+/* แผงรายละเอียดสาขา (Customers): ป๊อปอัปกึ่งกลางจอ */
+.cudr{display:grid;place-items:center;padding:20px}
+.cudr-p{position:relative;top:auto;right:auto;bottom:auto;width:min(620px,94vw);max-height:90vh;transform:translateY(18px) scale(.97);opacity:0;transition:transform .25s cubic-bezier(.2,.8,.2,1),opacity .2s;padding:26px 28px 28px}
+.cudr.open .cudr-p{transform:none;opacity:1}
+.cudr-bg{backdrop-filter:blur(3px)}
+.cd-mini{grid-template-columns:repeat(4,1fr)}
+@media (max-width:560px){.cd-mini{grid-template-columns:repeat(2,1fr)}.cd-m:nth-child(4n){border-right:1px solid rgba(15,23,42,.06)}.cd-m:nth-child(2n){border-right:0}.cd-m:nth-child(n+5){border-bottom:1px solid rgba(15,23,42,.06)}.cd-m:nth-child(n+7){border-bottom:0}}
 </style>
 </head>
 <body>
