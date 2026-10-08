@@ -1826,6 +1826,25 @@ table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD
 .cd-l{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:#8A93A3;margin-bottom:8px}
 .cd-v{font-size:28px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-bottom:8px;color:var(--ink)}
 .cd-note{margin-top:16px;font-size:12.5px;color:#8A93A3}
+
+.cd-tr{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.cd-badge{background:#1B1B1F;color:#fff;font-size:12px;font-weight:700;border-radius:999px;padding:6px 14px;white-space:nowrap}
+.cd-ins{display:flex;flex-direction:column;gap:14px;margin:6px 0 20px}
+.cd-i{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.55;color:var(--ink-2)}
+.cd-i b{color:var(--ink);font-weight:700}
+.cd-ic{flex:0 0 auto;width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:16px;font-weight:800}
+.cd-ic.dn{background:#FBE3E6;color:#D13447}.cd-ic.up{background:#DDF3E7;color:#12804F}.cd-ic.warn{background:#FCEFCF;color:#B7791F}
+.cd-mini{display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border-radius:18px;padding:6px 4px;box-shadow:0 6px 18px -14px rgba(15,23,42,.3)}
+.cd-m{padding:12px 12px 10px;border-right:1px solid rgba(15,23,42,.06);border-bottom:1px solid rgba(15,23,42,.06)}
+.cd-m:nth-child(4n){border-right:0}.cd-m:nth-child(n+5){border-bottom:0}
+.cd-ml{font-size:12px;color:#8A93A3;margin-bottom:4px}
+.cd-mv{font-size:19px;font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:var(--ink)}
+.cd-md{font-size:12px;font-weight:600;margin-top:4px;min-height:16px}
+.cd-md em{font-style:normal}.cd-md em.pos{color:#12804F}.cd-md em.neg{color:#D13447}
+.cd-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px}
+.cd-nav{border:0;background:transparent;font:inherit;font-size:14px;color:#8A93A3;cursor:pointer;padding:6px 0;text-align:left}
+.cd-nav:hover{color:var(--ink)}
+.cd-chart{border:0;background:linear-gradient(180deg,#FF7A33,#F0601A);color:#fff;border-radius:13px;padding:11px 20px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 10px 20px -10px rgba(246,107,33,.85);white-space:nowrap}
 </style>
 </head>
 <body>
@@ -2603,7 +2622,11 @@ document.addEventListener('click',e=>{
 function cuDrawerEl(){ let el=document.getElementById('cuDrawer'); if(el) return el;
   el=document.createElement('div'); el.id='cuDrawer'; el.className='cudr';
   el.innerHTML='<div class="cudr-bg" data-cudclose></div><aside class="cudr-p" role="dialog" aria-modal="true" aria-label="รายละเอียดสาขา"><div id="cudrBody"></div></aside>';
-  document.body.appendChild(el); el.addEventListener('click',ev=>{ if(ev.target.closest('[data-cudclose]')) closeCuDrawer(); }); return el; }
+  document.body.appendChild(el); el.addEventListener('click',ev=>{
+    if(ev.target.closest('[data-cudclose]')){ closeCuDrawer(); return; }
+    const go=ev.target.closest('[data-cudgo]'); if(go){ openCuDrawer(go.dataset.cudgo); return; }
+    const ch=ev.target.closest('[data-cudchart]'); if(ch){ closeCuDrawer(); const sel=document.querySelector('#customers [data-cubr]');
+      if(sel){ sel.value=ch.dataset.cudchart; sel.dispatchEvent(new Event('change',{bubbles:true})); const t=document.getElementById('cuCharts'); if(t) t.scrollIntoView({behavior:'smooth',block:'center'}); } } }); return el; }
 function closeCuDrawer(){ const el=document.getElementById('cuDrawer'); if(el) el.classList.remove('open'); }
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeCuDrawer(); });
 function openCuDrawer(code){ code=String(code); const el=cuDrawerEl();
@@ -2617,11 +2640,38 @@ function openCuDrawer(code){ code=String(code); const el=cuDrawerEl();
   const rank=rows.slice().sort((a,c)=>c.tr-a.tr).findIndex(x=>String(x.code)===code)+1;
   const CK=['dine','take','deli'], TRK=['trDine','trTake','trDeli'];
   const tk=(x,j)=>x&&x[TRK[j]]?x[CK[j]]/x[TRK[j]]:null, ca=x=>x&&x.cust&&x.tr?x.cust/x.tr:null, pb=x=>x&&x.cust?x.sales/x.cust:null;
-  const card=(l,v,pv,f)=>`<div class="cd-c"><div class="cd-l">${l}</div><div class="cd-v">${f(v)}</div>${pv!=null&&v!=null&&pv?`<div class="kp">${pill(pct(pv,v))}</div>`:''}</div>`;
+  const avgOf=(num,den)=>{ let n=0,d=0; rows.forEach(x=>{ if(x[den]>0&&x[num]!=null){ n+=x[num]; d+=x[den]; } }); return d?n/d:null; };
+  const avgCa=avgOf('cust','tr'), chAvg=[0,1,2].map(j=>avgOf(CK[j],TRK[j]));
+  const pc=(a2,b2)=>(a2==null||b2==null||!a2)?null:(b2/a2-1)*100;
+  const sgn1=v=>(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(1)+'%';
+  const dl=(v,ref)=>{ const g=pc(ref,v); return g==null?'':'<em class="'+(g>=0?'pos':'neg')+'">'+sgn1(g)+'</em>'; };
+  const ins=[];
+  /* 1) ลูกค้าเทียบเดือนก่อน + เทียบกับ 12 สาขาแรก */
+  const gCu=p&&p.cust?pc(p.cust,b.cust):null;
+  if(gCu!=null){ const top=rows.slice().sort((x,y)=>y.tr-x.tr).slice(0,12).map(x=>{ const q=prevRows.find(z=>String(z.code)===String(x.code)); return q&&q.cust?pc(q.cust,x.cust):null; }).filter(v=>v!=null);
+    const worst=top.length>3&&gCu<=Math.min(...top), best=top.length>3&&gCu>=Math.max(...top);
+    ins.push([gCu>=0?'up':'dn','<b>ลูกค้า'+(gCu>=0?'เพิ่มขึ้น':'ลดลง')+' '+Math.abs(gCu).toFixed(1)+'%</b> จากเดือนก่อน'+(worst?' — มากที่สุดใน '+top.length+' สาขาแรก':best?' — ดีที่สุดใน '+top.length+' สาขาแรก':'')]); }
+  /* 2) ลูกค้าต่อบิล เทียบค่าเฉลี่ยทุกสาขา */
+  const cab=ca(b);
+  if(cab!=null&&avgCa){ const g=pc(avgCa,cab); if(Math.abs(g)>=1) ins.push([g>=0?'up':'warn','<b>ลูกค้าต่อบิล '+cab.toFixed(2)+' คน</b> '+(g>=0?'สูงกว่า':'ต่ำกว่า')+'ค่าเฉลี่ยทุกสาขา ('+avgCa.toFixed(2)+')']); }
+  /* 3) ช่องทางที่ห่างจากค่าเฉลี่ยมากที่สุด */
+  const chN=['Dine in','Takeaway','Delivery'];
+  let bestJ=-1,bestG=0; [0,1,2].forEach(j=>{ const t=tk(b,j); if(t==null||!chAvg[j]) return; const g=pc(chAvg[j],t); if(Math.abs(g)>Math.abs(bestG)){ bestG=g; bestJ=j; } });
+  if(bestJ>=0&&Math.abs(bestG)>=2){ const t=tk(b,bestJ), pj=tk(p,bestJ), gl=pj?pc(pj,t):null, diff=Math.abs(t-chAvg[bestJ]);
+    const conflict=gl!=null&&((gl>=0)!==(bestG>=0));
+    ins.push([bestG>=0?'up':'warn','<b>'+chN[bestJ]+' ฿'+fmtN(Math.round(t))+'</b> '+(bestG>=0?'สูงกว่า':'ต่ำกว่า')+'เฉลี่ย ฿'+fmtN(Math.round(diff))+(gl!=null&&Math.abs(gl)>=0.1?(conflict?' แม้'+(gl>=0?'เพิ่มขึ้น ':'ลดลง ')+Math.abs(gl).toFixed(1)+'%':' และ'+(gl>=0?'เพิ่มขึ้น ':'ลดลง ')+Math.abs(gl).toFixed(1)+'%'):'')]); }
+  const IC={up:'↗',dn:'↘',warn:'!'};
+  const insHtml=ins.length?'<div class="cd-ins">'+ins.map(i=>'<div class="cd-i"><span class="cd-ic '+i[0]+'">'+IC[i[0]]+'</span><span>'+i[1]+'</span></div>').join('')+'</div>':'';
+  const mini=(l,v,pv,f)=>'<div class="cd-m"><div class="cd-ml">'+l+'</div><div class="cd-mv">'+f(v)+'</div><div class="cd-md">'+(pv&&v!=null?dl(v,pv):'')+'</div></div>';
+  const sorted=rows.slice().sort((x,y)=>y.tr-x.tr), at=rank-1, nb=sorted[at-1]||null, nx=sorted[at+1]||null;
+  const navL=nb?nb:nx, navTxt=navL?(nb?'‹ ':'')+navL.code+' '+navL.name+(nb?'':' ›'):'';
   const nmx=(BRANCH_META&&BRANCH_META[code]&&BRANCH_META[code].name)||b.name||'';
-  body.innerHTML=`<div class="cd-top"><div><div class="cd-sub">สาขา ${code} · อันดับ ${rank}</div><div class="cd-name">${b.name||nmx}</div></div><button type="button" class="cd-x" data-cudclose aria-label="ปิด">✕</button></div>
-    <div class="cd-grid">${card('Total Trans',b.tr,p&&p.tr,fN)}${card('Ticket Avg.',b.tk,p&&p.tk,fB)}${card('Ticket Dine in',tk(b,0),tk(p,0),fB)}${card('Ticket Takeaway',tk(b,1),tk(p,1),fB)}${card('Ticket Delivery',tk(b,2),tk(p,2),fB)}${card('Customers',b.cust||null,p&&p.cust,fN)}${card('Customer Avg.',ca(b),ca(p),f2)}${card('Per Bill',pb(b),pb(p),fB)}</div>
-    <div class="cd-note">% เทียบเดือนก่อน (vs LM) · ${S.multi?S.lab:label(m)}</div>`;
+  body.innerHTML='<div class="cd-top"><div><div class="cd-sub">'+code+' · '+(S.multi?S.lab:label(m))+'</div><div class="cd-name">'+(b.name||nmx)+'</div></div><div class="cd-tr"><span class="cd-badge">#'+rank+' Trans</span><button type="button" class="cd-x" data-cudclose aria-label="ปิด">✕</button></div></div>'
+    +insHtml
+    +'<div class="cd-mini">'+mini('Trans',b.tr,p&&p.tr,fN)+mini('Customers',b.cust||null,p&&p.cust,fN)+mini('Ticket',b.tk,p&&p.tk,fB)+mini('Per Bill',pb(b),pb(p),fB)
+    +mini('Dine in',tk(b,0),tk(p,0),fB)+mini('Takeaway',tk(b,1),tk(p,1),fB)+mini('Delivery',tk(b,2),tk(p,2),fB)+mini('Cust. Avg',ca(b),ca(p),f2)+'</div>'
+    +'<div class="cd-foot">'+(navL?'<button type="button" class="cd-nav" data-cudgo="'+navL.code+'">'+navTxt+'</button>':'<span></span>')+'<button type="button" class="cd-chart" data-cudchart="'+code+'">ดูกราฟ →</button></div>'
+    +'<div class="cd-note">% เทียบเดือนก่อน (vs LM) · '+(S.multi?S.lab:label(m))+'</div>';
   el.classList.add('open'); }
 function customersSection(m){
   const S=SCP||{multi:false}, T='Customers & Average Ticket';
