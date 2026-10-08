@@ -1677,7 +1677,7 @@ body.hub main{max-width:1000px;margin-left:auto;margin-right:auto;width:100%}
 #overview>.bar{padding:4px 4px 12px!important;background:transparent!important}
 #overview .bar h2{font-size:15px}
 #overview>.body{padding:0!important}
-.ovstack{display:grid;grid-template-columns:minmax(250px,.8fr) minmax(0,2.2fr);gap:16px}
+.ovstack{display:grid;grid-template-columns:minmax(260px,.85fr) minmax(0,2.15fr);gap:16px;align-items:start}
 .ovstack>#ovTrend,.ovstack>#ovBranch{grid-column:1/-1}
 @media (max-width:900px){.ovstack{grid-template-columns:1fr}}
 .ovc{background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.95);border-radius:24px;padding:20px 24px;box-shadow:0 18px 40px -30px rgba(70,45,20,.45)}
@@ -1693,6 +1693,13 @@ table td{border-bottom:1px solid rgba(15,23,42,.05)}
 table tr:nth-child(even) td{background:transparent}
 table tr:hover td{background:rgba(246,107,33,.05)}
 table tr.hi td{background:#FFF1E6!important}
+.ovstack:has([data-ovp="st"]:not([hidden]))>.ovc{grid-column:1/-1}
+.ovmore{text-align:left}
+.ovx .scroll{max-width:100%}
+/* การ์ดรอข้อมูล: ป้าย "เร็ว ๆ นี้" ลงบรรทัดใหม่ถ้าไม่พอ ไม่บีบชื่อ */
+#hubView .hv-tile.soon .hv-top{flex-wrap:wrap;row-gap:8px}
+#hubView .hv-tile.soon .hv-n{white-space:nowrap}
+#hubView .hv-tile.soon .hv-chip{margin:0 0 0 auto;white-space:nowrap;flex:0 0 auto}
 table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD9}
 /* การ์ดสรุปเหนือตารางสาขา: พื้นขาว จุดสีหน้าชื่อ ตัวเลขใหญ่ */
 .st.big{background:#fff!important;border:1px solid rgba(15,23,42,.06);border-left:1px solid rgba(15,23,42,.06)!important;border-radius:18px;box-shadow:0 10px 24px -20px rgba(15,23,42,.35);padding:16px 20px}
