@@ -2005,10 +2005,10 @@ function plSection(m){
   const yrMs=yrSrc?PL_MONKEY.map((k,i)=>i+1).filter(mm=>yrSrc[PL_MONKEY[mm-1]]&&yrSrc[PL_MONKEY[mm-1]][0]>0):[];
   const YC=[['cogs','#D9822D'],['labor','#2563EB'],['sga','#8B5CF6'],['opex','#10B981'],['central','#F43F5E'],['dep','#64748B']]
     .map(([id,c])=>{ const it=idx(id); return it?{it,name:plLabel(it),color:c}:null; }).filter(Boolean);
-  const yrSer=YC.map(o=>({name:o.name,color:o.color,w:2.8,label:'last',
+  const yrSer=YC.map(o=>({name:o.name,color:o.color,w:2.8,label:'all',
     vals:yrMs.map(mm=>{ const a=yrSrc[PL_MONKEY[mm-1]]; return a[0]>0&&a[o.it.index]!=null?a[o.it.index]/a[0]*100:null; })}));
   const yearChart=yrMs.length>1&&yrSer.length?`<div class="grp">ต้นทุนและค่าใช้จ่าย เทียบทั้งปี ${YEAR} (% ของรายได้)</div>`
-    +lineSeries(yrMs.map(mm=>MONTH_TH[mm-1]),yrSer,{w:1180,h:300,R:56,fmt:v=>v.toFixed(1)+'%',tipFmt:v=>v.toFixed(1)+'%'})+legendOf(yrSer):'';
+    +lineSeries(yrMs.map(mm=>MONTH_TH[mm-1]),yrSer,{w:1180,h:400,fmt:v=>v.toFixed(1)+'%',tipFmt:v=>v.toFixed(1)+'%'})+legendOf(yrSer):'';
   const chartRows=(PLS.branch==='all')?months.map(mm=>{const a=F.actual[PL_MONKEY[mm-1]];return {m:mm,revenue:a[0]*1e6,food:a[idx('cogs').index]*1e6,labor:a[idx('labor').index]*1e6,rent:a[idx('sga').index]*1e6,admin:a[idx('opex').index]*1e6,profit:a[idx('net').index]*1e6};}):[];
   return sec('pl','Profit & Loss — full chart of accounts',sub,`
     ${head}
@@ -2459,15 +2459,21 @@ function lineSeries(labels, series, opt={}){
   let s='';
   for(let k=0;k<=3;k++){ const v=mn+(mx-mn)*k/3, yy=y(v);
     s+=`<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="var(--hair)"/><text x="${L-8}" y="${yy+4}" font-size="11" fill="var(--faint)" text-anchor="end">${fmt(v)}</text>`; }
-  const lastLb=[];
+  const lastLb=[], allLb={};
   series.forEach(sr=>{
     const pts=sr.vals.map((v,i)=>v==null?null:[x(i),y(v)]).filter(Boolean);
     if(pts.length>1) s+=`<polyline fill="none" stroke="${sr.color}" stroke-width="${sr.w||2.4}" stroke-linejoin="round" stroke-linecap="round" ${sr.dash?'stroke-dasharray="6 5"':''} points="${pts.map(p=>p.join(',')).join(' ')}"/>`;
     sr.vals.forEach((v,i)=>{ if(v==null) return;
       s+=`<circle cx="${x(i)}" cy="${y(v)}" r="${sr.w?4:3.5}" fill="var(--card)" stroke="${sr.color}" stroke-width="2"><title>${labels[i]} · ${sr.name}: ${fmt(v)}</title></circle>`;
-      if(sr.label==='last'){ if(i===sr.vals.length-1) lastLb.push({y:y(v),c:sr.color,t:fmt(v)}); }
+      if(sr.label==='all'){ (allLb[i]=allLb[i]||[]).push({y:y(v)-9,c:sr.color,t:fmt(v)}); }
+      else if(sr.label==='last'){ if(i===sr.vals.length-1) lastLb.push({y:y(v),c:sr.color,t:fmt(v)}); }
       else if(sr.label) s+=`<text x="${x(i)}" y="${y(v)-10}" font-size="11.5" font-weight="600" fill="${sr.color}" text-anchor="middle">${fmt(v)}</text>`; });
   });
+  /* ป้ายค่าทุกจุด (label:'all'): เรียงในแต่ละเดือนให้ห่างกันอย่างน้อย 13px ไม่ให้ทับกัน */
+  Object.keys(allLb).forEach(i=>{ const g=allLb[i].sort((a,b)=>a.y-b.y);
+    g.forEach((o,k)=>{ if(k&&o.y<g[k-1].y+14) o.y=g[k-1].y+14; });
+    const over=g[g.length-1].y-(H-B-6); if(over>0) g.forEach(o=>o.y-=over);
+    g.forEach(o=>{ s+=`<text x="${x(+i)}" y="${o.y}" font-size="11.5" font-weight="700" fill="${o.c}" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="3">${o.t}</text>`; }); });
   /* ป้ายค่าท้ายเส้น: อยู่ขวาสุด ดันห่างกันอย่างน้อย 14px ไม่ให้ทับกัน */
   lastLb.sort((a,b)=>a.y-b.y); lastLb.forEach((o,k)=>{ if(k&&o.y<lastLb[k-1].y+14) o.y=lastLb[k-1].y+14; });
   lastLb.forEach(o=>{ s+=`<text x="${x(labels.length-1)+10}" y="${o.y+4}" font-size="12" font-weight="700" fill="${o.c}">${o.t}</text>`; });
