@@ -1294,6 +1294,8 @@ body.present .cmpchip{font-size:15px}
 .scopebar2 b{font-size:14px;color:var(--ink)}
 .scopebar2 .hint2{margin-left:auto;font-size:12.5px;color:var(--accent-ink)}
 .scopebar2 u{font-weight:700;cursor:pointer}
+.plblock{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:16px;box-shadow:var(--sh)}
+.plblock>.grp:first-child,.plblock>.grp.big:first-child{margin-top:0}
 .kcs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
 .kc{background:var(--card,#fff);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
 .kc.pos{border-left-color:var(--good)} .kc.neg{border-left-color:var(--bad,#E11D48)}
@@ -2029,8 +2031,8 @@ function plSection(m){
     .map(([id,c])=>{ const it=idx(id); return it?{it,name:plLabel(it),color:c}:null; }).filter(Boolean);
   const yrSer=YC.map(o=>({name:o.name,color:o.color,w:2.8,label:'all',
     vals:yrMs.map(mm=>{ const a=yrSrc[PL_MONKEY[mm-1]]; return a[0]>0&&a[o.it.index]!=null?a[o.it.index]/a[0]*100:null; })}));
-  const yearChart=yrMs.length>1&&yrSer.length?`<div class="grp">ต้นทุนและค่าใช้จ่าย เทียบทั้งปี ${YEAR} (% ของรายได้)</div>`
-    +lineSeries(yrMs.map(mm=>MONTH_TH[mm-1]),yrSer,{w:1180,h:400,fmt:v=>v.toFixed(1)+'%',tipFmt:v=>v.toFixed(1)+'%'})+legendOf(yrSer):'';
+  const yearChart=yrMs.length>1&&yrSer.length?`<div class="plblock"><div class="grp">ต้นทุนและค่าใช้จ่าย เทียบทั้งปี ${YEAR} (% ของรายได้)</div>`
+    +lineSeries(yrMs.map(mm=>MONTH_TH[mm-1]),yrSer,{w:1180,h:400,fmt:v=>v.toFixed(1)+'%',tipFmt:v=>v.toFixed(1)+'%'})+legendOf(yrSer)+'</div>':'';
   const chartRows=(PLS.branch==='all')?months.map(mm=>{const a=F.actual[PL_MONKEY[mm-1]];return {m:mm,revenue:a[0]*1e6,food:a[idx('cogs').index]*1e6,labor:a[idx('labor').index]*1e6,rent:a[idx('sga').index]*1e6,admin:a[idx('opex').index]*1e6,profit:a[idx('net').index]*1e6};}):[];
   return sec('pl','Profit & Loss — full chart of accounts',sub,`
     ${cmpMode?`<div class="strip">${ents.map(e=>{ const ni=idx('net').index; if(!e.v) return `<div class="st"><div class="l">${e.name}</div><div class="v">—</div><div class="s">ไม่มีงบช่วงนี้</div></div>`;
@@ -2044,7 +2046,7 @@ function plSection(m){
       ${tile('กำไรสุทธิ (บรรทัดสุดท้าย)',g('net'),cls(g('net')))}
     </div>`}
     ${yearChart}
-    ${chartRows.length>1?`<div class="grp">สัดส่วนต้นทุนต่อรายได้ รายเดือน (%)</div>`+costStack(chartRows.map(r=>({m:r.m,revenue:r.revenue,food:r.food,labor:r.labor,rent:r.rent,admin:r.admin,profit:r.profit}))):''}
+    ${chartRows.length>1?`<div class="plblock"><div class="grp">สัดส่วนต้นทุนต่อรายได้ รายเดือน (%)</div>`+costStack(chartRows.map(r=>({m:r.m,revenue:r.revenue,food:r.food,labor:r.labor,rent:r.rent,admin:r.admin,profit:r.profit})))+'</div>':''}
     ${head}
     <div class="scroll" style="margin-top:12px"><table class="pltable">
       ${cmpMode?`<tr><th>รายการ · ${RNG(months)} ${YEAR}<button type="button" class="pltall" id="plToggleAll" title="พับ/กางหมวดย่อยทั้งหมด"><span>${PLS.showSub?'▾':'▸'}</span>${PLS.showSub?'ซ่อนหมวดย่อย':'แสดงหมวดย่อย'}</button></th>${ents.map(e=>`<th class="n cmpth">${e.name}</th>`).join('')}</tr>`
@@ -2053,7 +2055,7 @@ function plSection(m){
       ${ly?`<th class="n">${RNG(months)} ${YEAR-1}</th><th class="n">Δ</th>`:''}</tr>`}
       ${rowsOut.join('')}
     </table></div>
-    ${plMatrix(items)}
+    ${(mx=>mx?`<div class="plblock">${mx}</div>`:'')(plMatrix(items))}
     ${cosBody()||''}
     <div class="note">ตัวเลขเต็มหน่วยบาทจากไฟล์ PL · Δ = ส่วนต่างเป็นบาท${ly?" · LY มีความละเอียดถึงหลักพันบาท":""} · สีเขียว/แดงตามทิศทางที่ดี (ต้นทุนลดลง = เขียว, กำไรเพิ่มขึ้น = เขียว) · กดปุ่ม ▸ หน้าหมวดเพื่อพับ/กางรายการย่อย</div>`);
 }
@@ -2863,9 +2865,11 @@ function cosBody(){
         <td class="n">${KM(b.rev)}</td>${mk(b.cos,avgC)}${dd(b.dCos)}${mk(b.col,avgL)}${dd(b.dCol)}</tr>`).join('')}
       </table></div>`;
   }
-  return `<div class="grp big">Food Cost (COS) &amp; Labor Cost (COL)</div>
+  return `<div class="plblock"><div class="grp big">Food Cost (COS) &amp; Labor Cost (COL)</div>
     <div class="hint" style="margin:-4px 0 12px">${S.multi?S.lab:label(last.m)}${fb&&!S.multi?' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':''} · ${brs.length} สาขา${FILT.zone!=='all'?' · '+scopeName():''} · ยิ่งต่ำยิ่งดี</div>`
-    +strip+charts+plbrHtml+tbl+`<div class="note">ป้ายเขียวหมายถึงลดลง (ดีขึ้น) ป้ายแดงหมายถึงเพิ่มขึ้น</div>`;
+    +strip+charts+`</div>`
+    +(plbrHtml?`<div class="plblock">${plbrHtml}</div>`:'')
+    +(tbl?`<div class="plblock"><div class="grp big">%COS / %COL รายสาขา</div>${tbl}<div class="note">ป้ายเขียวหมายถึงลดลง (ดีขึ้น) ป้ายแดงหมายถึงเพิ่มขึ้น</div></div>`:'');
 }
 
 /* ---- เมนูหมวด + แถบล่างบนมือถือ ---- */
