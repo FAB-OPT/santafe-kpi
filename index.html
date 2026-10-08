@@ -2032,6 +2032,7 @@ function plSection(m){
       ${rowsOut.join('')}
     </table></div>
     ${PLM.on?plMatrix(items):''}
+    ${cosBody()||''}
     <div class="note">ตัวเลขเต็มหน่วยบาทจากไฟล์ PL · Δ = ส่วนต่างเป็นบาท${ly?" · LY มีความละเอียดถึงหลักพันบาท":""} · สีเขียว/แดงตามทิศทางที่ดี (ต้นทุนลดลง = เขียว, กำไรเพิ่มขึ้น = เขียว) · กดปุ่ม ▸ หน้าหมวดเพื่อพับ/กางรายการย่อย</div>`);
 }
 /* สร้างใหม่เฉพาะหัวข้อ P&L (ไม่ต้องสร้างทุกหัวข้อทั้งหน้า) · คงเลขหัวข้อ หมวด สไลด์ที่เปิด และตำแหน่งเลื่อน */
@@ -2724,7 +2725,7 @@ function bindExtra2(){
   const pm=$('#plmMetric'); if(pm) pm.onchange=e=>{ PLM.metric=e.target.value; rebuildPL(); };
   const pt=$('#plmToggle'); if(pt) pt.onclick=()=>{ PLM.on=!PLM.on; rebuildPL(); };
   on('tr[data-plbr]',el=>openBranch(el.dataset.plbr));
-  const cs=$('#csSort'); if(cs) cs.onchange=e=>{ CST.sort=e.target.value; r(); };
+  const cs=$('#csSort'); if(cs) cs.onchange=e=>{ CST.sort=e.target.value; rebuildPL(); };
 }
 
 /* ========================= หมวดหลัก 5 หมวด ========================= */
@@ -2734,7 +2735,7 @@ const GROUPS=[
     {cap:'รายสาขา',ids:['mall','zone','branches','plan','branchdetail']},
     {cap:'ช่องทางขาย',ids:['delivery','decline']}]},
   {k:'cust',ic:'👥',name:'ลูกค้า',subs:[{cap:'',ids:['customers']}]},
-  {k:'cost',ic:'🍳',name:'COL / COS',subs:[{cap:'',ids:['cos','plbr']}]},
+  {k:'cost',ic:'🍳',name:'COL / COS',subs:[{cap:'',ids:['plbr']}]},
   {k:'pl',ic:'📊',name:'P&L',subs:[{cap:'',ids:['pl']}]},
   {k:'cem',ic:'⭐',name:'CEM',subs:[{cap:'',ids:['cem']}]},
   {k:'oss',ic:'✅',name:'OSS',subs:[{cap:'',ids:['oss']}]}];
@@ -2749,8 +2750,9 @@ function goSec(id){ const g=SEC_GROUP[id];
   const el=document.getElementById(id); if(el) el.scrollIntoView({block:'start'}); }
 
 /* ========================= ต้นทุนอาหาร (COS) และค่าแรง (COL) ========================= */
-const CST={sort:'prime'};
-function cosSection(){
+const CST={sort:'cos'};
+/* ส่วน Food Cost (COS) & Labor Cost (COL) ต่อท้ายหัวข้อ P&L */
+function cosBody(){
   const F=EXTRA&&EXTRA.pnlFull; if(!F||!F.actual) return null;
   const items=plFlat();
   const iRev=items.find(x=>x.id==='revenue').index, iCos=items.find(x=>x.id==='cogs').index, iCol=items.find(x=>x.id==='labor').index;
@@ -2768,7 +2770,6 @@ function cosSection(){
   const cur=S.multi?P(plVals(F.actual,inS)):P(F.actual[last.k]);
   const prev=S.multi?(keysOk(F.actual,S.prevMs)?P(plVals(F.actual,S.prevMs)):null):(mons.length>1?P(F.actual[mons[mons.length-2].k]):null);
   const ly=S.multi?(keysOk(F.ly,inS)?P(plVals(F.ly,inS)):null):((F.ly&&F.ly[last.k])?P(F.ly[last.k]):null);
-  const prime=o=>o&&o.cos!=null&&o.col!=null?o.cos+o.col:null;
   const pp=(a,b)=>(a==null||b==null)?null:a-b;
   /* หมายเหตุ: ยิ่งต่ำยิ่งดี จึงกลับสีของส่วนต่าง */
   const tile=(l,v,now,pv,lv,sub)=>`<div class="st ${v==null?'':(v<=(pv==null?v:pv)?'pos':'neg')}">
@@ -2778,45 +2779,40 @@ function cosSection(){
     <div class="st"><div class="l">รายได้ ${S.multi?RNG(inS):MONTH_TH[last.m-1]}</div><div class="v">${MM(cur.rev)}</div><div class="s">ฐานคิดเปอร์เซ็นต์ทั้งหมด</div></div>
     ${tile('%COS ต้นทุนอาหาร',cur.cos,cur,prev?prev.cos:null,ly?ly.cos:null,MM(cur.cosB))}
     ${tile('%COL ค่าแรง',cur.col,cur,prev?prev.col:null,ly?ly.col:null,MM(cur.colB))}
-    ${tile('Prime cost (COS+COL)',prime(cur),cur,prime(prev),prime(ly),MM(cur.cosB+cur.colB))}
   </div>`;
   const labels=mons.map(o=>MONTH_TH[o.m-1]);
   const ser=[{name:'%COS ต้นทุนอาหาร',color:'var(--chart-2)',label:1,vals:mons.map(o=>+P(F.actual[o.k]).cos.toFixed(1))},
              {name:'%COL ค่าแรง',color:'var(--chart-1)',label:1,vals:mons.map(o=>+P(F.actual[o.k]).col.toFixed(1))}];
-  const serP=[{name:'Prime cost',color:'var(--bad)',label:1,vals:mons.map(o=>+prime(P(F.actual[o.k])).toFixed(1))}];
-  if(F.ly&&mons.filter(o=>F.ly[o.k]).length>1) serP.push({name:'Prime LY',color:'var(--chart-3)',dash:1,vals:mons.map(o=>F.ly[o.k]?+prime(P(F.ly[o.k])).toFixed(1):null)});
-  const charts=`<div class="two"><div><h3>%COS และ %COL รายเดือน</h3>${lineSeries(labels,ser,{w:580,h:230,fmt:v=>v.toFixed(0)+'%',tipFmt:v=>v.toFixed(1)+'%'})}</div>
-    <div><h3>Prime cost (COS+COL) รายเดือน</h3>${lineSeries(labels,serP,{w:580,h:230,fmt:v=>v.toFixed(0)+'%',tipFmt:v=>v.toFixed(1)+'%'})}</div></div>
-    <div class="legend">${ser.concat(serP).map(s=>`<span><i style="background:${s.color};opacity:${s.dash?.6:1}"></i>${s.name}</span>`).join('')}</div>`;
+  const charts=`<h3>%COS และ %COL รายเดือน</h3>${lineSeries(labels,ser,{w:1180,h:260,fmt:v=>v.toFixed(1)+'%',tipFmt:v=>v.toFixed(1)+'%'})}
+    <div class="legend">${ser.map(s=>`<span><i style="background:${s.color}"></i>${s.name}</span>`).join('')}</div>`;
   /* รายสาขา */
   const brName=c=>(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].name)||c;
   const codes=Object.keys(F.branch||{}).filter(c=>FILT.zone==='all'||(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone===FILT.zone));
   const brs=codes.map(c=>{ const a=S.multi?plVals(F.branch[c],inS):F.branch[c][last.k]; if(!a||!a[iRev]) return null; const o=P(a);
       const pa=S.multi?(keysOk(F.branch[c],S.prevMs)?plVals(F.branch[c],S.prevMs):null):(mons.length>1?F.branch[c][mons[mons.length-2].k]:null); const po=pa&&pa[iRev]?P(pa):null;
-      return {c,name:brName(c),zone:(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone)||'',...o,prime:o.cos+o.col,
+      return {c,name:brName(c),zone:(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone)||'',...o,
               dCos:po?o.cos-po.cos:null,dCol:po?o.col-po.col:null};})
     .filter(Boolean);
   let tbl='';
   if(brs.length){
-    const S={prime:(a,b)=>b.prime-a.prime, cos:(a,b)=>b.cos-a.cos, col:(a,b)=>b.col-a.col, rev:(a,b)=>b.rev-a.rev};
-    const list=brs.slice().sort(S[CST.sort]||S.prime);
-    const avgC=cur.cos, avgL=cur.col, avgP=prime(cur);
+    const S={cos:(a,b)=>b.cos-a.cos, col:(a,b)=>b.col-a.col, rev:(a,b)=>b.rev-a.rev};
+    const list=brs.slice().sort(S[CST.sort]||S.cos);
+    const avgC=cur.cos, avgL=cur.col;
     const mk=(v,avg)=>`<td class="n ${v>avg?'neg':'pos'}">${v.toFixed(1)}%</td>`;
     const dd=v=>v==null?'<td class="n">—</td>':`<td class="n">${pill(-v,1,' ppt')}</td>`;
     tbl=`<div class="plbar" style="margin-top:16px"><label>เรียงตาม <select id="csSort">
-        <option value="prime" ${CST.sort==='prime'?'selected':''}>Prime cost สูงสุด</option>
         <option value="cos" ${CST.sort==='cos'?'selected':''}>%COS สูงสุด</option>
         <option value="col" ${CST.sort==='col'?'selected':''}>%COL สูงสุด</option>
         <option value="rev" ${CST.sort==='rev'?'selected':''}>รายได้สูงสุด</option></select></label>
-      <span class="hint">แดง = สูงกว่าค่าเฉลี่ยบริษัท (COS ${avgC.toFixed(1)}% · COL ${avgL.toFixed(1)}% · Prime ${avgP.toFixed(1)}%) · คลิกสาขาเพื่อดูงบเต็ม</span></div>
-      <div class="scroll"><table><tr><th>#</th><th>สาขา</th><th>โซน</th><th class="n">รายได้</th><th class="n">%COS</th><th class="n">Δ COS</th><th class="n">%COL</th><th class="n">Δ COL</th><th class="n">Prime</th></tr>
+      <span class="hint">แดง = สูงกว่าค่าเฉลี่ยบริษัท (COS ${avgC.toFixed(1)}% · COL ${avgL.toFixed(1)}%) · คลิกสาขาเพื่อดูงบเต็ม</span></div>
+      <div class="scroll"><table><tr><th>#</th><th>สาขา</th><th>โซน</th><th class="n">รายได้</th><th class="n">%COS</th><th class="n">Δ COS</th><th class="n">%COL</th><th class="n">Δ COL</th></tr>
       ${list.map((b,i)=>`<tr class="clk" data-plbr="${b.c}"><td>${i+1}</td><td>${b.c} ${b.name}</td><td>${b.zone}</td>
-        <td class="n">${KM(b.rev)}</td>${mk(b.cos,avgC)}${dd(b.dCos)}${mk(b.col,avgL)}${dd(b.dCol)}${mk(b.prime,avgP)}</tr>`).join('')}
+        <td class="n">${KM(b.rev)}</td>${mk(b.cos,avgC)}${dd(b.dCos)}${mk(b.col,avgL)}${dd(b.dCol)}</tr>`).join('')}
       </table></div>`;
   }
-  return sec('cos','Food Cost (COS) & Labor Cost (COL)',
-    `${S.multi?S.lab:label(last.m)}${fb&&!S.multi?' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':''} · ${brs.length} สาขา${FILT.zone!=='all'?' · โซน '+FILT.zone:''} · ยิ่งต่ำยิ่งดี`,
-    strip+charts+tbl+`<div class="note">Prime cost = %COS + %COL คือต้นทุนที่ผู้จัดการสาขาคุมได้โดยตรง ป้ายเขียวหมายถึงลดลง (ดีขึ้น) ป้ายแดงหมายถึงเพิ่มขึ้น</div>`);
+  return `<div class="grp big">Food Cost (COS) &amp; Labor Cost (COL)</div>
+    <div class="hint" style="margin:-4px 0 12px">${S.multi?S.lab:label(last.m)}${fb&&!S.multi?' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':''} · ${brs.length} สาขา${FILT.zone!=='all'?' · โซน '+FILT.zone:''} · ยิ่งต่ำยิ่งดี</div>`
+    +strip+charts+tbl+`<div class="note">ป้ายเขียวหมายถึงลดลง (ดีขึ้น) ป้ายแดงหมายถึงเพิ่มขึ้น</div>`;
 }
 
 /* ---- เมนูหมวด + แถบล่างบนมือถือ ---- */
@@ -3994,8 +3990,6 @@ function buildMain(m){
   }
 
   // 8 P&L (ผังบัญชีเต็มถ้ามี ไม่งั้นใช้แบบย่อเดิม)
-  const cosSec = (EXTRA&&EXTRA.pnlFull) ? cosSection() : null;
-  if(cosSec) out.push(cosSec);
   const plFullSec = (EXTRA&&EXTRA.pnlFull) ? plSection(m) : null;
   if(plFullSec) out.push(plFullSec);
   const plRows=plFullSec?[]:MONTHLY.filter(r=>r.m<=m && DETAIL[r.m] && DETAIL[r.m].pl).map(r=>({m:r.m,...DETAIL[r.m].pl}));
@@ -5612,7 +5606,7 @@ const TOPICS=[
     {cap:'Trade Zone',ids:['mall','zone']},
     {cap:'Sales Mix',ids:['salesmix']}]},
   {k:'cust',ic:'👥',n:'Customer Traffic',ids:['customers']},
-  {k:'cost',ic:'📊',n:'Profitability',ids:['pl','cos','plbr']},
+  {k:'cost',ic:'📊',n:'Profitability',ids:['pl','plbr']},
   {k:'quality',ic:'⭐',n:'Store Excellence',ids:['cem','oss']},
   /* 2 หมวดที่ยังไม่มีข้อมูลในระบบ แสดงเป็นการ์ดรอข้อมูล กดไม่ได้ */
   {k:'people',ic:'🧑‍🍳',n:'People Performance',ids:[],soon:'ชั่วโมงแรงงาน · %ค่าแรง'},
@@ -5642,9 +5636,10 @@ function tile(t){
       const a=g(1), b=g(2), c=g(3);   // การ์ด: Total Trans · Customers · Ticket Avg. · Customer Avg. · Per Bill
       return {l:'ลูกค้ารวม', v:a&&(a.v+' คน'),
         rows:[b&&['ยอดเฉลี่ยต่อบิล',b.v], c&&['ลูกค้าเฉลี่ยต่อบิล',c.v+' คน']].filter(Boolean)}; }
-    case 'cost': { const xs=document.querySelectorAll('#pl .strip .st'), n=xs[xs.length-1], p=st('cos',3), rv=n&&T('.s',n);
+    case 'cost': { const ss=document.querySelectorAll('#pl .strip'), xs=ss[0]?ss[0].querySelectorAll('.st'):[], n=xs[xs.length-1], rv=n&&T('.s',n);
+      const cs=ss[1]?ss[1].querySelectorAll('.st'):[], g=i=>cs[i]?T('.v',cs[i]):null;   // ชุดที่สอง: รายได้ · %COS · %COL
       return {l:'กำไรสุทธิ', v:n&&T('.v',n),
-        rows:[rv&&['อัตรากำไรสุทธิ',rv.replace('ของรายได้','').trim()], p&&['ต้นทุนหลัก (Prime Cost)',p.v]].filter(Boolean)}; }
+        rows:[rv&&['อัตรากำไรสุทธิ',rv.replace('ของรายได้','').trim()], g(1)&&['%COS ต้นทุนอาหาร',g(1)], g(2)&&['%COL ค่าแรง',g(2)]].filter(Boolean)}; }
     case 'quality': { const c=st('cem',0), o=st('oss',0);
       return {l:'คะแนน CEM เฉลี่ย', v:c&&c.v,
         rows:[c&&c.s&&['ประเมิน CEM แล้ว',c.s], o&&['คะแนน OSS',o.v]].filter(Boolean)}; }
