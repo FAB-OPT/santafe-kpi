@@ -6329,10 +6329,10 @@ function tile(t){
       const a=g(1), b=g(2), c=g(3);   // การ์ด: Total Trans · Customers · Ticket Avg. · Customer Avg. · Per Bill
       return {l:'ลูกค้ารวม', v:a&&(a.v+' คน'),
         rows:[b&&['ยอดเฉลี่ยต่อบิล',b.v], c&&['ลูกค้าเฉลี่ยต่อบิล',c.v+' คน']].filter(Boolean)}; }
-    case 'cost': { const ss=document.querySelectorAll('#pl .strip'), xs=ss[0]?ss[0].querySelectorAll('.st'):[], n=xs[xs.length-1], rv=n&&T('.s',n);
-      const cs=ss[1]?ss[1].querySelectorAll('.st'):[], g=i=>cs[i]?T('.v',cs[i]):null;   // ชุดที่สอง: รายได้ · %COS · %COL
-      return {l:'กำไรสุทธิ', v:n&&T('.v',n),
-        rows:[rv&&['อัตรากำไรสุทธิ',rv.replace('ของรายได้','').trim()], g(1)&&['%COS ต้นทุนอาหาร',g(1)], g(2)&&['%COL ค่าแรง',g(2)]].filter(Boolean)}; }
+    case 'cost': { const n=document.querySelector('#pl .plk.dark'), rv=n&&T('.plks',n), cc=[...document.querySelectorAll('#pl .plcc .plccv b')].map(x=>x.textContent.trim());
+      const mg=rv&&rv.split(' ของรายได้')[0];
+      return {l:'กำไรสุทธิ', v:n&&T('.plkv',n),
+        rows:[mg&&['อัตรากำไรสุทธิ',mg], cc[0]&&['%COS ต้นทุนอาหาร',cc[0]], cc[1]&&['%COL ค่าแรง',cc[1]]].filter(Boolean)}; }
     case 'quality': { const c=st('cem',0), o=st('oss',0);
       return {l:'คะแนน CEM เฉลี่ย', v:c&&c.v,
         rows:[c&&c.s&&['ประเมิน CEM แล้ว',c.s], o&&['คะแนน OSS',o.v]].filter(Boolean)}; }
