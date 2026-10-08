@@ -1877,6 +1877,32 @@ table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD
 .plcpt{font-size:14px;font-weight:700;margin-bottom:4px}
 .plins{margin-top:14px;padding:13px 18px;border-radius:14px;background:#FCEBDD;border:1px solid #F6D7BD;color:#3B2F26;font-size:14px;line-height:1.7}
 .plins b:first-child{color:#C9490B}
+
+/* ===== Profit by Branch (ดีไซน์ใหม่) ===== */
+#plbr .gr{margin-left:auto;font-size:13px;font-weight:500;color:var(--mute);text-transform:none;letter-spacing:0}
+.plbg{display:grid;grid-template-columns:minmax(260px,.9fr) minmax(0,2.1fr);gap:14px}
+@media (max-width:1000px){.plbg{grid-template-columns:1fr}}
+.plbc{background:#fff;border:1px solid rgba(15,23,42,.05);border-radius:18px;padding:18px 22px}
+.plbn{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.plbnb small{display:block;font-size:13px;color:#7B8494;font-weight:600;margin-bottom:4px}
+.plbnb b{display:block;font-size:44px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.plbnb b.pos{color:#12A367}.plbnb b.neg{color:#E0364B}
+.plbnb span{display:block;font-size:12.5px;color:#8A93A3;margin-top:4px}
+.plbsp{display:flex;gap:3px;height:9px;border-radius:99px;overflow:hidden;margin-top:22px}
+.plbsp i{display:block;background:#12A367;height:100%}.plbsp i.l{background:#E0364B}
+.plbsl{font-size:13px;color:#8A93A3;margin-top:10px}
+.plbh{font-size:14px;font-weight:700;margin-bottom:6px}
+.plbc svg.chart{max-height:none;overflow:visible;margin-top:10px}
+.plbc svg.chart text{font-size:15px}
+#plbr svg rect[data-bar="0"]{fill:#E5555F}#plbr svg rect[data-bar="1"]{fill:#F29A9E}#plbr svg rect[data-bar="2"]{fill:#E9BB4F}
+#plbr svg rect[data-bar="3"]{fill:#8FD3AE}#plbr svg rect[data-bar="4"]{fill:#4DB683}#plbr svg rect[data-bar="5"]{fill:#17A365}
+.plbhint{font-size:12.5px;color:#8A93A3;margin-top:2px}
+.plbg2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media (max-width:1100px){.plbg2{grid-template-columns:1fr}}
+.plbt2{background:#fff;border:1px solid rgba(15,23,42,.05);border-radius:18px;padding:14px 16px 10px;min-width:0}
+.plbth{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:700;margin:0 4px 10px}
+.plbth i{width:10px;height:10px;border-radius:50%}.plbth i.g{background:#12A367}.plbth i.r{background:#E0364B}
+.plbt2 table{font-size:15px}
 </style>
 </head>
 <body>
@@ -3258,22 +3284,25 @@ function plbrBody(){
     const MIN=200000*(S.multi?S.n:1);       // กันสาขาที่ปิด/ยอดเกือบศูนย์ ทำให้ %กำไร เพี้ยน
     const rank=plb.filter(b=>b.sales>=MIN), skipped=plb.length-rank.length;
     const srt=rank.slice().sort((a,b)=>b.gp-a.gp);
-    const t=(arr)=>`<div class="scroll"><table><tr><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">กำไร</th><th class="n">%กำไร</th><th class="n">%COS</th><th class="n">%COL</th></tr>
+    const t=(arr,bad)=>`<div class="scroll"><table class="plbt"><tr><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">กำไร</th><th class="n">%กำไร</th><th class="n">%COS</th><th class="n">%COL</th></tr>
       ${arr.map(b=>`<tr class="clk" data-ssbr="${b.code}"><td>${b.name}</td><td class="n">${KB(b.sales)}</td><td class="n ${cls(b.profit)}">${KB(b.profit)}</td><td class="n">${pill(b.gp)}</td><td class="n">${b.cos.toFixed(1)}%</td><td class="n">${b.col.toFixed(1)}%</td></tr>`).join('')}</table></div>`;
-    const loss=plb.filter(b=>b.profit<0);
+    const loss=plb.filter(b=>b.profit<0), nProfit=plb.length-loss.length;
     PLBR={rank,edges:[-10,0,5,10,15,1e9],labels:['ขาดทุน>10%','ขาดทุน 0-10%','0-5%','5-10%','10-15%','>15%'],sel:null};
-    return `<div id="plbr"><div class="grp big">Profit by Branch</div><div class="hint" style="margin:-4px 0 12px">${`${S.multi?S.lab:label(plbM)}${plbM!==m&&!S.multi?' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':''} · ${rank.length} สาขา${isJD()&&JD_CLOSED.size?(PLS.closed?' (รวมสาขาปิด)':` (ไม่รวมสาขาปิด ${JD_CLOSED.size} สาขา)`):''} · เรียงตาม %กำไร${skipped?` (ไม่รวม ${skipped} สาขาที่ยอดต่ำกว่า 0.2M)`:''}`}</div>`+`
-      <div class="strip">
-        <div class="st pos"><div class="l">สาขาที่กำไร</div><div class="v">${plb.length-loss.length}</div><div class="s">จาก ${plb.length} สาขา</div></div>
-        <div class="st neg"><div class="l">สาขาที่ขาดทุน</div><div class="v">${loss.length}</div><div class="s">รวม ${MB(loss.reduce((a,b)=>a+b.profit,0))}</div></div>
+    const subTxt=`${S.multi?S.lab:label(plbM)}${plbM!==m&&!S.multi?' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':''} · ${rank.length} สาขา`;
+    return `<div id="plbr"><div class="grp big">Profit by Branch<span class="gr">${subTxt}</span></div>
+      <div class="plbg">
+        <div class="plbc">
+          <div class="plbn"><div class="plbnb"><small>สาขาที่กำไร</small><b class="pos">${nProfit}</b></div><div class="plbnb"><small>สาขาที่ขาดทุน</small><b class="neg">${loss.length}</b><span>รวม ${MB(loss.reduce((a,b)=>a+b.profit,0))}</span></div></div>
+          <div class="plbsp"><i style="flex:${Math.max(nProfit,.5)}"></i><i class="l" style="flex:${Math.max(loss.length,.5)}"></i></div>
+          <div class="plbsl">จาก ${plb.length} สาขา</div>
+        </div>
+        <div class="plbc"><div class="plbh">การกระจาย %กำไร (จำนวนสาขา)</div>${histo(rank.map(b=>b.gp),PLBR.edges,PLBR.labels)}<div class="plbhint">คลิกแท่งกราฟเพื่อดูรายชื่อสาขาในช่วงนั้น</div></div>
       </div>
-      <div class="grp">การกระจาย %กำไร (จำนวนสาขา)</div>
-      ${histo(rank.map(b=>b.gp),PLBR.edges,PLBR.labels)}
-      <div class="hint" style="margin-top:4px">คลิกแท่งกราฟเพื่อดูรายชื่อสาขาในช่วงนั้น</div>
       <div id="plbrPick"></div>
-      <div class="two" style="margin-top:16px"><div><h3 class="g">กำไรดีที่สุด 5 สาขา</h3>${t(srt.slice(0,5))}</div>
-      <div><h3 class="r">ต้องดูแลด่วน 5 สาขา</h3>${t(srt.slice(-5).reverse())}</div></div></div>`;
-
+      <div class="plbg2">
+        <div class="plbt2"><div class="plbth"><i class="g"></i>กำไรดีที่สุด 5 สาขา</div>${t(srt.slice(0,5))}</div>
+        <div class="plbt2"><div class="plbth"><i class="r"></i>ต้องดูแลด่วน 5 สาขา</div>${t(srt.slice(-5).reverse())}</div>
+      </div></div>`;
   }
 
   return '';
