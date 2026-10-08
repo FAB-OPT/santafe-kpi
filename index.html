@@ -1729,21 +1729,21 @@ table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD
 #overview .ovth h3,#salesmix .ovth h3,#salesmix .sh b{font-size:22px}
 
 /* ===== Profitability · Customers · Store Excellence: ตัวเลขใหญ่ขึ้น ===== */
-#pl table td,#plbr table td,#customers table td,#cem table td,#oss table td{font-size:17px;padding-top:12px;padding-bottom:12px}
-#pl table th,#plbr table th,#customers table th,#cem table th,#oss table th{font-size:12.5px}
-#pl table .pill,#customers table .pill,#cem table .pill,#oss table .pill{font-size:14.5px;padding:3px 11px}
-#pl table .tiny,#customers table .tiny{font-size:13px}
-#pl .st .v,#customers .st .v,#cem .st .v,#oss .st .v{font-size:40px}
-#pl .st.big .v,#cem .st.big .v,#oss .st.big .v{font-size:50px}
-#pl .st .l,#customers .st .l,#cem .st .l,#oss .st .l{font-size:14.5px}
-#pl .st .s,#customers .st .s,#cem .st .s,#oss .st .s{font-size:14.5px}
-#plbr svg text{font-size:15.5px}
+#pl table td,#plbr table td,#customers table td,#cem table td,#oss table td{font-size:15.5px;padding-top:11px;padding-bottom:11px}
+#pl table th,#plbr table th,#customers table th,#cem table th,#oss table th{font-size:11.5px}
+#pl table .pill,#customers table .pill,#cem table .pill,#oss table .pill{font-size:13.5px;padding:3px 10px}
+#pl table .tiny,#customers table .tiny{font-size:12px}
+#pl .st .v,#customers .st .v,#cem .st .v,#oss .st .v{font-size:36px}
+#pl .st.big .v,#cem .st.big .v,#oss .st.big .v{font-size:44px}
+#pl .st .l,#customers .st .l,#cem .st .l,#oss .st .l{font-size:13.5px}
+#pl .st .s,#customers .st .s,#cem .st .s,#oss .st .s{font-size:13.5px}
+#plbr svg text{font-size:14px}
 #pl .grp,#customers .grp{font-size:14px}
 #pl .note,#customers .note,#cem .note,#oss .note{font-size:15px}
-.kc .kv{font-size:38px}.kc .kl{font-size:12.5px}.kc .ks{font-size:14px}
-.mxc b{font-size:28px}.mxc small{font-size:13px}
+.kc .kv{font-size:34px}.kc .kl{font-size:12px}.kc .ks{font-size:13px}
+.mxc b{font-size:25px}.mxc small{font-size:12.5px}
 .bvr .bn,.bvr b{font-size:15px}
-#customers .cpn text{font-size:14px}
+#customers .cpn text{font-size:13px}
 
 /* ===== Customer Traffic: การ์ดแยก ระยะห่างโปร่ง กราฟสูงขึ้น ===== */
 #customers{background:transparent!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
@@ -2475,21 +2475,21 @@ function lyTrAgg(ms){ let sales=0,trans=0,cu=0,cuS=0,cuT=0,any=false;
   return {trans, ticket:sales/trans, customer:cu||null, custAvg:cu?cu/cuT:null, perBill:cu?cuS/cu:null, ch}; }
 /* กราฟรายเดือนแยกสเกล: เส้นปีนี้ + เส้น LY ประ + % vs LY ใต้แต่ละเดือน (LY เทียบสาขาเดียวกับที่ส่งบิลในเดือนนั้น) */
 function cuPanel(title,labs,cur,ly,color,unit){
-  const W=1180,H=280,L=64,R=24,T=40,B=36,n=cur.length, X=i=>L+(W-L-R)*(i+.5)/n;
+  const W=1180,H=260,L=64,R=24,T=40,B=36,n=cur.length, X=i=>L+(W-L-R)*(i+.5)/n;
   const vs=cur.concat(ly).filter(v=>v!=null); if(!vs.length) return '';
   const mn=Math.min(...vs)*.94, mx=Math.max(...vs)*1.04, Y=v=>T+(H-T-B)*(1-(v-mn)/(mx-mn||1));
   const big=Math.max(...vs), K=v=>big<20000?Math.round(v).toLocaleString('en-US'):big<100000?(v/1000).toFixed(1)+'K':Math.round(v/1000)+'K', col=d=>d>=0?'#10B981':'#F43F5E', sg=d=>(d>=0?'+':'')+d.toFixed(1)+'%';
   const seg=a=>{ let d='',pen=false; a.forEach((v,i)=>{ if(v==null){pen=false;return;} d+=(pen?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1); pen=true; }); return d; };
-  let g=''; for(let k=0;k<3;k++){ const v=mn+(mx-mn)*k/2; g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#EEF1F5"/><text x="${L-8}" y="${Y(v)+4}" font-size="13" fill="#98A1AE" text-anchor="end">${K(v)}</text>`; }
+  let g=''; for(let k=0;k<3;k++){ const v=mn+(mx-mn)*k/2; g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#EEF1F5"/><text x="${L-8}" y="${Y(v)+4}" font-size="12" fill="#98A1AE" text-anchor="end">${K(v)}</text>`; }
   if(ly.some(v=>v!=null)) g+=`<path d="${seg(ly)}" fill="none" stroke="#B6BDC9" stroke-width="2" stroke-dasharray="5 4"/>`;
   g+=`<path d="${seg(cur)}" fill="none" stroke="${color}" stroke-width="3"/>`;
   let lastD=null;
   cur.forEach((v,i)=>{ if(v==null) return; const last=i===n-1, d=ly[i]!=null&&ly[i]>0?(v/ly[i]-1)*100:null; if(last) lastD=d;
     g+=`<circle cx="${X(i)}" cy="${Y(v)}" r="${last?7:4}" fill="${last?color:'#fff'}" stroke="${color}" stroke-width="2.5"/>`
-      +`<text x="${X(i)}" y="${Y(v)-14}" font-size="${last?17:14.5}" font-weight="${last?800:600}" fill="${last?color:'#475569'}" text-anchor="middle">${K(v)}</text>`
-      +(d!=null?`<text x="${X(i)}" y="${H-10}" font-size="14" text-anchor="middle"><tspan fill="#64748B" font-weight="600">${K(ly[i])}</tspan><tspan fill="${col(d)}" font-weight="800" dx="6">${sg(d)}</tspan></text>`:''); });
-  if(ly.some(v=>v!=null)) g+=`<text x="${L-8}" y="${H-10}" font-size="13" font-weight="800" fill="#64748B" text-anchor="end">LY · %</text>`;
-  labs.forEach((m,i)=>{ g+=`<text x="${X(i)}" y="16" font-size="13.5" fill="${i===n-1?'#0F172A':'#98A1AE'}" font-weight="${i===n-1?700:500}" text-anchor="middle">${m}</text>`; });
+      +`<text x="${X(i)}" y="${Y(v)-14}" font-size="${last?15.5:13.5}" font-weight="${last?800:600}" fill="${last?color:'#475569'}" text-anchor="middle">${K(v)}</text>`
+      +(d!=null?`<text x="${X(i)}" y="${H-10}" font-size="13" text-anchor="middle"><tspan fill="#64748B" font-weight="600">${K(ly[i])}</tspan><tspan fill="${col(d)}" font-weight="800" dx="6">${sg(d)}</tspan></text>`:''); });
+  if(ly.some(v=>v!=null)) g+=`<text x="${L-8}" y="${H-10}" font-size="12.5" font-weight="800" fill="#64748B" text-anchor="end">LY · %</text>`;
+  labs.forEach((m,i)=>{ g+=`<text x="${X(i)}" y="16" font-size="12.5" fill="${i===n-1?'#0F172A':'#98A1AE'}" font-weight="${i===n-1?700:500}" text-anchor="middle">${m}</text>`; });
   return `<div class="cpn"><div class="cph"><b>${title}</b>${lastD!=null?`<span class="cchip" style="background:${col(lastD)}">${labs[n-1]} ${sg(lastD)} vs LY</span>`:''}<span class="clg"><i style="background:${color}"></i>ปีนี้${ly.some(v=>v!=null)?'<i class="ds"></i>LY':''}</span></div><svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block">${g}</svg></div>`; }
 const CUC={br:'all',ctx:null};
 /* กราฟรายเดือนของส่วนลูกค้า: All = ทั้งบริษัท · เลือกสาขา = เฉพาะสาขานั้น (LY จากประวัติรายสาขา STF) */
