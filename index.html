@@ -2100,6 +2100,9 @@ ol.rank.aud-secs>li{display:block!important;grid-template-columns:none!important
 ol.rank.aud-secs .aud-sr{display:flex;align-items:center;gap:10px}
 ol.rank.aud-secs .aud-sn{flex:1;min-width:0;white-space:normal}
 ol.rank.aud-secs .aud-bar{display:block;width:100%}
+
+.aud-cm{white-space:normal;line-height:1.6;max-width:520px;font-size:13.5px;color:#334155}
+.aud-cm .mute{color:#9AA3B0;font-size:12.5px}
 </style>
 </head>
 <body>
@@ -3164,18 +3167,22 @@ function auditSection(id,title,m,d){
       <td><span class="aud-fb"><u><i style="width:${(q.failN/qMax*100).toFixed(1)}%;background:${c}"></i></u><b>${q.failN}</b><em class="${q.failN/n>=.3?'neg':''}">${(q.failN/n*100).toFixed(0)}%</em></span></td><td class="n ${q.pct<92?'neg':''}">${q.pct.toFixed(1)}%</td></tr>`; }).join('')}</table></div></div>`:'';
   let qPanel='';
   if(A.q!=null&&qs[A.q]&&qs[A.q].fl){ const q=qs[A.q]; const list=q.fl.slice().sort((p,x)=>p.score-x.score);
-    qPanel=`<div class="pick"><div class="pickhd"><h4>สาขาที่ตกข้อ: ${q.name} (${list.length})</h4><button class="btn small" data-aclose>ปิด</button></div>
-      ${list.length?`<div class="scroll"><table><tr><th>#</th><th>สาขา</th><th>โซน</th><th class="n">คะแนนข้อนี้</th><th class="n">คะแนนรวม</th></tr>${list.map((b,i)=>`<tr><td>${i+1}</td><td>${b.code} ${b.name}</td><td>${zoneOf(b.code)}</td><td class="n neg">${b.score} / ${q.max}</td><td class="n">${sc(cur[b.code]&&cur[b.code].score)}</td></tr>`).join('')}</table></div>`:'<div class="empty">ไม่มีสาขาในโซนนี้ที่ตกข้อนี้</div>'}</div>`; }
+    const seen={}; q.fl.forEach(b=>{ const k=b.code; if(!seen[k]||b.score<seen[k].score) seen[k]=b; });
+    const rows=Object.values(seen).sort((p,x)=>p.score-x.score);
+    qPanel=`<div class="pick"><div class="pickhd"><h4>สาขาที่ตกข้อ: ${q.name} (${rows.length})</h4><button class="btn small" data-aclose>ปิด</button></div>
+      ${rows.length?`<div class="scroll"><table><tr><th>#</th><th>สาขา</th><th>โซน</th><th class="n">คะแนนข้อนี้</th><th class="n">คะแนนรวม</th><th>ความเห็น / หมายเหตุจากผู้สำรวจ</th></tr>${rows.map((b,i)=>`<tr><td>${i+1}</td><td>${b.code} ${b.name}</td><td>${zoneOf(b.code)}</td><td class="n neg">${b.score} / ${q.max}</td><td class="n">${sc(cur[b.code]&&cur[b.code].score)}</td><td class="aud-cm">${b.cm?b.cm:'<span class="mute">— ไม่มีความเห็น —</span>'}</td></tr>`).join('')}</table></div>`:'<div class="empty">ไม่มีสาขาในโซนนี้ที่ตกข้อนี้</div>'}</div>`; }
   // ---- ข้อที่ถูกหักคะแนน (OSS) — คลิกดูสาขา ----
-  const fl=(a.fails||[]).map(f=>({...f,st:f.stores?filtZone(f.stores):null})).map(f=>({...f,nn:f.st?f.st.length:f.n})).sort((p,q)=>q.nn-p.nn);
+  const fl=(a.fails||[]).map(f=>({...f,st:f.stores?filtZone(f.stores):null})).map(f=>({...f,nn:f.st?new Set(f.st.map(x=>x.code)).size:f.n})).sort((p,q)=>q.nn-p.nn);
   const fHtml=fl.length?`<div class="aud-c"><div class="aud-t">ข้อที่ถูกหักคะแนนบ่อยที่สุด<small>จุด = สาขาที่ถูกหัก (จาก ${n} สาขา)${fl.some(f=>f.st)?' · กดข้อเพื่อดูสาขา':''}</small></div>
     <div class="scroll"><table class="aud-tb"><tr><th>หมวด</th><th>หัวข้อที่ถูกหัก</th><th>สาขาที่ถูกหัก</th></tr>
     ${fl.map((f,i)=>`<tr class="${f.st?'clk':''} ${A.f===i?'sel':''}" data-f="${i}"><td><span class="aud-code">${f.section||'—'}</span></td><td style="white-space:normal">${f.text}</td>
       <td><span class="aud-dots">${n<=8?Array.from({length:n},(_,j)=>`<i class="${j<f.nn?'on '+(f.nn>=3?'d3':'d2'):''}"></i>`).join(''):`<u><i style="width:${Math.min(100,f.nn/n*100).toFixed(1)}%"></i></u>`}<b class="neg">${f.nn}</b></span></td></tr>`).join('')}</table></div></div>`:'';
   let fPanel='';
   if(A.f!=null&&fl[A.f]&&fl[A.f].st){ const f=fl[A.f];
-    fPanel=`<div class="pick"><div class="pickhd"><h4>สาขาที่ถูกหักข้อ: ${f.text} (${f.st.length})</h4><button class="btn small" data-aclose>ปิด</button></div>
-      <div class="scroll"><table><tr><th>#</th><th>สาขา</th><th>โซน</th><th class="n">คะแนนรวม</th></tr>${f.st.map((b,i)=>`<tr><td>${i+1}</td><td>${b.code} ${b.name}</td><td>${zoneOf(b.code)}</td><td class="n">${sc(b.score!=null?b.score:(cur[b.code]&&cur[b.code].score))}</td></tr>`).join('')}</table></div></div>`; }
+    const g={}; f.st.forEach(b=>{ const o=g[b.code]||(g[b.code]={code:b.code,name:b.name,score:b.score,notes:[]}); o.notes.push(b.note||''); });
+    const rows=Object.values(g);
+    fPanel=`<div class="pick"><div class="pickhd"><h4>สาขาที่ถูกหักข้อ: ${f.text} (${rows.length} สาขา)</h4><button class="btn small" data-aclose>ปิด</button></div>
+      <div class="scroll"><table><tr><th>#</th><th>สาขา</th><th>โซน</th><th class="n">คะแนนรวม</th><th>สิ่งที่ตรวจพบ (หมายเหตุผู้ตรวจ)</th></tr>${rows.map((b,i)=>`<tr><td>${i+1}</td><td>${b.code} ${b.name}${b.notes.length>1?` <span class="aud-sp r">${b.notes.length} ครั้ง</span>`:''}</td><td>${zoneOf(b.code)}</td><td class="n">${sc(b.score!=null?b.score:(cur[b.code]&&cur[b.code].score))}</td><td class="aud-cm">${b.notes.filter(Boolean).length?b.notes.filter(Boolean).map(t=>'• '+t).join('<br>'):'<span class="mute">— ไม่มีหมายเหตุ (นำเข้าไฟล์ใบตรวจใหม่เพื่อดึงหมายเหตุ) —</span>'}</td></tr>`).join('')}</table></div></div>`; }
   // ---- OSS: สาขาที่ตรวจแล้ว ----
   const brs=(a.branches||[]).filter(b=>inZone({name:b[0]})).slice().sort((p,q)=>+p[1]-+q[1]);
   const brHtml=brs.length?`<div class="aud-c"><div class="aud-t">สาขาที่ตรวจแล้ว<small>${brs.length} สาขา · เรียงคะแนนต่ำ → สูง</small></div>
@@ -6069,7 +6076,10 @@ function parseCEM(wb){
 
   // ---- คะแนนรายหมวด + รายข้อ (หัวข้อที่ตก) ----
   const body=rs.slice(hi+1).filter(r=>r&&String(r[cId]==null?'':r[cId]).trim());
-  const rowRef=(r,c)=>({code:String(r[cId]).trim(), name:String(r[cName]||r[cId]).replace(/^Santa\s*Fe\s*-\s*/i,'').trim(), score:r[c]});
+  const cmCol=c=>{ const t=String(H[c]).trim(); let k=H.findIndex(v=>typeof v==='string'&&v.trim()==='Comment: '+t);
+    if(k<0){ const m=t.match(/^([A-Za-z]+\d+)\./); if(m) k=H.findIndex(v=>typeof v==='string'&&v.trim().indexOf('Comment: '+m[1]+'.')===0); } return k; };
+  const rowRef=(r,c)=>{ const o={code:String(r[cId]).trim(), name:String(r[cName]||r[cId]).replace(/^Santa\s*Fe\s*-\s*/i,'').trim(), score:r[c]};
+    const k=cmCol(c); if(k>=0&&typeof r[k]==='string'&&r[k].trim()) o.cm=r[k].replace(/\s+/g,' ').trim(); return o; };
   const numsOf=c=>body.map(r=>r[c]).filter(v=>typeof v==='number'&&isFinite(v));
   const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
   const sections=[], questions=[];
@@ -6128,7 +6138,8 @@ function parseOSS(wb){
       const L=typeof r[1]==='string'?r[1].trim():'';
       if(/^[A-Z]$/.test(L)&&typeof r[2]==='string'){ secNow=r[2].trim().split(':')[0].trim(); continue; }
       if(typeof r[0]==='number' && typeof r[3]==='string' && r[2]===1)
-        fails.push({section:secNow, text:r[3].replace(/\s+/g,' ').trim()});
+        { const nt=r.slice(4).find(v=>typeof v==='string'&&v.trim().length>3);
+          fails.push({section:secNow, text:r[3].replace(/\s+/g,' ').trim(), note:nt?nt.replace(/\s+/g,' ').trim():''}); }
     }
   }
   return {ym, code:String(code), name:name||String(code), score:+(+score).toFixed(1), dateTxt, sections, fails};
@@ -6371,7 +6382,7 @@ async function importFile(file){
       d.oss=auditFromScores(d.ossStores,'oss');
       { const ent=Object.entries(d.ossStores), all=ent.map(x=>x[1]), sec={}, fq={};
         ent.forEach(([code,b])=>{ (b.sections||[]).forEach(x=>{ (sec[x.code+' '+x.name]=sec[x.code+' '+x.name]||[]).push(x.pct); });
-                         (b.fails||[]).forEach(f=>{ const k=f.text; fq[k]=fq[k]||{text:f.text,section:f.section,n:0,stores:[]}; fq[k].n++; fq[k].stores.push({code,name:b.name,score:b.score}); }); });
+                         (b.fails||[]).forEach(f=>{ const k=f.text; fq[k]=fq[k]||{text:f.text,section:f.section,n:0,stores:[]}; fq[k].n++; fq[k].stores.push({code,name:b.name,score:b.score,note:f.note||''}); }); });
         d.oss.sections=Object.entries(sec).map(([k,v])=>({name:k, avg:+(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1)})).sort((a,b)=>a.avg-b.avg);
         d.oss.fails=Object.values(fq).sort((a,b)=>b.n-a.n).slice(0,10);
         d.oss.branches=all.map(b=>[b.name,b.score,(b.fails||[]).length,b.date||'']).sort((a,b)=>a[1]-b[1]);
