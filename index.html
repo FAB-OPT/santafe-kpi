@@ -2169,6 +2169,23 @@ section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):n
 .cd-chcard .cusvg text[font-size="9.5"]{font-size:12.5px!important}
 .cd-chcard .cusvg text[font-size="10.5"]{font-size:13px!important}
 .cd-chcard .cusvg text[font-weight="800"]{font-size:14px!important}
+
+/* ป๊อปอัปสาขา แบบ 4: กราฟคู่ + แท่งช่องทางเทียบ LY */
+.cd-g4{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:6px}
+.cd-g4 .cpns2{display:contents}
+.cd-g4 .cpn{background:#fff!important;border:0!important;border-radius:18px;padding:12px 14px!important;box-shadow:0 6px 18px -14px rgba(15,23,42,.3)!important}
+.cd-g4 .cusvg text{font-size:12px!important}
+.cd-chb{display:flex;flex-direction:column;gap:2px}
+.cd-cb{margin:7px 0}.cd-cbh{display:flex;justify-content:space-between;font-size:13.5px}.cd-cbh b{font-size:15px}
+.cd-cbt{height:10px;border-radius:99px;background:#EDF0F4;position:relative;margin-top:5px}.cd-cbt i{position:absolute;left:0;top:0;height:100%;border-radius:99px}
+.cd-cbt u{position:absolute;top:-4px;height:18px;border-left:2px dashed #64748B}
+.cd-cbf{font-size:12px;color:#8A93A3;margin-top:4px}.cd-cbf b.pos{color:#12804F}.cd-cbf b.neg{color:#D13447}
+.cd-tot{margin-top:auto;font-size:12.5px;color:#6B7280}
+.cd-k5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:12px}
+.cd-bg{padding:14px 18px}.cd-bg .cd-sv{font-size:26px}
+.cd-ins3{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
+.cd-ins3 .cd-i{background:#fff;border-radius:14px;padding:10px 14px;font-size:13.5px}
+@media (max-width:1000px){.cd-g4,.cd-k5,.cd-ins3{grid-template-columns:1fr 1fr!important}}
 </style>
 </head>
 <body>
@@ -3077,13 +3094,21 @@ function openCuDrawer(code){ code=String(code); const el=cuDrawerEl();
   const CHC=['#E8751A','#8B5CF6','#12A58E'], CHN=['Dine in','Takeaway','Delivery'];
   const chCards=[0,1,2].map(j=>{ const v=tk(b,j), g=pc(tk(p,j),v), av=chAvg[j], d=v!=null&&av?v-av:null;
     return '<div class="cd-ch" style="border-top:3px solid '+CHC[j]+'"><div class="cd-ml">'+CHN[j]+'</div><div class="cd-sv">'+fB(v)+'</div>'+(g!=null?'<div class="cd-md">'+pl(g,'LM')+'</div>':'')+(d!=null?'<div class="cd-ml" style="margin-top:4px">'+(d>=0?'+':'−')+'฿'+fmtN(Math.round(Math.abs(d)))+' vs เฉลี่ย</div>':'')+'</div>'; }).join('');
-  window.CU_W=900; window.CU_H=300; let charts=''; try{ charts=(typeof CUC!=='undefined'&&CUC.ctx)?cuChartsHtml(code):''; }finally{ window.CU_W=0; window.CU_H=0; }
+  window.CU_W=560; window.CU_H=270; let charts=''; try{ charts=(typeof CUC!=='undefined'&&CUC.ctx)?cuChartsHtml(code):''; }finally{ window.CU_W=0; window.CU_H=0; }
+  /* LY ของ Ticket ต่อช่องทาง (STF: ยอด/บิล รายช่องทาง) */
+  const arr=k=>(hY&&(hY[k]||[])[m-1])||0, sum=(...ks)=>ks.reduce((a2,k)=>a2+arr(k),0);
+  const lyCh=[ (arr('k')-sum('kt','kg','kl','kp'))>0?(arr('s')-sum('t','g','l','p'))/(arr('k')-sum('kt','kg','kl','kp')):null,
+    arr('kt')>0?arr('t')/arr('kt'):null, sum('kg','kl','kp')>0?sum('g','l','p')/sum('kg','kl','kp'):null ].map(v=>v!=null&&v>0&&isFinite(v)?v:null);
+  const chMax=Math.max(1,...[0,1,2].map(j=>Math.max(tk(b,j)||0,lyCh[j]||0)))*1.08;
+  const chBars=[0,1,2].map(j=>{ const v=tk(b,j), l=lyCh[j], d=v!=null&&l!=null?v-l:null;
+    return '<div class="cd-cb"><div class="cd-cbh"><span>'+CHN[j]+'</span><b>'+fB(v)+'</b></div><div class="cd-cbt"><i style="width:'+((v||0)/chMax*100)+'%;background:'+CHC[j]+'"></i>'+(l!=null?'<u style="left:'+(l/chMax*100)+'%"></u>':'')+'</div><div class="cd-cbf">'+(l!=null?'LY '+fB(l)+' · <b class="'+(d>=0?'pos':'neg')+'">'+(d>=0?'+':'−')+fmtN(Math.round(Math.abs(d)))+'</b>':'<span>ไม่มี LY</span>')+'</div></div>'; }).join('');
+  const tkTot=pctv(b.tk,LYv.tk);
+  const chCard='<div class="cd-chcard cd-chb"><div class="cd-chh">Ticket แยกช่องทาง <small>เทียบ LY</small></div>'+chBars+(tkTot!=null?'<div class="cd-tot">'+pl(tkTot,'LY')+' <span>รวม '+fB(b.tk)+'</span></div>':'')+'</div>';
+  const bigm=(lab,v,f,pLM)=>'<div class="cd-sm cd-bg"><div class="cd-ml">'+lab+'</div><div class="cd-sv">'+f(v)+'</div>'+(pLM!=null?'<div class="cd-md">'+pl(pLM,'LM')+'</div>':'')+'</div>';
   body.innerHTML='<div class="cd-top"><div><div class="cd-sub">'+code+' · '+(S.multi?S.lab:label(m))+' · #'+rank+' Trans จาก '+rows.length+' สาขา</div><div class="cd-name">'+(b.name||nmx)+'</div></div><div class="cd-tr"><button type="button" class="cd-x" data-cudclose aria-label="ปิด">✕</button></div></div>'
-    +'<div class="cd-land"><div class="cd-left"><div class="cd-chcard"><div class="cd-chh">Total Trans และ Customers รายเดือน <small>เส้นประ = LY</small></div>'+(charts||'<div class="empty">ไม่มีข้อมูลรายเดือน</div>')+'</div></div>'
-    +'<div class="cd-right">'+big('TOTAL TRANS',b.tr,fN,pc(p&&p.tr,b.tr),pctv(b.tr,LYv.tr))+big('CUSTOMERS',b.cust||null,fN,pc(p&&p.cust,b.cust),pctv(b.cust,LYv.cu))
-    +'<div class="cd-s3">'+small3('Ticket Avg.',b.tk,fB,pc(p&&p.tk,b.tk),pctv(b.tk,LYv.tk))+small3('Per Bill',pb(b),fB,pc(pb(p),pb(b)),pctv(pb(b),LYv.pb))+small3('Cust. Avg',ca(b),f2,pc(ca(p),ca(b)),pctv(ca(b),LYv.ca))+'</div>'
-    +'<div class="cd-sec">Ticket แยกช่องทาง</div><div class="cd-s3">'+chCards+'</div>'
-    +(insHtml?'<div class="cd-sec">ประเด็นที่ควรดู</div>'+insHtml:'')+'</div></div>'
+    +'<div class="cd-g4">'+(charts||'<div class="cd-chcard"><div class="empty">ไม่มีข้อมูลรายเดือน</div></div>')+chCard+'</div>'
+    +'<div class="cd-k5">'+bigm('TOTAL TRANS',b.tr,fN,pc(p&&p.tr,b.tr))+bigm('CUSTOMERS',b.cust||null,fN,pc(p&&p.cust,b.cust))+bigm('Ticket',b.tk,fB,pc(p&&p.tk,b.tk))+bigm('Per Bill',pb(b),fB,pc(pb(p),pb(b)))+bigm('Cust.Avg',ca(b),f2,pc(ca(p),ca(b)))+'</div>'
+    +(insHtml?insHtml.replace('class="cd-ins"','class="cd-ins cd-ins3"'):'')
     +'<div class="cd-foot">'+(navL?'<button type="button" class="cd-nav" data-cudgo="'+navL.code+'">'+navTxt+'</button>':'<span></span>')+'<button type="button" class="cd-chart" data-cudchart="'+code+'">ดูในกราฟรายสาขา →</button></div>'
     +'<div class="cd-note">% เทียบเดือนก่อน (vs LM) และปีก่อน (vs LY) · '+(S.multi?S.lab:label(m))+'</div>';
   el.classList.add('open'); }
