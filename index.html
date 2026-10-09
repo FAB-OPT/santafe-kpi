@@ -2174,7 +2174,7 @@ section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):n
 .cd-g4{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:6px}
 .cd-g4 .cpns2{display:contents}
 .cd-g4 .cpn{background:#fff!important;border:0!important;border-radius:18px;padding:12px 14px!important;box-shadow:0 6px 18px -14px rgba(15,23,42,.3)!important}
-.cd-g4 .cusvg text{font-size:12px!important}
+.cd-g4 .cusvg text{font-size:11.5px!important}.cd-g4 .cph small{display:none}
 .cd-chb{display:flex;flex-direction:column;gap:2px}
 .cd-cb{margin:7px 0}.cd-cbh{display:flex;justify-content:space-between;font-size:13.5px}.cd-cbh b{font-size:15px}
 .cd-cbt{height:10px;border-radius:99px;background:#EDF0F4;position:relative;margin-top:5px}.cd-cbt i{position:absolute;left:0;top:0;height:100%;border-radius:99px}
@@ -2938,7 +2938,7 @@ function lyTrAgg(ms){ let sales=0,trans=0,cu=0,cuS=0,cuT=0,any=false;
   return {trans, ticket:sales/trans, customer:cu||null, custAvg:cu?cu/cuT:null, perBill:cu?cuS/cu:null, ch}; }
 /* กราฟรายเดือนแยกสเกล: เส้นปีนี้ + เส้น LY ประ + % vs LY ใต้แต่ละเดือน (LY เทียบสาขาเดียวกับที่ส่งบิลในเดือนนั้น) */
 function cuPanel(title,unit,labs,cur,ly,color){
-  const W=window.CU_W||560,H=window.CU_H||252,L=window.CU_W?58:46,R=14,T=30,B=window.CU_W?72:64,n=cur.length, colW=(W-L-R)/n, X=i=>L+colW*(i+.5);
+  const W=window.CU_W||560,H=window.CU_H||252,L=window.CU_W?58:46,R=14,T=30,B=window.CU_SIMPLE?58:window.CU_W?72:64,n=cur.length, colW=(W-L-R)/n, X=i=>L+colW*(i+.5);
   const vs=cur.concat(ly).filter(v=>v!=null); if(!vs.length) return '';
   const mn=Math.min(...vs)*.94, mx=Math.max(...vs)*1.05, Y=v=>T+(H-T-B)*(1-(v-mn)/(mx-mn||1));
   const big=Math.max(...vs), K=v=>big<20000?Math.round(v).toLocaleString('en-US'):big<100000?(v/1000).toFixed(1)+'K':Math.round(v/1000)+'K', col=d=>d>=0?'#10A56B':'#E0364B', sg=d=>(d>=0?'+':'')+d.toFixed(1)+'%';
@@ -2952,9 +2952,9 @@ function cuPanel(title,unit,labs,cur,ly,color){
   cur.forEach((v,i)=>{ const last=i===n-1, d=v!=null&&ly[i]!=null&&ly[i]>0?(v/ly[i]-1)*100:null; if(last) lastD=d;
     if(v!=null) g+=`<circle cx="${X(i)}" cy="${Y(v)}" r="${last?5.5:3.8}" fill="${last?color:'#fff'}" stroke="${color}" stroke-width="2"><title>${labs[i]}: ${K(v)}${ly[i]!=null?' · LY '+K(ly[i]):''}${d!=null?' ('+sg(d)+')':''}</title></circle>`
       +`<text x="${X(i)}" y="${(()=>{ const nb=[cur[i-1],cur[i+1]].filter(z=>z!=null).map(z=>Y(z)-Y(v)); const above=nb.every(d=>d>-16), below=nb.every(d=>d<16); return (!above&&below)?Y(v)+(last?24:21):Y(v)-10; })()}" font-size="${last?12.5:10.5}" font-weight="${last?800:600}" fill="${last?color:'#3B4556'}" text-anchor="middle">${K(v)}</text>`;
-    g+=`<text x="${X(i)}" y="${H-40}" font-size="10.5" fill="${last?'#0F172A':'#8A93A3'}" font-weight="${last?800:500}" text-anchor="middle">${labs[i]}</text>`;
-    if(ly[i]!=null) g+=`<text x="${X(i)}" y="${H-26}" font-size="9.5" fill="#8A93A3" text-anchor="middle">LY ${K(ly[i])}</text>`;
-    if(d!=null) g+=`<text x="${X(i)}" y="${H-11}" font-size="10.5" font-weight="800" fill="${col(d)}" text-anchor="middle">${sg(d)}</text>`; });
+    g+=`<text x="${X(i)}" y="${window.CU_SIMPLE?H-30:H-40}" font-size="10.5" fill="${last?'#0F172A':'#8A93A3'}" font-weight="${last?800:500}" text-anchor="middle">${labs[i]}</text>`;
+    if(ly[i]!=null&&!window.CU_SIMPLE) g+=`<text x="${X(i)}" y="${H-26}" font-size="9.5" fill="#8A93A3" text-anchor="middle">LY ${K(ly[i])}</text>`;
+    if(d!=null) g+=`<text x="${X(i)}" y="${window.CU_SIMPLE?H-10:H-11}" font-size="10.5" font-weight="800" fill="${col(d)}" text-anchor="middle">${sg(d)}</text>`; });
   const chip=lastD!=null?`<span class="cchip ${lastD>=0?'pos':'neg'}">${labs[n-1]} ${sg(lastD)} vs LY</span>`:'';
   return `<div class="cpn"><div class="cph"><b>${title}</b><small>${unit}</small>${chip}</div><svg class="cusvg" viewBox="0 0 ${W} ${H}">${g}</svg></div>`; }
 const CUC={br:'all',ctx:null};
@@ -3094,7 +3094,7 @@ function openCuDrawer(code){ code=String(code); const el=cuDrawerEl();
   const CHC=['#E8751A','#8B5CF6','#12A58E'], CHN=['Dine in','Takeaway','Delivery'];
   const chCards=[0,1,2].map(j=>{ const v=tk(b,j), g=pc(tk(p,j),v), av=chAvg[j], d=v!=null&&av?v-av:null;
     return '<div class="cd-ch" style="border-top:3px solid '+CHC[j]+'"><div class="cd-ml">'+CHN[j]+'</div><div class="cd-sv">'+fB(v)+'</div>'+(g!=null?'<div class="cd-md">'+pl(g,'LM')+'</div>':'')+(d!=null?'<div class="cd-ml" style="margin-top:4px">'+(d>=0?'+':'−')+'฿'+fmtN(Math.round(Math.abs(d)))+' vs เฉลี่ย</div>':'')+'</div>'; }).join('');
-  window.CU_W=560; window.CU_H=270; let charts=''; try{ charts=(typeof CUC!=='undefined'&&CUC.ctx)?cuChartsHtml(code):''; }finally{ window.CU_W=0; window.CU_H=0; }
+  window.CU_W=450; window.CU_H=310; window.CU_SIMPLE=1; let charts=''; try{ charts=(typeof CUC!=='undefined'&&CUC.ctx)?cuChartsHtml(code):''; }finally{ window.CU_W=0; window.CU_H=0; window.CU_SIMPLE=0; }
   /* LY ของ Ticket ต่อช่องทาง (STF: ยอด/บิล รายช่องทาง) */
   const arr=k=>(hY&&(hY[k]||[])[m-1])||0, sum=(...ks)=>ks.reduce((a2,k)=>a2+arr(k),0);
   const lyCh=[ (arr('k')-sum('kt','kg','kl','kp'))>0?(arr('s')-sum('t','g','l','p'))/(arr('k')-sum('kt','kg','kl','kp')):null,
