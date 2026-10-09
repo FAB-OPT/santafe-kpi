@@ -2157,9 +2157,18 @@ section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):n
 .cudr-p{padding:20px 26px 18px!important}
 .cudr-p .cd-top{margin-bottom:10px}
 
-.cd-chcard .cusvg text{font-size:14px!important}
-.cd-chcard .cusvg text[font-weight="800"]{font-size:16px!important}
 .cd-chcard .cph b{font-size:15px}
+
+.cd-chcard{display:flex;flex-direction:column}
+.cd-chcard .cpns2{flex:1;align-content:space-around}
+.cd-bv{font-size:34px}.cd-bigc{padding:12px 16px}
+.cd-right{gap:8px}
+.cudr-p{max-height:94vh}
+
+.cd-chcard .cusvg text{font-size:14px!important}
+.cd-chcard .cusvg text[font-size="9.5"]{font-size:12.5px!important}
+.cd-chcard .cusvg text[font-size="10.5"]{font-size:13px!important}
+.cd-chcard .cusvg text[font-weight="800"]{font-size:14px!important}
 </style>
 </head>
 <body>
@@ -2912,7 +2921,7 @@ function lyTrAgg(ms){ let sales=0,trans=0,cu=0,cuS=0,cuT=0,any=false;
   return {trans, ticket:sales/trans, customer:cu||null, custAvg:cu?cu/cuT:null, perBill:cu?cuS/cu:null, ch}; }
 /* กราฟรายเดือนแยกสเกล: เส้นปีนี้ + เส้น LY ประ + % vs LY ใต้แต่ละเดือน (LY เทียบสาขาเดียวกับที่ส่งบิลในเดือนนั้น) */
 function cuPanel(title,unit,labs,cur,ly,color){
-  const W=window.CU_W||560,H=window.CU_H||252,L=46,R=14,T=28,B=64,n=cur.length, colW=(W-L-R)/n, X=i=>L+colW*(i+.5);
+  const W=window.CU_W||560,H=window.CU_H||252,L=window.CU_W?58:46,R=14,T=30,B=window.CU_W?72:64,n=cur.length, colW=(W-L-R)/n, X=i=>L+colW*(i+.5);
   const vs=cur.concat(ly).filter(v=>v!=null); if(!vs.length) return '';
   const mn=Math.min(...vs)*.94, mx=Math.max(...vs)*1.05, Y=v=>T+(H-T-B)*(1-(v-mn)/(mx-mn||1));
   const big=Math.max(...vs), K=v=>big<20000?Math.round(v).toLocaleString('en-US'):big<100000?(v/1000).toFixed(1)+'K':Math.round(v/1000)+'K', col=d=>d>=0?'#10A56B':'#E0364B', sg=d=>(d>=0?'+':'')+d.toFixed(1)+'%';
@@ -3068,7 +3077,7 @@ function openCuDrawer(code){ code=String(code); const el=cuDrawerEl();
   const CHC=['#E8751A','#8B5CF6','#12A58E'], CHN=['Dine in','Takeaway','Delivery'];
   const chCards=[0,1,2].map(j=>{ const v=tk(b,j), g=pc(tk(p,j),v), av=chAvg[j], d=v!=null&&av?v-av:null;
     return '<div class="cd-ch" style="border-top:3px solid '+CHC[j]+'"><div class="cd-ml">'+CHN[j]+'</div><div class="cd-sv">'+fB(v)+'</div>'+(g!=null?'<div class="cd-md">'+pl(g,'LM')+'</div>':'')+(d!=null?'<div class="cd-ml" style="margin-top:4px">'+(d>=0?'+':'−')+'฿'+fmtN(Math.round(Math.abs(d)))+' vs เฉลี่ย</div>':'')+'</div>'; }).join('');
-  window.CU_W=880; window.CU_H=215; let charts=''; try{ charts=(typeof CUC!=='undefined'&&CUC.ctx)?cuChartsHtml(code):''; }finally{ window.CU_W=0; window.CU_H=0; }
+  window.CU_W=900; window.CU_H=300; let charts=''; try{ charts=(typeof CUC!=='undefined'&&CUC.ctx)?cuChartsHtml(code):''; }finally{ window.CU_W=0; window.CU_H=0; }
   body.innerHTML='<div class="cd-top"><div><div class="cd-sub">'+code+' · '+(S.multi?S.lab:label(m))+' · #'+rank+' Trans จาก '+rows.length+' สาขา</div><div class="cd-name">'+(b.name||nmx)+'</div></div><div class="cd-tr"><button type="button" class="cd-x" data-cudclose aria-label="ปิด">✕</button></div></div>'
     +'<div class="cd-land"><div class="cd-left"><div class="cd-chcard"><div class="cd-chh">Total Trans และ Customers รายเดือน <small>เส้นประ = LY</small></div>'+(charts||'<div class="empty">ไม่มีข้อมูลรายเดือน</div>')+'</div></div>'
     +'<div class="cd-right">'+big('TOTAL TRANS',b.tr,fN,pc(p&&p.tr,b.tr),pctv(b.tr,LYv.tr))+big('CUSTOMERS',b.cust||null,fN,pc(p&&p.cust,b.cust),pctv(b.cust,LYv.cu))
