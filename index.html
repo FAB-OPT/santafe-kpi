@@ -2191,6 +2191,11 @@ section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):n
 .aud-t small.aud-cta,.aud-hint{display:inline-flex!important;align-items:center;gap:6px;background:#FFF1E6;color:#C2570C!important;border:1px solid #F9C9A3;border-radius:99px;padding:5px 14px;font-size:13px!important;font-weight:700!important;margin-left:10px;vertical-align:middle;animation:audpulse 2.4s ease-in-out infinite}
 .aud-hint{margin:12px 0 0;display:flex!important;width:max-content}
 @keyframes audpulse{0%,100%{box-shadow:0 0 0 0 rgba(240,96,26,.28)}50%{box-shadow:0 0 0 6px rgba(240,96,26,0)}}
+
+.cdp-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.cdp-h b{font-size:16px}.cdp-h small{font-size:12px;color:#8A93A3}
+.cdp-row{display:flex;align-items:center;gap:10px;margin:6px 0}.cdp-big{font-size:30px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.cdp-pill{border-radius:99px;padding:2px 10px;font-size:12.5px;font-weight:700;background:#F1F3F6;color:#5B6678}
+.cd-g4 .cph small{display:inline!important}
 </style>
 </head>
 <body>
@@ -2942,7 +2947,23 @@ function lyTrAgg(ms){ let sales=0,trans=0,cu=0,cuS=0,cuT=0,any=false;
   const ch=chOk?Object.fromEntries(Object.entries(CH).map(([k,[sl,tr]])=>[k,tr>0?{trans:tr,ticket:sl/tr}:null])):null;
   return {trans, ticket:sales/trans, customer:cu||null, custAvg:cu?cu/cuT:null, perBill:cu?cuS/cu:null, ch}; }
 /* กราฟรายเดือนแยกสเกล: เส้นปีนี้ + เส้น LY ประ + % vs LY ใต้แต่ละเดือน (LY เทียบสาขาเดียวกับที่ส่งบิลในเดือนนั้น) */
+/* กราฟ % เทียบปีก่อนรายเดือน (ใช้ในป๊อปอัปสาขา) */
+function cuPanelPct(title,labs,cur,ly,color){
+  const W=window.CU_W||450,H=window.CU_H||310,L=12,R=12,T=30,B=34,n=cur.length,cw=(W-L-R)/n;
+  const d=cur.map((v,i)=>v!=null&&ly[i]!=null&&ly[i]>0?(v/ly[i]-1)*100:null), dv=d.filter(v=>v!=null);
+  const K=v=>v>=20000?(v/1000).toFixed(1)+'K':Math.round(v).toLocaleString('en-US');
+  const li=n-1, lv=cur[li], ll=ly[li];
+  if(!dv.length) return '<div class="cpn"><div class="cdp-h"><b>'+title+'</b></div><div class="cdp-big">'+(lv!=null?K(lv):'—')+'</div><div class="empty">ยังไม่มีข้อมูลปีก่อน</div></div>';
+  const mn=Math.min(...dv,0)*1.15, mx=Math.max(...dv,0)+(Math.max(...dv,0)>0?Math.max(...dv)*.2:3), Y=v=>T+(H-T-B)*(1-(v-mn)/((mx-mn)||1));
+  let g='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(0)+'" y2="'+Y(0)+'" stroke="#94A3B8"/>';
+  d.forEach((v,i)=>{ const x=L+cw*i+cw*.18, last=i===li, col=v==null?'':(v>=0?'#10A56B':'#E0364B');
+    if(v!=null) g+='<rect x="'+x.toFixed(1)+'" y="'+(v>=0?Y(v):Y(0)).toFixed(1)+'" width="'+(cw*.64).toFixed(1)+'" height="'+Math.max(1,Math.abs(Y(v)-Y(0))).toFixed(1)+'" rx="4" fill="'+col+'" opacity="'+(last?1:.5)+'"><title>'+labs[i]+': '+K(cur[i])+' · LY '+K(ly[i])+' ('+(v>=0?'+':'')+v.toFixed(1)+'%)</title></rect>'
+      +'<text x="'+(x+cw*.32).toFixed(1)+'" y="'+(v>=0?Y(v)-6:Y(v)+16).toFixed(1)+'" font-size="'+(last?13:11.5)+'" font-weight="'+(last?800:600)+'" text-anchor="middle" fill="'+(last?col:'#475569')+'">'+Math.round(v)+'%</text>';
+    g+='<text x="'+(x+cw*.32).toFixed(1)+'" y="'+(H-12)+'" font-size="12" text-anchor="middle" fill="'+(last?'#0F172A':'#8A93A3')+'" font-weight="'+(last?800:500)+'">'+labs[i]+'</text>'; });
+  const dl=d[li], pill=dl!=null&&ll?'<span class="cdp-pill '+(dl>=0?'pos':'neg')+'">LY '+K(ll)+'</span>':'';
+  return '<div class="cpn"><div class="cdp-h"><b>'+title+' · % เทียบปีก่อน</b><small>แต่ละเดือนเทียบเดือนเดียวกันของปีก่อน</small></div><div class="cdp-row"><span class="cdp-big">'+(lv!=null?K(lv):'—')+'</span>'+pill+'</div><svg class="cusvg" viewBox="0 0 '+W+' '+H+'">'+g+'</svg></div>'; }
 function cuPanel(title,unit,labs,cur,ly,color){
+  if(window.CU_SIMPLE) return cuPanelPct(title,labs,cur,ly,color);
   const W=window.CU_W||560,H=window.CU_H||252,L=window.CU_W?58:46,R=14,T=30,B=window.CU_SIMPLE?58:window.CU_W?72:64,n=cur.length, colW=(W-L-R)/n, X=i=>L+colW*(i+.5);
   const vs=cur.concat(ly).filter(v=>v!=null); if(!vs.length) return '';
   const mn=Math.min(...vs)*.94, mx=Math.max(...vs)*1.05, Y=v=>T+(H-T-B)*(1-(v-mn)/(mx-mn||1));
@@ -3099,7 +3120,7 @@ function openCuDrawer(code){ code=String(code); const el=cuDrawerEl();
   const CHC=['#E8751A','#8B5CF6','#12A58E'], CHN=['Dine in','Takeaway','Delivery'];
   const chCards=[0,1,2].map(j=>{ const v=tk(b,j), g=pc(tk(p,j),v), av=chAvg[j], d=v!=null&&av?v-av:null;
     return '<div class="cd-ch" style="border-top:3px solid '+CHC[j]+'"><div class="cd-ml">'+CHN[j]+'</div><div class="cd-sv">'+fB(v)+'</div>'+(g!=null?'<div class="cd-md">'+pl(g,'LM')+'</div>':'')+(d!=null?'<div class="cd-ml" style="margin-top:4px">'+(d>=0?'+':'−')+'฿'+fmtN(Math.round(Math.abs(d)))+' vs เฉลี่ย</div>':'')+'</div>'; }).join('');
-  window.CU_W=450; window.CU_H=310; window.CU_SIMPLE=1; let charts=''; try{ charts=(typeof CUC!=='undefined'&&CUC.ctx)?cuChartsHtml(code):''; }finally{ window.CU_W=0; window.CU_H=0; window.CU_SIMPLE=0; }
+  window.CU_W=450; window.CU_H=300; window.CU_SIMPLE=1; let charts=''; try{ charts=(typeof CUC!=='undefined'&&CUC.ctx)?cuChartsHtml(code):''; }finally{ window.CU_W=0; window.CU_H=0; window.CU_SIMPLE=0; }
   /* LY ของ Ticket ต่อช่องทาง (STF: ยอด/บิล รายช่องทาง) */
   const arr=k=>(hY&&(hY[k]||[])[m-1])||0, sum=(...ks)=>ks.reduce((a2,k)=>a2+arr(k),0);
   const lyCh=[ (arr('k')-sum('kt','kg','kl','kp'))>0?(arr('s')-sum('t','g','l','p'))/(arr('k')-sum('kt','kg','kl','kp')):null,
