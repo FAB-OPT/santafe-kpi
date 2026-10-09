@@ -2186,6 +2186,11 @@ section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):n
 .cd-ins3{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
 .cd-ins3 .cd-i{background:#fff;border-radius:14px;padding:10px 14px;font-size:13.5px}
 @media (max-width:1000px){.cd-g4,.cd-k5,.cd-ins3{grid-template-columns:1fr 1fr!important}}
+
+/* ข้อความบอกว่าคลิกได้ ให้เด่น */
+.aud-t small.aud-cta,.aud-hint{display:inline-flex!important;align-items:center;gap:6px;background:#FFF1E6;color:#C2570C!important;border:1px solid #F9C9A3;border-radius:99px;padding:5px 14px;font-size:13px!important;font-weight:700!important;margin-left:10px;vertical-align:middle;animation:audpulse 2.4s ease-in-out infinite}
+.aud-hint{margin:12px 0 0;display:flex!important;width:max-content}
+@keyframes audpulse{0%,100%{box-shadow:0 0 0 0 rgba(240,96,26,.28)}50%{box-shadow:0 0 0 6px rgba(240,96,26,0)}}
 </style>
 </head>
 <body>
@@ -3239,7 +3244,7 @@ function auditSection(id,title,m,d){
   const distCard=`<div class="aud-c"><div class="aud-t">การกระจายตัวของสาขา<small>${gl?MONTH_TH[m-2]+' → ':''}${MONTH_TH[m-1]}</small></div>
     ${gl?distRow(MONTH_TH[m-2]+' (LM)',gl,'lm',Object.keys(lm).length):''}${distRow(label(m),gc,'cur',n)}
     <div class="aud-lg">${GN.map((x,i)=>`<span><i style="background:${GC[i]}"></i>${x}</span>`).join('')}</div>${dsum}
-    <div class="aud-hint">คลิกแท่งสีเพื่อดูรายชื่อสาขาในกลุ่มนั้น</div></div>`;
+    <div class="aud-hint">👆 คลิกแท่งสีเพื่อดูรายชื่อสาขาในกลุ่มนั้น</div></div>`;
   // ---- แผงรายชื่อสาขาในกลุ่มที่คลิก ----
   const listTbl=(list,per)=>{ const others=[]; if(per!=='cur') others.push({h:label(m),map:cur}); if(per!=='lm'&&lm) others.push({h:'LM',map:lm}); if(per!=='ly'&&ly) others.push({h:'LY',map:ly});
     return `<div class="scroll"><table><tr><th>#</th><th>สาขา</th><th>โซน</th><th class="n">คะแนน</th>${others.map(o=>`<th class="n">${o.h}</th>`).join('')}</tr>
@@ -3253,7 +3258,7 @@ function auditSection(id,title,m,d){
   const lowOf=x=>x.low?filtZone(x.low):null;
   const LO=kind==='cem'?85:80, secCol=v=>v>=(kind==='cem'?99:cut[0])?'var(--good)':(v>=cut[1]?'var(--amber)':'var(--bad)');
   const refPos=((cut[1]-LO)/(100-LO)*100).toFixed(1);
-  const secHtml=secs.length?`<div class="aud-c"><div class="aud-t">คะแนนรายหมวด<small>${secs.some(x=>x.low)?'คลิกหมวดเพื่อดูสาขาที่ต่ำกว่า '+cut[1]+'%':''}</small></div>
+  const secHtml=secs.length?`<div class="aud-c"><div class="aud-t">คะแนนรายหมวด<small class="aud-cta">${secs.some(x=>x.low)?'👆 คลิกหมวดเพื่อดูสาขาที่ต่ำกว่า '+cut[1]+'%':''}</small></div>
     <div class="aud-sh"><span>หมวด</span><span>แกน ${LO}–100% · เส้นประ = เกณฑ์ ${cut[1]}%</span></div>
     <ol class="rank aud-secs">${secs.map((x,i)=>{ const lw=lowOf(x), col=secCol(x.avg), w=Math.max(2,Math.min(100,(x.avg-LO)/(100-LO)*100));
       return `<li class="${x.low?'clk':''} ${A.sec===i?'sel':''} ${x.avg<cut[1]?'bad':''}" data-sec="${i}"><div class="aud-sr"><span class="aud-sn">${x.name}</span>${lw&&lw.length?`<span class="aud-sp ${x.avg<cut[1]?'r':'o'}">ต่ำกว่าเกณฑ์ ${lw.length} สาขา</span>`:(x.low?'<span class="aud-sp g">ผ่านทุกสาขา</span>':'')}<b style="color:${col}">${x.avg.toFixed(1)}%</b></div>
@@ -3266,7 +3271,7 @@ function auditSection(id,title,m,d){
   const qs=(a.questions||[]).map(q=>({...q,fl:q.fails?filtZone(q.fails):null})).map(q=>({...q,failN:q.fl?q.fl.length:q.fail})).sort((p,q)=>q.failN-p.failN);
   const QC={Service:'#E8751A',WQ:'#8B5CF6',Billing:'#0F8E9A',AM:'#1FA463',Quality:'#D9822D'};
   const qMax=Math.max(1,...qs.map(q=>q.failN));
-  const qHtml=qs.length?`<div class="aud-c"><div class="aud-t">ข้อที่ตกบ่อยที่สุด<small>จำนวนสาขาที่ได้คะแนนไม่เต็ม${qs.some(q=>q.fl)?' · คลิกข้อเพื่อดูว่าสาขาไหนตก':''}</small></div>
+  const qHtml=qs.length?`<div class="aud-c"><div class="aud-t">ข้อที่ตกบ่อยที่สุด<small>จำนวนสาขาที่ได้คะแนนไม่เต็ม</small>${qs.some(q=>q.fl)?'<small class="aud-cta">👆 คลิกข้อเพื่อดูว่าสาขาไหนตก</small>':''}</div>
     <div class="scroll"><table class="aud-tb"><tr><th>รหัส</th><th>หัวข้อ</th><th>สาขาที่ตก (% ของสาขา)</th><th class="n">คะแนนเฉลี่ย</th></tr>
     ${qs.map((q,i)=>{ const mm=/^([A-Za-z]+\d+)\.\s*([\s\S]*)$/.exec(q.name), code=mm?mm[1]:'', title=mm?mm[2]:q.name, pre=(/^[A-Za-z]+/.exec(code)||[''])[0], c=QC[pre]||'#8A93A3';
       return `<tr class="${q.fl?'clk':''} ${A.q===i?'sel':''}" data-q="${i}"><td>${code?`<span class="aud-code" style="color:${c};background:${c}1A">${code}</span>`:''}</td><td style="white-space:normal">${title}</td>
