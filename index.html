@@ -2103,6 +2103,21 @@ ol.rank.aud-secs .aud-bar{display:block;width:100%}
 
 .aud-cm{white-space:normal;line-height:1.6;max-width:520px;font-size:13.5px;color:#334155}
 .aud-cm .mute{color:#9AA3B0;font-size:12.5px}
+
+/* ===== หัวข้อการ์ดทุกหน้า: แถบสีส้มหน้าชื่อ + เส้นใต้หัวข้อ ===== */
+.aud-t{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:800;margin:0 0 14px;padding:0 0 12px;border-bottom:2px solid var(--accent-3)}
+.aud-t::before{content:"";width:6px;height:22px;border-radius:3px;background:var(--accent);flex:0 0 auto}
+.aud-t small{margin-left:auto;font-size:13px}
+#overview .ovc>.ovth,#mall .ovth,#zone .ovth{padding-bottom:12px;margin-bottom:14px;border-bottom:2px solid var(--accent-3)}
+#overview .ovc>.ovth h3,#mall .ovth h3,#zone .ovth h3{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:800;letter-spacing:-.01em}
+#overview .ovc>.ovth h3::before,#mall .ovth h3::before,#zone .ovth h3::before{content:"";width:6px;height:22px;border-radius:3px;background:var(--accent);flex:0 0 auto}
+#overview .ovlab:first-child{display:flex;align-items:center;gap:8px}
+
+/* หัวข้อของกล่องหลักทุกกล่องที่ยังเป็นกรอบเดียว (Trade Zone ฯลฯ) */
+section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):not(#oss)>.bar{margin:20px 24px 0;padding:0 0 12px!important;background:transparent!important;border-bottom:2px solid var(--accent-3)!important;flex-wrap:nowrap!important;align-items:center!important}
+section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):not(#oss)>.bar h2{display:flex;align-items:center;gap:10px;font-size:20px!important;font-weight:800!important;letter-spacing:-.01em;flex:1 1 auto;min-width:0;margin:0}
+section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):not(#oss)>.bar h2::before{content:""!important;display:block!important;width:6px!important;height:22px!important;border-radius:3px!important;background:var(--accent)!important;flex:0 0 auto}
+section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):not(#oss)>.bar .sub{margin-left:0}
 </style>
 </head>
 <body>
