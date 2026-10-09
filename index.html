@@ -2130,6 +2130,36 @@ section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):n
 .cudr-p .cd-m:nth-child(-n+2) .cd-mv{font-size:34px;letter-spacing:-.02em}
 .cudr-p .cd-m:nth-child(-n+2){grid-row:span 1}
 @media (max-width:900px){.cudr-p .cd-ins{grid-template-columns:1fr}.cudr-p .cd-mini{grid-template-columns:repeat(2,1fr)}}
+
+/* ป๊อปอัปสาขา: กราฟซ้าย ตัวเลขขวา (แนวนอน) */
+.cudr-p{width:min(1240px,97vw)!important}
+.cd-land{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,1fr);gap:14px;margin-top:6px}
+@media (max-width:1000px){.cd-land{grid-template-columns:1fr}}
+.cd-chcard{background:#fff;border-radius:20px;padding:14px 16px;box-shadow:0 6px 18px -14px rgba(15,23,42,.3)}
+.cd-chh{font-size:15px;font-weight:800;margin-bottom:6px}.cd-chh small{font-weight:500;color:#8A93A3;margin-left:8px}
+.cd-chcard .cpns2{grid-template-columns:1fr!important;gap:6px}
+.cd-chcard .cpn{border:0!important;padding:4px 0 0!important;background:transparent!important;box-shadow:none!important}
+.cd-right{display:flex;flex-direction:column;gap:10px;min-width:0}
+.cd-bigc{background:#fff;border-radius:18px;padding:14px 18px;box-shadow:0 6px 18px -14px rgba(15,23,42,.3)}
+.cd-bv{font-size:38px;font-weight:800;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums;margin:2px 0 6px}
+.cd-bp{display:flex;gap:6px;flex-wrap:wrap}
+.cd-s3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cd-sm,.cd-ch{background:#fff;border-radius:14px;padding:10px 12px;box-shadow:0 6px 18px -14px rgba(15,23,42,.3)}
+.cd-sv{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;margin:2px 0 4px}
+.cd-sm .cd-md,.cd-ch .cd-md{margin-top:3px;min-height:0}
+.cd-sec{font-size:12px;font-weight:700;letter-spacing:.05em;color:#8A93A3;margin-top:4px}
+.cd-right .cd-ins{display:flex;flex-direction:column;gap:8px;margin:0}
+.cd-right .cd-i{background:#fff;border-radius:14px;padding:9px 12px;font-size:13px}
+.cd-right .cd-ic{width:28px;height:28px;font-size:14px}
+
+.cd-chcard .cusvg{width:100%;height:auto}
+.cd-chcard .cph{margin-bottom:0}
+.cudr-p{padding:20px 26px 18px!important}
+.cudr-p .cd-top{margin-bottom:10px}
+
+.cd-chcard .cusvg text{font-size:14px!important}
+.cd-chcard .cusvg text[font-weight="800"]{font-size:16px!important}
+.cd-chcard .cph b{font-size:15px}
 </style>
 </head>
 <body>
@@ -2882,7 +2912,7 @@ function lyTrAgg(ms){ let sales=0,trans=0,cu=0,cuS=0,cuT=0,any=false;
   return {trans, ticket:sales/trans, customer:cu||null, custAvg:cu?cu/cuT:null, perBill:cu?cuS/cu:null, ch}; }
 /* กราฟรายเดือนแยกสเกล: เส้นปีนี้ + เส้น LY ประ + % vs LY ใต้แต่ละเดือน (LY เทียบสาขาเดียวกับที่ส่งบิลในเดือนนั้น) */
 function cuPanel(title,unit,labs,cur,ly,color){
-  const W=560,H=252,L=46,R=14,T=28,B=64,n=cur.length, colW=(W-L-R)/n, X=i=>L+colW*(i+.5);
+  const W=window.CU_W||560,H=window.CU_H||252,L=46,R=14,T=28,B=64,n=cur.length, colW=(W-L-R)/n, X=i=>L+colW*(i+.5);
   const vs=cur.concat(ly).filter(v=>v!=null); if(!vs.length) return '';
   const mn=Math.min(...vs)*.94, mx=Math.max(...vs)*1.05, Y=v=>T+(H-T-B)*(1-(v-mn)/(mx-mn||1));
   const big=Math.max(...vs), K=v=>big<20000?Math.round(v).toLocaleString('en-US'):big<100000?(v/1000).toFixed(1)+'K':Math.round(v/1000)+'K', col=d=>d>=0?'#10A56B':'#E0364B', sg=d=>(d>=0?'+':'')+d.toFixed(1)+'%';
@@ -3026,12 +3056,27 @@ function openCuDrawer(code){ code=String(code); const el=cuDrawerEl();
   const sorted=rows.slice().sort((x,y)=>y.tr-x.tr), at=rank-1, nb=sorted[at-1]||null, nx=sorted[at+1]||null;
   const navL=nb?nb:nx, navTxt=navL?(nb?'‹ ':'')+navL.code+' '+navL.name+(nb?'':' ›'):'';
   const nmx=(BRANCH_META&&BRANCH_META[code]&&BRANCH_META[code].name)||b.name||'';
-  body.innerHTML='<div class="cd-top"><div><div class="cd-sub">'+code+' · '+(S.multi?S.lab:label(m))+'</div><div class="cd-name">'+(b.name||nmx)+'</div></div><div class="cd-tr"><span class="cd-badge">#'+rank+' Trans</span><button type="button" class="cd-x" data-cudclose aria-label="ปิด">✕</button></div></div>'
-    +insHtml
-    +'<div class="cd-mini">'+mini('Trans',b.tr,p&&p.tr,fN)+mini('Customers',b.cust||null,p&&p.cust,fN)+mini('Ticket',b.tk,p&&p.tk,fB)+mini('Per Bill',pb(b),pb(p),fB)
-    +mini('Dine in',tk(b,0),tk(p,0),fB)+mini('Takeaway',tk(b,1),tk(p,1),fB)+mini('Delivery',tk(b,2),tk(p,2),fB)+mini('Cust. Avg',ca(b),ca(p),f2)+'</div>'
-    +'<div class="cd-foot">'+(navL?'<button type="button" class="cd-nav" data-cudgo="'+navL.code+'">'+navTxt+'</button>':'<span></span>')+'<button type="button" class="cd-chart" data-cudchart="'+code+'">ดูกราฟ →</button></div>'
-    +'<div class="cd-note">% เทียบเดือนก่อน (vs LM) · '+(S.multi?S.lab:label(m))+'</div>';
+  /* LY ของสาขา (STF) · กราฟรายเดือนสาขานี้ */
+  const byB=filtZone(EXTRA.branchYears||[]).find(x=>String(x.code)===code), hY=byB&&byB.h&&byB.h[YEAR-1];
+  const lyk=k=>{ const v=hY&&(hY[k]||[])[m-1]; return v>0?v:null; };
+  const LYv={tr:lyk('k'), cu:lyk('c'), tk:(lyk('k')&&lyk('s'))?lyk('s')/lyk('k'):null};
+  LYv.ca=LYv.tr&&LYv.cu?LYv.cu/LYv.tr:null; LYv.pb=lyk('s')&&LYv.cu?lyk('s')/LYv.cu:null;
+  const pctv=(v,ref)=>pc(ref,v);
+  const pl=(g,t)=>g==null?'':'<span class="pill '+(g>=0?'pos':'neg')+'">'+sgn1(g)+' '+t+'</span>';
+  const big=(lab,v,f,pLM,pLY)=>'<div class="cd-bigc"><div class="cd-ml">'+lab+'</div><div class="cd-bv">'+f(v)+'</div><div class="cd-bp">'+pl(pLM,'vs LM')+pl(pLY,'vs LY')+'</div></div>';
+  const small3=(l,v,f,pLM,pLY)=>'<div class="cd-sm"><div class="cd-ml">'+l+'</div><div class="cd-sv">'+f(v)+'</div>'+(pLM!=null?'<div class="cd-md">'+pl(pLM,'LM')+'</div>':'')+(pLY!=null?'<div class="cd-md">'+pl(pLY,'LY')+'</div>':'')+'</div>';
+  const CHC=['#E8751A','#8B5CF6','#12A58E'], CHN=['Dine in','Takeaway','Delivery'];
+  const chCards=[0,1,2].map(j=>{ const v=tk(b,j), g=pc(tk(p,j),v), av=chAvg[j], d=v!=null&&av?v-av:null;
+    return '<div class="cd-ch" style="border-top:3px solid '+CHC[j]+'"><div class="cd-ml">'+CHN[j]+'</div><div class="cd-sv">'+fB(v)+'</div>'+(g!=null?'<div class="cd-md">'+pl(g,'LM')+'</div>':'')+(d!=null?'<div class="cd-ml" style="margin-top:4px">'+(d>=0?'+':'−')+'฿'+fmtN(Math.round(Math.abs(d)))+' vs เฉลี่ย</div>':'')+'</div>'; }).join('');
+  window.CU_W=880; window.CU_H=215; let charts=''; try{ charts=(typeof CUC!=='undefined'&&CUC.ctx)?cuChartsHtml(code):''; }finally{ window.CU_W=0; window.CU_H=0; }
+  body.innerHTML='<div class="cd-top"><div><div class="cd-sub">'+code+' · '+(S.multi?S.lab:label(m))+' · #'+rank+' Trans จาก '+rows.length+' สาขา</div><div class="cd-name">'+(b.name||nmx)+'</div></div><div class="cd-tr"><button type="button" class="cd-x" data-cudclose aria-label="ปิด">✕</button></div></div>'
+    +'<div class="cd-land"><div class="cd-left"><div class="cd-chcard"><div class="cd-chh">Total Trans และ Customers รายเดือน <small>เส้นประ = LY</small></div>'+(charts||'<div class="empty">ไม่มีข้อมูลรายเดือน</div>')+'</div></div>'
+    +'<div class="cd-right">'+big('TOTAL TRANS',b.tr,fN,pc(p&&p.tr,b.tr),pctv(b.tr,LYv.tr))+big('CUSTOMERS',b.cust||null,fN,pc(p&&p.cust,b.cust),pctv(b.cust,LYv.cu))
+    +'<div class="cd-s3">'+small3('Ticket Avg.',b.tk,fB,pc(p&&p.tk,b.tk),pctv(b.tk,LYv.tk))+small3('Per Bill',pb(b),fB,pc(pb(p),pb(b)),pctv(pb(b),LYv.pb))+small3('Cust. Avg',ca(b),f2,pc(ca(p),ca(b)),pctv(ca(b),LYv.ca))+'</div>'
+    +'<div class="cd-sec">Ticket แยกช่องทาง</div><div class="cd-s3">'+chCards+'</div>'
+    +(insHtml?'<div class="cd-sec">ประเด็นที่ควรดู</div>'+insHtml:'')+'</div></div>'
+    +'<div class="cd-foot">'+(navL?'<button type="button" class="cd-nav" data-cudgo="'+navL.code+'">'+navTxt+'</button>':'<span></span>')+'<button type="button" class="cd-chart" data-cudchart="'+code+'">ดูในกราฟรายสาขา →</button></div>'
+    +'<div class="cd-note">% เทียบเดือนก่อน (vs LM) และปีก่อน (vs LY) · '+(S.multi?S.lab:label(m))+'</div>';
   el.classList.add('open'); }
 function customersSection(m){
   const S=SCP||{multi:false}, T='Customers & Average Ticket';
