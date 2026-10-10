@@ -858,7 +858,18 @@ body.present .panel{padding:14px 18px 14px;border-radius:14px}
 .covhd b{font-size:14px;color:var(--ink)}
 .lgd{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11.5px;color:var(--mute)}
 .lgd .dk{min-width:20px;height:20px;margin-left:6px}
-.covwrap{overflow-x:auto}
+.covwrap{overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin}
+.covhd b small{margin-left:10px;padding:2px 9px;border-radius:99px;background:var(--accent-2);color:var(--accent-ink);font-size:11px;font-weight:700}
+.dk.na{background:transparent;color:#CBD5E1;border:0;font-weight:400}
+table.cov th.yb{padding:10px 8px 8px;text-align:left;background:var(--surface)!important;border-bottom:1px solid var(--line);white-space:nowrap}
+table.cov th.yb b{font-size:15px;font-weight:800;color:var(--ink)}
+table.cov th.yb em{margin-left:10px;font-style:normal;font-size:11px;font-weight:600;color:var(--mute)}
+table.cov th.yb.cur{background:var(--accent-2)!important}table.cov th.yb.cur b{color:var(--accent-ink)}table.cov th.yb.cur em{color:#047857;font-weight:700}
+table.cov th.ys,table.cov td.ys{border-left:2px solid var(--line)!important}
+table.cov th.cn,table.cov td.cn{position:sticky!important;left:0;z-index:3;min-width:196px;box-shadow:2px 0 0 var(--hair)!important}
+table.cov tr.cg td{position:static}
+table.cov td.cc .dk{min-width:26px;height:26px;border-radius:8px;font-size:12.5px}
+.covhint{padding:8px 16px;border-top:1px solid var(--hair);font-size:11.5px;color:var(--mute);background:var(--surface)}
 table.cov{width:100%;border-collapse:separate;border-spacing:0}
 table.cov th,table.cov td{position:static!important;box-shadow:none!important;background:#fff!important;border-bottom:1px solid var(--hair)}
 table.cov tr:hover td{background:#FCFCFD!important}
@@ -2306,8 +2317,8 @@ section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):n
     </div>
     <div class="impR">
       <div class="covcard">
-        <div class="covhd"><b>ข้อมูลในระบบ</b>
-          <span class="lgd"><i class="dk ok">✓</i>มีครบ<i class="dk part">1/59</i>มีบางสาขา<i class="dk miss">✕</i>ยังขาด<i class="dk open"></i>เดือนนี้ยังไม่ปิด</span></div>
+        <div class="covhd"><b>ข้อมูลในระบบ<small>ย้อนหลัง 5 ปี</small></b>
+          <span class="lgd"><i class="dk ok">✓</i>มีครบ<i class="dk part">1/59</i>มีบางสาขา<i class="dk miss">✕</i>ยังขาด<i class="dk open"></i>เดือนนี้ยังไม่ปิด<i class="dk na">–</i>ไม่ได้เก็บ</span></div>
         <div id="impCov"></div>
       </div>
       <div class="impfoot">
@@ -6401,7 +6412,7 @@ function covTypes(){
   const D=m=>DETAIL[m]||{}, R=m=>MONTHLY.find(x=>x.m===m)||{}, F=EXTRA&&EXTRA.pnlFull, K=m=>PL_MONKEY[m-1];
   const nBr=m=>(D(m).stores&&D(m).stores.now)||59;
   return [
-    {g:'ยอดขาย',name:'ยอดขายรวม',src:'Daily Sale หรือ แบบฟอร์มส่งยอดขาย',f:m=>R(m).sales!=null},
+    {g:'ยอดขาย',name:'ยอดขายรวม',src:'Daily Sale หรือ แบบฟอร์มส่งยอดขาย',f:m=>R(m).sales!=null,p:(y,m)=>y===YEAR-1&&R(m).ly!=null},
     {g:'ยอดขาย',name:'แผน (Budget)',src:'แบบฟอร์มส่งยอดขาย',f:m=>R(m).budget!=null},
     {g:'ยอดขาย',name:'ยอด LY',src:'Daily Sale',f:m=>R(m).ly!=null},
     {g:'ยอดขาย',name:'%SSSG',src:'Sales 2025_2026 (แถว SSSG)',f:m=>!!(DETAIL[m]||{}).sssgFile},
@@ -6410,13 +6421,15 @@ function covTypes(){
     {g:'ยอดขาย',name:'ยอดรายสาขา',src:'แบบฟอร์มส่งยอดขาย',exp:nBr,
       f:m=>Math.max((D(m).branchRows||[]).length,(D(m).planBranches||[]).length)},
     {g:'ยอดขาย',name:'ยอดรายสาขา 2 ปี',src:'ไฟล์ Sales 2025_2026 (เดือนที่ไฟล์ยังไม่มี ใช้แบบฟอร์มส่งยอดขาย)',fixed:1,exp:nBr,
-      f:m=>(EXTRA.branchYears||[]).filter(b=>b.m&&b.m[m]&&b.m[m].ty).length},
+      f:m=>(EXTRA.branchYears||[]).filter(b=>b.m&&b.m[m]&&b.m[m].ty).length,
+      p:(y,m)=>y===YEAR-1?(EXTRA.branchYears||[]).filter(b=>b.m&&b.m[m]&&b.m[m].ly).length:0},
     {g:'P&L',name:'งบกำไรขาดทุน',src:'ไฟล์ PL',f:m=>!!((F&&F.actual&&F.actual[K(m)])||D(m).pl)},
     {g:'P&L',name:'กำไรรายสาขา',src:'ไฟล์ PL (ชีต SUM)',exp:nBr,
       f:m=>Math.max((D(m).plBranches||[]).length,F&&F.branch?Object.values(F.branch).filter(b=>b&&b[K(m)]).length:0)},
     {g:'CEM · OSS',name:'CEM',src:'ไฟล์ CEM',exp:nBr,
       f:m=>{ const n=Object.keys(D(m).cemStores||{}).length; if(n) return n;
-             const y=(EXTRA.cemStoreYears||[]).filter(s=>typeof (s.y2026||[])[m-1]==='number').length; return y||(D(m).cem?true:0); }},
+             const y=(EXTRA.cemStoreYears||[]).filter(s=>typeof (s.y2026||[])[m-1]==='number').length; return y||(D(m).cem?true:0); },
+      p:(y,m)=>y===YEAR-1?(EXTRA.cemStoreYears||[]).filter(s=>typeof (s.y2025||[])[m-1]==='number').length:0},
     {g:'CEM · OSS',name:'OSS',src:'ไฟล์ OSS (1 ไฟล์ ต่อ 1 สาขา)',exp:nBr,
       f:m=>Object.keys(D(m).ossStores||{}).length||(D(m).oss?true:0)},
   ];
@@ -6437,17 +6450,32 @@ function renderImportPanel(){
   const cell=(t,m)=>covCell(t,m,nowM);
   const okN=(list,ms)=>list.reduce((a,t)=>a+ms.filter(m=>cell(t,m).st==='ok').length,0);
   const allN=T.length*done.length, okAll=okN(T,done), pctAll=allN?Math.round(okAll/allN*100):0;
-  /* ---- ตารางแบบจุด ---- */
-  const chip=c=>c.st==='ok'?'<i class="dk ok">✓</i>':c.st==='part'?`<i class="dk part">${c.txt}</i>`:c.st==='miss'?'<i class="dk miss">✕</i>':'<i class="dk open"></i>';
-  const monHead=cols.map(m=>{ const n=T.filter(t=>cell(t,m).st==='ok').length, p=Math.round(n/T.length*100);
-    return `<th class="mh${m===curM?' cur':''}${m===nowM?' now':''}"><span class="mn">${MONTH_TH[m-1]}</span>
-      <span class="mb"><i style="width:${m===nowM&&!n?0:p}%"></i></span><span class="mc">${m===nowM&&!n?'ยังไม่ปิด':n+'/'+T.length}</span></th>`; }).join('');
+  /* ---- ตารางแบบจุด · ย้อนหลัง 5 ปี เลื่อนซ้าย-ขวาดูได้ (ปีที่ไม่ได้เก็บข้อมูลขึ้น –) ---- */
+  const YRS=Array.from({length:5},(_,i)=>YEAR-4+i);
+  const pcell=(t,y,m)=>{ if(!t.p) return {st:'na',tip:'ไม่ได้เก็บข้อมูลปี '+y};
+    const v=t.p(y,m), exp=t.exp?t.exp(m):null;
+    if(v===true) return {st:'ok',tip:'มีข้อมูล'};
+    if(typeof v==='number'&&v>0){ const full=!exp||v>=exp*0.8; return {st:full?'ok':'part',txt:full||!exp?String(v):v+'/'+exp,tip:`มี ${v}${exp?' จาก '+exp:''} สาขา`}; }
+    return {st:'miss',tip:'ยังไม่มีข้อมูล'}; };
+  const cellY=(t,y,m)=>y===YEAR?cell(t,m):pcell(t,y,m);
+  const msOf=y=>y===YEAR?cols:Array.from({length:12},(_,i)=>i+1);
+  const trk=y=>y===YEAR?T:T.filter(t=>t.p);
+  const chip=c=>c.st==='ok'?'<i class="dk ok">✓</i>':c.st==='part'?`<i class="dk part">${c.txt}</i>`:c.st==='miss'?'<i class="dk miss">✕</i>':c.st==='na'?'<i class="dk na">–</i>':'<i class="dk open"></i>';
+  const yearBand=YRS.map(y=>{ const TT=trk(y), ms=msOf(y), tot=TT.length*(y===YEAR?done.length:12), ok=TT.reduce((a,t)=>a+ms.filter(m=>(y!==YEAR||m<nowM)&&cellY(t,y,m).st==='ok').length,0);
+    return `<th class="yb ys${y===YEAR?' cur':''}" colspan="${ms.length}"><b>${y}</b><em>${tot?(y===YEAR?'ครบ '+Math.round(ok/tot*100)+'%':(ok?'มีข้อมูล '+ok+' ช่อง':'ยังไม่มีข้อมูลในระบบ')):'—'}</em></th>`; }).join('');
+  const monHead=YRS.map(y=>msOf(y).map((m,i)=>{ const TT=trk(y), n=TT.filter(t=>cellY(t,y,m).st==='ok').length, p=TT.length?Math.round(n/TT.length*100):0, isNow=y===YEAR&&m===nowM;
+    return `<th class="mh${i===0?' ys':''}${y===YEAR&&m===curM?' cur':''}${isNow?' now':''}"><span class="mn">${MONTH_TH[m-1]}</span>
+      <span class="mb"><i style="width:${isNow&&!n?0:p}%"></i></span><span class="mc">${isNow&&!n?'ยังไม่ปิด':n+'/'+TT.length}</span></th>`; }).join('')).join('');
+  const nCol=YRS.reduce((a,y)=>a+msOf(y).length,0);
   let g0='', rows='';
   T.forEach(t=>{ if(t.g!==g0){ g0=t.g; const G=T.filter(x=>x.g===g0), gp=G.length*done.length?Math.round(okN(G,done)/(G.length*done.length)*100):0;
-      rows+=`<tr class="cg"><td colspan="${cols.length+1}"><span>${g0}</span><em>ครบ ${gp}%</em></td></tr>`; }
+      rows+=`<tr class="cg"><td colspan="${nCol+1}"><span>${g0}</span><em>ปี ${YEAR} ครบ ${gp}%</em></td></tr>`; }
     rows+=`<tr><td class="cn"><b>${t.name}</b><small>${t.fixed?'ฝังในเว็บ · ผู้ดูแลอัปเดตให้':t.src}</small></td>
-      ${cols.map(m=>{ const c=cell(t,m); return `<td class="cc${m===curM?' cur':''}" title="${t.name} ${label(m)}: ${c.tip}">${chip(c)}</td>`; }).join('')}</tr>`; });
-  cv.innerHTML=`<div class="covwrap"><table class="cov"><tr><th class="cn">ข้อมูล</th>${monHead}</tr>${rows}</table></div>`;
+      ${YRS.map(y=>msOf(y).map((m,i)=>{ const c=cellY(t,y,m); return `<td class="cc${i===0?' ys':''}${y===YEAR&&m===curM?' cur':''}" title="${t.name} ${MONTH_TH[m-1]} ${y}: ${c.tip}">${chip(c)}</td>`; }).join('')).join('')}</tr>`; });
+  const oldW=cv.querySelector('.covwrap'), sl=oldW&&oldW.scrollWidth?oldW.scrollLeft:null;
+  cv.innerHTML=`<div class="covwrap"><table class="cov"><tr class="yr"><th class="cn" rowspan="2">ข้อมูล</th>${yearBand}</tr><tr>${monHead}</tr>${rows}</table></div>
+    <div class="covhint">← เลื่อนซ้าย-ขวาเพื่อดูย้อนหลัง 5 ปี (${YRS[0]}–${YEAR}) · ปีที่ไม่ได้เก็บข้อมูลแสดงเป็น –</div>`;
+  if(sl!=null){ const w=cv.querySelector('.covwrap'); if(w) w.scrollLeft=sl; }
   /* ---- ต้องนำเข้าต่อ (เดือนที่กำลังดู) ---- */
   const miss=T.map(t=>({t,c:cell(t,curM)})).filter(x=>x.c.st!=='ok');
   $('#impMiss').innerHTML=miss.length
@@ -6636,7 +6664,8 @@ async function importFile(file){
 }
 $('#importBtn').onclick=()=>{showMsg('','');
   const ih=document.querySelector('#importModal h2'); if(ih) ih.textContent='นำเข้าข้อมูล · '+((BRANDS.find(b=>b.k===BRAND)||{n:''}).n);
-  renderImportPanel();$('#importModal').classList.add('open');};
+  renderImportPanel();$('#importModal').classList.add('open');
+  const cw=document.querySelector('#impCov .covwrap'); if(cw) cw.scrollLeft=cw.scrollWidth;};
 $('#logClear').onclick=()=>{ if(!confirm('ล้างประวัติการนำเข้าในเครื่องนี้?')) return; try{localStorage.removeItem(LOG_KEY)}catch(e){} renderImportPanel(); };
 $('#closeModal').onclick=()=>$('#importModal').classList.remove('open');
 $('#importModal').onclick=e=>{if(e.target.id==='importModal')$('#importModal').classList.remove('open');};
