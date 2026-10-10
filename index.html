@@ -3364,7 +3364,10 @@ function auditSection(id,title,m,d){
       return rs+dl; }).join('');
     const miss=ys.filter(y=>A.yrs[y]&&!hasY(y));
     return head(`${codes.length} สาขา · ${ms.length} เดือนที่มีข้อมูล · สีตามเกณฑ์ ${GN.map(x=>x.split(' ')[0]).join(' / ')}${miss.length?' · ปี '+miss.join(', ')+' ยังไม่มีข้อมูล':''}`)
-      +`<div class="scroll"><table class="aud-ht">${th}${avgRows}${avgD}${body}</table></div></div>`;
+      +(()=>{ const col={[YEAR-1]:'#8A93A3',[YEAR]:'#F66B21'};
+        const ser=sel.map(y=>({name:'ปี '+y,color:col[y],dash:y!==YEAR,label:'all',vals:ms.map(mm=>{ const z=maps[y][mm]; return z?+mean(Object.values(z).map(o=>o.score)).toFixed(1):null; })}));
+        return `<div class="plleg" style="margin:4px 0 2px">${ser.map(o=>`<span><i style="background:${o.color}"></i>${o.name}</span>`).join('')}<span style="margin-left:auto;color:#8A93A3">คะแนนเฉลี่ยทุกสาขา รายเดือน</span></div>`+lineSeries(ms.map(mm=>MONTH_TH[mm-1]),ser,{w:1100,h:260,R:24,fmt:v=>v.toFixed(1)+'%',tipFmt:v=>v.toFixed(1)+'%'}); })()
+      +`<div class="scroll" style="margin-top:10px"><table class="aud-ht">${th}${avgRows}${avgD}${body}</table></div></div>`;
   })();
   const W2=h=>h?`<div class="aud-w">${h}</div>`:'';
   return sec(id,title,`ซานตาเฟ่ สเต็ก · ${label(m)} · ${n} สาขาที่ตรวจแล้ว${FILT.zone!=='all'?' · '+scopeName():''}`,
