@@ -791,7 +791,16 @@ body.present .panel{padding:14px 18px 14px;border-radius:14px}
 
 
 /* ============ ศูนย์นำเข้าข้อมูล ============ */
-.box.wide.imp{max-width:1180px;padding:22px 24px 18px;background:var(--bg)}
+.box.wide.imp{max-width:1560px;width:98vw;padding:22px 24px 18px;background:var(--bg)}
+.impgrid{grid-template-columns:320px minmax(0,1fr)!important}
+@media (max-width:1280px){ .impgrid{grid-template-columns:minmax(0,1fr)!important} }
+table.cov th.cn,table.cov td.cn{min-width:0!important;width:180px}
+table.cov td.cn small{white-space:normal;max-width:190px}
+table.cov th.mh{padding-left:2px;padding-right:2px}
+table.cov td.cc{padding:6px 1px}
+table.cov td.cc .dk{min-width:24px;height:24px}
+.covwrap{overflow-x:visible}
+@media (max-width:760px){ .covwrap{overflow-x:auto} }
 .imphd{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:14px}
 .imphd h2{font-size:20px;font-weight:800;letter-spacing:-.01em}
 .imphd p{margin:3px 0 0;color:var(--mute);font-size:13px}
