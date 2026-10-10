@@ -866,7 +866,12 @@ table.cov th.yb b{font-size:15px;font-weight:800;color:var(--ink)}
 table.cov th.yb em{margin-left:10px;font-style:normal;font-size:11px;font-weight:600;color:var(--mute)}
 table.cov th.yb.cur{background:var(--accent-2)!important}table.cov th.yb.cur b{color:var(--accent-ink)}table.cov th.yb.cur em{color:#047857;font-weight:700}
 table.cov th.ys,table.cov td.ys{border-left:2px solid var(--line)!important}
-table.cov th.cn,table.cov td.cn{position:sticky!important;left:0;z-index:3;min-width:196px;box-shadow:2px 0 0 var(--hair)!important}
+.cyts{display:flex;gap:8px;padding:12px 16px 4px;flex-wrap:wrap}
+.cyt{display:inline-flex;align-items:baseline;gap:7px;padding:7px 16px;border:1.5px solid var(--line);border-radius:99px;background:#fff;font:inherit;font-size:14px;font-weight:800;color:var(--ink-2);cursor:pointer}
+.cyt small{font-size:11px;font-weight:600;color:var(--mute)}.cyt.none{color:var(--mute)}
+.cyt.on{background:var(--accent);border-color:var(--accent);color:#fff}.cyt.on small{color:rgba(255,255,255,.85)}
+table.cov th.cn,table.cov td.cn{min-width:190px}
+table.cov th.mh{min-width:0}
 table.cov tr.cg td{position:static}
 table.cov td.cc .dk{min-width:26px;height:26px;border-radius:8px;font-size:12.5px}
 .covhint{padding:8px 16px;border-top:1px solid var(--hair);font-size:11.5px;color:var(--mute);background:var(--surface)}
@@ -6443,6 +6448,7 @@ function covCell(t,m,nowM){ const v=t.f(m), exp=t.exp?t.exp(m):null;
   if(m===nowM) return {st:'open',txt:'·',tip:'เดือนนี้ยังไม่ปิด'};
   return {st:'miss',txt:'✕',tip:'ยังไม่มีข้อมูล'}; }
 
+let COVY=YEAR;
 function renderImportPanel(){
   const cv=$('#impCov'); if(!cv) return;
   const {nowM,cols}=covCols(), T=covTypes();
@@ -6451,7 +6457,7 @@ function renderImportPanel(){
   const okN=(list,ms)=>list.reduce((a,t)=>a+ms.filter(m=>cell(t,m).st==='ok').length,0);
   const allN=T.length*done.length, okAll=okN(T,done), pctAll=allN?Math.round(okAll/allN*100):0;
   /* ---- ตารางแบบจุด · ย้อนหลัง 5 ปี เลื่อนซ้าย-ขวาดูได้ (ปีที่ไม่ได้เก็บข้อมูลขึ้น –) ---- */
-  const YRS=Array.from({length:5},(_,i)=>YEAR-4+i);
+  const ALLY=Array.from({length:5},(_,i)=>YEAR-4+i); if(!ALLY.includes(COVY)) COVY=YEAR; const YRS=[COVY];
   const pcell=(t,y,m)=>{ if(!t.p) return {st:'na',tip:'ไม่ได้เก็บข้อมูลปี '+y};
     const v=t.p(y,m), exp=t.exp?t.exp(m):null;
     if(v===true) return {st:'ok',tip:'มีข้อมูล'};
@@ -6472,10 +6478,11 @@ function renderImportPanel(){
       rows+=`<tr class="cg"><td colspan="${nCol+1}"><span>${g0}</span><em>ปี ${YEAR} ครบ ${gp}%</em></td></tr>`; }
     rows+=`<tr><td class="cn"><b>${t.name}</b><small>${t.fixed?'ฝังในเว็บ · ผู้ดูแลอัปเดตให้':t.src}</small></td>
       ${YRS.map(y=>msOf(y).map((m,i)=>{ const c=cellY(t,y,m); return `<td class="cc${i===0?' ys':''}${y===YEAR&&m===curM?' cur':''}" title="${t.name} ${MONTH_TH[m-1]} ${y}: ${c.tip}">${chip(c)}</td>`; }).join('')).join('')}</tr>`; });
-  const oldW=cv.querySelector('.covwrap'), sl=oldW&&oldW.scrollWidth?oldW.scrollLeft:null;
-  cv.innerHTML=`<div class="covwrap"><table class="cov"><tr class="yr"><th class="cn" rowspan="2">ข้อมูล</th>${yearBand}</tr><tr>${monHead}</tr>${rows}</table></div>
-    <div class="covhint">← เลื่อนซ้าย-ขวาเพื่อดูย้อนหลัง 5 ปี (${YRS[0]}–${YEAR}) · ปีที่ไม่ได้เก็บข้อมูลแสดงเป็น –</div>`;
-  if(sl!=null){ const w=cv.querySelector('.covwrap'); if(w) w.scrollLeft=sl; }
+  const ytab=ALLY.slice().reverse().map(y=>{ const TT=trk(y), ms=msOf(y), has=TT.reduce((a,t)=>a+ms.filter(m=>cellY(t,y,m).st==='ok').length,0);
+    return `<button class="cyt${y===COVY?' on':''}${has?'':' none'}" data-cy="${y}">${y}<small>${y===YEAR?'ปีนี้':(has?'มีข้อมูล':'ไม่มี')}</small></button>`; }).join('');
+  cv.innerHTML=`<div class="cyts">${ytab}</div><div class="covwrap"><table class="cov"><tr class="yr"><th class="cn" rowspan="2">ข้อมูล</th>${yearBand}</tr><tr>${monHead}</tr>${rows}</table></div>
+    ${COVY<YEAR?`<div class="covhint">ปี ${COVY}: ระบบเก็บเฉพาะบางชนิดข้อมูล · ช่องที่เป็น – คือไม่ได้เก็บข้อมูลปีนั้น</div>`:''}`;
+  cv.querySelectorAll('[data-cy]').forEach(b=>b.onclick=()=>{ COVY=+b.dataset.cy; renderImportPanel(); });
   /* ---- ต้องนำเข้าต่อ (เดือนที่กำลังดู) ---- */
   const miss=T.map(t=>({t,c:cell(t,curM)})).filter(x=>x.c.st!=='ok');
   $('#impMiss').innerHTML=miss.length
@@ -6664,8 +6671,7 @@ async function importFile(file){
 }
 $('#importBtn').onclick=()=>{showMsg('','');
   const ih=document.querySelector('#importModal h2'); if(ih) ih.textContent='นำเข้าข้อมูล · '+((BRANDS.find(b=>b.k===BRAND)||{n:''}).n);
-  renderImportPanel();$('#importModal').classList.add('open');
-  const cw=document.querySelector('#impCov .covwrap'); if(cw) cw.scrollLeft=cw.scrollWidth;};
+  renderImportPanel();$('#importModal').classList.add('open');};
 $('#logClear').onclick=()=>{ if(!confirm('ล้างประวัติการนำเข้าในเครื่องนี้?')) return; try{localStorage.removeItem(LOG_KEY)}catch(e){} renderImportPanel(); };
 $('#closeModal').onclick=()=>$('#importModal').classList.remove('open');
 $('#importModal').onclick=e=>{if(e.target.id==='importModal')$('#importModal').classList.remove('open');};
