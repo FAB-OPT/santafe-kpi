@@ -2106,17 +2106,48 @@ table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD
 .aud-sr{display:flex;align-items:center;gap:10px;margin-bottom:8px}.aud-sn{font-size:14px;font-weight:600;flex:1}
 .aud-sr b{font-size:17px;font-weight:800}
 .aud-sp{font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 10px;white-space:nowrap}
-.aud-tks{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px}
-.aud-tk{display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border:1.5px solid var(--hair);border-radius:99px;font-size:13.5px;font-weight:700;cursor:pointer;user-select:none;background:#fff;color:var(--mute,#6B7280)}
-.aud-tk input{accent-color:var(--orange,#F66B21);width:16px;height:16px;margin:0;cursor:pointer}
-.aud-tk.on{border-color:var(--orange,#F66B21);background:#FFF3EA;color:var(--orange-ink,#D2510F)}
-.aud-tk.off{opacity:.55;cursor:not-allowed}.aud-tk.off input{cursor:not-allowed}
-#cem table.aud-ht td,#oss table.aud-ht td{font-size:13.5px;padding:6px 9px}
-table.aud-ht th{white-space:nowrap}table.aud-ht td.n,table.aud-ht th.n{text-align:right;font-variant-numeric:tabular-nums}
-table.aud-ht td.yr{font-size:12px;font-weight:800;color:#8A93A3;white-space:nowrap}
-table.aud-ht tr.avg td{background:#FFF8F2;font-weight:700}
-table.aud-ht tr.dl td{background:#FAFAF7;font-size:12px}
-table.aud-ht td.bn{white-space:nowrap;font-weight:600;vertical-align:middle;border-right:1px solid var(--hair)}
+/* ===== การ์ดเทียบปี CEM/OSS ===== */
+.yc-hdr{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.yc-ti b{font-size:20px;font-weight:800}.yc-ti small{margin-left:10px;font-size:13px;color:#8A93A3}
+.yc-chips{display:flex;gap:8px}
+.yc-chip{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px;border:1.5px solid var(--hair);border-radius:12px;background:#fff;font:inherit;font-size:13px;font-weight:800;color:#8A93A3;cursor:pointer}
+.yc-chip.on{background:#FFF1E4;border-color:#F3C9A3;color:#D2510F}.yc-chip i{width:12px;height:3px;border-radius:2px;background:#8E8A99}
+.yc-chip.off{opacity:.55;cursor:not-allowed}
+.yc-kg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.yc-k{background:#fff;border:1px solid rgba(15,23,42,.06);border-radius:16px;padding:16px 18px}
+.yc-kl{font-size:13px;color:#8A93A3;margin-bottom:6px}.yc-kv{font-size:30px;font-weight:800;color:#1F2430;line-height:1.1}
+.yc-k.or .yc-kv{color:#E8751A}.yc-k.gy .yc-kv{color:#6B7280}
+.yc-k.bad{background:#FBEBEC;border-color:#F4C5CB}.yc-k.bad .yc-kv{color:#E0364B}
+.yc-k.good{background:#E7F6EE;border-color:#BFE6D1}.yc-k.good .yc-kv{color:#12804F}
+.yc-ch{border:1px solid rgba(15,23,42,.06);border-radius:16px;padding:14px 16px 6px;background:#fff;margin-bottom:14px}
+.yc-lg{display:flex;align-items:center;gap:16px;font-size:12.5px;color:#6B7280;margin-bottom:4px}.yc-lg em{margin-left:auto;font-style:normal;color:#9AA1AE}
+.yc-lg i.ln{display:inline-block;width:20px;height:3px;border-radius:2px;background:#E8751A;margin-right:6px;vertical-align:middle}
+.yc-lg i.ln.ds{background:none;border-top:2px dashed #8E8A99;height:0}
+.yc-lg i.sh{display:inline-block;width:14px;height:12px;border-radius:3px;background:rgba(244,63,94,.15);margin-right:6px;vertical-align:middle}
+.yc-th{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:6px 2px 10px}
+.yc-tt{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#6B7280}.yc-tt b{font-size:15px;color:#1F2430}
+.yc-tt i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-1px}
+.yc-tt i.g0,.yc-ch2.g0{background:#D5EDE0}.yc-tt i.g1,.yc-ch2.g1{background:#FBE8C9}.yc-tt i.g2,.yc-ch2.g2{background:#F8D7DB}
+.yc-tabs{display:inline-flex;background:#F4EEE8;border-radius:12px;padding:3px}
+.yc-tabs button{border:0;background:transparent;padding:7px 16px;border-radius:9px;font:inherit;font-size:13px;font-weight:700;color:#8A93A3;cursor:pointer}
+.yc-tabs button.on{background:#fff;color:#1F2430;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.yc-wrap{border:1px solid rgba(15,23,42,.06);border-radius:16px;background:#fff;overflow:hidden}
+table.yc-t{width:100%;border-collapse:collapse;table-layout:fixed}
+table.yc-t th,table.yc-t td{font-size:13px;padding:4px 3px;border:0;background:transparent;position:static}
+table.yc-t tr.yc-hd th{font-size:11.5px;font-weight:500;color:#9AA1AE;text-align:left;padding:12px 8px;letter-spacing:.04em;border-bottom:1px solid #F0E9E1}
+table.yc-t th.yc-c,table.yc-t td.yc-c{text-align:center}
+table.yc-t th:first-child{width:21%}table.yc-t th:nth-child(2){width:46px}
+td.yc-n{padding:10px 10px 10px 16px!important;vertical-align:middle;border-bottom:1px solid #F0E9E1}td.yc-n b{display:block;font-size:14px;font-weight:700;margin-bottom:5px}
+.yc-yy{font-size:11px;font-weight:800;border-radius:99px;padding:2px 9px}.yc-yy.pos{background:#DDF3E7;color:#12804F}.yc-yy.neg{background:#FBE3E6;color:#D13447}
+td.yc-y{font-size:11.5px!important;font-weight:700;color:#9AA1AE;padding-left:8px!important}td.yc-y.or{color:#E8751A}
+.yc-ch2{display:block;border-radius:8px;padding:6px 0;font-weight:700;font-variant-numeric:tabular-nums;color:#3A3F4B}
+.yc-na{color:#C5CAD3}.yc-p{color:#7A7F8C;font-variant-numeric:tabular-nums}
+td.yc-d{font-size:12px!important;font-weight:700;font-variant-numeric:tabular-nums}td.yc-d.pos{color:#12804F}td.yc-d.neg{color:#D13447}
+td.yc-av{font-weight:800;font-size:14px!important;color:#1F2430}
+tr.yc-avg td{background:#FDF4EC}
+.yc-ft{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;font-size:12px;color:#8A93A3}
+.yc-ft button{border:0;background:transparent;font:inherit;font-size:13px;font-weight:800;color:#1F2430;cursor:pointer}
+@media (max-width:820px){ .yc-kg{grid-template-columns:repeat(2,minmax(0,1fr))} .yc-wrap{overflow-x:auto} table.yc-t{min-width:760px} }
 .aud-sp.o{background:#FFF1D6;color:#B7791F}.aud-sp.r{background:#FBE3E6;color:#D13447}.aud-sp.g{background:#DDF3E7;color:#12804F}
 .aud-bar{position:relative;height:9px;border-radius:99px;background:rgba(15,23,42,.07)}
 .aud-bar i{position:absolute;left:0;top:0;height:100%;border-radius:99px}
@@ -3359,40 +3390,79 @@ function auditSection(id,title,m,d){
   const brHtml=brs.length?`<div class="aud-c"><div class="aud-t">สาขาที่ตรวจแล้ว<small>${brs.length} สาขา · เรียงคะแนนต่ำ → สูง</small></div>
     ${brs.map(b=>{ const v=+b[1], col=secCol(v), w=Math.max(2,Math.min(100,(v-LO)/(100-LO)*100));
       return `<div class="aud-br"><div class="aud-brh"><span class="aud-brn">${b[0]}<small>${b[3]||''}</small></span><span class="aud-sp r">ถูกหัก ${b[2]} ข้อ</span><b style="color:${col}">${v.toFixed(1)}%</b></div><div class="aud-bar"><i style="width:${w.toFixed(1)}%;background:${col}"></i><u style="left:${refPos}%"></u></div></div>`; }).join('')}</div>`:'';
-  // ---- ตารางคะแนนรายสาขาย้อนหลัง 2 ปี (ติ๊กเลือกปีเทียบกันได้) ----
+  // ---- การ์ดเทียบปี: คะแนนรายสาขา ปีนี้ เทียบ ปีก่อน (KPI · กราฟเส้น · ตารางรายสาขา) ----
   const hist=(()=>{
-    const ys=[YEAR-1,YEAR], maps={};
-    ys.forEach(y=>{ maps[y]={}; for(let mm=1;mm<=12;mm++){ const z=zoneStores(auditStores(kind,mm,y)); if(z) maps[y][mm]=z; } });
-    const hasY=y=>Object.keys(maps[y]).length>0;
-    const sel=ys.filter(y=>A.yrs[y]&&hasY(y));
-    const tk=y=>`<label class="aud-tk ${A.yrs[y]&&hasY(y)?'on':''} ${hasY(y)?'':'off'}"><input type="checkbox" data-hy="${y}" ${A.yrs[y]&&hasY(y)?'checked':''} ${hasY(y)?'':'disabled'}>ปี ${y}${hasY(y)?'':' (ยังไม่มีข้อมูล)'}</label>`;
-    const dk=`<label class="aud-tk ${A.dl?'on':''} ${sel.length===2?'':'off'}"><input type="checkbox" data-hdl ${A.dl&&sel.length===2?'checked':''} ${sel.length===2?'':'disabled'}>แสดงผลต่าง (${YEAR} − ${YEAR-1})</label>`;
-    const head=sub=>`<div class="aud-c"><div class="aud-t">คะแนนรายสาขา ย้อนหลัง 2 ปี<small>${sub}</small></div><div class="aud-tks">${ys.map(tk).join('')}${dk}</div>`;
-    if(!sel.length) return head('ติ๊กเลือกปีที่ต้องการดู')+`<div class="empty">${ys.some(hasY)?'ติ๊กอย่างน้อย 1 ปีเพื่อแสดงตาราง':'ยังไม่มีข้อมูล '+kind.toUpperCase()+' ย้อนหลัง'}</div></div>`;
-    const ms=[]; for(let mm=1;mm<=12;mm++) if(sel.some(y=>maps[y][mm])) ms.push(mm);
-    const br={}; sel.forEach(y=>ms.forEach(mm=>{ const z=maps[y][mm]; if(z) Object.entries(z).forEach(([c,v])=>{ if(!br[c]) br[c]=v.name; }); }));
-    const codes=Object.keys(br).sort((p,q)=>(+p||0)-(+q||0)||String(p).localeCompare(String(q)));
-    const val=(y,c,mm)=>{ const z=maps[y][mm]; return z&&z[c]?z[c].score:null; };
-    const mean=a=>{ const v=a.filter(x=>x!=null); return v.length?v.reduce((p,q)=>p+q,0)/v.length:null; };
-    const cell=v=>v==null?'<td class="n mute">—</td>':`<td class="n" style="color:${GC[grp(v)]};font-weight:600">${v.toFixed(1)}</td>`;
-    const dcell=v=>v==null?'<td class="n mute">—</td>':`<td class="n ${v>=0?'pos':'neg'}">${v>=0?'+':'−'}${Math.abs(v).toFixed(1)}</td>`;
-    const both=sel.length===2&&A.dl;
-    const th=`<tr><th>สาขา</th><th>ปี</th>${ms.map(mm=>`<th class="n">${MONTH_TH[mm-1]}</th>`).join('')}<th class="n">เฉลี่ย</th></tr>`;
-    const avgRows=sel.map((y,i)=>{ const row=ms.map(mm=>{ const z=maps[y][mm]; return z?mean(Object.values(z).map(x=>x.score)):null; });
-      return `<tr class="avg">${i===0?`<td class="bn" rowspan="${sel.length+(both?1:0)}">ทุกสาขา (เฉลี่ย)</td>`:''}<td class="yr">${y}</td>${row.map(cell).join('')}${cell(mean(row))}</tr>`; }).join('');
-    const avgD=both?(()=>{ const a=sel[0], b=sel[1]; const r=ms.map(mm=>{ const x=maps[a][mm],y=maps[b][mm]; const p=x?mean(Object.values(x).map(o=>o.score)):null, q=y?mean(Object.values(y).map(o=>o.score)):null; return p!=null&&q!=null?q-p:null; });
-      return `<tr class="dl"><td class="yr">ผลต่าง</td>${r.map(dcell).join('')}${dcell(mean(r))}</tr>`; })():'';
-    const body=codes.map(c=>{ const rs=sel.map((y,i)=>{ const row=ms.map(mm=>val(y,c,mm));
-        return `<tr>${i===0?`<td class="bn" rowspan="${sel.length+(both?1:0)}">${c} ${br[c]}</td>`:''}<td class="yr">${y}</td>${row.map(cell).join('')}${cell(mean(row))}</tr>`; }).join('');
-      const dl=both?(()=>{ const r=ms.map(mm=>{ const p=val(sel[0],c,mm), q=val(sel[1],c,mm); return p!=null&&q!=null?q-p:null; });
-        return `<tr class="dl"><td class="yr">ผลต่าง</td>${r.map(dcell).join('')}${dcell(mean(r))}</tr>`; })():'';
-      return rs+dl; }).join('');
-    const miss=ys.filter(y=>A.yrs[y]&&!hasY(y));
-    return head(`${codes.length} สาขา · ${ms.length} เดือนที่มีข้อมูล · สีตามเกณฑ์ ${GN.map(x=>x.split(' ')[0]).join(' / ')}${miss.length?' · ปี '+miss.join(', ')+' ยังไม่มีข้อมูล':''}`)
-      +(()=>{ const col={[YEAR-1]:'#8A93A3',[YEAR]:'#F66B21'};
-        const ser=sel.map(y=>({name:'ปี '+y,color:col[y],dash:y!==YEAR,label:'all',vals:ms.map(mm=>{ const z=maps[y][mm]; return z?+mean(Object.values(z).map(o=>o.score)).toFixed(1):null; })}));
-        return `<div class="plleg" style="margin:4px 0 2px">${ser.map(o=>`<span><i style="background:${o.color}"></i>${o.name}</span>`).join('')}<span style="margin-left:auto;color:#8A93A3">คะแนนเฉลี่ยทุกสาขา รายเดือน</span></div>`+lineSeries(ms.map(mm=>MONTH_TH[mm-1]),ser,{w:1100,h:260,R:24,fmt:v=>v.toFixed(1)+'%',tipFmt:v=>v.toFixed(1)+'%'}); })()
-      +`<div class="scroll" style="margin-top:10px"><table class="aud-ht">${th}${avgRows}${avgD}${body}</table></div></div>`;
+    const PY=YEAR-1, maps={}; [PY,YEAR].forEach(y=>{ maps[y]={}; for(let mm=1;mm<=12;mm++){ const z=zoneStores(auditStores(kind,mm,y)); if(z) maps[y][mm]=z; } });
+    const msC=Object.keys(maps[YEAR]).map(Number), msP=Object.keys(maps[PY]).map(Number);
+    if(!msC.length) return '';
+    const hasP=msP.length>0, showP=hasP&&A.yrs[PY]!==false, showD=showP&&A.dl!==false;
+    A.sort=A.sort||'code';
+    const ms=[...new Set(showP?msC.concat(msP):msC)].sort((p,q)=>p-q);
+    const common=ms.filter(m=>maps[YEAR][m]&&maps[PY][m]);
+    const mean=a=>{ const v=a.filter(x=>x!=null&&isFinite(x)); return v.length?v.reduce((p,q)=>p+q,0)/v.length:null; };
+    const f1=v=>v==null?'—':(+v).toFixed(1);
+    const sg=v=>v==null?'—':(Math.abs(v)<.05?'±0.0':(v>0?'+':'−')+Math.abs(v).toFixed(1));
+    const val=(y,c,m)=>{ const z=maps[y][m]; return z&&z[c]?z[c].score:null; };
+    const avgOf=(y,m)=>maps[y][m]?mean(Object.values(maps[y][m]).map(o=>o.score)):null;
+    const rng=a=>a.length?(a.length>1?MONTH_TH[a[0]-1]+'–'+MONTH_TH[a[a.length-1]-1]:MONTH_TH[a[0]-1]):'';
+    const names={}; msC.forEach(m=>Object.entries(maps[YEAR][m]).forEach(([c,v])=>names[c]=names[c]||v.name));
+    if(showP) msP.forEach(m=>Object.entries(maps[PY][m]).forEach(([c,v])=>names[c]=names[c]||v.name));
+    const codes=Object.keys(names);
+    const a26=mean(msC.map(m=>avgOf(YEAR,m))), a25=showP?mean(common.map(m=>avgOf(PY,m))):null, a26c=showP?mean(common.map(m=>avgOf(YEAR,m))):null;
+    const dAll=showP&&common.length?a26c-a25:null;
+    const below=common.filter(m=>avgOf(YEAR,m)<avgOf(PY,m)-.0499).length;
+    const kp=(l,v,cls)=>`<div class="yc-k ${cls||''}"><div class="yc-kl">${l}</div><div class="yc-kv">${v}</div></div>`;
+    const kpis=`<div class="yc-kg">${kp(`เฉลี่ย ${YEAR} (${rng(msC)})`,f1(a26)+'%','or')}${showP?kp(`เฉลี่ย ${PY} (${rng(common)})`,f1(a25)+'%','gy')+kp('ผลต่างช่วงเดียวกัน',(dAll==null?'—':sg(dAll)+' ppt'),dAll==null?'':(dAll>=0?'good':'bad'))+kp('ต่ำกว่าปีก่อน',`${below} / ${common.length} เดือน`,''):kp('เดือนที่มีข้อมูล',msC.length+' เดือน','')}</div>`;
+    // ---- กราฟเส้น ----
+    const W=1100,H=300,L=52,R=34,T=30,B=64;
+    const all=[]; ms.forEach(m=>{ const a=avgOf(YEAR,m); if(a!=null) all.push(a); if(showP){ const b=avgOf(PY,m); if(b!=null) all.push(b); } });
+    let lo=Math.floor(Math.min(...all)-.8), hi=Math.ceil(Math.max(...all)+.8); if(hi-lo<3) hi=lo+3;
+    const X=i=>L+(W-L-R)*(ms.length<2?.5:i/(ms.length-1)), Y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
+    let sv='';
+    for(let g=lo;g<=hi;g+=Math.max(1,Math.round((hi-lo)/5))) sv+=`<line x1="${L}" x2="${W-R}" y1="${Y(g)}" y2="${Y(g)}" stroke="#EEE7DF"/><text x="${L-10}" y="${Y(g)+4}" font-size="12" fill="#9AA1AE" text-anchor="end">${g}%</text>`;
+    const pt=(y,m)=>{ const i=ms.indexOf(m), v=avgOf(y,m); return v==null?null:[X(i),Y(v),v]; };
+    if(showP) for(let i=0;i<common.length-1;i++){ const m1=common[i], m2=common[i+1]; if(ms.indexOf(m2)-ms.indexOf(m1)!==1) continue;
+      const p1=pt(YEAR,m1),p2=pt(YEAR,m2),q1=pt(PY,m1),q2=pt(PY,m2); const dm=((p1[2]-q1[2])+(p2[2]-q2[2]))/2;
+      sv+=`<polygon points="${q1[0]},${q1[1]} ${q2[0]},${q2[1]} ${p2[0]},${p2[1]} ${p1[0]},${p1[1]}" fill="${dm<0?'rgba(244,63,94,.12)':'rgba(16,185,129,.12)'}"/>`; }
+    const line=(y,col,dash)=>{ const ps=ms.map(m=>pt(y,m)).filter(Boolean); if(ps.length>1) sv+=`<polyline fill="none" stroke="${col}" stroke-width="${dash?2.2:3}" ${dash?'stroke-dasharray="6 5"':''} stroke-linejoin="round" stroke-linecap="round" points="${ps.map(p=>p[0]+','+p[1]).join(' ')}"/>`; };
+    if(showP) line(PY,'#8E8A99',true);
+    line(YEAR,'#E8751A',false);
+    const lastC=msC[msC.length-1];
+    ms.forEach((m,i)=>{ const c=pt(YEAR,m), p=showP?pt(PY,m):null; const cUp=!p||c==null||c[2]>=p[2];
+      if(p) sv+=`<circle cx="${p[0]}" cy="${p[1]}" r="4.5" fill="#fff" stroke="#8E8A99" stroke-width="2"><title>${MONTH_TH[m-1]} ${PY}: ${p[2].toFixed(1)}%</title></circle><text x="${p[0]}" y="${p[1]+(cUp?19:-11)}" font-size="12" font-weight="700" fill="#7A7685" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="3">${p[2].toFixed(1)}</text>`;
+      if(c) sv+=`<circle cx="${c[0]}" cy="${c[1]}" r="5.5" fill="${m===lastC?'#E8751A':'#fff'}" stroke="#E8751A" stroke-width="2.4"><title>${MONTH_TH[m-1]} ${YEAR}: ${c[2].toFixed(1)}%</title></circle><text x="${c[0]}" y="${c[1]+(cUp?-12:19)}" font-size="12.5" font-weight="800" fill="#D2510F" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="3">${c[2].toFixed(1)}</text>`;
+      const isLast=m===lastC;
+      sv+=`<text x="${X(i)}" y="${H-34}" font-size="13" font-weight="${isLast?800:500}" fill="${isLast?'#1F2430':'#8A93A3'}" text-anchor="middle">${MONTH_TH[m-1]}</text>`;
+      if(showD){ const a=avgOf(YEAR,m), b=avgOf(PY,m), has=a!=null&&b!=null, d=has?a-b:null, bg=!has?'#EFEFEF':(d>=0?'#DDF3E7':'#FBE3E6'), fg=!has?'#9AA1AE':(d>=0?'#12804F':'#D13447');
+        sv+=`<rect x="${X(i)-30}" y="${H-24}" width="60" height="22" rx="11" fill="${bg}"/><text x="${X(i)}" y="${H-9}" font-size="12" font-weight="800" fill="${fg}" text-anchor="middle">${has?sg(d):'—'}</text>`; } });
+    const chart=`<div class="yc-ch"><div class="yc-lg"><span><i class="ln"></i>${YEAR}</span>${showP?`<span><i class="ln ds"></i>${PY}</span><span><i class="sh"></i>ช่องว่างที่ต่ำกว่าปีก่อน</span>`:''}<em>คะแนนเฉลี่ยทุกสาขา</em></div><svg class="chart" viewBox="0 0 ${W} ${H}">${sv}</svg></div>`;
+    // ---- ตารางรายสาขา ----
+    const rowOf=c=>{ const r26=ms.map(m=>val(YEAR,c,m)), r25=ms.map(m=>val(PY,c,m)); const cm=common.filter(m=>val(YEAR,c,m)!=null&&val(PY,c,m)!=null);
+      const av26=mean(r26), av25=showP?mean(cm.map(m=>val(PY,c,m))):null, dv=showP&&cm.length?mean(cm.map(m=>val(YEAR,c,m)))-av25:null;
+      return {c,name:names[c],r26,r25,av26,av25,dv}; };
+    let rows=codes.map(rowOf);
+    if(A.sort==='worst') rows.sort((p,q)=>(p.dv==null)-(q.dv==null)||(p.dv||0)-(q.dv||0));
+    else if(A.sort==='low') rows.sort((p,q)=>(p.av26==null)-(q.av26==null)||(p.av26||0)-(q.av26||0));
+    else rows.sort((p,q)=>(+p.c||0)-(+q.c||0)||String(p.c).localeCompare(String(q.c)));
+    const LIM=3, shown=A.all?rows:rows.slice(0,LIM);
+    const cc=v=>v==null?'<td class="yc-c"><span class="yc-na">—</span></td>':`<td class="yc-c"><span class="yc-ch2 g${grp(v)}">${v.toFixed(1)}</span></td>`;
+    const pc=v=>`<td class="yc-c yc-p">${v==null?'—':v.toFixed(1)}</td>`;
+    const dc=v=>`<td class="yc-c yc-d ${v==null?'':(v>=-.0499?'pos':'neg')}">${sg(v)}</td>`;
+    const pill=d=>d==null?'':`<span class="yc-yy ${d>=-.0499?'pos':'neg'}">YoY ${sg(d)} ppt</span>`;
+    const avgRow={c:'',name:'ทุกสาขา (เฉลี่ย)',r26:ms.map(m=>avgOf(YEAR,m)),r25:ms.map(m=>avgOf(PY,m)),av26:a26,av25:a25,dv:dAll};
+    const blk=(r,isAvg)=>{ const span=1+(showP?1:0)+(showD?1:0), cl=isAvg?'yc-avg':'';
+      const first=`<tr class="${cl}"><td class="yc-n" rowspan="${span}"><b>${isAvg?r.name:r.c+' '+r.name}</b>${pill(showP?r.dv:null)}</td><td class="yc-y or">${YEAR}</td>${r.r26.map(cc).join('')}<td class="yc-c yc-av">${f1(r.av26)}</td></tr>`;
+      const second=showP?`<tr class="${cl}"><td class="yc-y">${PY}</td>${r.r25.map(pc).join('')}<td class="yc-c yc-p">${f1(r.av25)}</td></tr>`:'';
+      const third=showD?`<tr class="${cl}"><td class="yc-y">ผลต่าง</td>${ms.map((m,i)=>{ const a=r.r26[i], b=r.r25[i]; return dc(a!=null&&b!=null?a-b:null); }).join('')}${dc(r.dv)}</tr>`:'';
+      return first+second+third; };
+    const tab=(k,l)=>`<button class="${A.sort===k?'on':''}" data-hs="${k}">${l}</button>`;
+    const GL=GN.map((x,i)=>`<span><i class="g${i}"></i>${x}</span>`).join('');
+    const missP=showP?ms.filter(m=>!maps[PY][m]):[];
+    const table=`<div class="yc-th"><div class="yc-tt"><b>ตารางรายสาขา</b>${GL}</div><div class="yc-tabs">${tab('code','ตามรหัส')}${tab('worst','แย่ลงมากสุด')}${tab('low',`คะแนน ${YEAR} ต่ำสุด`)}</div></div>
+      <div class="yc-wrap"><table class="yc-t"><tr class="yc-hd"><th>สาขา</th><th>ปี</th>${ms.map(m=>`<th class="yc-c">${MONTH_TH[m-1]}</th>`).join('')}<th class="yc-c">เฉลี่ย</th></tr>${blk(avgRow,true)}${shown.map(r=>blk(r,false)).join('')}</table></div>
+      <div class="yc-ft"><span>สีพื้นช่อง = เกณฑ์ของปี ${YEAR}${missP.length?' · '+rng(missP)+' '+PY+' ไม่มีข้อมูล':''}</span>${rows.length>LIM?`<button data-hall>${A.all?'ย่อรายการ ⌃':`แสดงทั้งหมด ${rows.length} สาขา ⌄`}</button>`:''}</div>`;
+    const chip=`<button class="yc-chip${showP?' on':''}${hasP?'':' off'}" data-hy="${PY}" ${hasP?'':'disabled'}>${showP?'<i></i>':''}ปี ${PY}${hasP?'':' (ยังไม่มีข้อมูล)'}</button><button class="yc-chip${showD?' on':''}${showP?'':' off'}" data-hdl ${showP?'':'disabled'}>± ผลต่าง</button>`;
+    return `<div class="aud-c yc"><div class="yc-hdr"><div class="yc-ti"><b>คะแนนรายสาขา ${YEAR}${showP?' เทียบ '+PY:''}</b><small>${codes.length} สาขา · ${rng(ms)}</small></div><div class="yc-chips">${chip}</div></div>${kpis}${chart}${table}</div>`;
   })();
   const W2=h=>h?`<div class="aud-w">${h}</div>`:'';
   return sec(id,title,`ซานตาเฟ่ สเต็ก · ${label(m)} · ${n} สาขาที่ตรวจแล้ว${FILT.zone!=='all'?' · '+scopeName():''}`,
@@ -3424,8 +3494,10 @@ function bindExtra(){
     on('#'+k+' li[data-sec].clk','onclick',t=>{const i=+t.dataset.sec; const same=A.sec===i; clear(); if(!same) A.sec=i; r();});
     on('#'+k+' tr[data-f].clk','onclick',t=>{const i=+t.dataset.f; const same=A.f===i; clear(); if(!same) A.f=i; r();});
     on('#'+k+' [data-aclose]','onclick',()=>{clear(); r();});
-    on('#'+k+' input[data-hy]','onchange',i=>{ A.yrs[i.dataset.hy]=i.checked; r(); });
-    on('#'+k+' input[data-hdl]','onchange',i=>{ A.dl=i.checked; r(); });
+    on('#'+k+' [data-hy]','onclick',b=>{ const y=b.dataset.hy; A.yrs[y]=A.yrs[y]===false; r(); });
+    on('#'+k+' [data-hdl]','onclick',()=>{ A.dl=A.dl===false; r(); });
+    on('#'+k+' [data-hs]','onclick',b=>{ A.sort=b.dataset.hs; r(); });
+    on('#'+k+' [data-hall]','onclick',()=>{ A.all=!A.all; r(); });
   });
 }
 
