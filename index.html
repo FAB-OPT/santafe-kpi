@@ -2796,8 +2796,9 @@ function plSection(m){
   const isCo=PLS.branch==='all', cur$=isCo?'฿':'';
   const pvLbl=pm.length?RNG(pm):'';
   const perLbl=RNG(months)+' '+YEAR+' · '+(isCo?(FILT.zone==='all'?'ทุกสาขา':scopeName()):'สาขา '+brName(PLS.branch));
-  const kpiT=(l,id,dark)=>{ const it=idx(id); if(!it) return ''; const v=cur[it.index], pv=prevAll?prevAll[it.index]:null;
-    const dlt=pv!=null?`<span>vs ${pvLbl} <b class="${v-pv>=0?'pos':'neg'}">${(v-pv>=0?'+':'−')+fm(Math.abs(v-pv))}</b></span>`:'';
+  const kpiT=(l,id,dark,inv)=>{   // inv = หัวข้อค่าใช้จ่าย: เพิ่มขึ้น = แดง ลดลง = เขียว
+    const it=idx(id); if(!it) return ''; const v=cur[it.index], pv=prevAll?prevAll[it.index]:null;
+    const dlt=pv!=null?`<span>vs ${pvLbl} <b class="${(v-pv>=0)!==!!inv?'pos':'neg'}">${(v-pv>=0?'+':'−')+fm(Math.abs(v-pv))}</b></span>`:'';
     return `<div class="plk${dark?' dark':''}"><div class="plkl">${l}</div><div class="plkv">${cur$}${fm(v)}</div><div class="plks">${id==='revenue'?'100%':pc(v,rev)+' ของรายได้'}${dlt?' · '+dlt:''}</div></div>`; };
   const WF=[['รายได้','revenue','t','#3B4455'],['COS','cogs','d','#F0954F'],['กำไรขั้นต้น','gp1','t','#1FA463'],['ค่าแรง (COL)','labor','d','#5B8DEF'],['SG&A','sga','d','#A778F0'],
     ['ก่อนค่าดำเนินงาน','gp3','t','#1FA463'],['OPEX','opex','d','#20B2A5'],['OP','op','t','#1FA463'],['ส่วนกลาง','central','d','#EF5B5B'],['ค่าเสื่อม','dep','d','#8A93A3'],['กำไรสุทธิ','net','t','#0F172A']]
@@ -2819,7 +2820,7 @@ function plSection(m){
         const np=e.v[0]?e.v[ni]/e.v[0]*100:null;
         return `<div class="st ${np==null?'':cls(np)}"><div class="l">${e.name}</div><div class="v">${np==null?'—':np.toFixed(1)+'%'}</div><div class="s">กำไรสุทธิ ${fmOf(e.br)(e.v[ni])} · รายได้ ${fmOf(e.br)(e.v[0])}</div></div>`; }).join('')}</div>`
     :`<div class="plblock"><div class="grp big">จากรายได้สู่กำไรสุทธิ<span class="gr">${perLbl}</span></div>
-      <div class="plks5">${kpiT('รายได้รวม','revenue')}${kpiT('กำไรหลัง COS','gp1')}${kpiT('กำไรหลัง COS · COL · SG&A','gp3')}${kpiT('กำไรจากการดำเนินงาน (OP)','op')}${kpiT('กำไรสุทธิ','net',true)}</div>
+      <div class="plks5">${kpiT('รายได้รวม','revenue')}${kpiT('ต้นทุนขาย (COS)','cogs',false,true)}${kpiT('ค่าแรง (COL)','labor',false,true)}${kpiT('กำไรจากการดำเนินงาน (OP)','op')}${kpiT('กำไรสุทธิ','net',true)}</div>
       ${waterfall?`<div class="plwfw">${waterfall}</div><div class="plwfn">หน่วย: ${isCo?'ล้านบาท':'พันบาท'} · SG&amp;A, OPEX, ส่วนกลาง, ค่าเสื่อม ตัวเลขใต้ชื่อคือ % ของรายได้</div>`:''}</div>`;
   /* การ์ดต้นทุนและค่าใช้จ่าย: %COS / %COL + กราฟแยกต้นทุนหลัก/ค่าใช้จ่ายรอง + ข้อสังเกต */
   const yrSrc=PLS.branch==='all'?F.actual:(F.branch&&F.branch[PLS.branch]);
