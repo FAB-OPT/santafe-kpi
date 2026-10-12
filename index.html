@@ -2098,7 +2098,7 @@ i.good{background:#12A367}i.bad{background:#F43F5E}i.soft{background:#C9CDD3}
 .instb tbody tr[data-insopen]:hover,.instb tbody tr.insrow:hover{background:#fffaf6;cursor:pointer}
 .instb th[data-insort]{cursor:pointer}.instb th i{font-style:normal;margin-left:5px;color:#c5bdb6;font-size:11px}
 .insmain{table-layout:fixed;min-width:1360px}
-.instb tr.insgrp th{border-bottom:0;padding:0 4px 4px}.instb tr.insgrp th.insg{text-align:center;font-size:12.5px;color:#8A93A3;position:relative}.instb tr.insgrp th.insg::after{content:"";position:absolute;left:6px;right:6px;bottom:0;height:1px;background:var(--line)}
+.instb tr.insgrp th{border-bottom:0;padding:0 4px 0}.instb tr.insgrp th.insg{text-align:center;font-size:13px;color:#6B7280;border-bottom:2px solid #E9E2D8;padding-bottom:6px}.insstc{white-space:nowrap}.insct{font-size:12.5px;color:#6B7280;font-weight:700;margin-left:4px}.insct .bd{color:#E11D48}.insct .gd{color:#12804F}
 .instb tr.insavg td{background:#F6F2EC;font-weight:700;border-bottom:1px solid #E9E2D8}.insname b{display:block}.insname small{display:block;color:#8A93A3;font-size:12px;font-weight:500}.insrow .insname b{display:inline}
 .instb td.insbar{min-width:200px}.instb td .ppdb{margin:0 6px}.insch{color:var(--accent-ink)}
 .instb tr.insnow td{background:#FFF1E6}
@@ -3897,18 +3897,17 @@ function insightBody(m){
   const th=(k,t,cls)=>`<th class="${cls||''}" data-insort="${k}">${t}<i>${INS.sort===k?(INS.dir==='asc'?'▲':'▼'):'↕'}</i></th>`;
   const cell=(e,k)=>{ const v=e.a[k], t=insTone(k,v,A[k]); return `<td class="r"><span class="insc ${t}">${insFmt(k,v)}</span></td>`; };
   const rowsH=list.map(e=>`<tr class="insrow" data-inskey="${e.key}"><td class="insname">${INS.view==='zone'?'<b>'+e.key+'</b><small>'+e.a.n+' สาขา</small>':'<b>'+e.key+'</b> '+e.name.replace(e.key+' ','')}</td>${INS_M.map(([k])=>cell(e,k)).join('')}
-      <td class="insstc"><div class="insst2"><span class="pips">${INS_TONED.map(k=>{ const t=insTone(k,e.a[k],A[k]); return '<i class="pip '+(t||'n')+'"></i>'; }).join('')}</span><small><b class="bd">${e.bad}</b> • <b class="gd">${e.good}</b></small></div></td><td class="r"><span class="insbtn">ดูรายละเอียด ›</span></td></tr>`).join('')||`<tr><td colspan="${INS_M.length+3}"><div class="empty">ไม่พบข้อมูลตามคำค้น</div></td></tr>`;
-  const avgRow=`<tr class="insavg"><td class="insname"><b>เฉลี่ยทุกสาขา</b></td>${INS_M.map(([k])=>`<td class="r"><span class="insc">${insFmt(k,A[k])}</span></td>`).join('')}<td></td><td></td></tr>`;
-  const cols=`<colgroup><col style="width:150px">${INS_M.map(()=>'<col style="width:84px">').join('')}<col style="width:140px"><col style="width:128px"></colgroup>`;
+      <td class="insstc"><span class="pips">${INS_TONED.map(k=>{ const t=insTone(k,e.a[k],A[k]); return '<i class="pip '+(t||'n')+'"></i>'; }).join('')}</span> <small class="insct"><b class="bd">${e.bad}</b> • <b class="gd">${e.good}</b></small><span class="insbtn" style="margin-left:10px">ดูรายละเอียด ›</span></td></tr>`).join('')||`<tr><td colspan="${INS_M.length+2}"><div class="empty">ไม่พบข้อมูลตามคำค้น</div></td></tr>`;
+  const avgRow=`<tr class="insavg"><td class="insname"><b>เฉลี่ยทุกสาขา</b></td>${INS_M.map(([k])=>`<td class="r"><span class="insc">${insFmt(k,A[k])}</span></td>`).join('')}<td></td></tr>`;
+  const cols=`<colgroup><col style="width:150px">${INS_M.map(()=>'<col style="width:84px">').join('')}<col style="width:290px"></colgroup>`;
   const mo=MONTH_TH[m-1];
-  const src=`<div class="inssrc"><b>ที่มาของตัวเลข (${mo} ${YEAR}):</b> ยอดขาย · แผน · จำนวนบิล · เช็คเฉลี่ย · ช่องทาง · ชั่วโมงแรงงาน = ไฟล์ “แบบฟอร์มส่งยอดขาย” รายสาขา · %COS · %COL · กำไรสุทธิ = งบกำไรขาดทุนรายสาขา (ไฟล์ P&L) · CEM · OSS = ผลสำรวจรายสาขา · vs LM = เทียบเดือนก่อน (เฉพาะสาขาที่มียอดทั้งสองเดือน) · แถวเฉลี่ยทุกสาขา = รวมทุกสาขาที่มีข้อมูลก่อนหาร (ไม่ใช่เฉลี่ยของเฉลี่ย)</div>`;
+  const src=`<div class="inssrc"><b>เกณฑ์สี:</b> เทียบกับแถว “เฉลี่ยทุกสาขา” ทุกคอลัมน์ ยกเว้นยอดขาย · vs LM · บิล vs LM ที่แสดงไว้ดูอย่างเดียว ไม่ลงสีและไม่นับสถานะ<br><b>ที่มาของตัวเลข (${mo} ${YEAR}):</b> ยอดขาย · แผน · จำนวนบิล · เช็คเฉลี่ย · ช่องทาง · ชั่วโมงแรงงาน = ไฟล์ “แบบฟอร์มส่งยอดขาย” รายสาขา · %COS · %COL · กำไรสุทธิ = งบกำไรขาดทุนรายสาขา (ไฟล์ P&L) · CEM · OSS = ผลสำรวจรายสาขา · vs LM = เทียบเดือนก่อน (เฉพาะสาขาที่มียอดทั้งสองเดือน) · แถวเฉลี่ยทุกสาขา = รวมทุกสาขาที่มีข้อมูลก่อนหาร (ไม่ใช่เฉลี่ยของเฉลี่ย)</div>`;
   return `${tabBar}<div class="ppview"><span class="ovseg"><button type="button" class="${INS.view==='zone'?'on':''}" data-insview="zone">รายโซน</button><button type="button" class="${INS.view==='branch'?'on':''}" data-insview="branch">รายสาขา</button></span></div>${cards}
-    <div class="aud-c ppt"><div class="ppth"><div class="ppt2" style="margin:0">${INS.view==='zone'?'รายโซน':'รายสาขา'}<small>ทุกเรื่องในที่เดียว · เขียว = ดี · แดง = ต้องดูแล · คลิกแถวเพื่อดูวิเคราะห์ละเอียด</small></div>
+    <div class="aud-c ppt"><div class="ppth"><div class="ppt2" style="margin:0">${INS.view==='zone'?'รายโซน':'รายสาขา'}<small>เขียว = ดี · แดง = ต้องดูแล · คลิกแถวเพื่อดูวิเคราะห์</small></div>
       ${INS.view==='branch'?`<input type="search" class="ppsearch" id="insQ" placeholder="ค้นหารหัส / ชื่อสาขา" value="${(INS.q||'').replace(/"/g,'&quot;')}" autocomplete="off">`:''}</div>
-      <div class="insleg"><span><i class="g"></i> ดี</span><span><i class="b"></i> ต้องดูแล</span><span>เกณฑ์: เทียบกับแถว “เฉลี่ยทุกสาขา” ทุกคอลัมน์ ยกเว้นยอดขาย · vs LM · บิล vs LM ซึ่งแสดงไว้ดูอย่างเดียว ไม่ลงสีและไม่นับสถานะ</span></div>
       <div class="scroll"><table class="instb insmain">${cols}<thead>
-        <tr class="insgrp"><th></th><th colspan="5" class="insg">ยอดขาย</th><th colspan="3" class="insg">ต้นทุน · กำไร</th><th colspan="2" class="insg">มาตรฐานร้าน</th><th colspan="1" class="insg">แรงงาน</th><th></th><th></th></tr>
-        <tr><th data-insort="name">${INS.view==='zone'?'โซน':'สาขา'}<i>${INS.sort==='name'?(INS.dir==='asc'?'▲':'▼'):'↕'}</i></th>${INS_M.map(([k,t])=>th(k,t,'r')).join('')}${th('bad','สถานะ','')}<th></th></tr></thead>
+        <tr class="insgrp"><th></th><th colspan="5" class="insg">ยอดขาย</th><th colspan="3" class="insg">ต้นทุน · กำไร</th><th colspan="2" class="insg">มาตรฐานร้าน</th><th colspan="1" class="insg">แรงงาน</th><th></th></tr>
+        <tr><th data-insort="name">${INS.view==='zone'?'โซน':'สาขา'}<i>${INS.sort==='name'?(INS.dir==='asc'?'▲':'▼'):'↕'}</i></th>${INS_M.map(([k,t])=>th(k,t,'r')).join('')}${th('bad','สถานะ','')}</tr></thead>
         <tbody id="insRows">${avgRow}${rowsH}</tbody></table></div>${src}</div>`;
 }
 function insightSection(m){
