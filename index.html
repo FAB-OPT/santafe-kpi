@@ -3426,7 +3426,7 @@ function peopleBody(m){
   const tab=(k,t)=>`<button type="button" class="${PPL.f===k?'on':''}" data-ppf="${k}">${t}</button>`;
   return `${cards}${metrics}
     <div class="ppg2">${quadH}${wH}</div>
-    <div class="aud-c ppt"><div class="ppth"><div class="ppt2" style="margin:0">รายสาขา</div><span class="ovseg">${tab('all','ทั้งหมด '+n)}${tab('low','ต่ำกว่าเกณฑ์ '+P.low.length)}${tab('col','%COL เกิน 25% · '+nCol)}</span>
+    <div class="aud-c ppt"><div class="ppth"><div class="ppt2" style="margin:0">รายสาขา</div><span class="ovseg">${tab('all','ทั้งหมด')}${tab('low','ต่ำกว่าเกณฑ์')}${tab('col','%COL เกิน 25%')}</span>
       <input type="search" class="ppsearch" id="ppQ" placeholder="ค้นหารหัส / ชื่อสาขา" value="${(PPL.q||'').replace(/"/g,'&quot;')}" autocomplete="off"></div>
       <div class="ppleg"><span><u></u> เส้นกลาง = ค่าเฉลี่ย ฿${f0(P.ps)}</span><span><i class="good"></i> สูงกว่าเฉลี่ย</span><span><i class="bad"></i> ต่ำกว่าเกณฑ์ (ต่ำกว่าเฉลี่ยเกิน 5% · &lt; ฿${f0(thr)})</span><span><i class="soft"></i> ต่ำกว่าเฉลี่ยเล็กน้อย</span></div>
       <div class="ppr pph">${th('code','สาขา')}${th('sales','ยอดขาย')}${th('col','%COL')}${th('lh','ชม.แรงงาน','r')}${th('pt','บิล/ชม.','r')}${th('ps','Productivity Sale (บาท/ชม.) เทียบค่าเฉลี่ย')}</div>
