@@ -2007,6 +2007,18 @@ table.cosm-pl td.pos{color:var(--good)}table.cosm-pl td.neg{color:var(--bad)}tab
 .cosm-plyr tr.hasch{cursor:pointer}.cosm-plyr tr.hasch:hover td{filter:brightness(.97)}
 .cosm-plyr tr.hasch td:first-child::before{content:'▸';display:inline-block;width:16px;color:var(--faint);font-size:11px}
 .cosm-plyr tr.hasch.open td:first-child::before,.cosm-plyr:not(.collapsed) tr.hasch td:first-child::before{content:'▾'}
+.ppks{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:14px}
+.ppk{background:#fff;border-radius:16px;padding:14px 16px;border:1px solid rgba(15,23,42,.05)}.ppk small{display:block;color:var(--mute);font-size:12.5px;font-weight:600}.ppk b{display:block;font-size:26px;font-weight:800;letter-spacing:-.02em;margin:2px 0;font-variant-numeric:tabular-nums}.ppk em{font-style:normal;font-size:12px;color:var(--mute)}
+.ppbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 10px}.ppbar .hint{font-size:12.5px;color:var(--mute)}
+.pptb{background:#fff;border-radius:18px;padding:6px 14px 8px;border:1px solid rgba(15,23,42,.05)}
+.ppr{display:grid;grid-template-columns:230px 1.2fr 74px 96px 1fr 1fr;gap:14px;align-items:center;padding:11px 4px;border-bottom:1px solid #f1ece6;cursor:pointer}
+.ppr:last-child{border-bottom:0}.ppr:not(.pph):hover{background:#fffaf6}
+.ppr.pph{cursor:default;font-size:12.5px;color:var(--mute);font-weight:700;border-bottom:1px solid var(--line)}.ppr.pph>div{cursor:pointer;white-space:nowrap}.ppr.pph>div i{font-style:normal;margin-left:5px;color:#c5bdb6;font-size:11px}.ppr.pph>div.r{text-align:right}
+.ppn b{color:var(--accent-ink);margin-right:8px}.ppnum{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}.ppnum small{color:var(--mute);font-weight:500}
+.ppv{display:flex;align-items:center;gap:8px;font-weight:700;font-variant-numeric:tabular-nums}.ppv span{min-width:62px;text-align:right}
+.ppb{flex:1;height:10px;border-radius:5px;background:#EEF0F4;position:relative;overflow:hidden}.ppb i{position:absolute;inset:0 auto 0 0;border-radius:5px}.ppb u{position:absolute;top:-2px;bottom:-2px;width:2px;background:#191512;opacity:.55}
+.ppp{display:inline-block;border-radius:999px;padding:3px 10px;font-weight:700;font-size:13px}.ppp.ok{background:#DDF3E8;color:#0B7A4B}.ppp.mid{background:#FDF0CC;color:#8a6200}.ppp.hi{background:#FFE1E4;color:#B4233A}
+@media (max-width:1100px){.ppks{grid-template-columns:repeat(2,1fr)}.ppr{grid-template-columns:1fr 1fr}.ppr.pph{display:none}.ppn{grid-column:1/-1}}
 .cosm-note{font-size:12.5px;color:#8A93A3;margin-top:12px}
 
 #plbr .plbc{display:flex;flex-direction:column}
@@ -2427,7 +2439,7 @@ const MONTH_EN_FULL = ['January','February','March','April','May','June','July',
 const MONTH_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const YEAR = 2026;
 // ชื่อย่อที่ใช้ในแถบเมนูด้านบน (หัวข้อเต็มยังอยู่ในแถบหัวข้อของแต่ละส่วน)
-const NAV_SHORT={overview:'Monthly KPI',salesmix:'Sales Mix & Customers',monthly:'Performance Trend',sssg:'%SSSG by Month',
+const NAV_SHORT={people:'People Performance',overview:'Monthly KPI',salesmix:'Sales Mix & Customers',monthly:'Performance Trend',sssg:'%SSSG by Month',
   delivery:'Delivery by Platform',decline:'Delivery Declines',trans:'Bills & Ticket by Channel',customers:'Customers & Avg Ticket',
   cos:'Food & Labor Cost',rank:'Top & Bottom Branches',mall:'Mall Group Health',zone:'Trade Zone Health',branches:'Branch Watchlist',branchdetail:'Branch Explorer',plan:'Plan Achievement',plbr:'Profit by Branch',pl:'Profit & Loss',cem:'CEM',oss:'OSS'}
 
@@ -3330,6 +3342,52 @@ function openCuDrawer(code){ code=String(code); const el=cuDrawerEl();
     +'<div class="cd-foot">'+(navL?'<button type="button" class="cd-nav" data-cudgo="'+navL.code+'">'+navTxt+'</button>':'<span></span>')+'<button type="button" class="cd-chart" data-cudchart="'+code+'">ดูในกราฟรายสาขา →</button></div>'
     +'<div class="cd-note">% เทียบเดือนก่อน (vs LM) และปีก่อน (vs LY) · '+(S.multi?S.lab:label(m))+'</div>';
   el.classList.add('open'); }
+/* ========================= People Performance =========================
+   Labour (hour) · %COL · Productivity Trans (บิล/ชม.) · Productivity Sale (฿/ชม.) รายสาขา
+   ข้อมูลจากแบบฟอร์มส่งยอดขาย (คอลัมน์ Labour(hour)) — ต้องนำเข้าไฟล์เวอร์ชันที่มีคอลัมน์นี้ */
+const PPL={sort:'sales',dir:'desc',f:'all'};
+function peopleData(m){
+  const d=DETAIL[m]||{};
+  const rows=filtZone(d.branchRows||[]).filter(b=>b.sales>0&&b.lh>0).map(b=>({code:b.code,name:((BRANCH_META&&BRANCH_META[b.code]&&BRANCH_META[b.code].name)||b.name),
+    sales:b.sales,col:b.col,lh:b.lh,tr:b.tr||0,pt:(b.tr||0)/b.lh,ps:b.sales/b.lh}));
+  if(!rows.length) return null;
+  const T=k=>rows.reduce((a,r)=>a+r[k],0), sales=T('sales'), hours=T('lh'), trans=T('tr');
+  return {rows,sales,hours,trans,col:rows.reduce((a,r)=>a+r.col*r.sales,0)/sales,pt:trans/hours,ps:sales/hours};
+}
+function peopleBody(m){
+  const P=peopleData(m);
+  if(!P) return '<div class="empty">ยังไม่มีข้อมูล Labour (hour) · นำเข้าไฟล์ "แบบฟอร์มส่งยอดขาย" ที่มีคอลัมน์ Labour(hour) (ปุ่ม ⤒ นำเข้าข้อมูล)</div>';
+  const fK=v=>fmtN(Math.round(v/1000))+'K', f1=v=>v.toFixed(1), f0=v=>fmtN(Math.round(v));
+  let list=P.rows.slice();
+  if(PPL.f==='low') list=list.filter(r=>r.ps<P.ps*0.95);
+  const keyOf=r=>PPL.sort==='code'?r.code:r[PPL.sort], dk=PPL.dir==='asc'?1:-1;
+  list.sort((a,b)=>{ const x=keyOf(a), y=keyOf(b); return typeof x==='string'?dk*x.localeCompare(y,undefined,{numeric:true}):dk*(x-y); });
+  const mx=k=>Math.max(...P.rows.map(r=>r[k]))||1;
+  const avgSales=P.sales/P.rows.length;
+  const colCls=c=>c>P.col+1.5?'hi':c>P.col-0.5?'mid':'ok';
+  const th=(k,t,cls)=>`<div class="${cls||''}" data-ppsort="${k}">${t}<i>${PPL.sort===k?(PPL.dir==='asc'?'▲':'▼'):'↕'}</i></div>`;
+  const kp=(l,v,s,k)=>`<div class="ppk"><small>${l}</small><b>${v}</b><em>${s||''}</em><span class="pk" data-pk="${k}" hidden>${v}</span></div>`;
+  const rowsH=list.map(r=>`<div class="ppr" data-ssbr="${r.code}">
+      <div class="ppn"><b>${r.code}</b>${r.name}</div>
+      <div class="ppv"><div class="ppb"><i style="width:${Math.max(2,r.sales/mx('sales')*100).toFixed(1)}%;background:#F0954F"></i><u style="left:${(avgSales/mx('sales')*100).toFixed(1)}%"></u></div><span>${fK(r.sales)}</span></div>
+      <div><span class="ppp ${colCls(r.col)}">${f1(r.col)}%</span></div>
+      <div class="ppnum">${f0(r.lh)} <small>ชม.</small></div>
+      <div class="ppv"><div class="ppb"><i style="width:${Math.max(2,r.pt/mx('pt')*100).toFixed(1)}%;background:#5B8DEF"></i><u style="left:${(P.pt/mx('pt')*100).toFixed(1)}%"></u></div><span>${f1(r.pt)}</span></div>
+      <div class="ppv"><div class="ppb"><i style="width:${Math.max(2,r.ps/mx('ps')*100).toFixed(1)}%;background:${r.ps<P.ps*0.95?'#E0364B':'#12A367'}"></i><u style="left:${(P.ps/mx('ps')*100).toFixed(1)}%"></u></div><span>฿${f0(r.ps)}</span></div>
+    </div>`).join('');
+  return `<div class="ppks">${kp('ยอดขายรวม','฿'+fmtN(Math.round(P.sales/1000))+'K',P.rows.length+' สาขา','sales')}${kp('%COL เฉลี่ย',f1(P.col)+'%','ถ่วงน้ำหนักยอดขาย','col')}${kp('Labour (hour) รวม',f0(P.hours),'ชั่วโมง','hours')}${kp('Productivity Trans',f1(P.pt),'บิล / ชม.','pt')}${kp('Productivity Sale','฿'+f0(P.ps),'บาท / ชม.','ps')}</div>
+    <div class="ppbar"><span class="ovseg"><button type="button" class="${PPL.f==='all'?'on':''}" data-ppf="all">ทั้งหมด ${P.rows.length}</button><button type="button" class="${PPL.f==='low'?'on':''}" data-ppf="low">Productivity Sale ต่ำกว่าเฉลี่ย ${P.rows.filter(r=>r.ps<P.ps*0.95).length}</button></span>
+      <span class="hint">เส้นดำบนแท่ง = ค่าเฉลี่ย · แท่งแดง = Productivity Sale ต่ำกว่าเฉลี่ยเกิน 5% · คลิกหัวคอลัมน์เพื่อเรียง · คลิกแถวเพื่อดูรายละเอียดสาขา</span></div>
+    <div class="pptb"><div class="ppr pph">${th('code','สาขา')}${th('sales','ยอดขาย')}${th('col','%COL')}${th('lh','Labour (hour)','r')}${th('pt','Productivity Trans')}${th('ps','Productivity Sale')}</div>${rowsH||'<div class="empty">ไม่มีสาขาตามเงื่อนไข</div>'}</div>`;
+}
+function peopleSection(m){
+  const S=SCP||{}, mm=S.multi?S.last:m;
+  return sec('people','People Performance',label(mm),peopleBody(mm));
+}
+function ppRender(){ const b=document.querySelector('#people .body'); if(!b||!SCP) return; const m=SCP.multi?SCP.last:curM; b.innerHTML=peopleBody(m); }
+document.addEventListener('click',e=>{
+  const so=e.target.closest&&e.target.closest('#people [data-ppsort]'); if(so){ const k=so.dataset.ppsort; if(PPL.sort===k) PPL.dir=PPL.dir==='asc'?'desc':'asc'; else { PPL.sort=k; PPL.dir=k==='code'?'asc':'desc'; } ppRender(); return; }
+  const fl=e.target.closest&&e.target.closest('#people [data-ppf]'); if(fl){ PPL.f=fl.dataset.ppf; ppRender(); } });
 function customersSection(m){
   const S=SCP||{multi:false}, T='Customers & Average Ticket';
   const CMP=CUS.cmp==='ly'?'ly':'lm', RNc=CMP==='ly'?'LY':'LM';
@@ -3970,6 +4028,7 @@ const GROUPS=[
     {cap:'รายสาขา',ids:['mall','zone','branches','plan','branchdetail']},
     {cap:'ช่องทางขาย',ids:['delivery','decline']}]},
   {k:'cust',ic:'👥',name:'ลูกค้า',subs:[{cap:'',ids:['customers']}]},
+  {k:'people',ic:'🧑‍🍳',name:'People',subs:[{cap:'',ids:['people']}]},
   {k:'pl',ic:'📊',name:'P&L',subs:[{cap:'',ids:['pl']}]},
   {k:'cem',ic:'⭐',name:'CEM',subs:[{cap:'',ids:['cem']}]},
   {k:'oss',ic:'✅',name:'OSS',subs:[{cap:'',ids:['oss']}]}];
@@ -5262,6 +5321,7 @@ function buildMain(m){
   // 6 trans / ticket
   const t=d.trans;
   out.push(customersSection(m));
+  out.push(peopleSection(m));
 
   // 7 branches good vs bad
   const b=d.branches;
@@ -6119,7 +6179,7 @@ function parseSalesForm(wb){
         dine:N(r[C.dine]), take:N(r[C.take]), grab:N(r[C.grab]), lm:N(r[C.lm]), sp:N(r[C.sp]), deli:N(r[C.deli]),
         tr:N(r[C.tr]), trDine:N(r[C.trDine]), trTake:N(r[C.trTake]), trDeli:N(r[C.trDeli]),
         tk:N(r[C.tk]), tkDine:N(r[C.tkDine]), tkTake:N(r[C.tkTake]), tkDeli:N(r[C.tkDeli]),
-        cust:N(r[C.cust]), labB:N(r[C.labB]), colPct:N(r[C.colPct])*100});
+        cust:N(r[C.cust]), labB:N(r[C.labB]), labH:N(r[C.labH]), colPct:N(r[C.colPct])*100});
     }
     if(list.some(b=>b.sales>0)) data[m]=list;
   }
@@ -6148,7 +6208,7 @@ function parseSalesForm(wb){
          dine:b.dine, take:b.take, deli:b.deli, grab:b.grab, lm:b.lm, sp:b.sp,
          tr:b.tr, cust:b.cust, tk:b.tr?Math.round(b.sales/b.tr):null, trDine:b.trDine, trTake:b.trTake, trDeli:b.trDeli,
          trMom:p&&p.tr?+((b.tr-p.tr)/p.tr*100).toFixed(1):null,
-         col:+(b.colPct||0).toFixed(1)};});}
+         col:+(b.colPct||0).toFixed(1), lh:b.labH>0?b.labH:null};});}
     d.stores={now:cur.filter(b=>b.sales>0).length, ly:null, sameStore:prev?cur.filter(b=>b.sales>0&&prev.some(p=>p.code===b.code&&p.sales>0)).length:null};
 
     /* ---- Delivery ---- */
@@ -7032,12 +7092,12 @@ const TOPICS=[
   {k:'cost',ic:'📊',n:'Profitability',ids:['pl']},
   {k:'quality',ic:'⭐',n:'Store Excellence',ids:['cem','oss']},
   /* 2 หมวดที่ยังไม่มีข้อมูลในระบบ แสดงเป็นการ์ดรอข้อมูล กดไม่ได้ */
-  {k:'people',ic:'🧑‍🍳',n:'People Performance',ids:[],soon:'ชั่วโมงแรงงาน · %ค่าแรง'},
+  {k:'people',ic:'🧑‍🍳',n:'People Performance',ids:['people']},
   {k:'other',ic:'🗂️',n:'Other',ids:[],soon:'หัวข้ออื่นที่จะเพิ่มภายหลัง'}];
 TOPICS.forEach(t=>{ if(t.groups) t.ids=t.groups.flatMap(g=>g.ids); });
 const TABN={overview:'Overview',monthly:'Trend',sssg:'SSSG',salesmix:'Sales Mix',delivery:'Delivery',decline:'Delivery Declines',
   plan:'Plan',mall:'Mall Group',zone:'Trade Zone',branches:'Watchlist',branchdetail:'Branch Explorer',
-  customers:'Customers',trans:'Bills by Channel',pl:'P&L',cos:'COS / COL',plbr:'Profit by Branch',cem:'CEM',oss:'OSS'};
+  customers:'Customers',people:'People',trans:'Bills by Channel',pl:'P&L',cos:'COS / COL',plbr:'Profit by Branch',cem:'CEM',oss:'OSS'};
 let TOPIC=null, TSEC=null;
 const T=(sel,root)=>{ const e=(root||document).querySelector(sel); return e?e.textContent.replace(/\s+/g,' ').trim():''; };
 const st=(id,i)=>{ const x=document.querySelectorAll('#'+id+' .strip .st')[i]; if(!x) return null;
@@ -7063,6 +7123,9 @@ function tile(t){
       const mg=rv&&rv.split(' ของรายได้')[0];
       return {l:'กำไรสุทธิ', v:n&&T('.plkv',n),
         rows:[mg&&['อัตรากำไรสุทธิ',mg], cc[0]&&['%COS ต้นทุนอาหาร',cc[0]], cc[1]&&['%COL ค่าแรง',cc[1]]].filter(Boolean)}; }
+    case 'people': { const g=k=>T('#people [data-pk="'+k+'"]');
+      return {l:'Productivity Sale', v:g('ps')&&(g('ps')+' / ชม.'),
+        rows:[g('col')&&['%COL เฉลี่ย',g('col')], g('hours')&&['Labour (hour)',g('hours')+' ชม.'], g('pt')&&['Productivity Trans',g('pt')+' บิล/ชม.']].filter(Boolean)}; }
     case 'quality': { const dk=id=>document.querySelector('#'+id+' .aud-k.dark'), c=dk('cem'), o=dk('oss');
       const cv=c&&T('.aud-kv',c), cs=c&&T('.aud-ks',c), ov=o&&T('.aud-kv',o), cn=cs&&(cs.match(/(\d+)\s*สาขา/)||[])[1];
       return {l:'คะแนน CEM เฉลี่ย', v:cv,
@@ -7133,8 +7196,8 @@ function openTopic(k){ TOPIC=k; TSEC=null; try{ history.pushState({hubT:k},''); 
 function goHub(){ TOPIC=null; TSEC=null; try{ if(history.state&&history.state.hubT) history.replaceState(null,''); }catch(e){} hubApply(); window.scrollTo({top:0}); }
 addEventListener('popstate',e=>{ if(!document.body.classList.contains('hub')) return; TOPIC=(e.state&&e.state.hubT)||null; hubApply(); window.scrollTo({top:0}); });
 /* ---- แบรนด์ที่ยังไม่มีข้อมูล (Santa Fe FS · Jaedang): โครงเดียวกับ KT ---- */
-const NEED_T={sales:'ไฟล์ Daily Sale (ชีต Summary Salse)',cust:'แบบฟอร์มส่งยอดขาย (บิล · ลูกค้า)',cost:'งบกำไรขาดทุนของร้าน (ไฟล์ P&L ปัจจุบันยังไม่มี)',quality:'ผลสำรวจ CEM · ผลตรวจ OSS'};
-const NEED_S={sssg:'แบบฟอร์มส่งยอดขาย + ยอดรายสาขา 2 ปี',rank:'ยอดรายสาขา 2 ปี',mall:'ยอดรายสาขา 2 ปี',zone:'ยอดรายสาขา 2 ปี',
+const NEED_T={people:'แบบฟอร์มส่งยอดขาย (คอลัมน์ Labour(hour))',sales:'ไฟล์ Daily Sale (ชีต Summary Salse)',cust:'แบบฟอร์มส่งยอดขาย (บิล · ลูกค้า)',cost:'งบกำไรขาดทุนของร้าน (ไฟล์ P&L ปัจจุบันยังไม่มี)',quality:'ผลสำรวจ CEM · ผลตรวจ OSS'};
+const NEED_S={people:'แบบฟอร์มส่งยอดขาย (คอลัมน์ Labour(hour))',sssg:'แบบฟอร์มส่งยอดขาย + ยอดรายสาขา 2 ปี',rank:'ยอดรายสาขา 2 ปี',mall:'ยอดรายสาขา 2 ปี',zone:'ยอดรายสาขา 2 ปี',
   delivery:'Daily Sale หรือ แบบฟอร์มส่งยอดขาย',decline:'Daily Sale',plan:'แบบฟอร์มส่งยอดขาย (แผนรายสาขา)',
   customers:'แบบฟอร์มส่งยอดขาย (บิล · ลูกค้า)',trans:'แบบฟอร์มส่งยอดขาย (บิลรายช่องทาง)',
   pl:'ไฟล์ P&L (ชีตสรุปของแบรนด์)',cos:'ไฟล์ P&L (ต้นทุนอาหาร · ค่าแรง)',plbr:'ไฟล์ P&L (ชีต SUM รายสาขา)',cem:'ไฟล์ผลสำรวจลูกค้า CEM',oss:'ไฟล์ผลตรวจมาตรฐาน OSS'};
