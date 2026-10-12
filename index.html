@@ -3830,11 +3830,11 @@ function plMatrix(items){
   const brName=brNameOf;
   const codes=Object.keys(F.branch).filter(c=>FILT.zone==='all'||inScopeCode(c));
   if(!codes.length) return '';
-  const ITEM={net:{t:'กำไรสุทธิ',i:iNet,good:{pct:v=>v>=0,baht:v=>v>=0}},
+  const ITEM={rev:{t:'รายได้',i:iRev,good:{baht:()=>true},bahtOnly:true},
               cogs:{t:'ต้นทุนอาหาร',i:iCogs,good:{pct:v=>v<=36,baht:()=>true}},
               lab:{t:'ค่าแรง',i:iLab,good:{pct:v=>v<=21,baht:()=>true}},
-              rev:{t:'รายได้',i:iRev,good:{baht:()=>true},bahtOnly:true},
-              cc:{t:'%COS + %COL',i:iCogs,good:{pct:()=>true},pctOnly:true}};
+              cc:{t:'%COS + %COL',i:iCogs,good:{pct:()=>true},pctOnly:true},
+              net:{t:'กำไรสุทธิ',i:iNet,good:{pct:v=>v>=0,baht:v=>v>=0}}};
   if(!ITEM[PLM.item]) PLM.item='net';
   const IT=ITEM[PLM.item], unit=IT.bahtOnly?'baht':(IT.pctOnly?'pct':(PLM.unit==='baht'?'baht':'pct'));
   const M={t:IT.t+(unit==='pct'?' (% ของรายได้)':' (บาท)'),
