@@ -1606,7 +1606,7 @@ body.present .secfull{display:none}
 body.hub #nav, body.hub .tabbar{display:none!important}
 body.hub .wrap{grid-template-columns:minmax(0,1fr);max-width:1640px;margin-left:auto;margin-right:auto}
 body:not(.present) .hhide{display:none!important}
-body.present #hubView, body.present #topicBar{display:none}
+body.present #hubView, body.present #topicBar, body.present #quickBar{display:none}
 #hubView{padding:6px 0 12px}
 .hv-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:6px 2px 18px}
 .hv-t{font-size:30px;font-weight:800;letter-spacing:-.01em;color:var(--ink);line-height:1.15}
@@ -1680,6 +1680,9 @@ th.srth:hover .srt.off{color:var(--accent)}
 #customers .stack1{margin:22px 0 18px}
 #customers .custiles .cuk span{min-width:84px}
 .tb-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.top{position:sticky!important;top:12px!important}   /* แถบบนสุด + เมนูลัดหมวด ตรึงตามตอนเลื่อน */
+#quickBar{position:sticky;top:var(--stick,72px);z-index:19;margin:0 -8px 8px;padding:8px 8px 6px;-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);background:rgba(250,248,245,.78);border-radius:0 0 16px 16px}
+#quickBar .tb-quick{margin:0}
 .tb-quick{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 12px;padding:2px 1px}
 .tq{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:7px;flex:0 0 auto;padding:6px 12px 6px 8px;border-radius:999px;font-size:13.5px;font-weight:700;color:var(--mute);background:var(--surface);border:1px solid var(--line);min-height:38px;white-space:nowrap}
 .tq .hv-ic.hv-ic{width:24px;height:24px;border-radius:8px;flex:0 0 auto}.tq .hv-ic.hv-ic svg{width:14px;height:14px}
@@ -7016,7 +7019,7 @@ function hubApply(){
   if(typeof BRAND!=='undefined'&&BRAND!=='kt'&&!HOME&&!brandHasData()) return emptyApply();
   const main=$('#main'); if(!main||!main.querySelector('section.slide')) return;
   document.body.classList.add('hub');
-  ['hubView','topicBar'].forEach(id=>{ const e=document.getElementById(id); if(e) e.remove(); });
+  ['hubView','topicBar','quickBar'].forEach(id=>{ const e=document.getElementById(id); if(e) e.remove(); });
   const secs=[...main.querySelectorAll('section.slide')]; secs.forEach(x=>x.classList.remove('ghide'));
   const smh=document.querySelector('#salesmix .bar h2'); if(smh) smh.textContent=smh.textContent.replace('Sales Mix & Customers','Sales Mix');
   /* หมวดที่หัวข้อทั้งหมดขึ้นแค่ "ยังไม่มีข้อมูล" ถือว่ายังไม่มีข้อมูล */
@@ -7047,11 +7050,12 @@ function hubApply(){
     if(!ids.includes(TSEC)) TSEC=ids[0];
     secs.forEach(x=>x.classList.toggle('hhide',x.id!==TSEC));
     /* เมนูลัดข้ามหมวด: กดไปหมวดอื่นได้ทันที ไม่ต้องกลับหน้ารวมก่อน */
-    const quick='<div class="tb-quick" role="group" aria-label="ไปหมวดอื่น">'+TOPICS.filter(x=>!x.soon&&avail.includes(x)).map(x=>'<button type="button" class="tq'+(x.k===t.k?' on':'')+'" data-topic="'+x.k+'"'+(x.k===t.k?' aria-current="page"':'')+'>'+hvIcon(x.k,1)+'<span>'+x.n+'</span></button>').join('')+'</div>';
-    place('<div id="topicBar">'+quick+'<div class="tb-row"><button type="button" class="tb-back" data-hub>‹ ภาพรวม</button>'+hvIcon(t.k,1)+'<h1 class="tb-t">'+t.n+'</h1>'
+    const quick='<div id="quickBar"><div class="tb-quick" role="group" aria-label="ไปหมวดอื่น">'+TOPICS.filter(x=>!x.soon&&avail.includes(x)).map(x=>'<button type="button" class="tq'+(x.k===t.k?' on':'')+'" data-topic="'+x.k+'"'+(x.k===t.k?' aria-current="page"':'')+'>'+hvIcon(x.k,1)+'<span>'+x.n+'</span></button>').join('')+'</div></div>';
+    place('<div id="topicBar"><div class="tb-row"><button type="button" class="tb-back" data-hub>‹ ภาพรวม</button>'+hvIcon(t.k,1)+'<h1 class="tb-t">'+t.n+'</h1>'
       +(ids.length>1?'<button type="button" class="btn small tb-pres" data-tpres>▶ พรีเซนต์หมวดนี้</button>':'')+'</div>'
       +((g=>g?'<div class="tb-nav">'+segHtml(t,ids)+(g>1?'<div class="tb-tabs" role="tablist">'+tabsHtml(t,ids)+'</div>':'')+'</div>':'')
           ((G=>G?G.cur.ids.length:(ids.length>1?ids.length:0))(tabGroups(t,ids))))+'</div>');
+    place(quick);   // แถบเมนูลัดอยู่นอก #topicBar เพื่อให้ตรึงตามจอได้ (sticky ติดอยู่ในกล่องแม่ไม่ได้)
     const hb=document.querySelector('[data-hub]'); if(hb) hb.onclick=goHub;
     document.querySelectorAll('.tb-quick [data-topic]').forEach(x=>x.onclick=()=>{ if(x.dataset.topic!==TOPIC) openTopic(x.dataset.topic); });
     document.querySelectorAll('[data-tsec]').forEach(x=>x.onclick=()=>{ TSEC=x.dataset.tsec; hubApply(); window.scrollTo({top:0}); });
