@@ -2065,6 +2065,12 @@ i.good{background:#12A367}i.bad{background:#F43F5E}i.soft{background:#C9CDD3}
 .insgo{text-align:right}.insbtn{display:inline-block;border:1px solid var(--accent);color:var(--accent-ink);background:var(--accent-2);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;white-space:nowrap;cursor:pointer;font-family:inherit}
 .insr:not(.pph):not(.insavg):hover .insbtn,.insbtn:hover{background:var(--accent);color:#fff}
 .insrec li{display:flex;gap:12px;align-items:center;justify-content:space-between}.insrec li span{flex:1}
+.instabs{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 14px}.instabs button{all:unset;box-sizing:border-box;cursor:pointer;padding:10px 18px;border-radius:12px;font-size:15px;font-weight:700;color:#6B7280;background:rgba(255,255,255,.7);border:1px solid var(--line)}
+.instabs button:hover{color:var(--ink)}.instabs button.on{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 6px 14px -8px rgba(246,107,33,.9)}
+.inszone{margin-left:auto;font-size:13.5px;color:#6B7280;font-weight:600}.inszone select{margin-left:8px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font:inherit;font-size:14px}
+.insissue{font-size:13.5px;line-height:1.55;color:#4B5563}.insissue b{color:var(--accent-ink)}
+.aud-c .ppr:not(.pph){font-size:14.5px}
+.insev{display:block;margin-top:4px;font-size:12.5px;line-height:1.5;color:#6B7280;font-weight:500}
 .ppfoot{margin-top:12px;font-size:12.5px;color:#9AA3B0}
 .cosm-note{font-size:12.5px;color:#8A93A3;margin-top:12px}
 
@@ -3601,7 +3607,7 @@ function openPeopleBranch(code,keepList){
 /* ========================= Insights — วิเคราะห์ทุกเรื่องรายโซน / รายสาขา =========================
    รวมตัวชี้วัดจากทุกหมวด: ยอดขาย vs แผน · vs LM · บิล vs LM · เช็คเฉลี่ย · %COS · %COL · กำไรสุทธิ · CEM · OSS · Productivity Sale
    แต่ละตัวมีสีเขียว/แดงตามเกณฑ์ → นับ "ตัวชี้วัดที่ต้องดูแล" → คลิกเพื่อดูวิเคราะห์ (สาเหตุยอดเปลี่ยน · ช่องทาง · โอกาส · ข้อเสนอแนะ) */
-const INS={view:'zone',sort:'bad',dir:'desc',q:''};
+const INS={view:'zone',sort:'bad',dir:'desc',q:'',tab:'overview',zsel:'all'};
 const INS_M=[['sales','ยอดขาย'],['ach','vs แผน'],['mom','vs LM'],['trMom','บิล vs LM'],['tk','เช็คเฉลี่ย'],['cos','%COS'],['col','%COL'],['net','กำไรสุทธิ'],['cem','CEM'],['oss','OSS'],['ps','฿/ชม.']];
 function insTone(k,v,a){ if(v==null||!isFinite(v)) return '';
   switch(k){
@@ -3614,11 +3620,16 @@ function insTone(k,v,a){ if(v==null||!isFinite(v)) return '';
     case 'oss': return a!=null&&v>=a+1?'g':a!=null&&v<a-1?'b':'';
     case 'ps': return a&&v>=a?'g':a&&v<a*(1-PP_TH)?'b':'';
   } return ''; }
-function insightData(m){
+const INS_MEMO={};
+function insightData(m,exact){
+  const key=m+'|'+(exact?1:0); if(INS_MEMO[key]!==undefined) return INS_MEMO[key];
+  const r=insightData0(m,exact); INS_MEMO[key]=r; return r;
+}
+function insightData0(m,exact){
   const d=DETAIL[m]||{}, br=filtZone(d.branchRows||[]).filter(b=>b.sales>0);
   if(!br.length) return null;
   const pv={}; ((DETAIL[m-1]||{}).branchRows||[]).forEach(b=>{ if(b.sales>0) pv[b.code]=b; });
-  let plmap={}; for(let k=m;k>=1;k--){ const l=(DETAIL[k]||{}).plBranches; if(l&&l.length){ l.forEach(b=>{ plmap[b.code]=b; }); break; } }
+  let plmap={}; for(let k=m;k>=(exact?m:1);k--){ const l=(DETAIL[k]||{}).plBranches; if(l&&l.length){ l.forEach(b=>{ plmap[b.code]=b; }); break; } }
   const cem=auditStores('cem',m,YEAR)||{}, oss=auditStores('oss',m,YEAR)||{};
   const zoneOf=c=>(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone)||'ไม่ระบุโซน';
   const rows=br.map(b=>({code:b.code,name:(BRANCH_META&&BRANCH_META[b.code]&&BRANCH_META[b.code].name)||b.name,zone:zoneOf(b.code),
@@ -3645,10 +3656,61 @@ function insFmt(k,v){ if(v==null||!isFinite(v)) return '—';
   switch(k){ case 'sales': return '฿'+fmtN(Math.round(v/1000))+'K'; case 'ach': return v.toFixed(0)+'%';
     case 'mom': case 'trMom': return (v>=0?'+':'−')+Math.abs(v).toFixed(1)+'%'; case 'tk': return '฿'+fmtN(Math.round(v));
     case 'cos': case 'col': case 'net': return v.toFixed(1)+'%'; case 'cem': case 'oss': return v.toFixed(1)+'%'; case 'ps': return '฿'+fmtN(Math.round(v)); } return String(v); }
-function insEntities(D,A){
+function insEntities(D,A,view){ view=view||INS.view;
   const mk=(key,name,list)=>{ const a=insAgg(list); let g=0,b=0; INS_M.forEach(([k])=>{ const t=insTone(k,a[k],A[k]); if(t==='g') g++; else if(t==='b') b++; }); return {key,name,list,a,good:g,bad:b}; };
-  if(INS.view==='zone'){ const Z={}; D.rows.forEach(r=>{ (Z[r.zone]=Z[r.zone]||[]).push(r); }); return Object.entries(Z).map(([z,l])=>mk(z,'โซน '+z,l)); }
+  if(view==='zone'){ const Z={}; D.rows.forEach(r=>{ (Z[r.zone]=Z[r.zone]||[]).push(r); }); return Object.entries(Z).map(([z,l])=>mk(z,'โซน '+z,l)); }
   return D.rows.map(r=>mk(r.code,r.code+' '+r.name,[r]));
+}
+/* ---------- ข้อมูลย้อนหลัง: ใช้เป็นหลักฐานประกอบเหตุผลและวิธีแก้ ---------- */
+function insHist(list,m){
+  const codes=new Set(list.map(r=>r.code)), out=[];
+  for(let k=1;k<=m;k++){ const Dk=insightData(k,true); if(!Dk) continue; const l=Dk.rows.filter(r=>codes.has(r.code)); if(!l.length) continue; out.push({m:k,a:insAgg(l),A:insAgg(Dk.rows)}); }
+  return out;
+}
+function insLY(list,m){
+  const by={}; ((EXTRA&&EXTRA.branchYears)||[]).forEach(b=>{ by[String(b.code)]=b; });
+  let s0=0,s1=0,k0=0,k1=0,n=0;
+  list.forEach(r=>{ const b=by[String(r.code)], h=b&&b.h&&b.h[YEAR-1]; if(!h) return; const S=(h.s||[])[m-1], K=(h.k||[])[m-1]; if(!(S>0)) return; n++; s0+=S; s1+=r.sales; if(K>0&&r.tr>0){ k0+=K; k1+=r.tr; } });
+  return n?{n,sales:s1/s0-1,bills:k0?k1/k0-1:null,ticket:(k0&&k1)?(s1/k1)/(s0/k0)-1:null}:null;
+}
+function insEvidence(e,A,H,LY){
+  const ev={}, M=i=>MONTH_TH[i-1], f0=v=>fmtN(Math.round(v)), f1=v=>v.toFixed(1), K=v=>fmtN(Math.round(Math.abs(v)/1000))+'K', pc=v=>(v>=0?'+':'−')+Math.abs(v*100).toFixed(1)+'%';
+  const ser=k=>H.map(x=>({m:x.m,v:x.a[k],A:x.A[k]})).filter(x=>x.v!=null&&isFinite(x.v));
+  const down=s=>{ let n=0; for(let i=s.length-1;i>0&&s[i].v<s[i-1].v;i--) n++; return n; };
+  const last=s=>s[s.length-1], best=(s,hi)=>s.reduce((x,y)=>(hi?y.v>x.v:y.v<x.v)?y:x);
+  const tk=ser('tk'); if(tk.length>=2){ const c=last(tk), b=best(tk,true), d=down(tk);
+    ev.tk=(d>=2?`เช็คเฉลี่ยลดต่อเนื่อง ${d} เดือน (${tk.slice(-d-1).map(x=>'฿'+f0(x.v)).join(' → ')}) · `:'')+`ย้อนหลังสูงสุด ฿${f0(b.v)} (${M(b.m)})`+(b.m!==c.m&&e.a.tr?` → ถ้ากลับถึงระดับนั้น เพิ่มได้ ≈ ฿${K(e.a.tr*(b.v-c.v))}`:'')+(LY&&LY.ticket!=null?` · เทียบ LY ${pc(LY.ticket)}`:''); }
+  const tr=ser('tr'); if(tr.length>=3){ const c=last(tr), pv=tr.slice(-4,-1), avg=pv.reduce((a,x)=>a+x.v,0)/pv.length, b=best(tr,true);
+    ev.tr=`บิลเดือนนี้ ${f0(c.v)} เทียบเฉลี่ย ${pv.length} เดือนก่อน ${f0(avg)} (${pc(c.v/avg-1)}) · ย้อนหลังสูงสุด ${f0(b.v)} (${M(b.m)})`+(LY&&LY.bills!=null?` · เทียบ LY ${pc(LY.bills)}`:''); }
+  const lowBetter=(k,name)=>{ const s=ser(k); if(s.length<3) return; const c=last(s), above=s.filter(x=>x.A!=null&&x.v>x.A+0.5).length, b=best(s,false);
+    ev[k]=`สูงกว่าเฉลี่ยทุกสาขา ${above} จาก ${s.length} เดือน · ต่ำสุดย้อนหลัง ${f1(b.v)}% (${M(b.m)})`+(b.m!==c.m&&e.a.sales?` → ถ้ากลับถึงระดับนั้น ลดได้ ≈ ฿${K((c.v-b.v)/100*e.a.sales)}`:''); };
+  lowBetter('cos'); lowBetter('col');
+  const ps=ser('ps'); if(ps.length>=3){ const c=last(ps), below=ps.filter(x=>x.A!=null&&x.v<x.A).length, b=best(ps,true);
+    ev.ps=`ต่ำกว่าเฉลี่ยทุกสาขา ${below} จาก ${ps.length} เดือน · ดีที่สุดย้อนหลัง ฿${f0(b.v)}/ชม. (${M(b.m)})`+(b.m!==c.m&&e.a.hours?` → ถ้ากลับถึงระดับนั้น เพิ่มได้ ≈ ฿${K((b.v-c.v)*e.a.hours)}`:''); }
+  const ach=ser('ach'); if(ach.length>=3){ const below=ach.filter(x=>x.v<100).length; ev.ach=`ต่ำกว่าแผน ${below} จาก ${ach.length} เดือน · ล่าสุด ${f1(last(ach).v)}%`+(LY&&LY.sales!=null?` · ยอดขายเทียบ LY ${pc(LY.sales)}`:''); }
+  [['cem','CEM'],['oss','OSS']].forEach(([k,n])=>{ const s=ser(k); if(s.length>=3){ const t=s.slice(-3); ev[k]=`${n} 3 เดือนล่าสุด: ${t.map(x=>f1(x.v)+'%').join(' → ')} (${t[2].v>=t[0].v?'ดีขึ้น':'แย่ลง'})`; } });
+  const nt=ser('net'); if(nt.length>=3){ const t=nt.slice(-3); ev.net=`กำไรสุทธิ 3 เดือนล่าสุด: ${t.map(x=>f1(x.v)+'%').join(' → ')}`; }
+  if(LY) ev.ly=`เทียบเดือนเดียวกันปีก่อน (${LY.n} สาขาที่เทียบได้): ยอดขาย ${pc(LY.sales)}${LY.bills!=null?' · บิล '+pc(LY.bills):''}${LY.ticket!=null?' · เช็คเฉลี่ย '+pc(LY.ticket):''}`;
+  return ev;
+}
+function insRecs(e,A,C,ev){
+  ev=ev||{};
+  const a=e.a, f0=v=>fmtN(Math.round(v)), f1=v=>v.toFixed(1), K=v=>fmtN(Math.round(Math.abs(v)/1000))+'K', sg=v=>(v<0?'−':'+')+'฿'+K(v);
+  const tkAvg=A.tk, rec=[]; const worstCh=C.ch.filter(c=>c.d<0).sort((x,y)=>x.d-y.d)[0];
+  if(a.ach!=null&&A.ach!=null&&a.ach<A.ach-2) rec.push(['plan',`ยอดขายต่ำกว่าแผน (${f1(a.ach)}%) — เชียร์ขายเพิ่มเติม`,ev.ach]);
+  if(a.trMom!=null&&a.trMom<-3) rec.push(['customers',`บิลลด ${f1(Math.abs(a.trMom))}% — แยกดูวันและช่วงเวลาที่บิลลดมากที่สุด เพื่อวางกิจกรรมให้ตรงช่วง`,ev.tr]);
+  if(a.tk!=null&&tkAvg&&a.tk<tkAvg*0.97) rec.push(['customers',`เช็คเฉลี่ย ฿${f0(a.tk)} เทียบ ฿${f0(tkAvg)} — ตรวจจำนวนรายการต่อบิล และติดตามผลการแนะนำของทานเล่นหรือเครื่องดื่ม`,ev.tk]);
+  if(worstCh&&Math.abs(worstCh.d)>0){
+    if(worstCh.k==='dine') rec.push(['customers',`Dine In ลดลง ${sg(worstCh.d)} — ตรวจเรื่องลูกค้าเข้าร้าน ที่นั่ง ระยะเวลารอ และบริการ`,ev.tr]);
+    else if(worstCh.k==='take') rec.push(['customers',`Take away ลดลง ${sg(worstCh.d)} — ตรวจเวลารอรับของและการเสนอเมนูหน้าเคาน์เตอร์`,ev.tr]);
+    else rec.push(['delivery',`${worstCh.n} ลดลง ${sg(worstCh.d)} — ตรวจการมองเห็นในแอปและเวลาเปิด–ปิดบนแพลตฟอร์ม (ดูในหัวข้อ Delivery)`]); }
+  if(a.col!=null&&A.col!=null&&a.col>A.col+1&&a.ps!=null&&A.ps&&a.ps<A.ps) rec.push(['people',`ค่าแรงสูงและประสิทธิภาพต่ำ (%COL ${f1(a.col)}% · ฿${f0(a.ps)}/ชม.) — ทบทวนตารางกะและจำนวนคนในแต่ละช่วงเวลา`,[ev.ps,ev.col].filter(Boolean).join(' · ')]);
+  if(a.cos!=null&&A.cos!=null&&a.cos>A.cos+1) rec.push(['pl',`%COS ${f1(a.cos)}% เทียบ ${f1(A.cos)}% — ตรวจของเสีย ปริมาณเสิร์ฟ และส่วนต่างสต๊อก พร้อมกำหนดจุดที่ต้องแก้`,ev.cos]);
+  if(a.cem!=null&&A.cem!=null&&a.cem<A.cem-1) rec.push(['cem',`CEM ${f1(a.cem)}% — เลือกข้อที่ถูกหักคะแนนหรือเกิดซ้ำมาสอนงาน แล้วตรวจติดตาม`,ev.cem]);
+  if(a.oss!=null&&A.oss!=null&&a.oss<A.oss-1) rec.push(['oss',`OSS ${f1(a.oss)}% — ตรวจมาตรฐานปฏิบัติการตามหัวข้อ OSS ที่ไม่ผ่าน`,ev.oss]);
+  if(a.net!=null&&A.net!=null&&a.net<A.net-1) rec.push(['pl',`กำไรสุทธิต่ำกว่าเฉลี่ย (${f1(a.net)}% vs ${f1(A.net)}%) — ดูควบคู่ %COS %COL และค่าใช้จ่ายคงที่ในหัวข้อ Profitability`,ev.net]);
+  if(!rec.length) rec.push([null,'ตัวชี้วัดโดยรวมอยู่ในเกณฑ์ดี — รักษามาตรฐาน และเรียนรู้แนวปฏิบัติไปใช้กับสาขาที่ต่ำกว่า']);
+  return rec;
 }
 function insChan(list){
   const comp=list.filter(r=>r.p&&r.p.sales>0), out=PP_CH.map(([k,n])=>{ const c=comp.reduce((a,r)=>a+(r.raw[k]||0),0), p0=comp.reduce((a,r)=>a+(r.p[k]||0),0);
@@ -3657,10 +3719,112 @@ function insChan(list){
   const tkC=ct?cs/ct:0, tkP=pt0?ps0/pt0:0;
   return {n:comp.length,ch:out,dSales:cs-ps0,billEff:(ct-pt0)*tkP,tkEff:ct*(tkC-tkP)};
 }
+/* ---------- แท็บวิเคราะห์เชิงลึก: สาเหตุยอดตก · จัดอันดับสาขา · ต้นทุน · เป้าฟื้นยอดขาย ---------- */
+function insTbl(heads,grid,rows){
+  const g=`grid-template-columns:${grid}`;
+  return `<div class="ppr pph" style="${g};cursor:default">${heads.map(h=>`<div class="${h[1]||''}">${h[0]}</div>`).join('')}</div>`+
+    (rows.map(r=>`<div class="ppr"${r.key?` data-insopen="${r.key}" data-inskind="${r.kind||'branch'}"`:''} style="${g}${r.key?'':';cursor:default'}">${r.cells.join('')}</div>`).join('')||'<div class="empty">ไม่มีข้อมูล</div>');
+}
+const insSg=v=>(v<0?'−':'+')+'฿'+fmtN(Math.round(Math.abs(v)/1000))+'K';
+const insCls=v=>v<0?'neg':'pos';
+function insCause(D,A,sc){
+  const C=insChan(sc), main=(b,t)=>Math.abs(b)>=Math.abs(t)?'จำนวนบิล':'ยอดต่อบิล';
+  const worst=C.ch.filter(c=>c.d<0).sort((x,y)=>x.d-y.d)[0];
+  const k=(cl,l,v,sub)=>`<div class="aud-k ppc ${cl||''}"><div class="aud-kh">${l}</div><div class="aud-kv" style="font-size:30px">${v}</div><div class="aud-ks">${sub||''}</div></div>`;
+  const cards=`<div class="aud-kg">${k('',  'ยอดขายเทียบเดือนก่อน',`<span class="${insCls(C.dSales)}">${insSg(C.dSales)}</span>`,C.n+' สาขาที่เทียบได้')}
+    ${k(C.billEff<0?'r':'g','เกิดจากจำนวนบิล',insSg(C.billEff),'ส่วนต่างบิล × เช็คเฉลี่ยเดือนก่อน')}${k(C.tkEff<0?'r':'g','เกิดจากยอดต่อบิล (เช็คเฉลี่ย)',insSg(C.tkEff),'บิลเดือนนี้ × ส่วนต่างเช็ค')}
+    ${k(worst?'r':'g','ช่องทางที่ลดมากสุด',worst?worst.n:'—',worst?insSg(worst.d):'ไม่มีช่องทางที่ลดลง')}</div>`;
+  const mxc=Math.max(...C.ch.map(c=>Math.max(c.c,c.p)))||1;
+  const chT=insTbl([['ช่องทาง'],['เดือนก่อน'],['เดือนนี้'],['ส่วนต่าง','r'],['%','r']],'minmax(110px,.8fr) minmax(150px,1fr) minmax(150px,1fr) 90px 70px',C.ch.map(c=>({cells:[
+    `<div class="ppn">${c.n}</div>`,`<div class="ppv"><div class="ppb"><i style="width:${Math.max(1,c.p/mxc*100).toFixed(1)}%;background:#C9CDD3"></i></div><span>${fmtN(Math.round(c.p/1000))}K</span></div>`,
+    `<div class="ppv"><div class="ppb"><i style="width:${Math.max(1,c.c/mxc*100).toFixed(1)}%;background:${c.d<0?'#F43F5E':'#12A367'}"></i></div><span>${fmtN(Math.round(c.c/1000))}K</span></div>`,
+    `<div class="ppnum ${insCls(c.d)}">${insSg(c.d)}</div>`,`<div class="ppnum ${insCls(c.d)}">${c.p?(c.d>=0?'+':'−')+Math.abs(c.d/c.p*100).toFixed(1)+'%':'—'}</div>`]})));
+  /* รายโซน + รายสาขา: ใครตกเพราะอะไร */
+  const rowsOf=list=>list.map(r=>({r,c:insChan([r])})).filter(x=>x.c.n);
+  const mkRow=(key,kind,name,c)=>{ const w=c.ch.filter(x=>x.d<0).sort((x,y)=>x.d-y.d)[0];
+    return {key,kind,cells:[`<div class="ppn">${name}</div>`,`<div class="ppnum ${insCls(c.dSales)}"><b>${insSg(c.dSales)}</b></div>`,`<div class="ppnum ${insCls(c.billEff)}">${insSg(c.billEff)}</div>`,`<div class="ppnum ${insCls(c.tkEff)}">${insSg(c.tkEff)}</div>`,
+      `<div><span class="inschip ${c.dSales<0?'b':'g'}">${c.dSales<0?'ตกเพราะ'+main(c.billEff,c.tkEff)+'ลด':'เพิ่มขึ้น'}</span></div>`,`<div class="ppn">${w?w.n+' <b class="neg">'+insSg(w.d)+'</b>':'<span class="ppfoot">—</span>'}</div>`]}; };
+  const heads=[['โซน / สาขา'],['ยอดขายเปลี่ยน','r'],['จากบิล','r'],['จากเช็ค','r'],['สาเหตุหลัก'],['ช่องทางที่ลดมากสุด']], grid='minmax(170px,1.2fr) 110px 100px 100px 150px minmax(180px,1.2fr)';
+  const Z={}; sc.forEach(r=>{ (Z[r.zone]=Z[r.zone]||[]).push(r); });
+  const zr=Object.entries(Z).map(([z,l])=>({z,c:insChan(l)})).filter(x=>x.c.n).sort((a,b)=>a.c.dSales-b.c.dSales).map(x=>mkRow(x.z,'zone','โซน '+x.z,x.c));
+  const br=rowsOf(sc).sort((a,b)=>a.c.dSales-b.c.dSales).slice(0,12).map(x=>mkRow(x.r.code,'branch','<b>'+x.r.code+'</b> '+x.r.name,x.c));
+  return cards+`<div class="aud-c"><div class="ppt2">ยอดขายรายช่องทาง<small>เทียบเดือนก่อน</small></div>${chT}</div>
+    <div class="aud-c" style="margin-top:14px"><div class="ppt2">รายโซน — ตกเพราะบิลหรือยอดต่อบิล<small>คลิกแถวเพื่อดูวิเคราะห์ละเอียด</small></div>${insTbl(heads,grid,zr)}</div>
+    <div class="aud-c" style="margin-top:14px"><div class="ppt2">12 สาขาที่ยอดขายลดมากสุด<small>เรียงตามยอดที่ลดลง (฿)</small></div>${insTbl(heads,grid,br)}</div>`;
+}
+function insRank(D,A,sc){
+  const E=sc.map(r=>{ const a=insAgg([r]); let g=0,b=0; const bad=[]; INS_M.forEach(([k,t])=>{ const tn=insTone(k,a[k],A[k]); if(tn==='g') g++; else if(tn==='b'){ b++; bad.push([k,t,a[k]]); } });
+    const C=insChan([r]); return {r,a,good:g,bad:b,badL:bad,C,key:r.code}; }).sort((x,y)=>(y.bad*100-y.good)-(x.bad*100-x.good)||((x.a.ach==null?999:x.a.ach)-(y.a.ach==null?999:y.a.ach)));
+  const rows=E.slice(0,15).map((e,i)=>{ const H=insHist([e.r],D.m), ev=insEvidence({a:e.a,list:[e.r]},A,H,null), rec=insRecs({a:e.a,list:[e.r]},A,e.C,ev).filter(x=>x[0]).slice(0,2);
+    return {key:e.key,kind:'branch',cells:[`<div class="ppwi" style="background:${i<3?'#FDE0E4':'#F1F3F6'};color:${i<3?'#B4233A':'#6B7280'}">${i+1}</div>`,
+      `<div class="ppn"><b>${e.r.code}</b> ${e.r.name}<small>โซน ${e.r.zone}</small></div>`,
+      `<div class="insst" style="justify-content:flex-start"><span class="bd">${e.bad}</span><span class="gd">${e.good}</span></div>`,
+      `<div class="inschips">${e.badL.slice(0,5).map(x=>`<span class="inschip b"><b>${x[1]}</b> ${insFmt(x[0],x[2])}</span>`).join('')||'<em>—</em>'}</div>`,
+      `<div class="insissue">${rec.map(x=>x[1].split(' — ')[0]+' → <b>'+(x[1].split(' — ')[1]||'')+'</b>'+(x[2]?'<small class="insev">📈 '+x[2]+'</small>':'')).join('<br>')||'—'}</div>`,
+      `<div class="insgo"><span class="insbtn">ดูรายละเอียด ›</span></div>`]}; });
+  return `<div class="aud-c"><div class="ppt2">สาขาที่ต้องเร่งแก้ — 15 อันดับแรก<small>เรียงตามจำนวนตัวชี้วัดที่แดง (n แดง · n เขียว) แล้วดู %ถึงแผน · พร้อมประเด็นเฉพาะของแต่ละร้าน</small></div>
+    ${insTbl([['#'],['สาขา'],['สถานะ'],['ตัวชี้วัดที่แดง'],['ประเด็นเฉพาะ → ข้อเสนอแนะ'],['']],'34px minmax(170px,1fr) 74px minmax(240px,1.4fr) minmax(260px,1.6fr) 112px',rows)}</div>`;
+}
+function insCost(D,A,sc){
+  const wl=sc.filter(r=>r.pl&&r.pl.sales>0&&r.pl.cos!=null&&r.pl.col!=null);
+  const ex=r=>({cos:Math.max(0,(r.pl.cos-A.cos)/100*r.pl.sales),col:Math.max(0,(r.pl.col-A.col)/100*r.pl.sales)});
+  const note=r=>{ const t=[]; const e=ex(r), a=insAgg([r]);
+    if(e.cos>0) t.push(a.mom!=null&&a.mom<0?'%COS สูงขณะยอดขายลด → ตรวจ waste/พอร์ชัน/การใช้วัตถุดิบ':'%COS สูงกว่าเฉลี่ย → ตรวจการใช้งานวัตถุดิบของพนักงาน');
+    if(e.col>0) t.push(a.ps!=null&&A.ps&&a.ps<A.ps?'%COL สูงและ ฿/ชม.ต่ำ → ทบทวนตารางกะ/จำนวนคนต่อช่วง':'%COL สูงกว่าเฉลี่ย → ตรวจชั่วโมงทำงานและโอที');
+    return t.join('<br>')||'อยู่ในเกณฑ์'; };
+  const sum=(l,f)=>l.reduce((x,r)=>x+f(r),0);
+  const Z={}; wl.forEach(r=>{ (Z[r.zone]=Z[r.zone]||[]).push(r); });
+  const zr=Object.entries(Z).map(([z,l])=>{ const s0=sum(l,r=>r.pl.sales), cos=sum(l,r=>r.pl.cos*r.pl.sales)/s0, col=sum(l,r=>r.pl.col*r.pl.sales)/s0, e1=sum(l,r=>ex(r).cos), e2=sum(l,r=>ex(r).col);
+    return {key:z,kind:'zone',tot:e1+e2,cells:[`<div class="ppn"><b>โซน ${z}</b><small>${l.length} สาขา</small></div>`,`<div class="ppnum">฿${fmtN(Math.round(s0/1000))}K</div>`,
+      `<div class="ppnum"><span class="insc ${insTone('cos',cos,A.cos)}">${cos.toFixed(1)}%</span></div>`,`<div class="ppnum"><span class="insc ${insTone('col',col,A.col)}">${col.toFixed(1)}%</span></div>`,
+      `<div class="ppnum neg">${e1>0?'฿'+fmtN(Math.round(e1/1000))+'K':'—'}</div>`,`<div class="ppnum neg">${e2>0?'฿'+fmtN(Math.round(e2/1000))+'K':'—'}</div>`,`<div class="ppnum neg"><b>${e1+e2>0?'฿'+fmtN(Math.round((e1+e2)/1000))+'K':'—'}</b></div>`]}; }).sort((a,b)=>b.tot-a.tot);
+  const br=wl.map(r=>({r,e:ex(r)})).map(x=>({...x,tot:x.e.cos+x.e.col})).filter(x=>x.tot>0).sort((a,b)=>b.tot-a.tot).slice(0,15).map(x=>({key:x.r.code,kind:'branch',cells:[
+    `<div class="ppn"><b>${x.r.code}</b> ${x.r.name}<small>โซน ${x.r.zone}</small></div>`,`<div class="ppnum">฿${fmtN(Math.round(x.r.pl.sales/1000))}K</div>`,
+    `<div class="ppnum"><span class="insc ${insTone('cos',x.r.pl.cos,A.cos)}">${x.r.pl.cos.toFixed(1)}%</span></div>`,`<div class="ppnum"><span class="insc ${insTone('col',x.r.pl.col,A.col)}">${x.r.pl.col.toFixed(1)}%</span></div>`,
+    `<div class="ppnum neg">${x.e.cos>0?'฿'+fmtN(Math.round(x.e.cos/1000))+'K':'—'}</div>`,`<div class="ppnum neg">${x.e.col>0?'฿'+fmtN(Math.round(x.e.col/1000))+'K':'—'}</div>`,`<div class="ppnum neg"><b>฿${fmtN(Math.round(x.tot/1000))}K</b></div>`,`<div class="insissue">${note(x.r)}</div>`]}));
+  const tot1=sum(wl,r=>ex(r).cos), tot2=sum(wl,r=>ex(r).col);
+  const cards=`<div class="aud-kg"><div class="aud-k"><div class="aud-kh"><i style="background:#F0954F"></i>%COS เฉลี่ยทุกสาขา</div><div class="aud-kv">${A.cos!=null?A.cos.toFixed(1)+'%':'—'}</div><div class="aud-ks">ต้นทุนขาย ÷ ยอดขาย</div></div>
+    <div class="aud-k"><div class="aud-kh"><i style="background:#5B8DEF"></i>%COL เฉลี่ยทุกสาขา</div><div class="aud-kv">${A.col!=null?A.col.toFixed(1)+'%':'—'}</div><div class="aud-ks">ค่าแรง ÷ ยอดขาย</div></div>
+    <div class="aud-k ppc r"><div class="aud-kh">ส่วนเกิน %COS เทียบค่าเฉลี่ย</div><div class="aud-kv">฿${fmtN(Math.round(tot1/1000))}K</div><div class="aud-ks">ถ้าสาขาที่สูงกว่าลดถึงค่าเฉลี่ย ประหยัดได้ประมาณนี้</div></div>
+    <div class="aud-k ppc y"><div class="aud-kh">ส่วนเกิน %COL เทียบค่าเฉลี่ย</div><div class="aud-kv">฿${fmtN(Math.round(tot2/1000))}K</div><div class="aud-ks">เทียบยอดขายเดือนเดียวกัน</div></div></div>`;
+  const H=[['โซน / สาขา'],['ยอดขาย (P&L)','r'],['%COS','r'],['%COL','r'],['ส่วนเกิน COS','r'],['ส่วนเกิน COL','r'],['รวมส่วนเกิน','r']];
+  return cards+`<div class="aud-c"><div class="ppt2">ต้นทุนเทียบยอดขาย รายโซน<small>ส่วนเกิน = (%เฉลี่ยโซน/สาขา − %เฉลี่ยทุกสาขา) × ยอดขาย · คลิกเพื่อดูวิเคราะห์</small></div>${insTbl(H,'minmax(150px,1.2fr) 110px 90px 90px 120px 120px 120px',zr)}</div>
+    <div class="aud-c" style="margin-top:14px"><div class="ppt2">15 สาขาที่ควรตรวจต้นทุนก่อน<small>เรียงตามส่วนเกินรวม · ใช้ตัวเลขงบกำไรขาดทุนเดือนล่าสุดที่มี</small></div>${insTbl(H.concat([['จุดที่ควรตรวจ']]),'minmax(170px,1.2fr) 100px 80px 80px 110px 110px 110px minmax(260px,1.6fr)',br)}</div>`;
+}
+function insTarget(D,A,sc){
+  const days=new Date(YEAR,D.m,0).getDate();
+  const gapOf=l=>{ const pl=l.filter(r=>r.plan>0); const plan=pl.reduce((x,r)=>x+r.plan,0), act=pl.reduce((x,r)=>x+r.sales,0), tr=pl.reduce((x,r)=>x+r.tr,0);
+    const tk=tr?act/tr:(A.tk||0); return {n:pl.length,plan,act,gap:plan-act,ach:plan?act/plan*100:null,tk,tr,perDay:(plan-act)/days,billsDay:tk?(plan-act)/tk/days:0,curBillsDay:tr/days}; };
+  const row=(key,kind,name,g)=>({key,kind,tot:g.gap,cells:[`<div class="ppn">${name}</div>`,`<div class="ppnum">฿${fmtN(Math.round(g.plan/1000))}K</div>`,`<div class="ppnum">฿${fmtN(Math.round(g.act/1000))}K</div>`,
+    `<div class="ppnum"><span class="insc ${g.ach>=100?'g':g.ach<90?'b':''}">${g.ach==null?'—':g.ach.toFixed(0)+'%'}</span></div>`,`<div class="ppnum ${g.gap>0?'neg':'pos'}"><b>${g.gap>0?'฿'+fmtN(Math.round(g.gap/1000))+'K':'ถึงแผนแล้ว'}</b></div>`,
+    `<div class="ppnum"><b>${g.gap>0?'+฿'+fmtN(Math.round(g.perDay)):'—'}</b></div>`,`<div class="ppnum">${g.gap>0?'+'+fmtN(Math.round(g.billsDay)):'—'}</div>`,`<div class="ppnum">${fmtN(Math.round(g.curBillsDay))} → ${g.gap>0?fmtN(Math.round(g.curBillsDay+g.billsDay)):fmtN(Math.round(g.curBillsDay))}</div>`]});
+  const all=gapOf(sc);
+  const Z={}; sc.forEach(r=>{ (Z[r.zone]=Z[r.zone]||[]).push(r); });
+  const zr=Object.entries(Z).map(([z,l])=>({z,g:gapOf(l)})).filter(x=>x.g.n).sort((a,b)=>b.g.gap-a.g.gap).map(x=>row(x.z,'zone','<b>โซน '+x.z+'</b> <small>'+x.g.n+' สาขามีแผน</small>',x.g));
+  const br=sc.filter(r=>r.plan>0&&r.sales<r.plan).map(r=>({r,g:gapOf([r])})).sort((a,b)=>b.g.gap-a.g.gap).slice(0,20).map(x=>row(x.r.code,'branch','<b>'+x.r.code+'</b> '+x.r.name,x.g));
+  const k=(cl,l,v,sub)=>`<div class="aud-k ppc ${cl}"><div class="aud-kh">${l}</div><div class="aud-kv" style="font-size:30px">${v}</div><div class="aud-ks">${sub}</div></div>`;
+  const cards=`<div class="aud-kg">${k('','แผนเดือนนี้ ('+label(D.m)+')','฿'+fmtN(Math.round(all.plan/1000))+'K',all.n+' สาขามีแผน · จริง ฿'+fmtN(Math.round(all.act/1000))+'K ('+(all.ach==null?'—':all.ach.toFixed(0))+'%)')}
+    ${k(all.gap>0?'r':'g','ยอดที่ขาดจากแผน',all.gap>0?'฿'+fmtN(Math.round(all.gap/1000))+'K':'ถึงแผนแล้ว','เฉลี่ย '+days+' วัน/เดือน')}
+    ${k('y','ต้องเพิ่มวันละ',all.gap>0?'฿'+fmtN(Math.round(all.perDay)):'—','ทั้งขอบเขตที่เลือก · เทียบยอดจริงเดือนนี้')}
+    ${k('y','หรือเพิ่มบิลวันละ',all.gap>0?fmtN(Math.round(all.billsDay))+' บิล':'—','ที่เช็คเฉลี่ย ฿'+fmtN(Math.round(all.tk))+' · ตอนนี้ '+fmtN(Math.round(all.curBillsDay))+' บิล/วัน')}</div>`;
+  const H=[['โซน / สาขา'],['แผน','r'],['จริง','r'],['ถึงแผน','r'],['ขาด','r'],['เพิ่มวันละ (฿)','r'],['เพิ่มบิล/วัน','r'],['บิล/วัน ตอนนี้ → ที่ต้องมี','r']], G='minmax(190px,1.3fr) 100px 100px 80px 110px 120px 100px 150px';
+  return cards+`<div class="aud-c"><div class="ppt2">เป้าหมายฟื้นยอดขาย รายโซน<small>ยอดที่ขาดจากแผน ÷ ${days} วัน · บิลที่ต้องเพิ่ม = ยอดที่ขาด ÷ เช็คเฉลี่ยของโซน ÷ ${days} วัน</small></div>${insTbl(H,G,zr)}</div>
+    <div class="aud-c" style="margin-top:14px"><div class="ppt2">20 สาขาที่ขาดจากแผนมากสุด<small>เรียงตามยอดที่ขาด (฿) · คลิกเพื่อดูวิเคราะห์</small></div>${insTbl(H,G,br)}</div>`;
+}
 function insightBody(m){
+  Object.keys(INS_MEMO).forEach(k=>delete INS_MEMO[k]);
   const D=insightData(m);
   if(!D) return '<div class="empty">ยังไม่มีข้อมูลรายสาขาสำหรับวิเคราะห์ · นำเข้าไฟล์ "แบบฟอร์มส่งยอดขาย" (ปุ่ม ⤒ นำเข้าข้อมูล)</div>';
-  const A=insAgg(D.rows), E=insEntities(D,A);
+  const A=insAgg(D.rows);
+  const zones=[...new Set(D.rows.map(r=>r.zone))].sort();
+  const scRows=INS.zsel&&INS.zsel!=='all'?D.rows.filter(r=>r.zone===INS.zsel):D.rows;
+  const TABS=[['overview','ภาพรวมตัวชี้วัด'],['cause','สาเหตุยอดตก'],['rank','จัดอันดับสาขา'],['cost','วิเคราะห์ต้นทุน'],['target','เป้าฟื้นยอดขาย']];
+  const tabBar=`<div class="instabs">${TABS.map(([k,t])=>`<button type="button" class="${INS.tab===k?'on':''}" data-instab="${k}">${t}</button>`).join('')}${INS.tab==='overview'?'':`<label class="inszone">ขอบเขต <select id="insZone"><option value="all">ทุกโซน</option>${zones.map(z=>`<option value="${z}" ${INS.zsel===z?'selected':''}>โซน ${z}</option>`).join('')}</select></label>`}</div>`;
+  if(INS.tab==='cause') return tabBar+insCause(D,A,scRows);
+  if(INS.tab==='rank') return tabBar+insRank(D,A,scRows);
+  if(INS.tab==='cost') return tabBar+insCost(D,A,scRows);
+  if(INS.tab==='target') return tabBar+insTarget(D,A,scRows);
+  const E=insEntities(D,A);
   const q=(INS.q||'').trim().toLowerCase();
   let list=E.filter(e=>!q||e.name.toLowerCase().includes(q));
   const keyOf=e=>INS.sort==='name'?e.name:INS.sort==='bad'?e.bad*100-e.good:INS.sort==='good'?e.good:e.a[INS.sort];
@@ -3680,7 +3844,7 @@ function insightBody(m){
   const rowsH=list.map(e=>`<div class="ppr insr" data-inskey="${e.key}"><div class="ppn">${INS.view==='zone'?'<b>'+e.key+'</b>'+'<small>'+e.a.n+' สาขา</small>':'<b>'+e.key+'</b>'+e.name.replace(e.key+' ','')}</div>${INS_M.map(([k])=>cell(e,k)).join('')}
       <div class="insst"><span class="bd">${e.bad}</span><span class="gd">${e.good}</span></div><div class="insgo"><span class="insbtn">ดูรายละเอียด ›</span></div></div>`).join('')||'<div class="empty">ไม่พบข้อมูลตามคำค้น</div>';
   const avgRow=`<div class="ppr insr insavg"><div class="ppn"><b>เฉลี่ยทุกสาขา</b></div>${INS_M.map(([k])=>`<div class="insc">${insFmt(k,A[k])}</div>`).join('')}<div></div><div></div></div>`;
-  return `<div class="ppview"><span class="ovseg"><button type="button" class="${INS.view==='zone'?'on':''}" data-insview="zone">รายโซน</button><button type="button" class="${INS.view==='branch'?'on':''}" data-insview="branch">รายสาขา</button></span></div>${cards}
+  return `${tabBar}<div class="ppview"><span class="ovseg"><button type="button" class="${INS.view==='zone'?'on':''}" data-insview="zone">รายโซน</button><button type="button" class="${INS.view==='branch'?'on':''}" data-insview="branch">รายสาขา</button></span></div>${cards}
     <div class="aud-c ppt"><div class="ppth"><div class="ppt2" style="margin:0">${INS.view==='zone'?'รายโซน':'รายสาขา'}<small>ทุกเรื่องในที่เดียว · เขียว = ดี · แดง = ต้องดูแล · คลิกแถวเพื่อดูวิเคราะห์ละเอียด</small></div>
       ${INS.view==='branch'?`<input type="search" class="ppsearch" id="insQ" placeholder="ค้นหารหัส / ชื่อสาขา" value="${(INS.q||'').replace(/"/g,'&quot;')}" autocomplete="off">`:''}</div>
       <div class="insleg"><span><i class="g"></i> ดี</span><span><i class="b"></i> ต้องดูแล</span><span class="insst"><span class="bd">n</span> = จำนวนตัวชี้วัดที่แดง</span><span class="insst"><span class="gd">n</span> = จำนวนที่เขียว</span>
@@ -3693,9 +3857,9 @@ function insightSection(m){
   return sec('insight','Insights — วิเคราะห์ทุกเรื่อง รายโซน · รายสาขา',label(mm),insightBody(mm));
 }
 function insRender(){ const b=document.querySelector('#insight .body'); if(!b||!SCP) return; b.innerHTML=insightBody(SCP.multi?SCP.last:curM); }
-function openInsight(key){
+function openInsight(key,view){ view=view||INS.view; Object.keys(INS_MEMO).forEach(k=>delete INS_MEMO[k]);
   const m=SCP&&SCP.multi?SCP.last:curM, D=insightData(m); if(!D) return;
-  const A=insAgg(D.rows), E=insEntities(D,A), e=E.find(x=>x.key===key); if(!e) return;
+  const A=insAgg(D.rows), E=insEntities(D,A,view), e=E.find(x=>x.key===key); if(!e) return;
   let el=document.getElementById('insModal');
   if(!el){ el=document.createElement('div'); el.id='insModal'; el.className='cosm';
     el.innerHTML='<div class="cosm-bg" data-insx></div><div class="cosm-p" role="dialog" aria-modal="true"><div id="insmBody"></div></div>';
@@ -3716,17 +3880,8 @@ function openInsight(key){
   const upPt=(pt!=null&&ptAvg&&pt<ptAvg&&a.tk)?a.hours*(ptAvg-pt)*a.tk:0;
   const upPs=e.list.reduce((x,r)=>x+(r.lh>0&&A.ps&&r.sales/r.lh<A.ps?(A.ps-r.sales/r.lh)*r.lh:0),0);
   /* ข้อเสนอแนะเบื้องต้น (rule-based จากตัวเลข) */
-  const rec=[]; const worstCh=C.ch.filter(c=>c.d<0).sort((x,y)=>x.d-y.d)[0];
-  if(a.ach!=null&&A.ach!=null&&a.ach<A.ach-2) rec.push(['plan',`ยอดขายต่ำกว่าแผน (${f1(a.ach)}%) — เชียร์ขายเพิ่มเติม`]);
-  if(a.trMom!=null&&a.trMom<-3) rec.push(['customers',`จำนวนบิลลดลง ${f1(Math.abs(a.trMom))}% จากเดือนก่อน — ตรวจทราฟฟิกห้าง/พื้นที่ และกิจกรรมดึงลูกค้าใหม่ ลูกค้าเดิมกลับมา`]);
-  if(a.tk!=null&&tkAvg&&a.tk<tkAvg*0.97) rec.push(['customers',`เช็คเฉลี่ยต่ำกว่าเฉลี่ย (฿${f0(a.tk)} vs ฿${f0(tkAvg)}) — ส่งเสริมการขายเพิ่ม (ชุดเมนู ของทานเล่น เครื่องดื่ม) ฝึกพนักงานแนะนำเมนู`]);
-  if(worstCh&&Math.abs(worstCh.d)>0) rec.push(['delivery',`ช่องทาง ${worstCh.n} ลดลง ${sg(worstCh.d)} — ตรวจโปรโมชัน การมองเห็นบนแอป และเวลาเปิด-ปิดร้านบนแพลตฟอร์ม`]);
-  if(a.col!=null&&A.col!=null&&a.col>A.col+1&&a.ps!=null&&A.ps&&a.ps<A.ps) rec.push(['people',`ค่าแรงสูงและประสิทธิภาพต่ำ (%COL ${f1(a.col)}% · ฿${f0(a.ps)}/ชม.) — ทบทวนตารางกะและจำนวนคนในแต่ละช่วงเวลา`]);
-  if(a.cos!=null&&A.cos!=null&&a.cos>A.cos+1) rec.push(['pl',`%COS สูงกว่าเฉลี่ย (${f1(a.cos)}% vs ${f1(A.cos)}%) — การใช้งานวัตถุดิบของพนักงาน`]);
-  if(a.cem!=null&&A.cem!=null&&a.cem<A.cem-1) rec.push(['cem',`คะแนน CEM ต่ำ (${f1(a.cem)}%) — ดูหมวดที่ถูกหักคะแนนในหัวข้อ CEM แล้วตามแก้รายข้อ`]);
-  if(a.oss!=null&&A.oss!=null&&a.oss<A.oss-1) rec.push(['oss',`คะแนน OSS ต่ำ (${f1(a.oss)}%) — ตรวจมาตรฐานปฏิบัติการตามหัวข้อ OSS ที่ไม่ผ่าน`]);
-  if(a.net!=null&&A.net!=null&&a.net<A.net-1) rec.push(['pl',`กำไรสุทธิต่ำกว่าเฉลี่ย (${f1(a.net)}% vs ${f1(A.net)}%) — ดูควบคู่ %COS %COL และค่าใช้จ่ายคงที่ในหัวข้อ Profitability`]);
-  if(!rec.length) rec.push([null,'ตัวชี้วัดโดยรวมอยู่ในเกณฑ์ดี — รักษามาตรฐาน และเรียนรู้แนวปฏิบัติไปใช้กับสาขาที่ต่ำกว่า']);
+  const worstCh=C.ch.filter(c=>c.d<0).sort((x,y)=>x.d-y.d)[0];
+  const H=insHist(e.list,m), LY=insLY(e.list,m), ev=insEvidence(e,A,H,LY), rec=insRecs(e,A,C,ev);
   const mx=Math.max(...C.ch.map(c=>Math.max(c.c,c.p)))||1;
   const chRows=C.ch.map(c=>{ const pc=c.p?c.d/c.p*100:null; return `<div class="ppr ppch"><div class="ppn">${c.n}</div>
       <div class="ppv"><div class="ppb"><i style="width:${Math.max(1,c.p/mx*100).toFixed(1)}%;background:#C9CDD3"></i></div><span>${K(c.p)}</span></div>
@@ -3734,8 +3889,8 @@ function openInsight(key){
       <div class="ppnum ${c.d<0?'neg':'pos'}">${sg(c.d)}</div><div class="ppnum ${c.d<0?'neg':'pos'}">${pc==null?'—':(pc>=0?'+':'−')+Math.abs(pc).toFixed(1)+'%'}</div></div>`; }).join('');
   const topBr=worstCh&&e.list.length>1?worstCh.br.filter(b=>b.d<0).slice(0,3):[];
   const sc=(cls,t,v,sub)=>`<div class="aud-k ppc ${cls}"><div class="aud-kh">${t}</div><div class="aud-kv">${v}</div><div class="aud-ks">${sub}</div></div>`;
-  document.getElementById('insmBody').innerHTML=`<div class="cosm-top"><div><div class="cosm-sub">Insights · ${label(m)} · ${e.a.n} สาขา</div><div class="cosm-name"><span style="color:var(--accent)">${INS.view==='zone'?e.name:e.key}</span> ${INS.view==='zone'?'':e.name.replace(e.key+' ','')}</div></div>
-      <div class="cosm-nav">${INS.view==='branch'?`<button type="button" data-insbr="${e.key}" style="width:auto;padding:0 14px;font-size:13px">ดูรายละเอียดสาขา ›</button>`:''}<button type="button" class="cosm-x" data-insx aria-label="ปิด">✕</button></div></div>
+  document.getElementById('insmBody').innerHTML=`<div class="cosm-top"><div><div class="cosm-sub">Insights · ${label(m)} · ${e.a.n} สาขา</div><div class="cosm-name"><span style="color:var(--accent)">${view==='zone'?e.name:e.key}</span> ${view==='zone'?'':e.name.replace(e.key+' ','')}</div></div>
+      <div class="cosm-nav">${view==='branch'?`<button type="button" data-insbr="${e.key}" style="width:auto;padding:0 14px;font-size:13px">ดูรายละเอียดสาขา ›</button>`:''}<button type="button" class="cosm-x" data-insx aria-label="ปิด">✕</button></div></div>
     <div class="aud-kg ppm" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:12px">
       <div class="aud-k dark"><div class="aud-kh">สถานะ</div><div class="aud-kv">${e.bad}<small>แดง</small> · ${e.good}<small>เขียว</small></div><div class="aud-ks">จาก ${INS_M.length} ตัวชี้วัด</div></div>
       <div class="aud-k"><div class="aud-kh">ยอดขาย</div><div class="aud-kv">${insFmt('sales',a.sales)}</div><div class="aud-ks">${a.mom!=null?'vs LM '+insFmt('mom',a.mom):''}</div></div>
@@ -3753,12 +3908,18 @@ function openInsight(key){
       ${sc('g','ถ้าเช็คเฉลี่ยถึง ฿'+f0(tkAvg||0),upTk>0?'+฿'+K(upTk):'ถึงแล้ว','บิลเท่าเดิม '+f0(a.tr)+' บิล')}
       ${sc('y','ถ้าบิลต่อชม.ถึง '+(ptAvg?ptAvg.toFixed(1):'—'),upPt>0?'+฿'+K(upPt):'ถึงแล้ว','ชั่วโมงเท่าเดิม '+f0(a.hours||0)+' ชม.')}
       ${sc('r','ถ้าสาขาที่ต่ำกว่าเฉลี่ยถึง ฿'+f0(A.ps||0)+'/ชม.',upPs>0?'+฿'+K(upPs):'—','ชั่วโมงเท่าเดิม')}</div></div>`:''}
-    <div class="aud-c" style="margin-top:12px"><div class="ppt2">ข้อเสนอแนะเบื้องต้น<small>สร้างจากตัวเลขอัตโนมัติ — ใช้ประกอบการตัดสินใจ</small></div><ul class="ppbl insrec">${rec.map(([sec,t])=>'<li><span>'+t+'</span>'+(sec?'<button type="button" class="insbtn" data-insgo="'+sec+'">ดูข้อมูล ›</button>':'')+'</li>').join('')}</ul></div>`;
+
+    ${H.length>=2?`<div class="aud-c" style="margin-top:12px"><div class="ppt2">ย้อนหลังรายเดือน<small>ใช้ดูแนวโน้มและหาเดือนที่เคยทำได้ดี${ev.ly?' · '+ev.ly:''}</small></div>
+      ${insTbl([['เดือน'],['ยอดขาย','r'],['บิล','r'],['เช็คเฉลี่ย','r'],['%COS','r'],['%COL','r'],['฿/ชม.','r'],['CEM','r']],'80px repeat(7,minmax(80px,1fr))',H.slice(-9).map(x=>({cells:[`<div class="ppn"><b>${MONTH_TH[x.m-1]}</b></div>`].concat(['sales','tr','tk','cos','col','ps','cem'].map(k=>{ const t=k==='sales'||k==='tr'?'':insTone(k,x.a[k],x.A[k]); return `<div class="insc ${t}">${k==='tr'?(x.a.tr?fmtN(Math.round(x.a.tr)):'—'):insFmt(k,x.a[k])}</div>`; }))})))}</div>`:''}
+    <div class="aud-c" style="margin-top:12px"><div class="ppt2">ข้อเสนอแนะเบื้องต้น<small>สร้างจากตัวเลขและข้อมูลย้อนหลังอัตโนมัติ — ใช้ประกอบการตัดสินใจ</small></div><ul class="ppbl insrec">${rec.map(([sec,t,evd])=>'<li><span>'+t+(evd?'<small class="insev">📈 ข้อมูลย้อนหลัง: '+evd+'</small>':'')+'</span>'+(sec?'<button type="button" class="insbtn" data-insgo="'+sec+'">ดูข้อมูล ›</button>':'')+'</li>').join('')}</ul></div>`;
   el.classList.add('open'); }
 document.addEventListener('click',e=>{
   const vw=e.target.closest&&e.target.closest('#insight [data-insview]'); if(vw){ INS.view=vw.dataset.insview; INS.sort='bad'; INS.dir='desc'; INS.q=''; insRender(); return; }
   const so=e.target.closest&&e.target.closest('#insight [data-insort]'); if(so){ const k=so.dataset.insort; if(INS.sort===k) INS.dir=INS.dir==='asc'?'desc':'asc'; else { INS.sort=k; INS.dir=(k==='name')?'asc':'desc'; } insRender(); return; }
+  const tb=e.target.closest&&e.target.closest('#insight [data-instab]'); if(tb){ INS.tab=tb.dataset.instab; insRender(); return; }
+  const op=e.target.closest&&e.target.closest('#insight [data-insopen]'); if(op){ openInsight(op.dataset.insopen,op.dataset.inskind); return; }
   const rw=e.target.closest&&e.target.closest('#insight [data-inskey]'); if(rw) openInsight(rw.dataset.inskey); });
+document.addEventListener('change',e=>{ if(e.target&&e.target.id==='insZone'){ INS.zsel=e.target.value; insRender(); } });
 document.addEventListener('input',e=>{ if(e.target&&e.target.id==='insQ'){ INS.q=e.target.value; const pos=e.target.selectionStart; insRender(); const n=document.getElementById('insQ'); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(x){} } } });
 function customersSection(m){
   const S=SCP||{multi:false}, T='Customers & Average Ticket';
