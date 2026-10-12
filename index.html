@@ -2036,7 +2036,7 @@ i.good{background:#12A367}i.bad{background:#F43F5E}i.soft{background:#C9CDD3}
 .ppd{display:grid;grid-template-columns:66px 1fr 64px;gap:12px;align-items:center;font-variant-numeric:tabular-nums}.ppdv{font-weight:800}
 .ppdb{position:relative;height:12px;background:#F2F0ED;border-radius:6px}.ppdb u{position:absolute;left:50%;top:-4px;bottom:-4px;width:2px;background:#191512;opacity:.85;z-index:1}.ppdb i{position:absolute;top:0;bottom:0;border-radius:4px}
 .ppdp{text-align:right;font-weight:800}.ppdp.neg{color:#E11D48}.ppdp.pos{color:#12804F}
-.ppr.ppm1{cursor:default;grid-template-columns:minmax(110px,.6fr) minmax(150px,1fr) 78px 92px 76px minmax(300px,1.6fr)}.ppr.ppm1:not(.pph):hover{background:transparent}
+.ppr.ppm1{cursor:default;grid-template-columns:minmax(90px,.5fr) 96px 80px 96px 76px 86px minmax(260px,2fr)}.ppr.ppm1 .c{text-align:center}.ppd2{display:grid;grid-template-columns:1fr 64px;gap:12px;align-items:center}.ppch2{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:8px}.ppvs{font-size:12.5px;color:#A9B3C4}.ppr.ppm1:not(.pph):hover{background:transparent}
 .ppr.tot{background:#FFF6EC;border-radius:10px;font-weight:800}
 .ppfoot{margin-top:12px;font-size:12.5px;color:#9AA3B0}
 .cosm-note{font-size:12.5px;color:#8A93A3;margin-top:12px}
@@ -3450,43 +3450,49 @@ document.addEventListener('click',e=>{
   const so=e.target.closest&&e.target.closest('#people [data-ppsort]'); if(so){ const k=so.dataset.ppsort; if(PPL.sort===k) PPL.dir=PPL.dir==='asc'?'desc':'asc'; else { PPL.sort=k; PPL.dir=k==='code'?'asc':(k==='ps'?'asc':'desc'); } ppRender(); return; }
   const fl=e.target.closest&&e.target.closest('#people [data-ppf]'); if(fl){ PPL.f=fl.dataset.ppf; ppRender(); } });
 document.addEventListener('input',e=>{ if(e.target&&e.target.id==='ppQ'){ PPL.q=e.target.value; ppRows(); } });
-/* รายละเอียดสาขา (People Performance): ทั้งปีรายเดือน — ยอดขาย · %COL · ชม.แรงงาน · บิล/ชม. · Productivity Sale เทียบค่าเฉลี่ยทุกสาขาของเดือนนั้น */
-function openPeopleBranch(code){
+/* รายละเอียดสาขา (People Performance): ทั้งปีรายเดือน — ยอดขาย · %COL · ชม.แรงงาน · บิล/ชม. · ฿/ชม. เทียบค่าเฉลี่ยทุกสาขาของเดือนนั้น */
+const PPM={list:[],i:0};
+function openPeopleBranch(code,keepList){
   code=String(code);
+  if(!keepList){ PPM.list=[...document.querySelectorAll('#ppRows .ppr[data-ssbr]')].map(r=>r.dataset.ssbr); PPM.i=PPM.list.indexOf(code); }
   const ms=[]; for(let mm=1;mm<=12;mm++){ const P=peopleData(mm); if(!P) continue; const r=P.rows.find(x=>x.code===code); if(r) ms.push({m:mm,r,P}); }
   if(!ms.length) return;
   let el=document.getElementById('ppModal');
   if(!el){ el=document.createElement('div'); el.id='ppModal'; el.className='cosm';
     el.innerHTML='<div class="cosm-bg" data-ppx></div><div class="cosm-p" role="dialog" aria-modal="true"><div id="ppmBody"></div></div>';
     document.body.appendChild(el);
-    el.addEventListener('click',ev=>{ if(ev.target.closest('[data-ppx]')) el.classList.remove('open'); }); }
+    el.addEventListener('click',ev=>{ if(ev.target.closest('[data-ppx]')){ el.classList.remove('open'); return; }
+      const nv=ev.target.closest('[data-ppnav]'); if(nv){ const j=PPM.i+(+nv.dataset.ppnav); if(PPM.list[j]){ PPM.i=j; openPeopleBranch(PPM.list[j],true); } } }); }
   const f1=v=>v.toFixed(1), f0=v=>fmtN(Math.round(v)), fK=v=>fmtN(Math.round(v/1000))+'K';
   const nm=ms[ms.length-1].r.name, zone=(BRANCH_META&&BRANCH_META[code]&&BRANCH_META[code].zone)||'';
   const T=k=>ms.reduce((a,x)=>a+x.r[k],0), sales=T('sales'), hours=T('lh'), trans=T('tr'), col=ms.reduce((a,x)=>a+x.r.col*x.r.sales,0)/sales;
-  const cS=ms.reduce((a,x)=>a+x.P.sales,0), cH=ms.reduce((a,x)=>a+x.P.hours,0), cT=ms.reduce((a,x)=>a+x.P.trans,0);
+  const cS=ms.reduce((a,x)=>a+x.P.sales,0), cH=ms.reduce((a,x)=>a+x.P.hours,0), cT=ms.reduce((a,x)=>a+x.P.trans,0), cCol=ms.reduce((a,x)=>a+x.P.col*x.P.sales,0)/cS;
   const ps=sales/hours, pt=trans/hours, cps=cS/cH, cpt=cT/cH;
   const mxS=Math.max(...ms.map(x=>x.r.sales)), mxD=Math.max(...ms.map(x=>Math.abs(x.r.ps/x.P.ps-1)),Math.abs(ps/cps-1))||1;
+  const nLow=ms.filter(x=>x.r.ps<x.P.ps).length;
   const colCls=(c,a)=>c>a+1.5?'hi':c>a-0.5?'mid':'ok';
-  const dcell=(v,avg)=>{ const dv=v/avg-1, tone=dv<-PP_TH?'bad':dv<0?'soft':'good', w=Math.abs(dv)/mxD*50;
-    return `<div class="ppd"><span class="ppdv">฿${f0(v)}</span><div class="ppdb"><u></u><i class="${tone}" style="${dv<0?'right:50%':'left:50%'};width:${Math.max(.6,w).toFixed(1)}%"></i></div><span class="ppdp ${dv<-PP_TH?'neg':dv>0?'pos':''}">${dv>=0?'+':'−'}${Math.abs(dv*100).toFixed(1)}%</span></div>`; };
-  const rowH=(lab,d,P,tot)=>`<div class="ppr ppm1${tot?' tot':''}"><div class="ppn">${lab}</div>
-      <div class="ppv"><div class="ppb"><i style="width:${Math.max(2,d.sales/(tot?sales:mxS)*100).toFixed(1)}%;background:#F0954F"></i></div><span>${fK(d.sales)}</span></div>
-      <div><span class="ppp ${colCls(d.col,P.col)}">${f1(d.col)}%</span></div><div class="ppnum">${f0(d.lh)}</div><div class="ppnum">${f1(d.tr/d.lh)}</div>${dcell(d.sales/d.lh,P.ps)}</div>`;
-  const rows=ms.map(x=>rowH(MONTH_TH[x.m-1],x.r,x.P)).join('')+rowH('รวมทั้งปี',{sales,col,lh:hours,tr:trans},{col:ms.reduce((a,x)=>a+x.P.col*x.P.sales,0)/cS,ps:cps},true);
+  const dcells=(v,avg)=>{ const dv=v/avg-1, tone=dv<-PP_TH?'bad':dv<0?'soft':'good', w=Math.abs(dv)/mxD*50;
+    return `<div class="ppnum"><b>฿${f0(v)}</b></div><div class="ppd2"><div class="ppdb"><u></u><i class="${tone}" style="${dv<0?'right:50%':'left:50%'};width:${Math.max(.6,w).toFixed(1)}%"></i></div><span class="ppdp ${dv<-PP_TH?'neg':dv>0?'pos':''}">${dv>=0?'+':'−'}${Math.abs(dv*100).toFixed(1)}%</span></div>`; };
+  const rowH=(lab,d,P,tot,mi)=>`<div class="ppr ppm1${tot?' tot':''}"${mi!=null?` data-ppmi="${mi}"`:''}><div class="ppn">${lab}</div>
+      <div class="ppnum"><span>${fK(d.sales)}</span></div>
+      <div><span class="ppp ${colCls(d.col,P.col)}">${f1(d.col)}%</span></div><div class="ppnum">${f0(d.lh)}</div><div class="ppnum">${f1(d.tr/d.lh)}</div>${dcells(d.sales/d.lh,P.ps)}</div>`;
+  const rows=ms.map((x,i)=>rowH(MONTH_TH[x.m-1],x.r,x.P,false,i)).join('')+rowH('รวมทั้งปี',{sales,col,lh:hours,tr:trans},{col:cCol,ps:cps},true);
   const lbl=ms.map(x=>MONTH_TH[x.m-1]);
   const ser=[{name:'สาขานี้',color:'#F66B21',w:3,label:'all',vals:ms.map(x=>+x.r.ps.toFixed(0))},{name:'เฉลี่ยทุกสาขา',color:'#9AA3B0',dash:1,w:1.8,label:'last',vals:ms.map(x=>+x.P.ps.toFixed(0))}];
-  const chart=ms.length>=2?`<div class="aud-c" style="margin-top:0"><div class="ppt2">Productivity Sale รายเดือน<small>฿ ต่อชั่วโมง · เส้นประ = เฉลี่ยทุกสาขา</small></div>${lineSeries(lbl,ser,{w:900,h:260,R:46,fmt:v=>'฿'+fmtN(Math.round(v)),tipFmt:v=>'฿'+fmtN(Math.round(v))})}</div>`:'';
-  const dAvg=ps/cps-1;
-  document.getElementById('ppmBody').innerHTML=`<div class="cosm-top"><div><div class="cosm-sub">${zone?'โซน '+zone+' · ':''}People Performance · ${RNG(ms.map(x=>x.m))} ${YEAR}</div><div class="cosm-name">${code} ${nm}</div></div>
-    <div class="cosm-nav"><button type="button" class="cosm-x" data-ppx aria-label="ปิด">✕</button></div></div>
+  const chart=ms.length>=2?`<div class="aud-c" style="margin-top:0"><div class="ppch2"><div class="ppt2" style="margin:0">Productivity Sale รายเดือน<small>บาท / ชั่วโมง</small></div>
+      <div class="ppleg" style="margin:0"><span><i style="background:#F66B21;height:4px"></i> สาขานี้</span><span><i style="background:repeating-linear-gradient(90deg,#9AA3B0 0 4px,transparent 4px 7px);height:3px"></i> เฉลี่ยทุกสาขา</span></div></div>${lineSeries(lbl,ser,{w:900,h:260,R:46,fmt:v=>'฿'+fmtN(Math.round(v)),tipFmt:v=>'฿'+fmtN(Math.round(v))})}</div>`:'';
+  const dAvg=ps/cps-1, pill=dAvg>=0?'pos':'neg';
+  const rng=RNG(ms.map(x=>x.m))+' '+YEAR;
+  document.getElementById('ppmBody').innerHTML=`<div class="cosm-top"><div><div class="cosm-sub">${zone?'โซน '+zone+' · ':''}People Performance · ${rng}</div><div class="cosm-name"><span style="color:var(--accent)">${code}</span> ${nm}</div></div>
+    <div class="cosm-nav"><button type="button" data-ppnav="-1" ${PPM.list[PPM.i-1]?'':'disabled'}>‹</button><button type="button" data-ppnav="1" ${PPM.list[PPM.i+1]?'':'disabled'}>›</button><button type="button" class="cosm-x" data-ppx aria-label="ปิด">✕</button></div></div>
     <div class="aud-kg ppm" style="margin-bottom:14px">
-      <div class="aud-k dark"><div class="aud-kh">Productivity Sale ทั้งปี</div><div class="aud-kv">฿${f0(ps)}<small>/ ชม.</small></div><div class="aud-kp"><span class="pill ${dAvg>=0?'pos':'neg'}">${dAvg>=0?'+':'−'}${Math.abs(dAvg*100).toFixed(1)}% vs เฉลี่ย (฿${f0(cps)})</span></div><div class="aud-ks">ยอดขายรวม ÷ ชั่วโมงรวม ${ms.length} เดือน</div></div>
-      <div class="aud-k"><div class="aud-kh"><i style="background:#F0954F"></i>ยอดขายรวม</div><div class="aud-kv">฿${fmtN(Math.round(sales/1000))}K</div><div class="aud-ks">${ms.length} เดือน</div></div>
-      <div class="aud-k"><div class="aud-kh"><i style="background:#5B8DEF"></i>%COL เฉลี่ย</div><div class="aud-kv">${f1(col)}%</div><div class="aud-ks">ถ่วงน้ำหนักตามยอดขาย</div></div>
-      <div class="aud-k"><div class="aud-kh"><i style="background:#8B7CF6"></i>ชั่วโมงแรงงานรวม</div><div class="aud-kv">${f0(hours)}</div><div class="aud-ks">${f1(pt)} บิล/ชม. (เฉลี่ยทุกสาขา ${f1(cpt)})</div></div></div>
+      <div class="aud-k dark"><div class="aud-kh">Productivity Sale ทั้งปี</div><div class="aud-kv">฿${f0(ps)}<small>/ ชม.</small></div><div class="aud-kp"><span class="pill ${pill}">${dAvg>=0?'+':'−'}${Math.abs(dAvg*100).toFixed(1)}%</span> <span class="ppvs">vs เฉลี่ยทุกสาขา ฿${f0(cps)}</span></div></div>
+      <div class="aud-k"><div class="aud-kh">ยอดขายรวม</div><div class="aud-kv">฿${fmtN(Math.round(sales/1000))}K</div><div class="aud-ks">${ms.length} เดือน · ต่ำกว่าเฉลี่ย ${nLow} จาก ${ms.length} เดือน</div></div>
+      <div class="aud-k"><div class="aud-kh">%COL เฉลี่ย</div><div class="aud-kv">${f1(col)}%</div><div class="aud-ks">ทุกสาขา ${f1(cCol)}% · ถ่วงน้ำหนักตามยอดขาย</div></div>
+      <div class="aud-k"><div class="aud-kh">ชั่วโมงแรงงานรวม</div><div class="aud-kv">${f0(hours)}</div><div class="aud-ks">${f1(pt)} บิล/ชม. (ทุกสาขา ${f1(cpt)})</div></div></div>
     ${chart}
-    <div class="aud-c" style="margin-top:14px"><div class="ppt2">รายเดือน</div>
-      <div class="ppr pph ppm1"><div>เดือน</div><div>ยอดขาย</div><div>%COL</div><div class="r">ชม.แรงงาน</div><div class="r">บิล/ชม.</div><div>Productivity Sale (บาท/ชม.) เทียบค่าเฉลี่ย</div></div>${rows}</div>`;
+    <div class="aud-c" style="margin-top:14px"><div class="ppt2">รายเดือน<small>เทียบกับค่าเฉลี่ยทุกสาขาของเดือนเดียวกัน</small></div>
+      <div class="ppr pph ppm1"><div>เดือน</div><div class="r">ยอดขาย</div><div>%COL</div><div class="r">ชม.แรงงาน</div><div class="r">บิล/ชม.</div><div class="r">฿/ชม.</div><div class="c">เทียบเฉลี่ยเดือนนั้น</div></div>${rows}</div>`;
   el.classList.add('open'); }
 function customersSection(m){
   const S=SCP||{multi:false}, T='Customers & Average Ticket';
