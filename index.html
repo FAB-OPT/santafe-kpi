@@ -3845,7 +3845,7 @@ function brNameOf(c){ c=String(c);
   const by=(EXTRA&&EXTRA.branchYears||[]).find(b=>String(b.code)===c); if(by&&by.name&&String(by.name)!==c) return by.name;
   for(const k of Object.keys(DETAIL||{}).reverse()){ const r=((DETAIL[k]||{}).branchRows||[]).find(x=>String(x.code)===c); if(r&&r.name&&String(r.name)!==c) return r.name; }
   return c; }
-const PLM={on:true, item:'net', unit:'pct', sort:'last', dir:'desc'};
+const PLM={on:true, item:'rev', unit:'baht', sort:'name', dir:'asc'};   // เปิดมาเป็น รายได้ เรียงตามรหัสสาขา
 /* Branch × Month Matrix: เลือกหัวข้อ (กำไรสุทธิ · ต้นทุนอาหาร · ค่าแรง · รายได้) · หน่วย บาท / % · เรียงตามคอลัมน์ใดก็ได้ (คลิกหัวคอลัมน์) · มาก→น้อย / น้อย→มาก */
 function plMatrix(items){
   const F=EXTRA&&EXTRA.pnlFull; if(!F||!F.branch) return '';
