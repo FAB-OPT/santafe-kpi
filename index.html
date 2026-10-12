@@ -2626,7 +2626,7 @@ function plbrPickHtml(){
   const list=rank.filter(b=>binOf(b.gp)===sel).sort((a,b)=>b.gp-a.gp);
   return `<div class="bp-card" style="margin-top:12px"><div class="bp-h"><span>%กำไร ${labels[sel]} · ${list.length} สาขา</span><button type="button" class="btn small" data-binclose>ปิด</button></div>`+
     (list.length?`<div class="scroll"><table><tr><th>#</th><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">กำไร</th><th class="n">%กำไร</th><th class="n">%COS</th><th class="n">%COL</th></tr>
-      ${list.map((b,i)=>`<tr class="clk" data-plpick="${b.code}"><td>${i+1}</td><td>${b.name}</td><td class="n">${KB(b.sales)}</td><td class="n ${cls(b.profit)}">${KB(b.profit)}</td><td class="n">${pill(b.gp)}</td><td class="n">${b.cos.toFixed(1)}%</td><td class="n">${b.col.toFixed(1)}%</td></tr>`).join('')}</table></div>`
+      ${list.map((b,i)=>`<tr class="clk" data-plpick="${b.code}"><td>${i+1}</td><td>${canonName(b)}</td><td class="n">${KB(b.sales)}</td><td class="n ${cls(b.profit)}">${KB(b.profit)}</td><td class="n">${pill(b.gp)}</td><td class="n">${b.cos.toFixed(1)}%</td><td class="n">${b.col.toFixed(1)}%</td></tr>`).join('')}</table></div>`
       :'<div class="empty">ไม่มีสาขาในช่วงนี้</div>')+`</div>`;
 }
 function plbrPickShow(){
@@ -3812,6 +3812,8 @@ function zoneSection(){
 
 /* ========================= ตาราง P&L สาขา × เดือน ========================= */
 /* ชื่อสาขาจากรหัส: ทะเบียนสาขา → ยอดรายสาขา 2 ปี → แถวสาขารายเดือน (สาขาใหม่ที่ยังไม่อยู่ในทะเบียนก็ยังเห็นชื่อ) · ไม่เจอจริงๆ ค่อยแสดงรหัส */
+/* ชื่อสาขาให้ตรงกันทุกตาราง: ใช้ชื่อจากทะเบียนสาขา (เหมือนแมทริกซ์) ไม่ใช้ชื่อย่อที่มากับงบรายสาขา เช่น 'โลตัส จรัล' */
+function canonName(b){ const n=brNameOf(b.code); return (n&&String(n)!==String(b.code))?n:b.name; }
 function brNameOf(c){ c=String(c);
   const m=BRANCH_META&&BRANCH_META[c]; if(m&&m.name&&String(m.name)!==c) return m.name;
   const by=(EXTRA&&EXTRA.branchYears||[]).find(b=>String(b.code)===c); if(by&&by.name&&String(by.name)!==c) return by.name;
@@ -3958,7 +3960,7 @@ function plbrBody(){
     const rank=plb.filter(b=>b.sales>=MIN), skipped=plb.length-rank.length;
     const srt=rank.slice().sort((a,b)=>b.gp-a.gp);
     const t=(arr,bad)=>`<div class="scroll"><table class="plbt"><tr><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">กำไร</th><th class="n">%กำไร</th><th class="n">%COS</th><th class="n">%COL</th></tr>
-      ${arr.map((b,i)=>`<tr class="clk${i>=5?' plmore':''}" data-ssbr="${b.code}"><td>${b.name}</td><td class="n">${KB(b.sales)}</td><td class="n ${cls(b.profit)}">${KB(b.profit)}</td><td class="n">${pill(b.gp)}</td><td class="n">${b.cos.toFixed(1)}%</td><td class="n">${b.col.toFixed(1)}%</td></tr>`).join('')}</table></div>${arr.length>5?`<button type="button" class="plmbtn" onclick="const w=this.closest('.plbt2');w.classList.toggle('open');this.textContent=w.classList.contains('open')?'แสดงน้อยลง ▴':'ดูเพิ่ม (อีก ${arr.length-5} สาขา) ▾'">ดูเพิ่ม (อีก ${arr.length-5} สาขา) ▾</button>`:''}`;
+      ${arr.map((b,i)=>`<tr class="clk${i>=5?' plmore':''}" data-ssbr="${b.code}"><td>${canonName(b)}</td><td class="n">${KB(b.sales)}</td><td class="n ${cls(b.profit)}">${KB(b.profit)}</td><td class="n">${pill(b.gp)}</td><td class="n">${b.cos.toFixed(1)}%</td><td class="n">${b.col.toFixed(1)}%</td></tr>`).join('')}</table></div>${arr.length>5?`<button type="button" class="plmbtn" onclick="const w=this.closest('.plbt2');w.classList.toggle('open');this.textContent=w.classList.contains('open')?'แสดงน้อยลง ▴':'ดูเพิ่ม (อีก ${arr.length-5} สาขา) ▾'">ดูเพิ่ม (อีก ${arr.length-5} สาขา) ▾</button>`:''}`;
     const best=srt.filter(b=>b.profit>0), worst=srt.filter(b=>b.profit<0).reverse();   // ดีสุด = กำไรจริงเท่านั้น · ต้องดูแล = ขาดทุนเท่านั้น
     const empty=m=>`<div class="plmempty">${m}</div>`;
     const loss=plb.filter(b=>b.profit<0), nProfit=plb.length-loss.length;
@@ -5270,7 +5272,7 @@ function buildMain(m){
       <div class="scroll"><table>
         <tr><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">%สัดส่วน</th><th class="n">%แผน</th><th class="n">MoM</th><th class="n">Delivery</th><th class="n">%Deli</th><th class="n">บิล</th><th class="n">เช็คเฉลี่ย</th><th class="n">%กำไร</th><th class="n">CEM</th><th class="n">OSS</th></tr>
         ${rows.map(b=>{const pl=plMap[b.code],ce=cemMap[b.code],os=ossMap[b.code];
-          return `<tr class="clk" data-ssbr="${b.code}"><td>${b.name}</td><td class="n">${KB(b.sales)}</td><td class="n">${(b.sales/totS*100).toFixed(1)}%</td>
+          return `<tr class="clk" data-ssbr="${b.code}"><td>${canonName(b)}</td><td class="n">${KB(b.sales)}</td><td class="n">${(b.sales/totS*100).toFixed(1)}%</td>
           <td class="n ${b.ach==null?'':cls(b.ach-100)}">${b.ach==null?'—':b.ach.toFixed(0)+'%'}</td>
           <td class="n">${pill(b.mom)}</td>
           <td class="n">${KB(b.deli)}</td><td class="n">${b.sales?(b.deli/b.sales*100).toFixed(1)+'%':'—'}</td>
