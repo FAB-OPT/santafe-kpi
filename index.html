@@ -2674,8 +2674,8 @@ const EMPTY = t => `<div class="empty">ยังไม่มีข้อมู�
 /* ========================= P&L ผังบัญชีเต็ม (ข้อ 5) ========================= */
 const PLS={showSub:false, cmpLM:true, cmpLY:false, sort:'chart', branch:'all', open:{}, cmp:[], closed:false};
 const PL_TH={revenue:'รายได้รวม','rev-food':'รายได้อาหารและเครื่องดื่ม','rev-other':'รายได้อื่น',
-  cogs:'ต้นทุนขาย (COGS)','cogs-fresh':'วัตถุดิบสด','cogs-semi':'กึ่งสำเร็จรูป','cogs-frozen':'แช่แข็ง','cogs-dry':'ของแห้ง','cogs-bev':'เครื่องดื่มและของหวาน','cogs-misc':'ค่าใช้จ่ายเบ็ดเตล็ด','cogs-pack':'บรรจุภัณฑ์','cogs-finished':'สินค้าสำเร็จรูป','cogs-gas':'แก๊ส','cogs-transport':'ขนส่ง',
-  gp1:'กำไรขั้นต้น (หลัง COGS)', labor:'ค่าแรง','labor-mgr':'เงินเดือนผู้จัดการ','labor-staff':'เงินเดือนพนักงาน','labor-edu':'สนับสนุนการศึกษา','labor-bonus':'โบนัส','labor-contrib':'สมทบกองทุน','labor-uniform':'ยูนิฟอร์ม','labor-training':'ฝึกอบรม','labor-welfare':'สวัสดิการ',
+  cogs:'ต้นทุนขาย (COS)','cogs-fresh':'วัตถุดิบสด','cogs-semi':'กึ่งสำเร็จรูป','cogs-frozen':'แช่แข็ง','cogs-dry':'ของแห้ง','cogs-bev':'เครื่องดื่มและของหวาน','cogs-misc':'ค่าใช้จ่ายเบ็ดเตล็ด','cogs-pack':'บรรจุภัณฑ์','cogs-finished':'สินค้าสำเร็จรูป','cogs-gas':'แก๊ส','cogs-transport':'ขนส่ง',
+  gp1:'กำไรขั้นต้น (หลัง COS)', labor:'ค่าแรง','labor-mgr':'เงินเดือนผู้จัดการ','labor-staff':'เงินเดือนพนักงาน','labor-edu':'สนับสนุนการศึกษา','labor-bonus':'โบนัส','labor-contrib':'สมทบกองทุน','labor-uniform':'ยูนิฟอร์ม','labor-training':'ฝึกอบรม','labor-welfare':'สวัสดิการ',
   gp2:'กำไรก่อน SG&A', sga:'ค่าขายและบริหาร (SG&A)','sga-rent':'ค่าเช่า','sga-central':'ค่าบริการส่วนกลาง','sga-equip':'ค่าเช่าอุปกรณ์','sga-delivery':'ค่าธรรมเนียม Delivery','sga-tax':'ภาษีที่ดินและสิ่งปลูกสร้าง','sga-utility':'สาธารณูปโภค','sga-insurance':'ประกันภัย','sga-marketing':'การตลาดและโฆษณา','sga-transport':'ขนส่ง','sga-consult':'ที่ปรึกษา',
   gp3:'กำไรก่อนหักค่าดำเนินงาน', opex:'ค่าใช้จ่ายดำเนินงาน (OPEX)','opex-supplies':'วัสดุและอุปกรณ์','opex-stationery':'เครื่องเขียน','opex-computer':'คอมพิวเตอร์','opex-bank':'ค่าธรรมเนียมธนาคารและอื่นๆ','opex-vehicle':'ยานพาหนะและเดินทาง','opex-audit':'ตรวจสอบและพัฒนา','opex-otherservice':'ค่าบริการอื่น','opex-assetloss':'ขาดทุนจำหน่ายสินทรัพย์','opex-closureloss':'ขาดทุนปิดสาขา','opex-damage':'ค่าชดเชยความเสียหาย','opex-repair':'ซ่อมแซม','opex-other':'ค่าใช้จ่ายอื่น',
   op:'กำไรจากการดำเนินงาน (OP)', central:'ค่าใช้จ่ายส่วนกลางปันส่วน','net-bd':'กำไรก่อนค่าเสื่อม', dep:'ค่าเสื่อมราคา', net:'กำไรสุทธิ (บรรทัดสุดท้าย)'};
@@ -2799,7 +2799,7 @@ function plSection(m){
   const kpiT=(l,id,dark)=>{ const it=idx(id); if(!it) return ''; const v=cur[it.index], pv=prevAll?prevAll[it.index]:null;
     const dlt=pv!=null?`<span>vs ${pvLbl} <b class="${v-pv>=0?'pos':'neg'}">${(v-pv>=0?'+':'−')+fm(Math.abs(v-pv))}</b></span>`:'';
     return `<div class="plk${dark?' dark':''}"><div class="plkl">${l}</div><div class="plkv">${cur$}${fm(v)}</div><div class="plks">${id==='revenue'?'100%':pc(v,rev)+' ของรายได้'}${dlt?' · '+dlt:''}</div></div>`; };
-  const WF=[['รายได้','revenue','t','#3B4455'],['COGS','cogs','d','#F0954F'],['กำไรขั้นต้น','gp1','t','#1FA463'],['ค่าแรง','labor','d','#5B8DEF'],['SG&A','sga','d','#A778F0'],
+  const WF=[['รายได้','revenue','t','#3B4455'],['COS','cogs','d','#F0954F'],['กำไรขั้นต้น','gp1','t','#1FA463'],['ค่าแรง','labor','d','#5B8DEF'],['SG&A','sga','d','#A778F0'],
     ['ก่อนค่าดำเนินงาน','gp3','t','#1FA463'],['OPEX','opex','d','#20B2A5'],['OP','op','t','#1FA463'],['ส่วนกลาง','central','d','#EF5B5B'],['ค่าเสื่อม','dep','d','#8A93A3'],['กำไรสุทธิ','net','t','#0F172A']]
     .filter(x=>idx(x[1]));
   const waterfall=(()=>{ const W=1100,H=330,L=24,R=24,T=34,B=62,n=WF.length; if(n<4||!(rev>0)) return '';
@@ -2819,12 +2819,12 @@ function plSection(m){
         const np=e.v[0]?e.v[ni]/e.v[0]*100:null;
         return `<div class="st ${np==null?'':cls(np)}"><div class="l">${e.name}</div><div class="v">${np==null?'—':np.toFixed(1)+'%'}</div><div class="s">กำไรสุทธิ ${fmOf(e.br)(e.v[ni])} · รายได้ ${fmOf(e.br)(e.v[0])}</div></div>`; }).join('')}</div>`
     :`<div class="plblock"><div class="grp big">จากรายได้สู่กำไรสุทธิ<span class="gr">${perLbl}</span></div>
-      <div class="plks5">${kpiT('รายได้รวม','revenue')}${kpiT('กำไรขั้นต้น (หลัง COGS)','gp1')}${kpiT('กำไรก่อนหักค่าดำเนินงาน','gp3')}${kpiT('กำไรจากการดำเนินงาน (OP)','op')}${kpiT('กำไรสุทธิ','net',true)}</div>
+      <div class="plks5">${kpiT('รายได้รวม','revenue')}${kpiT('กำไรขั้นต้น (หลัง COS)','gp1')}${kpiT('กำไรก่อนหักค่าดำเนินงาน','gp3')}${kpiT('กำไรจากการดำเนินงาน (OP)','op')}${kpiT('กำไรสุทธิ','net',true)}</div>
       ${waterfall?`<div class="plwfw">${waterfall}</div><div class="plwfn">หน่วย: ${isCo?'ล้านบาท':'พันบาท'} · SG&amp;A, OPEX, ส่วนกลาง, ค่าเสื่อม ตัวเลขใต้ชื่อคือ % ของรายได้</div>`:''}</div>`;
   /* การ์ดต้นทุนและค่าใช้จ่าย: %COS / %COL + กราฟแยกต้นทุนหลัก/ค่าใช้จ่ายรอง + ข้อสังเกต */
   const yrSrc=PLS.branch==='all'?F.actual:(F.branch&&F.branch[PLS.branch]);
   const yrMs=yrSrc?PL_MONKEY.map((k,i)=>i+1).filter(mm=>yrSrc[PL_MONKEY[mm-1]]&&yrSrc[PL_MONKEY[mm-1]][0]>0):[];
-  const SERC={cogs:['#F0954F','ต้นทุนขาย (COGS)'],sga:['#A778F0','ค่าขายและบริหาร (SG&A)'],labor:['#5B8DEF','ค่าแรง'],opex:['#20B2A5','ค่าใช้จ่ายดำเนินงาน (OPEX)'],central:['#EF5B5B','ค่าใช้จ่ายส่วนกลางปันส่วน'],dep:['#8A93A3','ค่าเสื่อมราคา']};
+  const SERC={cogs:['#F0954F','ต้นทุนขาย (COS)'],sga:['#A778F0','ค่าขายและบริหาร (SG&A)'],labor:['#5B8DEF','ค่าแรง'],opex:['#20B2A5','ค่าใช้จ่ายดำเนินงาน (OPEX)'],central:['#EF5B5B','ค่าใช้จ่ายส่วนกลางปันส่วน'],dep:['#8A93A3','ค่าเสื่อมราคา']};
   const mkSer=ids=>ids.filter(id=>idx(id)).map(id=>({key:id,name:plLabel(idx(id)),color:SERC[id][0],w:2.6,label:'all',
     vals:yrMs.map(mm=>{ const a=yrSrc[PL_MONKEY[mm-1]]; return a[0]>0&&a[idx(id).index]!=null?a[idx(id).index]/a[0]*100:null; })}));
   const serMain=mkSer(['cogs','sga','labor']), serSub=mkSer(['opex','central','dep']);
@@ -3893,7 +3893,7 @@ function gpTrend(){
     +`<div class="legend">${ser.map(s=>`<span><i style="background:${s.color}"></i>${s.name}</span>`).join('')}</div>
     <div class="scroll" style="margin-top:14px"><table><tr><th>รายการ</th>${labels.map(l=>`<th class="n">${l}</th>`).join('')}</tr>
       <tr><td>รายได้รวม</td>${mons.map(o=>`<td class="n"><b>${MM(g(o,iRev))}</b></td>`).join('')}</tr>
-      ${pctRow('กำไรขั้นต้น (หลัง COGS)',iGp,1)}${pctRow('กำไรจากการดำเนินงาน (OP)',iOp,1)}${pctRow('กำไรสุทธิ',iNet,1)}
+      ${pctRow('กำไรขั้นต้น (หลัง COS)',iGp,1)}${pctRow('กำไรจากการดำเนินงาน (OP)',iOp,1)}${pctRow('กำไรสุทธิ',iNet,1)}
     </table></div><div class="note">ตารางหน่วยบาท · ตัวเลขจากงบกำไรขาดทุนที่นำเข้า (ถึง ${MONTH_TH[mons[mons.length-1].m-1]}) · ตัวเลขเล็ก = สัดส่วนต่อรายได้</div>`;
 }
 function monthlyTabs(){
@@ -6401,13 +6401,13 @@ const JD_MAP=[
     ['jd-rev-svc','Service charge',['Sales - Service charge']],
     ['jd-rev-disc','ส่วนลด',['Sales - Discount']],
     ['jd-rev-other','รายได้อื่น',['Other Income']]]},
-  {id:'cogs',label:'ต้นทุนขาย (COGS)',kids:[
+  {id:'cogs',label:'ต้นทุนขาย (COS)',kids:[
     ['jd-cogs-fb','ต้นทุนอาหารและเครื่องดื่ม',['Cost of sales - Food and Beverage']],
     ['jd-cogs-pork','คอหมู (Neck Pork)',['Cost of sales - Neck Pork']],
     ['jd-cogs-sup','วัสดุสิ้นเปลือง',['Cost of sales - Supplies']],
     ['jd-cogs-oth','ต้นทุนอื่น',['Cost of sales - Other']],
     ['jd-cogs-fuel','เชื้อเพลิงครัว',['Kitchen fuel']]]},
-  {id:'gp1',label:'กำไรขั้นต้น (หลัง COGS)',hl:1},
+  {id:'gp1',label:'กำไรขั้นต้น (หลัง COS)',hl:1},
   {id:'labor',label:'ค่าแรง',kids:[
     ['jd-lab-sal','เงินเดือนและค่าจ้าง',['Salaries and wages']],
     ['jd-lab-inc','Incentive',['Incentive']],
