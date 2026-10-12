@@ -1976,10 +1976,16 @@ table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD
 .cosm-ch{background:#fff;border-radius:18px;padding:16px 18px 6px}
 .cosm-t{font-size:16px;font-weight:700;margin-bottom:4px}.cosm-t small{font-size:12.5px;font-weight:400;color:#8A93A3;margin-left:10px}
 .plmx td.plc2 span{display:block;font-size:12px;line-height:1.5;font-variant-numeric:tabular-nums}.plmx td.plc2 .neg{color:#D13447;font-weight:700}
-.cosm-plh{display:flex;align-items:center;gap:10px;margin:18px 0 8px}.cosm-plh b{font-size:15px}.cosm-plh small{color:#8A93A3}.cosm-plh .btn{margin-left:auto}
-table.cosm-pl{width:100%;border-collapse:collapse}table.cosm-pl th,table.cosm-pl td{padding:6px 10px;font-size:13px;border-bottom:1px solid var(--hair)}
+.cosm-plh{display:flex;align-items:center;gap:10px;margin:6px 0 10px}.cosm-plh b{font-size:19px}.cosm-plh small{color:#8A93A3}.cosm-plh .btn{margin-left:auto}
+table.cosm-pl{width:100%;border-collapse:collapse}table.cosm-pl th,table.cosm-pl td{padding:10px 14px;font-size:16px;border-bottom:1px solid var(--hair);font-variant-numeric:tabular-nums}table.cosm-pl th{font-size:13.5px;color:#8A93A3;font-weight:600}
 table.cosm-pl tr.main td,table.cosm-pl tr.hl td{font-weight:700}table.cosm-pl tr.hl td{background:var(--accent-2)}
-table.cosm-pl tr.zero{display:none}table.cosm-pl.showzero tr.zero{display:table-row}table.cosm-pl.hidesub tr.sub{display:none!important}table.cosm-pl tr.sub td{color:var(--mute);font-size:12.5px}
+table.cosm-pl tr.zero{display:none}table.cosm-pl.showzero tr.zero{display:table-row}table.cosm-pl.hidesub tr.sub{display:none!important}table.cosm-pl tr.sub td{color:var(--mute);font-size:15px}
+.cosm-tabs{display:inline-flex;background:#E9E5DF;border-radius:14px;padding:4px;gap:2px;margin:6px 0 14px}
+.cosm-tabs button{border:0;background:none;padding:10px 22px;border-radius:11px;font:inherit;font-size:15px;font-weight:700;color:#6B7280;cursor:pointer}
+.cosm-tabs button.on{background:#fff;color:#0F172A;box-shadow:0 1px 5px rgba(0,0,0,.12)}
+.cosm-tp{display:none}.cosm-tp.on{display:block}
+.cosm-tp .cosm-plh+.scroll{background:#fff;border-radius:18px;padding:8px 10px;box-shadow:0 6px 18px -14px rgba(15,23,42,.3)}
+.cosm-t{font-size:18px}
 .cosm-note{font-size:12.5px;color:#8A93A3;margin-top:12px}
 
 #plbr .plbc{display:flex;flex-direction:column}
@@ -3120,6 +3126,7 @@ function openCosModal(code){
     el.innerHTML='<div class="cosm-bg" data-cmx></div><div class="cosm-p" role="dialog" aria-modal="true"><div id="cosmBody"></div></div>';
     document.body.appendChild(el);
     el.addEventListener('click',ev=>{ if(ev.target.closest('[data-cmx]')){ closeCosModal(); return; }
+      const tb0=ev.target.closest('[data-cmtab]'); if(tb0){ const k=tb0.dataset.cmtab; el.querySelectorAll('[data-cmtab]').forEach(b=>b.classList.toggle('on',b===tb0)); el.querySelectorAll('.cosm-tp').forEach(pn=>pn.classList.toggle('on',pn.dataset.cmp===k)); return; }
       const sb=ev.target.closest('[data-cmsub]'); if(sb){ const tb=document.querySelector('#cosmBody .cosm-pl'); if(tb){ const hide=tb.classList.toggle('hidesub'); sb.textContent=hide?'แสดงหมวดย่อย':'ซ่อนหมวดย่อย'; } return; }
       const zb=ev.target.closest('[data-cmzero]'); if(zb){ const tb=document.querySelector('#cosmBody .cosm-pl'); if(tb){ const on=tb.classList.toggle('showzero'); zb.textContent=on?'ซ่อนแถวที่เป็น 0':'แสดงแถวที่เป็น 0'; } return; }
       const nv=ev.target.closest('[data-cmnav]'); if(nv){ const j=COSM.i+(+nv.dataset.cmnav); if(COSM.list[j]) openCosModal(COSM.list[j]); } }); }
@@ -3136,7 +3143,7 @@ function openCosModal(code){
       <div class="cosm-d">${pv!=null?`<span class="pill ${v-pv<=0?'pos':'neg'}">${v-pv>=0?'+':'−'}${Math.abs(v-pv).toFixed(1)} ppt vs ${MONTH_TH[prv.m-1]}</span>`:''}<small>${v-a>=0?'+':'−'}${Math.abs(v-a).toFixed(1)} vs เฉลี่ย</small></div></div>`; };
   const labs=mons.map(o=>MONTH_TH[o.m-1]);
   const chart=(title,k,color)=>{ const ser=[{name:'สาขานี้',color:color,w:3,label:'all',fade:Math.max(0,bs.length-2),vals:bs.map(b=>b[k]==null?null:+b[k].toFixed(1))},{name:'เฉลี่ยทุกสาขา',color:'#9AA3B0',dash:1,w:1.8,label:'last',vals:av.map(a=>a[k]==null?null:+a[k].toFixed(1))}];
-    return `<div class="cosm-ch"><div class="cosm-t">${title}<small>เส้นประ = เฉลี่ยทุกสาขา</small></div>${lineSeries(labs,ser,{w:620,h:290,R:44,fmt:v=>v.toFixed(0)+'%',tipFmt:v=>v.toFixed(1)+'%'})}</div>`; };
+    return `<div class="cosm-ch"><div class="cosm-t">${title}<small>เส้นประ = เฉลี่ยทุกสาขา</small></div>${lineSeries(labs,ser,{w:470,h:330,R:46,fmt:v=>v.toFixed(0)+'%',lfmt:v=>v.toFixed(1),tipFmt:v=>v.toFixed(1)+'%'})}</div>`; };
   const plTbl=(()=>{ const FB=F.branch[code];
     /* ใช้เดือนล่าสุดที่สาขานี้มีงบจริง (สาขาเปิดใหม่/ยังไม่ส่งงบเดือนล่าสุด ก็ยังเห็นงบของเดือนที่มี) */
     let j=mons.length-1; while(j>=0&&!(FB[mons[j].k]&&FB[mons[j].k][iRev])) j--;
@@ -3152,8 +3159,9 @@ function openCosModal(code){
   document.getElementById('cosmBody').innerHTML=`<div class="cosm-top"><div><div class="cosm-sub">${zone?'โซน '+zone+' · ':''}รายได้ ${MONTH_TH[cur.m-1]} ${cur.rev!=null?KM(cur.rev):''}</div><div class="cosm-name">${code} ${nm}</div></div>
     <div class="cosm-nav"><button type="button" data-cmnav="-1" ${COSM.list[COSM.i-1]?'':'disabled'}>‹</button><button type="button" data-cmnav="1" ${COSM.list[COSM.i+1]?'':'disabled'}>›</button><button type="button" class="cosm-x" data-cmx aria-label="ปิด">✕</button></div></div>
     <div class="cosm-cards">${card('%COS ต้นทุนอาหาร','#F0954F','cos')}${card('%COL ค่าแรง','#5B8DEF','col')}</div>
-    <div class="cosm-charts">${chart('%COS ทั้งปี','cos','#F0954F')}${chart('%COL ทั้งปี','col','#2F6FE0')}</div>
-    ${plTbl}
+    <div class="cosm-tabs" data-cmtabs><button type="button" class="on" data-cmtab="a">ภาพรวม COS / COL</button><button type="button" data-cmtab="b">งบกำไรขาดทุน</button></div>
+    <div class="cosm-tp on" data-cmp="a"><div class="cosm-charts">${chart('%COS ทั้งปี','cos','#F0954F')}${chart('%COL ทั้งปี','col','#2F6FE0')}</div></div>
+    <div class="cosm-tp" data-cmp="b">${plTbl}</div>
     <div class="cosm-note">ข้อมูลจริงจากงบกำไรขาดทุนรายสาขา ${labs[0]}–${labs[L]} ${YEAR}</div>`;
   el.classList.add('open'); }
 /* ---- ตารางรายสาขา (Customers): เลขลำดับ · ค้นหา · เรียงคอลัมน์ · แสดงทั้งหมด ---- */
@@ -3586,7 +3594,7 @@ function lineSeries(labels, series, opt={}){
   const sp=(mx-mn)||Math.abs(mx)||1; mn-=sp*.14; mx+=sp*.16;
   const x=i=>L+(W-L-R)*(labels.length<2?.5:i/(labels.length-1));
   const y=v=>T+(H-T-B)*(1-(v-mn)/(mx-mn));
-  const fmt=opt.fmt||(v=>v.toFixed(2));
+  const fmt=opt.fmt||(v=>v.toFixed(2)), lf=opt.lfmt||fmt;   /* lfmt = รูปแบบตัวเลขบนจุด (ไม่ระบุ = ใช้ fmt เดียวกับแกน) */
   let s='';
   for(let k=0;k<=3;k++){ const v=mn+(mx-mn)*k/3, yy=y(v);
     s+=`<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="var(--hair)"/><text x="${L-8}" y="${yy+4}" font-size="11" fill="var(--faint)" text-anchor="end">${fmt(v)}</text>`; }
@@ -3599,9 +3607,9 @@ function lineSeries(labels, series, opt={}){
     else s+=pl(pts);
     sr.vals.forEach((v,i)=>{ if(v==null) return; const fd=fi&&i<fi;
       s+=`<circle cx="${x(i)}" cy="${y(v)}" r="${sr.w?4:3.5}" fill="var(--card)" stroke="${sr.color}" stroke-width="2"${fd?' opacity=".45"':''}><title>${labels[i]} · ${sr.name}: ${fmt(v)}</title></circle>`;
-      if(sr.label==='all'){ (allLb[i]=allLb[i]||[]).push({y:y(v)-9,c:fd?'#A6AEBB':sr.color,t:fmt(v)}); }
-      else if(sr.label==='last'){ if(i===sr.vals.length-1) lastLb.push({y:y(v),c:sr.color,t:fmt(v)}); }
-      else if(sr.label) s+=`<text x="${x(i)}" y="${y(v)-10}" font-size="11.5" font-weight="600" fill="${sr.color}" text-anchor="middle">${fmt(v)}</text>`; });
+      if(sr.label==='all'){ (allLb[i]=allLb[i]||[]).push({y:y(v)-9,c:fd?'#A6AEBB':sr.color,t:lf(v)}); }
+      else if(sr.label==='last'){ if(i===sr.vals.length-1) lastLb.push({y:y(v),c:sr.color,t:lf(v)}); }
+      else if(sr.label) s+=`<text x="${x(i)}" y="${y(v)-10}" font-size="11.5" font-weight="600" fill="${sr.color}" text-anchor="middle">${lf(v)}</text>`; });
   });
   /* ป้ายค่าทุกจุด (label:'all'): เรียงในแต่ละเดือนให้ห่างกันอย่างน้อย 13px ไม่ให้ทับกัน */
   Object.keys(allLb).forEach(i=>{ const g=allLb[i].sort((a,b)=>a.y-b.y);
