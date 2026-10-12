@@ -1449,7 +1449,7 @@ section.slide{background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(8px)
 .hv-ic.hv-ic.sm{width:36px;height:36px;border-radius:11px}.hv-ic.sm svg{width:19px;height:19px}
 .hv-ic.hv-ic-sales{background:#FDE8DA;color:#E8741F}.hv-ic.hv-ic-cust{background:#E8E4FB;color:#6C5CE0}
 .hv-ic.hv-ic-cost{background:#DCF0E5;color:#1F9D63}.hv-ic.hv-ic-quality{background:#FBEED0;color:#D79A12}
-.hv-ic.hv-ic-people,.hv-ic.hv-ic-other{background:rgba(120,105,90,.12);color:#9A9187}
+.hv-ic.hv-ic-other{background:rgba(120,105,90,.12);color:#9A9187}.hv-ic.hv-ic-people{background:#FDE2EC;color:#D6336C}.hv-ic.hv-ic-insight{background:#D9F2EF;color:#0F9D8F}
 #hubView .hv-tile.soon .hv-ic{color:#A8A096}
 #hubView .hv-n{font-size:20px}
 #hubView .hv-badge{font-size:13.5px}
@@ -2051,6 +2051,17 @@ i.good{background:#12A367}i.bad{background:#F43F5E}i.soft{background:#C9CDD3}
 .ppt3{font-weight:800;font-size:15px;margin:14px 0 6px}
 .ppr.ppch{cursor:default;grid-template-columns:minmax(110px,.8fr) minmax(150px,1fr) minmax(150px,1fr) 90px 70px;font-size:14.5px}.ppr.ppch:hover{background:transparent}
 @media (max-width:1100px){.ppr.ppz,.ppr.ppch{grid-template-columns:1fr 1fr}}
+.insr{grid-template-columns:minmax(130px,1.1fr) repeat(11,minmax(64px,1fr)) 84px;gap:8px;cursor:pointer;font-size:14px;align-items:center}
+.insr.pph,.insr.insavg{cursor:default}.insr.insavg{background:#F6F2EC;border-radius:10px;font-weight:700}.insr.insavg:hover{background:#F6F2EC}
+.insr .r{text-align:right}.insc{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;border-radius:8px;padding:5px 8px}
+.insc.g{background:#DDF3E8;color:#0B7A4B}.insc.b{background:#FFE1E4;color:#B4233A}
+.insr .ppn small{display:block;color:#8A93A3;font-size:12px;font-weight:500}
+.insst{display:flex;gap:5px;justify-content:flex-end}.insst .bd,.insst .gd{display:inline-block;min-width:24px;text-align:center;border-radius:999px;padding:3px 8px;font-weight:800;font-size:13px}.insst .bd{background:#FFE1E4;color:#B4233A}.insst .gd{background:#DDF3E8;color:#0B7A4B}
+.insleg{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:#6B7280;margin:0 0 8px;align-items:center}.insleg i{display:inline-block;width:14px;height:9px;border-radius:3px;margin-right:6px}.insleg i.g{background:#12A367}.insleg i.b{background:#F43F5E}
+.inschips{display:flex;flex-wrap:wrap;gap:8px}.inschip{border-radius:12px;padding:7px 12px;font-size:14px;border:1px solid transparent}.inschip small{margin-left:8px;opacity:.75;font-size:12px}
+.inschip.g{background:#E1F5EA;border-color:#BFE6CF;color:#0B7A4B}.inschip.b{background:#FDE3E7;border-color:#F6B9C2;color:#B4233A}
+#insModal .cosm-p{width:min(1180px,96vw)}
+@media (max-width:1100px){.insr{grid-template-columns:repeat(3,1fr)}.insr.pph{display:none}.insr .ppn{grid-column:1/-1}}
 .ppfoot{margin-top:12px;font-size:12.5px;color:#9AA3B0}
 .cosm-note{font-size:12.5px;color:#8A93A3;margin-top:12px}
 
@@ -2472,7 +2483,7 @@ const MONTH_EN_FULL = ['January','February','March','April','May','June','July',
 const MONTH_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const YEAR = 2026;
 // ชื่อย่อที่ใช้ในแถบเมนูด้านบน (หัวข้อเต็มยังอยู่ในแถบหัวข้อของแต่ละส่วน)
-const NAV_SHORT={people:'People Performance',overview:'Monthly KPI',salesmix:'Sales Mix & Customers',monthly:'Performance Trend',sssg:'%SSSG by Month',
+const NAV_SHORT={insight:'Insights',people:'People Performance',overview:'Monthly KPI',salesmix:'Sales Mix & Customers',monthly:'Performance Trend',sssg:'%SSSG by Month',
   delivery:'Delivery by Platform',decline:'Delivery Declines',trans:'Bills & Ticket by Channel',customers:'Customers & Avg Ticket',
   cos:'Food & Labor Cost',rank:'Top & Bottom Branches',mall:'Mall Group Health',zone:'Trade Zone Health',branches:'Branch Watchlist',branchdetail:'Branch Explorer',plan:'Plan Achievement',plbr:'Profit by Branch',pl:'Profit & Loss',cem:'CEM',oss:'OSS'}
 
@@ -3584,6 +3595,167 @@ function openPeopleBranch(code,keepList){
     <div class="aud-c" style="margin-top:14px"><div class="ppt2">รายเดือน<small>เทียบกับค่าเฉลี่ยทุกสาขาของเดือนเดียวกัน</small></div>
       <div class="ppr pph ppm1"><div>เดือน</div><div class="r">ยอดขาย</div><div>%COL</div><div class="r">ชม.แรงงาน</div><div class="r">บิล/ชม.</div><div class="r">฿/ชม.</div><div class="c">เทียบเฉลี่ยเดือนนั้น</div></div>${rows}</div>`;
   el.classList.add('open'); }
+/* ========================= Insights — วิเคราะห์ทุกเรื่องรายโซน / รายสาขา =========================
+   รวมตัวชี้วัดจากทุกหมวด: ยอดขาย vs แผน · vs LM · บิล vs LM · เช็คเฉลี่ย · %COS · %COL · กำไรสุทธิ · CEM · OSS · Productivity Sale
+   แต่ละตัวมีสีเขียว/แดงตามเกณฑ์ → นับ "ตัวชี้วัดที่ต้องดูแล" → คลิกเพื่อดูวิเคราะห์ (สาเหตุยอดเปลี่ยน · ช่องทาง · โอกาส · ข้อเสนอแนะ) */
+const INS={view:'zone',sort:'bad',dir:'desc',q:''};
+const INS_M=[['sales','ยอดขาย'],['ach','vs แผน'],['mom','vs LM'],['trMom','บิล vs LM'],['tk','เช็คเฉลี่ย'],['cos','%COS'],['col','%COL'],['net','กำไรสุทธิ'],['cem','CEM'],['oss','OSS'],['ps','฿/ชม.']];
+function insTone(k,v,a){ if(v==null||!isFinite(v)) return '';
+  switch(k){
+    case 'ach': return v>=100?'g':v<90?'b':'';
+    case 'mom': case 'trMom': return v>=0?'g':v<-3?'b':'';
+    case 'tk': return a&&v>=a*1.03?'g':a&&v<a*0.97?'b':'';
+    case 'cos': case 'col': return a!=null&&v<=a-0.5?'g':a!=null&&v>a+1?'b':'';
+    case 'net': return a!=null&&v>=a+1?'g':a!=null&&v<a-1?'b':'';
+    case 'cem': return v>=100?'g':v<92?'b':'';
+    case 'oss': return v>=90?'g':v<85?'b':'';
+    case 'ps': return a&&v>=a?'g':a&&v<a*(1-PP_TH)?'b':'';
+  } return ''; }
+function insightData(m){
+  const d=DETAIL[m]||{}, br=filtZone(d.branchRows||[]).filter(b=>b.sales>0);
+  if(!br.length) return null;
+  const pv={}; ((DETAIL[m-1]||{}).branchRows||[]).forEach(b=>{ if(b.sales>0) pv[b.code]=b; });
+  let plmap={}; for(let k=m;k>=1;k--){ const l=(DETAIL[k]||{}).plBranches; if(l&&l.length){ l.forEach(b=>{ plmap[b.code]=b; }); break; } }
+  const cem=auditStores('cem',m,YEAR)||{}, oss=auditStores('oss',m,YEAR)||{};
+  const zoneOf=c=>(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone)||'ไม่ระบุโซน';
+  const rows=br.map(b=>({code:b.code,name:(BRANCH_META&&BRANCH_META[b.code]&&BRANCH_META[b.code].name)||b.name,zone:zoneOf(b.code),
+    sales:b.sales,plan:b.plan||0,tr:b.tr||0,lh:b.lh||0,p:pv[b.code]||null,pl:plmap[b.code]||null,
+    cem:cem[b.code]?cem[b.code].score:null,oss:oss[b.code]?oss[b.code].score:null,raw:b}));
+  return {m,rows};
+}
+function insAgg(list){
+  const sum=(a,f)=>a.reduce((x,r)=>x+f(r),0), ratio=(n,dn)=>dn>0?n/dn:null;
+  const sales=sum(list,r=>r.sales);
+  const pl=list.filter(r=>r.plan>0), comp=list.filter(r=>r.p), plw=list.filter(r=>r.pl&&r.pl.sales>0), tl=list.filter(r=>r.tr>0), lh=list.filter(r=>r.lh>0);
+  const wavg=k=>{ const w=sum(plw,r=>r.pl.sales); return w>0?sum(plw,r=>(r.pl[k]||0)*r.pl.sales)/w:null; };
+  const cemV=list.filter(r=>r.cem!=null), ossV=list.filter(r=>r.oss!=null);
+  const colF=plw.length?wavg('col'):(()=>{ const w=sum(tl,r=>r.sales); return w>0?sum(list.filter(r=>r.raw.col>0),r=>r.raw.col*r.sales)/sum(list.filter(r=>r.raw.col>0),r=>r.sales):null; })();
+  return {n:list.length,sales,
+    ach:ratio(sum(pl,r=>r.sales),sum(pl,r=>r.plan))!=null?sum(pl,r=>r.sales)/sum(pl,r=>r.plan)*100:null,
+    mom:comp.length?(sum(comp,r=>r.sales)/sum(comp,r=>r.p.sales)-1)*100:null,
+    trMom:(()=>{ const c=comp.filter(r=>r.tr>0&&r.p.tr>0); return c.length?(sum(c,r=>r.tr)/sum(c,r=>r.p.tr)-1)*100:null; })(),
+    tk:ratio(sum(tl,r=>r.sales),sum(tl,r=>r.tr)), cos:plw.length?wavg('cos'):null, col:colF, net:plw.length?wavg('gp'):null,
+    cem:cemV.length?sum(cemV,r=>r.cem)/cemV.length:null, oss:ossV.length?sum(ossV,r=>r.oss)/ossV.length:null,
+    ps:ratio(sum(lh,r=>r.sales),sum(lh,r=>r.lh)), tr:sum(tl,r=>r.tr), hours:sum(lh,r=>r.lh)};
+}
+function insFmt(k,v){ if(v==null||!isFinite(v)) return '—';
+  switch(k){ case 'sales': return '฿'+fmtN(Math.round(v/1000))+'K'; case 'ach': return v.toFixed(0)+'%';
+    case 'mom': case 'trMom': return (v>=0?'+':'−')+Math.abs(v).toFixed(1)+'%'; case 'tk': return '฿'+fmtN(Math.round(v));
+    case 'cos': case 'col': case 'net': return v.toFixed(1)+'%'; case 'cem': case 'oss': return v.toFixed(1)+'%'; case 'ps': return '฿'+fmtN(Math.round(v)); } return String(v); }
+function insEntities(D,A){
+  const mk=(key,name,list)=>{ const a=insAgg(list); let g=0,b=0; INS_M.forEach(([k])=>{ const t=insTone(k,a[k],A[k]); if(t==='g') g++; else if(t==='b') b++; }); return {key,name,list,a,good:g,bad:b}; };
+  if(INS.view==='zone'){ const Z={}; D.rows.forEach(r=>{ (Z[r.zone]=Z[r.zone]||[]).push(r); }); return Object.entries(Z).map(([z,l])=>mk(z,'โซน '+z,l)); }
+  return D.rows.map(r=>mk(r.code,r.code+' '+r.name,[r]));
+}
+function insChan(list){
+  const comp=list.filter(r=>r.p&&r.p.sales>0), out=PP_CH.map(([k,n])=>{ const c=comp.reduce((a,r)=>a+(r.raw[k]||0),0), p0=comp.reduce((a,r)=>a+(r.p[k]||0),0);
+    const br=comp.map(r=>({code:r.code,name:r.name,d:(r.raw[k]||0)-(r.p[k]||0)})).sort((a,b)=>a.d-b.d); return {k,n,c,p:p0,d:c-p0,br}; });
+  const ct=comp.reduce((a,r)=>a+(r.tr||0),0), pt0=comp.reduce((a,r)=>a+(r.p.tr||0),0), cs=comp.reduce((a,r)=>a+r.sales,0), ps0=comp.reduce((a,r)=>a+r.p.sales,0);
+  const tkC=ct?cs/ct:0, tkP=pt0?ps0/pt0:0;
+  return {n:comp.length,ch:out,dSales:cs-ps0,billEff:(ct-pt0)*tkP,tkEff:ct*(tkC-tkP)};
+}
+function insightBody(m){
+  const D=insightData(m);
+  if(!D) return '<div class="empty">ยังไม่มีข้อมูลรายสาขาสำหรับวิเคราะห์ · นำเข้าไฟล์ "แบบฟอร์มส่งยอดขาย" (ปุ่ม ⤒ นำเข้าข้อมูล)</div>';
+  const A=insAgg(D.rows), E=insEntities(D,A);
+  const q=(INS.q||'').trim().toLowerCase();
+  let list=E.filter(e=>!q||e.name.toLowerCase().includes(q));
+  const keyOf=e=>INS.sort==='name'?e.name:INS.sort==='bad'?e.bad*100-e.good:INS.sort==='good'?e.good:e.a[INS.sort];
+  const dk=INS.dir==='asc'?1:-1;
+  list.sort((x,y)=>{ const a=keyOf(x), b=keyOf(y); if(typeof a==='string'||typeof b==='string') return dk*String(a||'').localeCompare(String(b||''),undefined,{numeric:true});
+    if(a==null||b==null) return (a==null)-(b==null); return dk*(a-b); });
+  /* สรุปด่วน */
+  const worst=E.slice().sort((a,b)=>(b.bad*100-b.good)-(a.bad*100-a.good))[0];
+  const metricBad=INS_M.map(([k,t])=>({k,t,n:E.filter(e=>insTone(k,e.a[k],A[k])==='b').length})).sort((a,b)=>b.n-a.n)[0];
+  const nWorst=E.filter(e=>e.bad>=4).length, unit=INS.view==='zone'?'โซน':'สาขา';
+  const hero=`<div class="aud-k dark"><div class="aud-kh">${unit}ที่ต้องดูแลก่อน · ${label(m)}</div><div class="aud-kv" style="font-size:30px">${worst?worst.name:'—'}</div>
+      <div class="aud-ks">${worst?'ตัวชี้วัดต้องดูแล '+worst.bad+' ตัว · ดี '+worst.good+' ตัว':''}</div><span class="pk" data-pk="worst" hidden>${worst?worst.name:'—'}</span></div>`;
+  const kc=(dot,l,v,sub,k)=>`<div class="aud-k"><div class="aud-kh"><i style="background:${dot}"></i>${l}</div><div class="aud-kv">${v}</div><div class="aud-ks">${sub}</div><span class="pk" data-pk="${k}" hidden>${v}</span></div>`;
+  const cards=`<div class="aud-kg">${hero}${kc('#F43F5E',unit+'ที่แดงตั้งแต่ 4 ตัวชี้วัด',nWorst+'<small>'+unit+'</small>','จาก '+E.length+' '+unit,'nworst')}${kc('#F59E0B','ตัวชี้วัดที่แดงบ่อยสุด',metricBad&&metricBad.n?metricBad.t:'—',metricBad&&metricBad.n?'แดงใน '+metricBad.n+' '+unit:'ไม่มี','mbad')}${kc('#12A367','ยอดขายรวม (ค่าเฉลี่ยทุก'+unit+')','฿'+fmtN(Math.round(A.sales/1000))+'K',A.n+' สาขา','sales')}</div>`;
+  const th=(k,t,cls)=>`<div class="${cls||''}" data-insort="${k}">${t}<i>${INS.sort===k?(INS.dir==='asc'?'▲':'▼'):'↕'}</i></div>`;
+  const cell=(e,k)=>{ const v=e.a[k], t=insTone(k,v,A[k]); return `<div class="insc ${t}">${insFmt(k,v)}</div>`; };
+  const rowsH=list.map(e=>`<div class="ppr insr" data-inskey="${e.key}"><div class="ppn">${INS.view==='zone'?'<b>'+e.key+'</b>'+'<small>'+e.a.n+' สาขา</small>':'<b>'+e.key+'</b>'+e.name.replace(e.key+' ','')}</div>${INS_M.map(([k])=>cell(e,k)).join('')}
+      <div class="insst"><span class="bd">${e.bad}</span><span class="gd">${e.good}</span></div></div>`).join('')||'<div class="empty">ไม่พบข้อมูลตามคำค้น</div>';
+  const avgRow=`<div class="ppr insr insavg"><div class="ppn"><b>เฉลี่ยทุกสาขา</b></div>${INS_M.map(([k])=>`<div class="insc">${insFmt(k,A[k])}</div>`).join('')}<div></div></div>`;
+  return `<div class="ppview"><span class="ovseg"><button type="button" class="${INS.view==='zone'?'on':''}" data-insview="zone">รายโซน</button><button type="button" class="${INS.view==='branch'?'on':''}" data-insview="branch">รายสาขา</button></span></div>${cards}
+    <div class="aud-c ppt"><div class="ppth"><div class="ppt2" style="margin:0">${INS.view==='zone'?'รายโซน':'รายสาขา'}<small>ทุกเรื่องในที่เดียว · เขียว = ดี · แดง = ต้องดูแล · คลิกแถวเพื่อดูวิเคราะห์ละเอียด</small></div>
+      ${INS.view==='branch'?`<input type="search" class="ppsearch" id="insQ" placeholder="ค้นหารหัส / ชื่อสาขา" value="${(INS.q||'').replace(/"/g,'&quot;')}" autocomplete="off">`:''}</div>
+      <div class="insleg"><span><i class="g"></i> ดี</span><span><i class="b"></i> ต้องดูแล</span><span class="insst"><span class="bd">n</span> = จำนวนตัวชี้วัดที่แดง</span><span class="insst"><span class="gd">n</span> = จำนวนที่เขียว</span>
+        <span>เกณฑ์: แผน ≥100% ดี/&lt;90% แดง · LM ≥0 ดี/&lt;−3% แดง · CEM ≥100 ดี/&lt;92 แดง · OSS ≥90 ดี/&lt;85 แดง · COS COL กำไร เช็ค ฿/ชม. เทียบค่าเฉลี่ย</span></div>
+      <div class="ppr insr pph"><div data-insort="name">${INS.view==='zone'?'โซน':'สาขา'}<i>${INS.sort==='name'?(INS.dir==='asc'?'▲':'▼'):'↕'}</i></div>${INS_M.map(([k,t])=>th(k,t,'r')).join('')}${th('bad','สถานะ','r')}</div>
+      <div id="insRows">${avgRow}${rowsH}</div></div>`;
+}
+function insightSection(m){
+  const S=SCP||{}, mm=S.multi?S.last:m;
+  return sec('insight','Insights — วิเคราะห์ทุกเรื่อง รายโซน · รายสาขา',label(mm),insightBody(mm));
+}
+function insRender(){ const b=document.querySelector('#insight .body'); if(!b||!SCP) return; b.innerHTML=insightBody(SCP.multi?SCP.last:curM); }
+function openInsight(key){
+  const m=SCP&&SCP.multi?SCP.last:curM, D=insightData(m); if(!D) return;
+  const A=insAgg(D.rows), E=insEntities(D,A), e=E.find(x=>x.key===key); if(!e) return;
+  let el=document.getElementById('insModal');
+  if(!el){ el=document.createElement('div'); el.id='insModal'; el.className='cosm';
+    el.innerHTML='<div class="cosm-bg" data-insx></div><div class="cosm-p" role="dialog" aria-modal="true"><div id="insmBody"></div></div>';
+    document.body.appendChild(el);
+    el.addEventListener('click',ev=>{ if(ev.target.closest('[data-insx]')) el.classList.remove('open');
+      const bb=ev.target.closest('[data-insbr]'); if(bb){ el.classList.remove('open'); openBranch(bb.dataset.insbr); } }); }
+  const f0=v=>fmtN(Math.round(v)), f1=v=>v.toFixed(1), K=v=>fmtN(Math.round(Math.abs(v)/1000))+'K', sg=v=>(v<0?'−':'+')+'฿'+K(v);
+  const a=e.a, C=insChan(e.list);
+  /* จุดแข็ง / ต้องดูแล */
+  const lab=Object.fromEntries(INS_M);
+  const tones=INS_M.map(([k,t])=>({k,t,v:a[k],avg:A[k],tone:insTone(k,a[k],A[k])}));
+  const goodL=tones.filter(x=>x.tone==='g'), badL=tones.filter(x=>x.tone==='b');
+  const chip=x=>`<span class="inschip ${x.tone}"><b>${x.t}</b> ${insFmt(x.k,x.v)}<small>${['mom','trMom','ach','cem','oss'].includes(x.k)?'':'เฉลี่ย '+insFmt(x.k,x.avg)}</small></span>`;
+  /* โอกาส (ประมาณการ) */
+  const tkAvg=A.tk, ptAvg=A.tr&&A.hours?A.tr/A.hours:null, pt=a.hours?a.tr/a.hours:null;
+  const upTk=(a.tk!=null&&tkAvg&&a.tk<tkAvg)?a.tr*(tkAvg-a.tk):0;
+  const upPt=(pt!=null&&ptAvg&&pt<ptAvg&&a.tk)?a.hours*(ptAvg-pt)*a.tk:0;
+  const upPs=e.list.reduce((x,r)=>x+(r.lh>0&&A.ps&&r.sales/r.lh<A.ps?(A.ps-r.sales/r.lh)*r.lh:0),0);
+  /* ข้อเสนอแนะเบื้องต้น (rule-based จากตัวเลข) */
+  const rec=[]; const worstCh=C.ch.filter(c=>c.d<0).sort((x,y)=>x.d-y.d)[0];
+  if(a.ach!=null&&a.ach<90) rec.push(`ยอดขายต่ำกว่าแผน (${f1(a.ach)}%) — ทบทวนแผนโปรโมชัน กิจกรรมหน้าร้าน และช่วงเวลาขายหลัก`);
+  if(a.trMom!=null&&a.trMom<-3) rec.push(`จำนวนบิลลดลง ${f1(Math.abs(a.trMom))}% จากเดือนก่อน — ตรวจทราฟฟิกห้าง/พื้นที่ และกิจกรรมดึงลูกค้าใหม่ ลูกค้าเดิมกลับมา`);
+  if(a.tk!=null&&tkAvg&&a.tk<tkAvg*0.97) rec.push(`เช็คเฉลี่ยต่ำกว่าเฉลี่ย (฿${f0(a.tk)} vs ฿${f0(tkAvg)}) — ส่งเสริมการขายเพิ่ม (ชุดเมนู ของทานเล่น เครื่องดื่ม) ฝึกพนักงานแนะนำเมนู`);
+  if(worstCh&&Math.abs(worstCh.d)>0) rec.push(`ช่องทาง ${worstCh.n} ลดลง ${sg(worstCh.d)} — ตรวจโปรโมชัน การมองเห็นบนแอป และเวลาเปิด-ปิดร้านบนแพลตฟอร์ม`);
+  if(a.col!=null&&A.col!=null&&a.col>A.col+1&&a.ps!=null&&A.ps&&a.ps<A.ps) rec.push(`ค่าแรงสูงและประสิทธิภาพต่ำ (%COL ${f1(a.col)}% · ฿${f0(a.ps)}/ชม.) — ทบทวนตารางกะและจำนวนคนในแต่ละช่วงเวลา`);
+  if(a.cos!=null&&A.cos!=null&&a.cos>A.cos+1) rec.push(`%COS สูงกว่าเฉลี่ย (${f1(a.cos)}% vs ${f1(A.cos)}%) — ตรวจ waste พอร์ชัน และราคารับวัตถุดิบ`);
+  if(a.cem!=null&&a.cem<92) rec.push(`คะแนน CEM ต่ำ (${f1(a.cem)}%) — ดูหมวดที่ถูกหักคะแนนในหัวข้อ CEM แล้วตามแก้รายข้อ`);
+  if(a.oss!=null&&a.oss<85) rec.push(`คะแนน OSS ต่ำ (${f1(a.oss)}%) — ตรวจมาตรฐานปฏิบัติการตามหัวข้อ OSS ที่ไม่ผ่าน`);
+  if(a.net!=null&&A.net!=null&&a.net<A.net-1) rec.push(`กำไรสุทธิต่ำกว่าเฉลี่ย (${f1(a.net)}% vs ${f1(A.net)}%) — ดูควบคู่ %COS %COL และค่าใช้จ่ายคงที่ในหัวข้อ Profitability`);
+  if(!rec.length) rec.push('ตัวชี้วัดโดยรวมอยู่ในเกณฑ์ดี — รักษามาตรฐาน และเรียนรู้แนวปฏิบัติไปใช้กับสาขาที่ต่ำกว่า');
+  const mx=Math.max(...C.ch.map(c=>Math.max(c.c,c.p)))||1;
+  const chRows=C.ch.map(c=>{ const pc=c.p?c.d/c.p*100:null; return `<div class="ppr ppch"><div class="ppn">${c.n}</div>
+      <div class="ppv"><div class="ppb"><i style="width:${Math.max(1,c.p/mx*100).toFixed(1)}%;background:#C9CDD3"></i></div><span>${K(c.p)}</span></div>
+      <div class="ppv"><div class="ppb"><i style="width:${Math.max(1,c.c/mx*100).toFixed(1)}%;background:${c.d<0?'#F43F5E':'#12A367'}"></i></div><span>${K(c.c)}</span></div>
+      <div class="ppnum ${c.d<0?'neg':'pos'}">${sg(c.d)}</div><div class="ppnum ${c.d<0?'neg':'pos'}">${pc==null?'—':(pc>=0?'+':'−')+Math.abs(pc).toFixed(1)+'%'}</div></div>`; }).join('');
+  const topBr=worstCh&&e.list.length>1?worstCh.br.filter(b=>b.d<0).slice(0,3):[];
+  const sc=(cls,t,v,sub)=>`<div class="aud-k ppc ${cls}"><div class="aud-kh">${t}</div><div class="aud-kv">${v}</div><div class="aud-ks">${sub}</div></div>`;
+  document.getElementById('insmBody').innerHTML=`<div class="cosm-top"><div><div class="cosm-sub">Insights · ${label(m)} · ${e.a.n} สาขา</div><div class="cosm-name"><span style="color:var(--accent)">${INS.view==='zone'?e.name:e.key}</span> ${INS.view==='zone'?'':e.name.replace(e.key+' ','')}</div></div>
+      <div class="cosm-nav">${INS.view==='branch'?`<button type="button" data-insbr="${e.key}" style="width:auto;padding:0 14px;font-size:13px">ดูรายละเอียดสาขา ›</button>`:''}<button type="button" class="cosm-x" data-insx aria-label="ปิด">✕</button></div></div>
+    <div class="aud-kg ppm" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:12px">
+      <div class="aud-k dark"><div class="aud-kh">สถานะ</div><div class="aud-kv">${e.bad}<small>แดง</small> · ${e.good}<small>เขียว</small></div><div class="aud-ks">จาก ${INS_M.length} ตัวชี้วัด</div></div>
+      <div class="aud-k"><div class="aud-kh">ยอดขาย</div><div class="aud-kv">${insFmt('sales',a.sales)}</div><div class="aud-ks">${a.mom!=null?'vs LM '+insFmt('mom',a.mom):''}</div></div>
+      <div class="aud-k"><div class="aud-kh">จำนวนบิล</div><div class="aud-kv">${f0(a.tr)}</div><div class="aud-ks">${a.trMom!=null?'vs LM '+insFmt('trMom',a.trMom):''} · เช็ค ${insFmt('tk',a.tk)}</div></div>
+      <div class="aud-k"><div class="aud-kh">กำไรสุทธิ</div><div class="aud-kv">${insFmt('net',a.net)}</div><div class="aud-ks">%COS ${insFmt('cos',a.cos)} · %COL ${insFmt('col',a.col)}</div></div></div>
+    <div class="aud-c" style="margin-top:0"><div class="ppt2">ภาพรวมตัวชี้วัด</div>
+      <div class="ppt3" style="margin-top:0;color:#B4233A">ต้องดูแล</div><div class="inschips">${badL.map(chip).join('')||'<em>ไม่มี</em>'}</div>
+      <div class="ppt3" style="color:#0B7A4B">จุดแข็ง</div><div class="inschips">${goodL.map(chip).join('')||'<em>ไม่มี</em>'}</div></div>
+    <div class="aud-c" style="margin-top:12px"><div class="ppt2">ยอดขายเปลี่ยนเพราะอะไร<small>เทียบเดือนก่อน · ${C.n} สาขาที่เทียบได้</small></div>
+      ${C.n?`<ul class="ppbl"><li>ยอดขาย${C.dSales<0?'ลดลง':'เพิ่มขึ้น'} <b class="${C.dSales<0?'neg':'pos'}">${sg(C.dSales)}</b> · จากจำนวนบิล <b class="${C.billEff<0?'neg':'pos'}">${sg(C.billEff)}</b> และเช็คเฉลี่ย <b class="${C.tkEff<0?'neg':'pos'}">${sg(C.tkEff)}</b></li>
+      ${worstCh?`<li>ช่องทางที่ลดมากสุด: <b class="neg">${worstCh.n} ${sg(worstCh.d)}</b>${topBr.length?' · จากสาขา '+topBr.map(b=>b.code+' '+b.name+' ('+sg(b.d)+')').join(', '):''}</li>`:'<li>ไม่มีช่องทางที่ยอดลดลง</li>'}</ul>
+      <div class="ppr ppch pph"><div>ช่องทาง</div><div>เดือนก่อน</div><div>เดือนนี้</div><div class="r">ส่วนต่าง</div><div class="r">%</div></div>${chRows}`:'<div class="ppfoot">ยังไม่มีข้อมูลเดือนก่อนสำหรับเทียบ</div>'}</div>
+    ${(upTk>0||upPt>0||upPs>0)?`<div class="aud-c" style="margin-top:12px"><div class="ppt2">โอกาสเพิ่มยอดขาย (ประมาณการ)<small>เทียบค่าเฉลี่ยทุกสาขา · ไม่รวมปัจจัยอื่น</small></div>
+      <div class="aud-kg" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+      ${sc('g','ถ้าเช็คเฉลี่ยถึง ฿'+f0(tkAvg||0),upTk>0?'+฿'+K(upTk):'ถึงแล้ว','บิลเท่าเดิม '+f0(a.tr)+' บิล')}
+      ${sc('y','ถ้าบิลต่อชม.ถึง '+(ptAvg?ptAvg.toFixed(1):'—'),upPt>0?'+฿'+K(upPt):'ถึงแล้ว','ชั่วโมงเท่าเดิม '+f0(a.hours||0)+' ชม.')}
+      ${sc('r','ถ้าสาขาที่ต่ำกว่าเฉลี่ยถึง ฿'+f0(A.ps||0)+'/ชม.',upPs>0?'+฿'+K(upPs):'—','ชั่วโมงเท่าเดิม')}</div></div>`:''}
+    <div class="aud-c" style="margin-top:12px"><div class="ppt2">ข้อเสนอแนะเบื้องต้น<small>สร้างจากตัวเลขอัตโนมัติ — ใช้ประกอบการตัดสินใจ</small></div><ul class="ppbl">${rec.map(x=>'<li>'+x+'</li>').join('')}</ul></div>`;
+  el.classList.add('open'); }
+document.addEventListener('click',e=>{
+  const vw=e.target.closest&&e.target.closest('#insight [data-insview]'); if(vw){ INS.view=vw.dataset.insview; INS.sort='bad'; INS.dir='desc'; INS.q=''; insRender(); return; }
+  const so=e.target.closest&&e.target.closest('#insight [data-insort]'); if(so){ const k=so.dataset.insort; if(INS.sort===k) INS.dir=INS.dir==='asc'?'desc':'asc'; else { INS.sort=k; INS.dir=(k==='name')?'asc':'desc'; } insRender(); return; }
+  const rw=e.target.closest&&e.target.closest('#insight [data-inskey]'); if(rw) openInsight(rw.dataset.inskey); });
+document.addEventListener('input',e=>{ if(e.target&&e.target.id==='insQ'){ INS.q=e.target.value; const pos=e.target.selectionStart; insRender(); const n=document.getElementById('insQ'); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(x){} } } });
 function customersSection(m){
   const S=SCP||{multi:false}, T='Customers & Average Ticket';
   const CMP=CUS.cmp==='ly'?'ly':'lm', RNc=CMP==='ly'?'LY':'LM';
@@ -4225,6 +4397,7 @@ const GROUPS=[
     {cap:'ช่องทางขาย',ids:['delivery','decline']}]},
   {k:'cust',ic:'👥',name:'ลูกค้า',subs:[{cap:'',ids:['customers']}]},
   {k:'people',ic:'🧑‍🍳',name:'People',subs:[{cap:'',ids:['people']}]},
+  {k:'insight',ic:'🧭',name:'Insights',subs:[{cap:'',ids:['insight']}]},
   {k:'pl',ic:'📊',name:'P&L',subs:[{cap:'',ids:['pl']}]},
   {k:'cem',ic:'⭐',name:'CEM',subs:[{cap:'',ids:['cem']}]},
   {k:'oss',ic:'✅',name:'OSS',subs:[{cap:'',ids:['oss']}]}];
@@ -5518,6 +5691,7 @@ function buildMain(m){
   const t=d.trans;
   out.push(customersSection(m));
   out.push(peopleSection(m));
+  out.push(insightSection(m));
 
   // 7 branches good vs bad
   const b=d.branches;
@@ -7275,6 +7449,7 @@ function hvIcon(k,sm){ const P={
   cost:'<path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>',
   quality:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
   people:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  insight:'<circle cx="12" cy="12" r="9"/><polygon points="16 8 14 14 8 16 10 10 16 8"/>',
   other:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'};
   return '<span class="hv-ic hv-ic-'+k+(sm?' sm':'')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(P[k]||P.other)+'</svg></span>'; }
 /* ================= UX ใหม่: หน้ารวมหัวข้อ → หน้าหมวด ================= */
@@ -7287,13 +7462,12 @@ const TOPICS=[
   {k:'cust',ic:'👥',n:'Customer Traffic',ids:['customers']},
   {k:'cost',ic:'📊',n:'Profitability',ids:['pl']},
   {k:'quality',ic:'⭐',n:'Store Excellence',ids:['cem','oss']},
-  /* 2 หมวดที่ยังไม่มีข้อมูลในระบบ แสดงเป็นการ์ดรอข้อมูล กดไม่ได้ */
   {k:'people',ic:'🧑‍🍳',n:'People Performance',ids:['people']},
-  {k:'other',ic:'🗂️',n:'Other',ids:[],soon:'หัวข้ออื่นที่จะเพิ่มภายหลัง'}];
+  {k:'insight',ic:'🧭',n:'Insights',ids:['insight']}];
 TOPICS.forEach(t=>{ if(t.groups) t.ids=t.groups.flatMap(g=>g.ids); });
 const TABN={overview:'Overview',monthly:'Trend',sssg:'SSSG',salesmix:'Sales Mix',delivery:'Delivery',decline:'Delivery Declines',
   plan:'Plan',mall:'Mall Group',zone:'Trade Zone',branches:'Watchlist',branchdetail:'Branch Explorer',
-  customers:'Customers',people:'People',trans:'Bills by Channel',pl:'P&L',cos:'COS / COL',plbr:'Profit by Branch',cem:'CEM',oss:'OSS'};
+  customers:'Customers',people:'People',insight:'Insights',trans:'Bills by Channel',pl:'P&L',cos:'COS / COL',plbr:'Profit by Branch',cem:'CEM',oss:'OSS'};
 let TOPIC=null, TSEC=null;
 const T=(sel,root)=>{ const e=(root||document).querySelector(sel); return e?e.textContent.replace(/\s+/g,' ').trim():''; };
 const st=(id,i)=>{ const x=document.querySelectorAll('#'+id+' .strip .st')[i]; if(!x) return null;
@@ -7319,6 +7493,9 @@ function tile(t){
       const mg=rv&&rv.split(' ของรายได้')[0];
       return {l:'กำไรสุทธิ', v:n&&T('.plkv',n),
         rows:[mg&&['อัตรากำไรสุทธิ',mg], cc[0]&&['%COS ต้นทุนอาหาร',cc[0]], cc[1]&&['%COL ค่าแรง',cc[1]]].filter(Boolean)}; }
+    case 'insight': { const g=k=>T('#insight [data-pk="'+k+'"]');
+      return {l:'ต้องดูแลก่อน', v:g('worst'),
+        rows:[g('nworst')&&['แดงตั้งแต่ 4 ตัวชี้วัด',g('nworst')], g('mbad')&&['ตัวชี้วัดที่แดงบ่อยสุด',g('mbad')]].filter(Boolean)}; }
     case 'people': { const g=k=>T('#people [data-pk="'+k+'"]');
       return {l:'Productivity Sale', v:g('ps')&&(g('ps')+' / ชม.'),
         rows:[g('col')&&['%COL เฉลี่ย',g('col')], g('hours')&&['Labour (hour)',g('hours')+' ชม.'], g('pt')&&['Productivity Trans',g('pt')+' บิล/ชม.']].filter(Boolean)}; }
@@ -7392,8 +7569,8 @@ function openTopic(k){ TOPIC=k; TSEC=null; try{ history.pushState({hubT:k},''); 
 function goHub(){ TOPIC=null; TSEC=null; try{ if(history.state&&history.state.hubT) history.replaceState(null,''); }catch(e){} hubApply(); window.scrollTo({top:0}); }
 addEventListener('popstate',e=>{ if(!document.body.classList.contains('hub')) return; TOPIC=(e.state&&e.state.hubT)||null; hubApply(); window.scrollTo({top:0}); });
 /* ---- แบรนด์ที่ยังไม่มีข้อมูล (Santa Fe FS · Jaedang): โครงเดียวกับ KT ---- */
-const NEED_T={people:'แบบฟอร์มส่งยอดขาย (คอลัมน์ Labour(hour))',sales:'ไฟล์ Daily Sale (ชีต Summary Salse)',cust:'แบบฟอร์มส่งยอดขาย (บิล · ลูกค้า)',cost:'งบกำไรขาดทุนของร้าน (ไฟล์ P&L ปัจจุบันยังไม่มี)',quality:'ผลสำรวจ CEM · ผลตรวจ OSS'};
-const NEED_S={people:'แบบฟอร์มส่งยอดขาย (คอลัมน์ Labour(hour))',sssg:'แบบฟอร์มส่งยอดขาย + ยอดรายสาขา 2 ปี',rank:'ยอดรายสาขา 2 ปี',mall:'ยอดรายสาขา 2 ปี',zone:'ยอดรายสาขา 2 ปี',
+const NEED_T={insight:'แบบฟอร์มส่งยอดขาย · งบกำไรขาดทุน · CEM · OSS',people:'แบบฟอร์มส่งยอดขาย (คอลัมน์ Labour(hour))',sales:'ไฟล์ Daily Sale (ชีต Summary Salse)',cust:'แบบฟอร์มส่งยอดขาย (บิล · ลูกค้า)',cost:'งบกำไรขาดทุนของร้าน (ไฟล์ P&L ปัจจุบันยังไม่มี)',quality:'ผลสำรวจ CEM · ผลตรวจ OSS'};
+const NEED_S={insight:'แบบฟอร์มส่งยอดขาย · งบกำไรขาดทุน · CEM · OSS',people:'แบบฟอร์มส่งยอดขาย (คอลัมน์ Labour(hour))',sssg:'แบบฟอร์มส่งยอดขาย + ยอดรายสาขา 2 ปี',rank:'ยอดรายสาขา 2 ปี',mall:'ยอดรายสาขา 2 ปี',zone:'ยอดรายสาขา 2 ปี',
   delivery:'Daily Sale หรือ แบบฟอร์มส่งยอดขาย',decline:'Daily Sale',plan:'แบบฟอร์มส่งยอดขาย (แผนรายสาขา)',
   customers:'แบบฟอร์มส่งยอดขาย (บิล · ลูกค้า)',trans:'แบบฟอร์มส่งยอดขาย (บิลรายช่องทาง)',
   pl:'ไฟล์ P&L (ชีตสรุปของแบรนด์)',cos:'ไฟล์ P&L (ต้นทุนอาหาร · ค่าแรง)',plbr:'ไฟล์ P&L (ชีต SUM รายสาขา)',cem:'ไฟล์ผลสำรวจลูกค้า CEM',oss:'ไฟล์ผลตรวจมาตรฐาน OSS'};
