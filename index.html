@@ -3522,7 +3522,7 @@ function peopleZoneHtml(m,P){
   const tkDiff=o.tk-S.tkAvg, ptDiff=o.pt-S.ptAvg;
   const sc=(cls,t,v,sub)=>`<div class="aud-k ppc ${cls}"><div class="aud-kh">${t}</div><div class="aud-kv">${v}</div><div class="aud-ks">${sub}</div></div>`;
   const scen=`<div class="aud-kg" style="grid-template-columns:repeat(3,minmax(0,1fr));margin:12px 0">
-    ${sc('g','ถ้าเช็คเฉลี่ยถึงค่าเฉลี่ย (฿'+f0(S.tkAvg)+')',o.upTk>0?'+฿'+fmtN(Math.round(o.upTk/1000))+'K':'ถึงแล้ว','บิลเท่าเดิม '+f0(o.trans)+' บิล · เช็คโซนนี้ ฿'+f0(o.tk)+(tkDiff<0?' (ต่ำกว่า ฿'+f0(-tkDiff)+')':' (สูงกว่า)'))}
+    ${sc('g','ถ้ายอดต่อบิลเพิ่มจาก ฿'+f0(o.tk)+' เป็น ฿'+f0(S.tkAvg),o.upTk>0?'+฿'+fmtN(Math.round(o.upTk/1000))+'K':'ถึงแล้ว','บิลเท่าเดิม '+f0(o.trans)+' บิล · เช็คโซนนี้ ฿'+f0(o.tk)+(tkDiff<0?' (ต่ำกว่า ฿'+f0(-tkDiff)+')':' (สูงกว่า)'))}
     ${sc('y','ถ้าบิลต่อชม.ถึงค่าเฉลี่ย ('+f1(S.ptAvg)+')',o.upPt>0?'+฿'+fmtN(Math.round(o.upPt/1000))+'K':'ถึงแล้ว','ชั่วโมงเท่าเดิม '+f0(o.hours)+' ชม. · โซนนี้ '+f1(o.pt)+' บิล/ชม.'+(ptDiff<0?'':' (สูงกว่า)'))}
     ${sc('r','ถ้าสาขาที่ต่ำกว่าเฉลี่ยทำถึงค่าเฉลี่ย',o.upBr>0?'+฿'+fmtN(Math.round(o.upBr/1000))+'K':'—','ชั่วโมงเท่าเดิม · ยกประสิทธิภาพ ฿/ชม. ของสาขาที่ต่ำกว่า ฿'+f0(S.psAvg)+' ทุกแห่ง')}</div>`;
   const mx=Math.max(...o.ch.map(c=>Math.max(c.c,c.p)))||1;
@@ -3921,7 +3921,7 @@ function openInsight(key,view){ view=view||INS.view; Object.keys(INS_MEMO).forEa
       <div class="ppr ppch pph"><div>ช่องทาง</div><div>เดือนก่อน</div><div>เดือนนี้</div><div class="r">ส่วนต่าง</div><div class="r">%</div></div>${chRows}`:'<div class="ppfoot">ยังไม่มีข้อมูลเดือนก่อนสำหรับเทียบ</div>'}</div>
     ${(upTk>0||upPt>0||upPs>0)?`<div class="aud-c" style="margin-top:12px"><div class="ppt2">โอกาสเพิ่มยอดขาย (ประมาณการ)<small>เทียบค่าเฉลี่ยทุกสาขา · ไม่รวมปัจจัยอื่น</small></div>
       <div class="aud-kg" style="grid-template-columns:repeat(3,minmax(0,1fr))">
-      ${sc('g','ถ้าเช็คเฉลี่ยถึง ฿'+f0(tkAvg||0),upTk>0?'+฿'+K(upTk):'ถึงแล้ว','บิลเท่าเดิม '+f0(a.tr)+' บิล')}
+      ${sc('g','ถ้ายอดต่อบิลเพิ่มจาก ฿'+f0(a.tk||0)+' เป็น ฿'+f0(tkAvg||0),upTk>0?'+฿'+K(upTk):'ถึงแล้ว','บิลเท่าเดิม '+f0(a.tr)+' บิล')}
       ${sc('y','ถ้าบิลต่อชม.ถึง '+(ptAvg?ptAvg.toFixed(1):'—'),upPt>0?'+฿'+K(upPt):'ถึงแล้ว','ชั่วโมงเท่าเดิม '+f0(a.hours||0)+' ชม.')}
       ${sc('r','ถ้าสาขาที่ต่ำกว่าเฉลี่ยถึง ฿'+f0(A.ps||0)+'/ชม.',upPs>0?'+฿'+K(upPs):'—','ชั่วโมงเท่าเดิม')}</div></div>`:''}
 
