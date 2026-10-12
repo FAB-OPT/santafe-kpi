@@ -3838,7 +3838,8 @@ function insightBody(m){
   const zones=[...new Set(D.rows.map(r=>r.zone))].sort();
   const scRows=INS.zsel&&INS.zsel!=='all'?D.rows.filter(r=>r.zone===INS.zsel):D.rows;
   const TABS=[['overview','ภาพรวมตัวชี้วัด'],['cause','สาเหตุยอดตก'],['rank','จัดอันดับสาขา'],['cost','วิเคราะห์ต้นทุน'],['target','เป้าฟื้นยอดขาย']];
-  const tabBar=`<div class="instabs">${TABS.map(([k,t])=>`<button type="button" class="${INS.tab===k?'on':''}" data-instab="${k}">${t}</button>`).join('')}${INS.tab==='overview'?'':`<label class="inszone">ขอบเขต <select id="insZone"><option value="all">ทุกโซน</option>${zones.map(z=>`<option value="${z}" ${INS.zsel===z?'selected':''}>โซน ${z}</option>`).join('')}</select></label>`}</div>`;
+  INS.tab='overview';   // แท็บวิเคราะห์เชิงลึก 4 แท็บถูกเอาออกจากหน้า (ฟังก์ชันยังอยู่ ไม่ได้แสดง)
+  const tabBar='';const _tabBarOld=`<div class="instabs">${TABS.map(([k,t])=>`<button type="button" class="${INS.tab===k?'on':''}" data-instab="${k}">${t}</button>`).join('')}${INS.tab==='overview'?'':`<label class="inszone">ขอบเขต <select id="insZone"><option value="all">ทุกโซน</option>${zones.map(z=>`<option value="${z}" ${INS.zsel===z?'selected':''}>โซน ${z}</option>`).join('')}</select></label>`}</div>`;
   if(INS.tab==='cause') return tabBar+insCause(D,A,scRows);
   if(INS.tab==='rank') return tabBar+insRank(D,A,scRows);
   if(INS.tab==='cost') return tabBar+insCost(D,A,scRows);
