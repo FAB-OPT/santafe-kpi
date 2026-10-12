@@ -3426,10 +3426,10 @@ function peopleBody(m){
   const hiP=r=>r.ps>=P.ps, hiC=r=>r.col>P.col;
   const quad=(pred,cls,title)=>{ const l=P.rows.filter(pred).sort((a,b)=>String(a.code).localeCompare(b.code));
     return `<div class="pq ${cls}"><div class="pqh"><b>${l.length}</b><span>${title}</span></div><div class="pqc">${l.map(r=>`<i data-ssbr="${r.code}" title="${r.code} ${r.name}">${r.code}</i>`).join('')||'<em>—</em>'}</div></div>`; };
-  const quadH=`<div class="aud-c ppq"><div class="ppt2">ค่าแรง vs ผลิตภาพ<small>แบ่งตามค่าเฉลี่ย %COL และ Productivity Sale · ชี้รหัสเพื่อดูชื่อสาขา</small></div>
+  const quadH=`<div class="aud-c ppq"><div class="ppt2">ค่าแรง vs ประสิทธิภาพ<small>แบ่งตามค่าเฉลี่ย %COL และ Productivity Sale · ชี้รหัสเพื่อดูชื่อสาขา</small></div>
     <div class="pqg"><span></span><span class="pqx">%COL ≤ ${f1(P.col)}%</span><span class="pqx">%COL &gt; ${f1(P.col)}%</span>
-      <span class="pqy">ผลิตภาพ ≥ ฿${f0(P.ps)}</span>${quad(r=>hiP(r)&&!hiC(r),'g','ดี – คุมค่าแรงได้ ผลิตภาพสูง')}${quad(r=>hiP(r)&&hiC(r),'y','ผลิตภาพดี แต่ค่าแรงสูง')}
-      <span class="pqy">ผลิตภาพ &lt; ฿${f0(P.ps)}</span>${quad(r=>!hiP(r)&&!hiC(r),'n','ค่าแรงต่ำ แต่ผลิตภาพต่ำ')}${quad(r=>!hiP(r)&&hiC(r),'r','ต้องดูแล – ค่าแรงสูง ผลิตภาพต่ำ')}</div></div>`;
+      <span class="pqy">ประสิทธิภาพ ≥ ฿${f0(P.ps)}</span>${quad(r=>hiP(r)&&!hiC(r),'g','ดี – คุมค่าแรงได้ ประสิทธิภาพสูง')}${quad(r=>hiP(r)&&hiC(r),'y','ประสิทธิภาพดี แต่ค่าแรงสูง')}
+      <span class="pqy">ประสิทธิภาพ &lt; ฿${f0(P.ps)}</span>${quad(r=>!hiP(r)&&!hiC(r),'n','ค่าแรงต่ำ แต่ประสิทธิภาพต่ำ')}${quad(r=>!hiP(r)&&hiC(r),'r','ต้องดูแล – ค่าแรงสูง ประสิทธิภาพต่ำ')}</div></div>`;
   const worst=P.low.slice().sort((a,b)=>a.ps-b.ps).slice(0,7);
   const wH=`<div class="aud-c ppw"><div class="ppt2">ต้องดูแลก่อน<small>Productivity Sale ต่ำสุด จาก ${P.low.length} สาขาที่ต่ำกว่าเกณฑ์</small></div>
     ${worst.map((r,i)=>`<div class="ppwr" data-ssbr="${r.code}"><span class="ppwi">${i+1}</span><div><b>${r.code}</b> ${r.name}<small>%COL ${f1(r.col)}% · ${f1(r.pt)} บิล/ชม.</small></div><div class="ppwv">฿${f0(r.ps)}<small>−${Math.abs((r.ps/P.ps-1)*100).toFixed(1)}%</small></div></div>`).join('')||'<div class="empty">ไม่มีสาขาที่ต่ำกว่าเกณฑ์</div>'}</div>`;
