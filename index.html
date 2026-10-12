@@ -3149,8 +3149,8 @@ function openCosModal(code){
     let j=mons.length-1; while(j>=0&&!(FB[mons[j].k]&&FB[mons[j].k][iRev])) j--;
     if(j<0) return `<div class="cosm-plh"><b>งบกำไรขาดทุนเต็ม</b></div><div class="cosm-note">ยังไม่มีงบกำไรขาดทุนของสาขานี้</div>`;
     const cm=FB[mons[j].k], ytd=plVals(FB,mons.slice(0,j+1).map(o=>o.m)), cur={m:mons[j].m};
-    const rv=cm[iRev], rvY=ytd?ytd[iRev]:0, f0=v=>v==null?'—':(v<0?'−':'')+fmtN(Math.round(Math.abs(v)/1000)), pc=(v,r)=>v==null||!r?'—':(v/r*100).toFixed(1)+'%';
-    const z0=v=>v==null||Math.round(v/1000)===0;
+    const rv=cm[iRev], rvY=ytd?ytd[iRev]:0, f0=v=>v==null?'—':(v<0?'−':'')+fmtN(Math.round(Math.abs(v)*1000))   /* ข้อมูลงบรายสาขาเก็บเป็นล้านบาท → แสดงเป็นพันบาท */, pc=(v,r)=>v==null||!r?'—':(v/r*100).toFixed(1)+'%';
+    const z0=v=>v==null||Math.round(v*1000)===0;
     const trs=items.map(it=>{ const v=cm[it.index], y=ytd?ytd[it.index]:null, zero=z0(v)&&z0(y);
       return `<tr class="${(it.depth?'sub':(it.highlight?'hl':'main'))+(zero?' zero':'')}"><td style="padding-left:${10+it.depth*16}px">${plLabel(it)}</td><td class="n">${f0(v)}</td><td class="n">${pc(v,rv)}</td><td class="n">${f0(y)}</td><td class="n">${pc(y,rvY)}</td></tr>`; }).join('');
     const nz=items.filter(it=>{ const v=cm[it.index], y=ytd?ytd[it.index]:null; return z0(v)&&z0(y); }).length;
