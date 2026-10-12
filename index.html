@@ -3945,6 +3945,7 @@ function plbrBody(){
     const t=(arr,bad)=>`<div class="scroll"><table class="plbt"><tr><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">กำไร</th><th class="n">%กำไร</th><th class="n">%COS</th><th class="n">%COL</th></tr>
       ${arr.map(b=>`<tr class="clk" data-ssbr="${b.code}"><td>${b.name}</td><td class="n">${KB(b.sales)}</td><td class="n ${cls(b.profit)}">${KB(b.profit)}</td><td class="n">${pill(b.gp)}</td><td class="n">${b.cos.toFixed(1)}%</td><td class="n">${b.col.toFixed(1)}%</td></tr>`).join('')}</table></div>`;
     const loss=plb.filter(b=>b.profit<0), nProfit=plb.length-loss.length;
+    const nTop=Math.min(5,Math.ceil(srt.length/2)), nBot=Math.min(5,srt.length-nTop);   // สาขาน้อยกว่า 10 → แบ่งครึ่ง ไม่ให้สาขาเดียวขึ้นทั้งสองตาราง
     PLBR={rank,edges:[-10,0,5,10,15,1e9],labels:['ขาดทุน>10%','ขาดทุน 0-10%','0-5%','5-10%','10-15%','>15%'],sel:null};
     const subTxt=`${S.multi?S.lab:label(plbM)}${plbM!==m&&!S.multi?' (เดือนล่าสุดที่มีงบกำไรขาดทุน)':''} · ${rank.length} สาขา`;
     return `<div id="plbr"><div class="grp big">Profit by Branch<span class="gr">${subTxt}</span></div>
@@ -3958,8 +3959,8 @@ function plbrBody(){
       </div>
       <div id="plbrPick"></div>
       <div class="plbg2">
-        <div class="plbt2"><div class="plbth"><i class="g"></i>กำไรดีที่สุด 5 สาขา</div>${t(srt.slice(0,5))}</div>
-        <div class="plbt2"><div class="plbth"><i class="r"></i>ต้องดูแลด่วน 5 สาขา</div>${t(srt.slice(-5).reverse())}</div>
+        <div class="plbt2"><div class="plbth"><i class="g"></i>กำไรดีที่สุด ${nTop} สาขา</div>${t(srt.slice(0,nTop))}</div>
+        <div class="plbt2"><div class="plbth"><i class="r"></i>ต้องดูแลด่วน ${nBot} สาขา</div>${t(srt.slice(srt.length-nBot).reverse())}</div>
       </div></div>`;
   }
 
