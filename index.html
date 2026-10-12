@@ -2752,7 +2752,7 @@ function plSection(m){
   const idx=id=>items.find(x=>x.id===id); const g=id=>{const it=idx(id); return it?cur[it.index]:null;};
   const tile=(l,v,cl)=>`<div class="st ${cl||''}"><div class="l">${l}</div><div class="v">${fm(v)}</div><div class="s">${pc(v,rev)} ของรายได้</div></div>`;
   const brs=F.branch?Object.keys(F.branch):[];
-  const brName=c=>(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].name)||c;
+  const brName=brNameOf;
   const brOpts=brs.filter(c=>FILT.zone==='all'||inScopeCode(c))
     .sort((a,b)=>String(a).localeCompare(String(b)));
   const head=`<div class="plbar">
@@ -3753,6 +3753,12 @@ function zoneSection(){
 }
 
 /* ========================= ตาราง P&L สาขา × เดือน ========================= */
+/* ชื่อสาขาจากรหัส: ทะเบียนสาขา → ยอดรายสาขา 2 ปี → แถวสาขารายเดือน (สาขาใหม่ที่ยังไม่อยู่ในทะเบียนก็ยังเห็นชื่อ) · ไม่เจอจริงๆ ค่อยแสดงรหัส */
+function brNameOf(c){ c=String(c);
+  const m=BRANCH_META&&BRANCH_META[c]; if(m&&m.name&&String(m.name)!==c) return m.name;
+  const by=(EXTRA&&EXTRA.branchYears||[]).find(b=>String(b.code)===c); if(by&&by.name&&String(by.name)!==c) return by.name;
+  for(const k of Object.keys(DETAIL||{}).reverse()){ const r=((DETAIL[k]||{}).branchRows||[]).find(x=>String(x.code)===c); if(r&&r.name&&String(r.name)!==c) return r.name; }
+  return c; }
 const PLM={on:true, item:'net', unit:'pct', sort:'last', dir:'desc'};
 /* Branch × Month Matrix: เลือกหัวข้อ (กำไรสุทธิ · ต้นทุนอาหาร · ค่าแรง · รายได้) · หน่วย บาท / % · เรียงตามคอลัมน์ใดก็ได้ (คลิกหัวคอลัมน์) · มาก→น้อย / น้อย→มาก */
 function plMatrix(items){
@@ -3761,7 +3767,7 @@ function plMatrix(items){
   if(!mons.length) return '';
   const iRev=items.find(x=>x.id==='revenue').index, iNet=items.find(x=>x.id==='net').index,
         iCogs=items.find(x=>x.id==='cogs').index, iLab=items.find(x=>x.id==='labor').index;
-  const brName=c=>(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].name)||c;
+  const brName=brNameOf;
   const codes=Object.keys(F.branch).filter(c=>FILT.zone==='all'||inScopeCode(c));
   if(!codes.length) return '';
   const ITEM={net:{t:'กำไรสุทธิ',i:iNet,good:{pct:v=>v>=0,baht:v=>v>=0}},
@@ -3948,7 +3954,7 @@ function cosBody(){
     <div class="legend">${ser.map(s=>`<span><i style="background:${s.color}"></i>${s.name}</span>`).join('')}</div>`;
   const plbrHtml=plbrBody();
   /* รายสาขา */
-  const brName=c=>(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].name)||c;
+  const brName=brNameOf;
   const codes=Object.keys(F.branch||{}).filter(c=>FILT.zone==='all'||inScopeCode(c));
   const brs=codes.map(c=>{ const a=S.multi?plVals(F.branch[c],inS):F.branch[c][last.k]; if(!a||!a[iRev]) return null; const o=P(a);
       const pa=S.multi?(keysOk(F.branch[c],S.prevMs)?plVals(F.branch[c],S.prevMs):null):(mons.length>1?F.branch[c][mons[mons.length-2].k]:null); const po=pa&&pa[iRev]?P(pa):null;
