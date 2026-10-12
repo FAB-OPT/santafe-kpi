@@ -1979,7 +1979,7 @@ table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD
 .cosm-plh{display:flex;align-items:center;gap:10px;margin:18px 0 8px}.cosm-plh b{font-size:15px}.cosm-plh small{color:#8A93A3}.cosm-plh .btn{margin-left:auto}
 table.cosm-pl{width:100%;border-collapse:collapse}table.cosm-pl th,table.cosm-pl td{padding:6px 10px;font-size:13px;border-bottom:1px solid var(--hair)}
 table.cosm-pl tr.main td,table.cosm-pl tr.hl td{font-weight:700}table.cosm-pl tr.hl td{background:var(--accent-2)}
-table.cosm-pl tr.sub{display:none}table.cosm-pl.showsub tr.sub{display:table-row}table.cosm-pl tr.sub td{color:var(--mute);font-size:12.5px}
+table.cosm-pl tr.zero{display:none}table.cosm-pl.showzero tr.zero{display:table-row}table.cosm-pl.hidesub tr.sub{display:none!important}table.cosm-pl tr.sub td{color:var(--mute);font-size:12.5px}
 .cosm-note{font-size:12.5px;color:#8A93A3;margin-top:12px}
 
 #plbr .plbc{display:flex;flex-direction:column}
@@ -3120,7 +3120,8 @@ function openCosModal(code){
     el.innerHTML='<div class="cosm-bg" data-cmx></div><div class="cosm-p" role="dialog" aria-modal="true"><div id="cosmBody"></div></div>';
     document.body.appendChild(el);
     el.addEventListener('click',ev=>{ if(ev.target.closest('[data-cmx]')){ closeCosModal(); return; }
-      const sb=ev.target.closest('[data-cmsub]'); if(sb){ const tb=document.querySelector('#cosmBody .cosm-pl'); if(tb){ const on=tb.classList.toggle('showsub'); sb.textContent=on?'ซ่อนหมวดย่อย':'แสดงหมวดย่อย'; } return; }
+      const sb=ev.target.closest('[data-cmsub]'); if(sb){ const tb=document.querySelector('#cosmBody .cosm-pl'); if(tb){ const hide=tb.classList.toggle('hidesub'); sb.textContent=hide?'แสดงหมวดย่อย':'ซ่อนหมวดย่อย'; } return; }
+      const zb=ev.target.closest('[data-cmzero]'); if(zb){ const tb=document.querySelector('#cosmBody .cosm-pl'); if(tb){ const on=tb.classList.toggle('showzero'); zb.textContent=on?'ซ่อนแถวที่เป็น 0':'แสดงแถวที่เป็น 0'; } return; }
       const nv=ev.target.closest('[data-cmnav]'); if(nv){ const j=COSM.i+(+nv.dataset.cmnav); if(COSM.list[j]) openCosModal(COSM.list[j]); } }); }
   const items=plFlat(), iRev=items.find(x=>x.id==='revenue').index, iCos=items.find(x=>x.id==='cogs').index, iCol=items.find(x=>x.id==='labor').index;
   const S=SCP||{}, endM=S.multi?S.last:curM;
@@ -3134,7 +3135,7 @@ function openCosModal(code){
     return `<div class="cosm-c"><div class="cosm-l"><i style="background:${color}"></i>${lab}</div><div class="cosm-v ${v>a?'neg':'pos'}">${v.toFixed(1)}%</div>
       <div class="cosm-d">${pv!=null?`<span class="pill ${v-pv<=0?'pos':'neg'}">${v-pv>=0?'+':'−'}${Math.abs(v-pv).toFixed(1)} ppt vs ${MONTH_TH[prv.m-1]}</span>`:''}<small>${v-a>=0?'+':'−'}${Math.abs(v-a).toFixed(1)} vs เฉลี่ย</small></div></div>`; };
   const labs=mons.map(o=>MONTH_TH[o.m-1]);
-  const chart=(title,k,color)=>{ const ser=[{name:'สาขานี้',color:color,w:3,label:'all',vals:bs.map(b=>b[k]==null?null:+b[k].toFixed(1))},{name:'เฉลี่ยทุกสาขา',color:'#9AA3B0',dash:1,w:1.8,label:'last',vals:av.map(a=>a[k]==null?null:+a[k].toFixed(1))}];
+  const chart=(title,k,color)=>{ const ser=[{name:'สาขานี้',color:color,w:3,label:'all',fade:Math.max(0,bs.length-2),vals:bs.map(b=>b[k]==null?null:+b[k].toFixed(1))},{name:'เฉลี่ยทุกสาขา',color:'#9AA3B0',dash:1,w:1.8,label:'last',vals:av.map(a=>a[k]==null?null:+a[k].toFixed(1))}];
     return `<div class="cosm-ch"><div class="cosm-t">${title}<small>เส้นประ = เฉลี่ยทุกสาขา</small></div>${lineSeries(labs,ser,{w:620,h:290,R:44,fmt:v=>v.toFixed(0)+'%',tipFmt:v=>v.toFixed(1)+'%'})}</div>`; };
   const plTbl=(()=>{ const FB=F.branch[code];
     /* ใช้เดือนล่าสุดที่สาขานี้มีงบจริง (สาขาเปิดใหม่/ยังไม่ส่งงบเดือนล่าสุด ก็ยังเห็นงบของเดือนที่มี) */
@@ -3142,9 +3143,11 @@ function openCosModal(code){
     if(j<0) return `<div class="cosm-plh"><b>งบกำไรขาดทุนเต็ม</b></div><div class="cosm-note">ยังไม่มีงบกำไรขาดทุนของสาขานี้</div>`;
     const cm=FB[mons[j].k], ytd=plVals(FB,mons.slice(0,j+1).map(o=>o.m)), cur={m:mons[j].m};
     const rv=cm[iRev], rvY=ytd?ytd[iRev]:0, f0=v=>v==null?'—':(v<0?'−':'')+fmtN(Math.round(Math.abs(v)/1000)), pc=(v,r)=>v==null||!r?'—':(v/r*100).toFixed(1)+'%';
-    const trs=items.map(it=>{ const v=cm[it.index], y=ytd?ytd[it.index]:null;
-      return `<tr class="${it.depth?'sub':(it.highlight?'hl':'main')}"><td style="padding-left:${10+it.depth*16}px">${plLabel(it)}</td><td class="n">${f0(v)}</td><td class="n">${pc(v,rv)}</td><td class="n">${f0(y)}</td><td class="n">${pc(y,rvY)}</td></tr>`; }).join('');
-    return `<div class="cosm-plh"><b>งบกำไรขาดทุนเต็ม</b><small>หน่วย: พันบาท${j<mons.length-1?' · เดือนล่าสุดที่สาขามีงบ: '+MONTH_TH[cur.m-1]:''}</small><button type="button" class="btn small" data-cmsub>แสดงหมวดย่อย</button></div>
+    const z0=v=>v==null||Math.round(v/1000)===0;
+    const trs=items.map(it=>{ const v=cm[it.index], y=ytd?ytd[it.index]:null, zero=z0(v)&&z0(y);
+      return `<tr class="${(it.depth?'sub':(it.highlight?'hl':'main'))+(zero?' zero':'')}"><td style="padding-left:${10+it.depth*16}px">${plLabel(it)}</td><td class="n">${f0(v)}</td><td class="n">${pc(v,rv)}</td><td class="n">${f0(y)}</td><td class="n">${pc(y,rvY)}</td></tr>`; }).join('');
+    const nz=items.filter(it=>{ const v=cm[it.index], y=ytd?ytd[it.index]:null; return z0(v)&&z0(y); }).length;
+    return `<div class="cosm-plh"><b>งบกำไรขาดทุน</b><small>หน่วย: พันบาท${j<mons.length-1?' · เดือนล่าสุดที่สาขามีงบ: '+MONTH_TH[cur.m-1]:''}</small>${nz?`<button type="button" class="btn small" data-cmzero style="margin-left:auto">แสดงแถวที่เป็น 0</button>`:''}<button type="button" class="btn small" data-cmsub${nz?'':' style="margin-left:auto"'}>ซ่อนหมวดย่อย</button></div>
       <div class="scroll"><table class="cosm-pl"><tr><th>รายการ</th><th class="n">${MONTH_TH[cur.m-1]} ${YEAR}</th><th class="n">% รายได้</th><th class="n">YTD ถึง ${MONTH_TH[cur.m-1]}</th><th class="n">% รายได้</th></tr>${trs}</table></div>`; })();
   document.getElementById('cosmBody').innerHTML=`<div class="cosm-top"><div><div class="cosm-sub">${zone?'โซน '+zone+' · ':''}รายได้ ${MONTH_TH[cur.m-1]} ${cur.rev!=null?KM(cur.rev):''}</div><div class="cosm-name">${code} ${nm}</div></div>
     <div class="cosm-nav"><button type="button" data-cmnav="-1" ${COSM.list[COSM.i-1]?'':'disabled'}>‹</button><button type="button" data-cmnav="1" ${COSM.list[COSM.i+1]?'':'disabled'}>›</button><button type="button" class="cosm-x" data-cmx aria-label="ปิด">✕</button></div></div>
@@ -3590,10 +3593,13 @@ function lineSeries(labels, series, opt={}){
   const lastLb=[], allLb={};
   series.forEach(sr=>{
     const pts=sr.vals.map((v,i)=>v==null?null:[x(i),y(v)]).filter(Boolean);
-    if(pts.length>1) s+=`<polyline fill="none" stroke="${sr.color}" stroke-width="${sr.w||2.4}" stroke-linejoin="round" stroke-linecap="round" ${sr.dash?'stroke-dasharray="6 5"':''} points="${pts.map(p=>p.join(',')).join(' ')}"/>`;
-    sr.vals.forEach((v,i)=>{ if(v==null) return;
-      s+=`<circle cx="${x(i)}" cy="${y(v)}" r="${sr.w?4:3.5}" fill="var(--card)" stroke="${sr.color}" stroke-width="2"><title>${labels[i]} · ${sr.name}: ${fmt(v)}</title></circle>`;
-      if(sr.label==='all'){ (allLb[i]=allLb[i]||[]).push({y:y(v)-9,c:sr.color,t:fmt(v)}); }
+    const pl=(arr,ex)=>arr.length>1?`<polyline fill="none" stroke="${sr.color}" stroke-width="${sr.w||2.4}" stroke-linejoin="round" stroke-linecap="round" ${ex||(sr.dash?'stroke-dasharray="6 5"':'')} points="${arr.map(p=>p.join(',')).join(' ')}"/>`:'';
+    const fi=sr.fade>0?sr.fade:0;   /* เดือนที่ index < fade แสดงจาง · ตั้งแต่ fade เป็นต้นไปแสดงเข้ม */
+    if(fi){ s+=pl(sr.vals.map((v,i)=>v==null||i>fi?null:[x(i),y(v)]).filter(Boolean),'stroke-dasharray="2 5" opacity=".45"')+pl(sr.vals.map((v,i)=>v==null||i<fi?null:[x(i),y(v)]).filter(Boolean)); }
+    else s+=pl(pts);
+    sr.vals.forEach((v,i)=>{ if(v==null) return; const fd=fi&&i<fi;
+      s+=`<circle cx="${x(i)}" cy="${y(v)}" r="${sr.w?4:3.5}" fill="var(--card)" stroke="${sr.color}" stroke-width="2"${fd?' opacity=".45"':''}><title>${labels[i]} · ${sr.name}: ${fmt(v)}</title></circle>`;
+      if(sr.label==='all'){ (allLb[i]=allLb[i]||[]).push({y:y(v)-9,c:fd?'#A6AEBB':sr.color,t:fmt(v)}); }
       else if(sr.label==='last'){ if(i===sr.vals.length-1) lastLb.push({y:y(v),c:sr.color,t:fmt(v)}); }
       else if(sr.label) s+=`<text x="${x(i)}" y="${y(v)-10}" font-size="11.5" font-weight="600" fill="${sr.color}" text-anchor="middle">${fmt(v)}</text>`; });
   });
