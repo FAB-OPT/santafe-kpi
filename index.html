@@ -1801,6 +1801,9 @@ table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD
 #customers .cuins b.pos{color:#12804F}#customers .cuins b.neg{color:#D13447}
 #customers .cpns2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media (max-width:1000px){#customers .cpns2{grid-template-columns:1fr}}
+#customers .cutabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+#customers .cutabs button{height:36px;padding:0 16px;border:1.5px solid var(--line);border-radius:99px;background:#fff;font:inherit;font-size:13.5px;font-weight:700;color:var(--mute);cursor:pointer}
+#customers .cutabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 #customers .cpn{background:#fff;border:1px solid rgba(15,23,42,.05);border-radius:18px;padding:16px 16px 6px}
 #customers .cph{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
 #customers .cph b{font-size:15px;font-weight:700}
@@ -3054,25 +3057,39 @@ function cuPanel(title,unit,labs,cur,ly,color,dec){
   return `<div class="cpn"><div class="cph"><b>${title}</b><small>${unit}</small>${chip}</div><svg class="cusvg" viewBox="0 0 ${W} ${H}">${g}</svg></div>`; }
 const CUC={br:'all',ctx:null};
 /* กราฟรายเดือนของส่วนลูกค้า: All = ทั้งบริษัท · เลือกสาขา = เฉพาะสาขานั้น (LY จากประวัติรายสาขา STF) */
-function cuChartsHtml(br){ const c=CUC.ctx; if(!c) return ''; const {tm,labs,nm}=c; if(br==null) br=CUC.br;
-  if(br==='all'){ const lyM=tm.map(r=>lyTrAgg([r.m]));
-    return `<div class="cpns2">${cuPanel('Total Trans','บิล · ทุกสาขา',labs,tm.map(r=>r.v.trans),lyM.map(x=>x&&x.trans),'#3F4A5E')}${cuPanel('Customers','คน · ทุกสาขา',labs,tm.map(r=>r.v.customer),lyM.map(x=>x&&x.customer),'#E07B1F')}${window.CU_SIMPLE?'':
-      cuPanel('Ticket Avg.','฿ ต่อบิล · ทุกสาขา',labs,tm.map(r=>r.v.ticket),lyM.map(x=>x&&x.ticket),'#0F8E9A')
-      +cuPanel('Per Customer','฿ ต่อลูกค้า 1 คน · ทุกสาขา',labs,tm.map(r=>r.v.customer&&r.v.trans?r.v.trans*r.v.ticket/r.v.customer:null),lyM.map(x=>x&&x.perBill),'#8B5CF6')
-      +cuPanel('Customer Avg.','คน ต่อบิล · ทุกสาขา',labs,tm.map(r=>r.v.customer&&r.v.trans?r.v.customer/r.v.trans:null),lyM.map(x=>x&&x.custAvg),'#1FA463',2)}</div>`; }
+/* กราฟรายเดือนของส่วนลูกค้า: การ์ดเดียว สลับหัวข้อด้วยแท็บ (Total Trans · Customers · Ticket Avg. · Per Customer · Customer Avg.)
+   All = ทั้งบริษัท · เลือกสาขา = เฉพาะสาขานั้น (LY จากประวัติรายสาขา STF) · ป๊อปอัปสาขา (CU_SIMPLE) ยังใช้ 2 กราฟเล็กเดิม */
+CUC.tab='trans';
+function cuMetrics(br){ const c=CUC.ctx; if(!c) return null; const {tm,nm}=c;
+  if(br==='all'){ const lyM=tm.map(r=>lyTrAgg([r.m])), sx=' · ทุกสาขา';
+    return [
+      {k:'trans',title:'Total Trans',unit:'บิล'+sx,vals:tm.map(r=>r.v.trans),ly:lyM.map(x=>x&&x.trans),color:'#3F4A5E'},
+      {k:'cust',title:'Customers',unit:'คน'+sx,vals:tm.map(r=>r.v.customer),ly:lyM.map(x=>x&&x.customer),color:'#E07B1F'},
+      {k:'tick',title:'Ticket Avg.',unit:'฿ ต่อบิล'+sx,vals:tm.map(r=>r.v.ticket),ly:lyM.map(x=>x&&x.ticket),color:'#0F8E9A'},
+      {k:'pc',title:'Per Customer',unit:'฿ ต่อลูกค้า 1 คน'+sx,vals:tm.map(r=>r.v.customer&&r.v.trans?r.v.trans*r.v.ticket/r.v.customer:null),ly:lyM.map(x=>x&&x.perBill),color:'#8B5CF6'},
+      {k:'ca',title:'Customer Avg.',unit:'คน ต่อบิล'+sx,vals:tm.map(r=>r.v.customer&&r.v.trans?r.v.customer/r.v.trans:null),ly:lyM.map(x=>x&&x.custAvg),color:'#1FA463',dec:2} ]; }
   const code=br, rows=tm.map(r=>filtZone((DETAIL[r.m]||{}).branchRows||[]).find(x=>String(x.code)===code&&x.tr>0)||null);
   const by=filtZone(EXTRA.branchYears||[]).find(x=>String(x.code)===code), h=by&&by.h&&by.h[YEAR-1];
   const lyv=(k,i)=>{ const v=h&&(h[k]||[])[tm[i].m-1]; return v>0?v:null; };
-  const cu=rows.map(r=>r&&r.cust>0?r.cust:null), tr=rows.map(r=>r?r.tr:null);
-  if(!tr.some(v=>v!=null)) return '<div class="empty">ไม่มีข้อมูลสาขานี้</div>';
-  const t=code+' '+(nm[code]||'');
-  const dv=(a,b)=>a>0&&b>0?a/b:null;
-  const tk2=rows.map(r=>r&&r.tk>0?r.tk:null), pc2=rows.map(r=>r&&r.cust>0&&r.sales>0?r.sales/r.cust:null), ca2=rows.map(r=>r&&r.cust>0&&r.tr>0?r.cust/r.tr:null);
-  const extra=window.CU_SIMPLE?'':
-    cuPanel('Ticket Avg.','฿ ต่อบิล · '+t,labs,tk2,tm.map((_,i)=>dv(lyv('s',i),lyv('k',i))),'#0F8E9A')
-    +cuPanel('Per Customer','฿ ต่อลูกค้า 1 คน · '+t,labs,pc2,tm.map((_,i)=>dv(lyv('s',i),lyv('c',i))),'#8B5CF6')
-    +cuPanel('Customer Avg.','คน ต่อบิล · '+t,labs,ca2,tm.map((_,i)=>dv(lyv('c',i),lyv('k',i))),'#1FA463',2);
-  return `<div class="cpns2">${cuPanel('Total Trans','บิล · '+t,labs,tr,tm.map((_,i)=>lyv('k',i)),'#3F4A5E')}${cuPanel('Customers','คน · '+t,labs,cu,tm.map((_,i)=>lyv('c',i)),'#E07B1F')}${extra}</div>`; }
+  const dv=(x,y)=>x>0&&y>0?x/y:null;
+  const tr=rows.map(r=>r?r.tr:null); if(!tr.some(v=>v!=null)) return null;
+  const sx=' · '+code+' '+(nm[code]||'');
+  return [
+    {k:'trans',title:'Total Trans',unit:'บิล'+sx,vals:tr,ly:tm.map((_,i)=>lyv('k',i)),color:'#3F4A5E'},
+    {k:'cust',title:'Customers',unit:'คน'+sx,vals:rows.map(r=>r&&r.cust>0?r.cust:null),ly:tm.map((_,i)=>lyv('c',i)),color:'#E07B1F'},
+    {k:'tick',title:'Ticket Avg.',unit:'฿ ต่อบิล'+sx,vals:rows.map(r=>r&&r.tk>0?r.tk:null),ly:tm.map((_,i)=>dv(lyv('s',i),lyv('k',i))),color:'#0F8E9A'},
+    {k:'pc',title:'Per Customer',unit:'฿ ต่อลูกค้า 1 คน'+sx,vals:rows.map(r=>r&&r.cust>0&&r.sales>0?r.sales/r.cust:null),ly:tm.map((_,i)=>dv(lyv('s',i),lyv('c',i))),color:'#8B5CF6'},
+    {k:'ca',title:'Customer Avg.',unit:'คน ต่อบิล'+sx,vals:rows.map(r=>r&&r.cust>0&&r.tr>0?r.cust/r.tr:null),ly:tm.map((_,i)=>dv(lyv('c',i),lyv('k',i))),color:'#1FA463',dec:2} ]; }
+function cuChartsHtml(br){ const c=CUC.ctx; if(!c) return ''; if(br==null) br=CUC.br;
+  const M=cuMetrics(br); if(!M) return '<div class="empty">ไม่มีข้อมูลสาขานี้</div>';
+  if(window.CU_SIMPLE) return '<div class="cpns2">'+M.slice(0,2).map(m=>cuPanel(m.title,m.unit,c.labs,m.vals,m.ly,m.color,m.dec)).join('')+'</div>';
+  const cur=M.find(m=>m.k===CUC.tab)||M[0], W0=window.CU_W, H0=window.CU_H;
+  window.CU_W=1100; window.CU_H=320;
+  let svg=''; try{ svg=cuPanel(cur.title,cur.unit,c.labs,cur.vals,cur.ly,cur.color,cur.dec); } finally{ window.CU_W=W0; window.CU_H=H0; }
+  return '<div class="cutabs">'+M.map(m=>'<button type="button" class="'+(m.k===cur.k?'on':'')+'" data-cutab="'+m.k+'">'+m.title+'</button>').join('')+'</div>'+(svg||'<div class="empty">ไม่มีข้อมูลของหัวข้อนี้</div>'); }
+document.addEventListener('click',e=>{ const t=e.target.closest&&e.target.closest('[data-cutab]'); if(!t) return; CUC.tab=t.dataset.cutab;
+  if(document.getElementById('cuCharts')) ovRender('cuCharts',()=>cuChartsHtml(CUC.br));
+  if(document.getElementById('cuChartsAll')) ovRender('cuChartsAll',()=>cuChartsHtml('all')); });
 document.addEventListener('change',e=>{ const s2=e.target.closest&&e.target.closest('[data-cubr]'); if(!s2) return; CUC.br=s2.value; ovRender('cuCharts',()=>cuChartsHtml(CUC.br));
   const t=document.querySelector('#customers .cubtbl'); if(!t) return;
   t.querySelectorAll('tr[data-ssbr]').forEach(r=>{ r.hidden=!(CUC.br==='all'||r.dataset.ssbr===CUC.br); }); cuRenum(); });
@@ -3292,7 +3309,7 @@ function customersSection(m){
   const per=S.multi?S.labS:labelFull(m)+(PV?' · เทียบ '+PV:'');
   const lgd='<span class="cu-lg"><i class="ln"></i>ปีนี้<i class="ln ds"></i>ปีก่อน (LY)<em>ชี้ที่กราฟเพื่อดูรายละเอียด</em></span>';
   const searchBox='<span class="gr"><input class="cusearch" type="search" data-cusearch placeholder="ค้นหาสาขา หรือรหัส" autocomplete="off"></span>';
-  return sec('customers',T,'',W(strip+ins)+W(CUC.ctx?cuChartsHtml('all'):'','ลูกค้าและจำนวนบิล รายเดือน<span class="gr">'+lgd+'</span>')+W(chTiles,'ช่องทางการขาย<span class="gr">'+per+'</span>')+W(tTable)+W(cuBr,'รายสาขา · ลูกค้าและจำนวนบิล'+searchBox)+W(btbl,'รายสาขา'));
+  return sec('customers',T,'',W(strip+ins)+W(CUC.ctx?'<div id="cuChartsAll">'+cuChartsHtml('all')+'</div>':'','ลูกค้าและจำนวนบิล รายเดือน<span class="gr">'+lgd+'</span>')+W(chTiles,'ช่องทางการขาย<span class="gr">'+per+'</span>')+W(tTable)+W(cuBr,'รายสาขา · ลูกค้าและจำนวนบิล'+searchBox)+W(btbl,'รายสาขา'));
 }
 
 /* ========================= CEM / OSS: กลุ่มคะแนน · เทียบเดือน/LY · เจาะรายสาขา ========================= */
