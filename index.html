@@ -3202,7 +3202,7 @@ function openCuDrawer(code){ code=String(code); const el=cuDrawerEl();
   const bigm=(lab,v,f,pLM)=>'<div class="cd-sm cd-bg"><div class="cd-ml">'+lab+'</div><div class="cd-sv">'+f(v)+'</div>'+(pLM!=null?'<div class="cd-md">'+pl(pLM,'LM')+'</div>':'')+'</div>';
   body.innerHTML='<div class="cd-top"><div><div class="cd-sub">'+code+' · '+(S.multi?S.lab:label(m))+' · #'+rank+' Trans จาก '+rows.length+' สาขา</div><div class="cd-name">'+(b.name||nmx)+'</div></div><div class="cd-tr"><button type="button" class="cd-x" data-cudclose aria-label="ปิด">✕</button></div></div>'
     +'<div class="cd-g4">'+(charts||'<div class="cd-chcard"><div class="empty">ไม่มีข้อมูลรายเดือน</div></div>')+chCard+'</div>'
-    +'<div class="cd-k5">'+bigm('TOTAL TRANS',b.tr,fN,pc(p&&p.tr,b.tr))+bigm('CUSTOMERS',b.cust||null,fN,pc(p&&p.cust,b.cust))+bigm('Ticket',b.tk,fB,pc(p&&p.tk,b.tk))+bigm('Per Bill',pb(b),fB,pc(pb(p),pb(b)))+bigm('Cust.Avg',ca(b),f2,pc(ca(p),ca(b)))+'</div>'
+    +'<div class="cd-k5">'+bigm('TOTAL TRANS',b.tr,fN,pc(p&&p.tr,b.tr))+bigm('CUSTOMERS',b.cust||null,fN,pc(p&&p.cust,b.cust))+bigm('Ticket',b.tk,fB,pc(p&&p.tk,b.tk))+bigm('Per Cust.',pb(b),fB,pc(pb(p),pb(b)))+bigm('Cust.Avg',ca(b),f2,pc(ca(p),ca(b)))+'</div>'
     +(insHtml?insHtml.replace('class="cd-ins"','class="cd-ins cd-ins3"'):'')
     +'<div class="cd-foot">'+(navL?'<button type="button" class="cd-nav" data-cudgo="'+navL.code+'">'+navTxt+'</button>':'<span></span>')+'<button type="button" class="cd-chart" data-cudchart="'+code+'">ดูในกราฟรายสาขา →</button></div>'
     +'<div class="cd-note">% เทียบเดือนก่อน (vs LM) และปีก่อน (vs LY) · '+(S.multi?S.lab:label(m))+'</div>';
@@ -3230,7 +3230,7 @@ function customersSection(m){
     ${kc('Customers',P.customer,now.customer,fN,now.customer==null?'ไม่มีข้อมูลลูกค้า':'',LYA&&LYA.customer,'คน')}
     ${kc('Ticket Avg.',P.ticket,now.ticket,fB,'',LYA&&LYA.ticket)}
     ${kc('Customer Avg.',P.custAvg,now.custAvg,f2,'',LYA&&LYA.custAvg,'คน/บิล')}
-    ${kc('Per Bill',spend(prv),spend(now),fB,'',LYA&&LYA.perBill)}
+    ${kc('Per Cust.',spend(prv),spend(now),fB,'',LYA&&LYA.perBill)}
   </div>`;
   /* สรุปสั้นๆ เทียบ LY */
   let ins='';
@@ -3257,7 +3257,7 @@ function customersSection(m){
     const codes=Object.keys(nm).sort(); if(CUC.br!=='all'&&!nm[CUC.br]) CUC.br='all';
     CUC.ctx={tm,labs,nm};
     trend=`<div class="grp big">รายเดือน<span class="gr">% เทียบเดือนก่อน (vs LM)</span></div>
-      <div class="scroll"><table><tr><th>เดือน</th><th class="n">Total Trans</th><th class="n">Ticket Avg.</th>${CUS_CH.map(o=>`<th class="n">Ticket ${o.n}</th>`).join('')}<th class="n">Customers</th><th class="n">Customer Avg.</th><th class="n">Per Bill</th></tr>
+      <div class="scroll"><table><tr><th>เดือน</th><th class="n">Total Trans</th><th class="n">Ticket Avg.</th>${CUS_CH.map(o=>`<th class="n">Ticket ${o.n}</th>`).join('')}<th class="n">Customers</th><th class="n">Customer Avg.</th><th class="n">Per Cust.</th></tr>
       ${tm.map((r,i)=>{ const v=r.v, q=i>0&&tm[i-1].m===r.m-1?tm[i-1].v:null, ca=x=>x&&x.customer&&x.trans?x.customer/x.trans:null;
         return `<tr class="${r.m===m&&!S.multi?'hi':''}"><td>${r.m===m&&!S.multi?'★ ':''}${MONTH_TH[r.m-1]}</td><td class="n">${fN(v.trans)}${vsL(q&&q.trans,v.trans)}</td><td class="n"><b>${fB(v.ticket)}</b>${vsL(q&&q.ticket,v.ticket)}</td>${CUS_CH.map(o=>{ const c=findCh(v,o.k), pc=findCh(q,o.k); return `<td class="n">${c?fB(c.ticket):'—'}${c&&pc?vsL(pc.ticket,c.ticket):''}</td>`; }).join('')}<td class="n">${fN(v.customer)}${vsL(q&&q.customer,v.customer)}</td><td class="n">${ca(v)==null?'—':f2(ca(v))}${vsL(ca(q),ca(v))}</td><td class="n">${fB(spend(v))}${vsL(spend(q),spend(v))}</td></tr>`; }).join('')}
       ${S.multi?`<tr class="hi"><td><b>รวม ${S.labS}</b></td><td class="n"><b>${fN(now.trans)}</b></td><td class="n"><b>${fB(now.ticket)}</b></td>${CUS_CH.map(o=>{ const c=findCh(now,o.k); return `<td class="n">${c?fB(c.ticket):'—'}</td>`; }).join('')}<td class="n"><b>${fN(now.customer)}</b></td><td class="n">${f2(now.custAvg)}</td><td class="n">${fB(spend(now))}</td></tr>`:''}
@@ -3273,7 +3273,7 @@ function customersSection(m){
     const tkc=(x,j)=>x&&x[TRK[j]]?x[CK[j]]/x[TRK[j]]:null, ca=x=>x&&x.cust&&x.tr?x.cust/x.tr:null, pb=x=>x&&x.cust?x.sales/x.cust:null;
     const hasCh=list.some(b=>b.trDine||b.trTake||b.trDeli);
     const chHint=hasCh?'':`<div class="hint" style="margin-top:8px">Ticket แยกช่องทางรายสาขา: ข้อมูล ${label(m)} ในเครื่องนี้มีบิลแยกช่องทาง 0 จาก ${list.length} สาขา — นำเข้าไฟล์แบบฟอร์มส่งยอดขายอีกครั้ง แล้วดูข้อความหลังนำเข้าว่า "บิลแยกช่องทางรายสาขา" ได้กี่สาขา</div>`;
-    btbl=`<div class="scroll"><table class="cubtbl"><tr><th class="csrt" data-cs="0">ลำดับ <i></i></th><th class="csrt" data-cs="1">สาขา <i></i></th><th class="n csrt on" data-dir="desc" data-cs="2">Total Trans <i>▼</i></th><th class="n csrt" data-cs="3">Ticket Avg. <i></i></th>${CUS_CH.map((o,j)=>`<th class="n csrt" data-cs="${4+j}">Ticket ${o.n} <i></i></th>`).join('')}<th class="n csrt" data-cs="7">Customers <i></i></th><th class="n csrt" data-cs="8">Customer Avg. <i></i></th><th class="n csrt" data-cs="9">Per Bill <i></i></th><th></th></tr>
+    btbl=`<div class="scroll"><table class="cubtbl"><tr><th class="csrt" data-cs="0">ลำดับ <i></i></th><th class="csrt" data-cs="1">สาขา <i></i></th><th class="n csrt on" data-dir="desc" data-cs="2">Total Trans <i>▼</i></th><th class="n csrt" data-cs="3">Ticket Avg. <i></i></th>${CUS_CH.map((o,j)=>`<th class="n csrt" data-cs="${4+j}">Ticket ${o.n} <i></i></th>`).join('')}<th class="n csrt" data-cs="7">Customers <i></i></th><th class="n csrt" data-cs="8">Customer Avg. <i></i></th><th class="n csrt" data-cs="9">Per Cust. <i></i></th><th></th></tr>
     ${list.map((b,i)=>{ const p=pMap[b.code];
       const hid=CUC.br!=='all'&&String(b.code)!==CUC.br;
       return `<tr class="clk${i>=12?' cuex':''}" data-ri="${i+1}" data-ssbr="${b.code}"${hid?' hidden':''}><td>${CUC.br==='all'?i+1:1}</td><td>${b.code} ${b.name}</td><td class="n">${fN(b.tr)}${vsL(p&&p.tr,b.tr)}</td><td class="n"><b>${fB(b.tk)}</b>${vsL(p&&p.tk,b.tk)}</td>${CUS_CH.map((o,j)=>`<td class="n">${fB(tkc(b,j))}${vsL(tkc(p,j),tkc(b,j))}</td>`).join('')}<td class="n">${fN(b.cust||null)}${vsL(p&&p.cust,b.cust)}</td><td class="n">${ca(b)==null?'—':f2(ca(b))}${vsL(ca(p),ca(b))}</td><td class="n">${fB(pb(b))}${vsL(pb(p),pb(b))}</td><td class="n"><button type="button" class="dtbtn" title="ดูรายละเอียดสาขา ${b.code}">ดูรายละเอียด ›</button></td></tr>`; }).join('')}</table></div>${list.length>12?`<div class="cumore"><button type="button" data-cumore>แสดงทั้งหมด ${list.length} สาขา <span>⌄</span></button></div>`:''}<div class="hint brqnone" hidden>ไม่พบสาขาที่ค้นหา</div>${chHint}`; }
@@ -5447,7 +5447,7 @@ function drawBranchCust(code,box){
   const tile=(l,v,sub,ly)=>`<div class="bp-k"><div class="bp-l">${l}</div><div class="bp-v">${v}</div><div class="bp-s">${sub||''}</div>${ly||''}</div>`;
   const kpis=[tile('Total Trans',fN(b.tr),lm(pr&&pr.tr,b.tr),lyl(LY.tr,b.tr,fN)), tile('Customers',fN(b.cust||null),lm(pr&&pr.cust,b.cust),lyl(LY.cust,b.cust,fN)),
     tile('Ticket Avg.',fB(tkOf(b)),lm(tkOf(pr),tkOf(b)),lyl(LY.tk,tkOf(b),fB)), tile('Customer Avg.',ca(b)==null?'—':f2(ca(b)),lm(ca(pr),ca(b)),lyl(LY.ca,ca(b),f2)),
-    tile('Per Bill',fB(pb(b)),lm(pb(pr),pb(b)),lyl(LY.pb,pb(b),fB))].join('');
+    tile('Per Cust.',fB(pb(b)),lm(pb(pr),pb(b)),lyl(LY.pb,pb(b),fB))].join('');
   const CH=[['dine','trDine','Dine in','#D9822D'],['take','trTake','Takeaway','#7C5CFC'],['deli','trDeli','Delivery','#0F9488']];
   const hasCh=CH.some(c=>b[c[1]]), totTr=CH.reduce((a,c)=>a+(b[c[1]]||0),0);
   const chBox=CH.map(([k,tk,n,c])=>{ const t=b[tk]||null, tick=t?b[k]/t:null, pt=pr&&pr[tk]||null, ptick=pt?pr[k]/pt:null;
@@ -5462,7 +5462,7 @@ function drawBranchCust(code,box){
   const hasLy=hist.some(h=>lyv('k',h.m)||lyv('c',h.m));
   const ly2=(a,v,f)=>(a!=null&&v!=null&&a)?`<span class="tiny ${Math.abs(pct(a,v))<0.05?'':cls(pct(a,v))}">${sgn(pct(a,v))} vs LY ${f(a)}</span>`:'';
   const tbl=`<div class="bp-card"><div class="bp-h"><span>รายเดือน</span></div><div class="scroll"><table>
-    <tr><th>เดือน</th><th class="n">Total Trans</th><th class="n">Ticket Avg.</th><th class="n">Customers</th><th class="n">Customer Avg.</th><th class="n">Per Bill</th></tr>
+    <tr><th>เดือน</th><th class="n">Total Trans</th><th class="n">Ticket Avg.</th><th class="n">Customers</th><th class="n">Customer Avg.</th><th class="n">Per Cust.</th></tr>
     ${hist.map((h,i)=>{ const x=h.r, q=i>0&&hist[i-1].m===h.m-1?hist[i-1].r:null, L=lyOf(h.m);
       return `<tr class="${h.m===cur.m?'hi':''}"><td>${MONTH_TH[h.m-1]}</td><td class="n">${fN(x.tr)}${vs(q&&q.tr,x.tr)}${ly2(L.tr,x.tr,fN)}</td><td class="n">${fB(tkOf(x))}${vs(tkOf(q),tkOf(x))}${ly2(L.tk,tkOf(x),fB)}</td><td class="n">${fN(x.cust||null)}${vs(q&&q.cust,x.cust)}${ly2(L.cust,x.cust,fN)}</td><td class="n">${ca(x)==null?'—':f2(ca(x))}${vs(ca(q),ca(x))}${ly2(L.ca,ca(x),f2)}</td><td class="n">${fB(pb(x))}${vs(pb(q),pb(x))}${ly2(L.pb,pb(x),fB)}</td></tr>`; }).join('')}
     </table></div></div>`;
@@ -6843,7 +6843,7 @@ function tile(t){
     case 'branch': { const p=st('plan',0), ok=st('plan',1), q=st('plan',2);
       return {v:p&&p.v, l:'ทำได้ตามแผน (ทั้งเครือข่าย)', sub:[ok&&('ถึงแผน '+B(ok.v+' สาขา','pos')), q&&('ต่ำกว่าแผน 10%+ '+B(q.v+' สาขา','neg'))].filter(Boolean).join(' · ')}; }
     case 'cust': { const g=i=>{ const x=document.querySelectorAll('#customers .kcs .kc')[i]; return x?{v:T('.kv',x)}:null; };
-      const a=g(1), b=g(2), c=g(3);   // การ์ด: Total Trans · Customers · Ticket Avg. · Customer Avg. · Per Bill
+      const a=g(1), b=g(2), c=g(3);   // การ์ด: Total Trans · Customers · Ticket Avg. · Customer Avg. · Per Cust.
       return {l:'ลูกค้ารวม', v:a&&(a.v+' คน'),
         rows:[b&&['ยอดเฉลี่ยต่อบิล',b.v], c&&['ลูกค้าเฉลี่ยต่อบิล',c.v+' คน']].filter(Boolean)}; }
     case 'cost': { const n=document.querySelector('#pl .plk.dark'), rv=n&&T('.plks',n), cc=[...document.querySelectorAll('#pl .plcc .plccv b')].map(x=>x.textContent.trim());
