@@ -2007,18 +2007,36 @@ table.cosm-pl td.pos{color:var(--good)}table.cosm-pl td.neg{color:var(--bad)}tab
 .cosm-plyr tr.hasch{cursor:pointer}.cosm-plyr tr.hasch:hover td{filter:brightness(.97)}
 .cosm-plyr tr.hasch td:first-child::before{content:'▸';display:inline-block;width:16px;color:var(--faint);font-size:11px}
 .cosm-plyr tr.hasch.open td:first-child::before,.cosm-plyr:not(.collapsed) tr.hasch td:first-child::before{content:'▾'}
+.ppsub{font-size:13.5px;color:var(--mute);margin:-4px 2px 14px}
 .ppks{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:14px}
 .ppk{background:#fff;border-radius:16px;padding:14px 16px;border:1px solid rgba(15,23,42,.05)}.ppk small{display:block;color:var(--mute);font-size:12.5px;font-weight:600}.ppk b{display:block;font-size:26px;font-weight:800;letter-spacing:-.02em;margin:2px 0;font-variant-numeric:tabular-nums}.ppk em{font-style:normal;font-size:12px;color:var(--mute)}
-.ppbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 10px}.ppbar .hint{font-size:12.5px;color:var(--mute)}
-.pptb{background:#fff;border-radius:18px;padding:6px 14px 8px;border:1px solid rgba(15,23,42,.05)}
-.ppr{display:grid;grid-template-columns:230px 1.2fr 74px 96px 1fr 1fr;gap:14px;align-items:center;padding:11px 4px;border-bottom:1px solid #f1ece6;cursor:pointer}
+.ppg2{display:grid;grid-template-columns:1.5fr 1fr;gap:14px;margin-bottom:14px}
+.ppcard{background:#fff;border-radius:18px;padding:16px 18px;border:1px solid rgba(15,23,42,.05)}
+.ppch{margin-bottom:10px}.ppch b{font-size:16px}.ppch small{margin-left:8px;color:var(--mute);font-size:12.5px;display:block;margin:2px 0 0}
+.pqg{display:grid;grid-template-columns:44px 1fr 1fr;gap:8px;align-items:stretch}
+.pqx{text-align:center;font-size:12.5px;font-weight:700;color:var(--mute)}.pqy{writing-mode:vertical-rl;transform:rotate(180deg);text-align:center;font-size:12px;font-weight:700;color:var(--mute);white-space:nowrap}
+.pq{border-radius:14px;padding:12px 14px;min-height:112px}.pq.g{background:#E3F4EA}.pq.y{background:#FBF0D2}.pq.n{background:#EFEDEA}.pq.r{background:#FCE3E5}
+.pqh{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}.pqh b{font-size:26px;font-weight:800;letter-spacing:-.02em}.pqh span{font-size:12.5px;font-weight:700}
+.pq.g .pqh b{color:#0B7A4B}.pq.y .pqh b{color:#8a6200}.pq.n .pqh b{color:#5b5249}.pq.r .pqh b{color:#B4233A}
+.pqc{display:flex;flex-wrap:wrap;gap:4px 5px}.pqc i{font-style:normal;font:700 11px/1 ui-monospace,Menlo,monospace;padding:3px 5px;border-radius:5px;background:rgba(255,255,255,.7);cursor:pointer}.pq.g .pqc i{color:#0B7A4B}.pq.y .pqc i{color:#8a6200}.pq.r .pqc i{color:#B4233A}.pq.n .pqc i{color:#5b5249}.pqc i:hover{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.ppwr{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center;padding:9px 2px;border-bottom:1px solid #f1ece6;cursor:pointer}.ppwr:last-child{border-bottom:0}.ppwr:hover{background:#fffaf6}
+.ppwi{color:var(--faint);font-size:13px;font-weight:700}.ppwr b{color:var(--accent-ink)}.ppwr small{display:block;color:var(--mute);font-size:12px}
+.ppwv{text-align:right;font-weight:800;font-variant-numeric:tabular-nums}.ppwv small{color:var(--bad);font-weight:700}
+.ppth{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px}.ppth b{font-size:16px}.ppsearch{margin-left:auto;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font:inherit;font-size:13.5px;min-width:220px}
+.ppleg{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--mute);margin:0 0 6px}.ppleg span{display:inline-flex;align-items:center;gap:6px}.ppleg u{display:inline-block;width:2px;height:12px;background:#191512;opacity:.7}.ppleg i{display:inline-block;width:12px;height:8px;border-radius:2px}
+i.good{background:#12A367}i.bad{background:#E0364B}i.soft{background:#C9CDD3}
+.ppr{display:grid;grid-template-columns:minmax(190px,1.1fr) minmax(150px,1fr) 70px 86px 70px minmax(280px,1.6fr);gap:14px;align-items:center;padding:9px 4px;border-bottom:1px solid #f1ece6;cursor:pointer}
 .ppr:last-child{border-bottom:0}.ppr:not(.pph):hover{background:#fffaf6}
 .ppr.pph{cursor:default;font-size:12.5px;color:var(--mute);font-weight:700;border-bottom:1px solid var(--line)}.ppr.pph>div{cursor:pointer;white-space:nowrap}.ppr.pph>div i{font-style:normal;margin-left:5px;color:#c5bdb6;font-size:11px}.ppr.pph>div.r{text-align:right}
-.ppn b{color:var(--accent-ink);margin-right:8px}.ppnum{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}.ppnum small{color:var(--mute);font-weight:500}
-.ppv{display:flex;align-items:center;gap:8px;font-weight:700;font-variant-numeric:tabular-nums}.ppv span{min-width:62px;text-align:right}
-.ppb{flex:1;height:10px;border-radius:5px;background:#EEF0F4;position:relative;overflow:hidden}.ppb i{position:absolute;inset:0 auto 0 0;border-radius:5px}.ppb u{position:absolute;top:-2px;bottom:-2px;width:2px;background:#191512;opacity:.55}
+.ppn b{color:var(--accent-ink);margin-right:8px}.ppnum{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.ppv{display:flex;align-items:center;gap:8px;font-weight:700;font-variant-numeric:tabular-nums}.ppv span{min-width:54px;text-align:right}
+.ppb{flex:1;height:8px;border-radius:4px;background:#EEF0F4;position:relative;overflow:hidden}.ppb i{position:absolute;inset:0 auto 0 0;border-radius:4px}
 .ppp{display:inline-block;border-radius:999px;padding:3px 10px;font-weight:700;font-size:13px}.ppp.ok{background:#DDF3E8;color:#0B7A4B}.ppp.mid{background:#FDF0CC;color:#8a6200}.ppp.hi{background:#FFE1E4;color:#B4233A}
-@media (max-width:1100px){.ppks{grid-template-columns:repeat(2,1fr)}.ppr{grid-template-columns:1fr 1fr}.ppr.pph{display:none}.ppn{grid-column:1/-1}}
+.ppd{display:grid;grid-template-columns:62px 1fr 58px;gap:10px;align-items:center;font-variant-numeric:tabular-nums}.ppdv{font-weight:700}
+.ppdb{position:relative;height:10px;background:#F2F0ED;border-radius:5px}.ppdb u{position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;background:#191512;opacity:.8;z-index:1}.ppdb i{position:absolute;top:0;bottom:0;border-radius:3px}
+.ppdp{text-align:right;font-weight:700;color:var(--mute)}.ppdp.neg{color:var(--bad)}.ppdp.pos{color:var(--good)}
+.ppfoot{margin-top:10px;font-size:12px;color:var(--faint)}
+@media (max-width:1100px){.ppks{grid-template-columns:repeat(2,1fr)}.ppg2{grid-template-columns:1fr}.ppr{grid-template-columns:1fr 1fr}.ppr.pph{display:none}.ppn,.ppd{grid-column:1/-1}}
 .cosm-note{font-size:12.5px;color:#8A93A3;margin-top:12px}
 
 #plbr .plbc{display:flex;flex-direction:column}
@@ -3345,49 +3363,80 @@ function openCuDrawer(code){ code=String(code); const el=cuDrawerEl();
 /* ========================= People Performance =========================
    Labour (hour) · %COL · Productivity Trans (บิล/ชม.) · Productivity Sale (฿/ชม.) รายสาขา
    ข้อมูลจากแบบฟอร์มส่งยอดขาย (คอลัมน์ Labour(hour)) — ต้องนำเข้าไฟล์เวอร์ชันที่มีคอลัมน์นี้ */
-const PPL={sort:'sales',dir:'desc',f:'all'};
+const PPL={sort:'ps',dir:'asc',f:'all',q:''};
+const PP_TH=0.05;   // ต่ำกว่าค่าเฉลี่ยเกิน 5% = ต่ำกว่าเกณฑ์
 function peopleData(m){
   const d=DETAIL[m]||{};
   const rows=filtZone(d.branchRows||[]).filter(b=>b.sales>0&&b.lh>0).map(b=>({code:b.code,name:((BRANCH_META&&BRANCH_META[b.code]&&BRANCH_META[b.code].name)||b.name),
     sales:b.sales,col:b.col,lh:b.lh,tr:b.tr||0,pt:(b.tr||0)/b.lh,ps:b.sales/b.lh}));
   if(!rows.length) return null;
   const T=k=>rows.reduce((a,r)=>a+r[k],0), sales=T('sales'), hours=T('lh'), trans=T('tr');
-  return {rows,sales,hours,trans,col:rows.reduce((a,r)=>a+r.col*r.sales,0)/sales,pt:trans/hours,ps:sales/hours};
+  const P={rows,sales,hours,trans,col:rows.reduce((a,r)=>a+r.col*r.sales,0)/sales,pt:trans/hours,ps:sales/hours};
+  P.low=rows.filter(r=>r.ps<P.ps*(1-PP_TH));
+  return P;
+}
+function peopleRowsHtml(P){
+  const f1=v=>v.toFixed(1), f0=v=>fmtN(Math.round(v)), fK=v=>fmtN(Math.round(v/1000))+'K';
+  let list=P.rows.slice();
+  if(PPL.f==='low') list=list.filter(r=>r.ps<P.ps*(1-PP_TH));
+  else if(PPL.f==='col') list=list.filter(r=>r.col>25);
+  const q=(PPL.q||'').trim().toLowerCase();
+  if(q) list=list.filter(r=>(r.code+' '+r.name).toLowerCase().includes(q));
+  const keyOf=r=>PPL.sort==='code'?r.code:r[PPL.sort], dk=PPL.dir==='asc'?1:-1;
+  list.sort((a,b)=>{ const x=keyOf(a), y=keyOf(b); return typeof x==='string'?dk*x.localeCompare(y,undefined,{numeric:true}):dk*(x-y); });
+  const mxS=Math.max(...P.rows.map(r=>r.sales))||1, mxD=Math.max(...P.rows.map(r=>Math.abs(r.ps/P.ps-1)))||1;
+  const colCls=c=>c>P.col+1.5?'hi':c>P.col-0.5?'mid':'ok';
+  return list.map(r=>{ const dv=r.ps/P.ps-1, w=Math.abs(dv)/mxD*50, tone=dv<-PP_TH?'bad':dv<0?'soft':'good';
+    return `<div class="ppr" data-ssbr="${r.code}">
+      <div class="ppn"><b>${r.code}</b>${r.name}</div>
+      <div class="ppv"><div class="ppb"><i style="width:${Math.max(2,r.sales/mxS*100).toFixed(1)}%;background:#F0954F"></i></div><span>${fK(r.sales)}</span></div>
+      <div><span class="ppp ${colCls(r.col)}">${f1(r.col)}%</span></div>
+      <div class="ppnum">${f0(r.lh)}</div>
+      <div class="ppnum">${f1(r.pt)}</div>
+      <div class="ppd"><span class="ppdv">฿${f0(r.ps)}</span><div class="ppdb"><u></u><i class="${tone}" style="${dv<0?'right:50%':'left:50%'};width:${Math.max(.6,w).toFixed(1)}%"></i></div><span class="ppdp ${dv<-PP_TH?'neg':dv>0?'pos':''}">${dv>=0?'+':'−'}${Math.abs(dv*100).toFixed(1)}%</span></div>
+    </div>`; }).join('')||'<div class="empty">ไม่มีสาขาตามเงื่อนไข</div>';
 }
 function peopleBody(m){
   const P=peopleData(m);
   if(!P) return '<div class="empty">ยังไม่มีข้อมูล Labour (hour) · นำเข้าไฟล์ "แบบฟอร์มส่งยอดขาย" ที่มีคอลัมน์ Labour(hour) (ปุ่ม ⤒ นำเข้าข้อมูล)</div>';
-  const fK=v=>fmtN(Math.round(v/1000))+'K', f1=v=>v.toFixed(1), f0=v=>fmtN(Math.round(v));
-  let list=P.rows.slice();
-  if(PPL.f==='low') list=list.filter(r=>r.ps<P.ps*0.95);
-  const keyOf=r=>PPL.sort==='code'?r.code:r[PPL.sort], dk=PPL.dir==='asc'?1:-1;
-  list.sort((a,b)=>{ const x=keyOf(a), y=keyOf(b); return typeof x==='string'?dk*x.localeCompare(y,undefined,{numeric:true}):dk*(x-y); });
-  const mx=k=>Math.max(...P.rows.map(r=>r[k]))||1;
-  const avgSales=P.sales/P.rows.length;
-  const colCls=c=>c>P.col+1.5?'hi':c>P.col-0.5?'mid':'ok';
-  const th=(k,t,cls)=>`<div class="${cls||''}" data-ppsort="${k}">${t}<i>${PPL.sort===k?(PPL.dir==='asc'?'▲':'▼'):'↕'}</i></div>`;
+  const f1=v=>v.toFixed(1), f0=v=>fmtN(Math.round(v));
+  const n=P.rows.length, thr=P.ps*(1-PP_TH);
   const kp=(l,v,s,k)=>`<div class="ppk"><small>${l}</small><b>${v}</b><em>${s||''}</em><span class="pk" data-pk="${k}" hidden>${v}</span></div>`;
-  const rowsH=list.map(r=>`<div class="ppr" data-ssbr="${r.code}">
-      <div class="ppn"><b>${r.code}</b>${r.name}</div>
-      <div class="ppv"><div class="ppb"><i style="width:${Math.max(2,r.sales/mx('sales')*100).toFixed(1)}%;background:#F0954F"></i><u style="left:${(avgSales/mx('sales')*100).toFixed(1)}%"></u></div><span>${fK(r.sales)}</span></div>
-      <div><span class="ppp ${colCls(r.col)}">${f1(r.col)}%</span></div>
-      <div class="ppnum">${f0(r.lh)} <small>ชม.</small></div>
-      <div class="ppv"><div class="ppb"><i style="width:${Math.max(2,r.pt/mx('pt')*100).toFixed(1)}%;background:#5B8DEF"></i><u style="left:${(P.pt/mx('pt')*100).toFixed(1)}%"></u></div><span>${f1(r.pt)}</span></div>
-      <div class="ppv"><div class="ppb"><i style="width:${Math.max(2,r.ps/mx('ps')*100).toFixed(1)}%;background:${r.ps<P.ps*0.95?'#E0364B':'#12A367'}"></i><u style="left:${(P.ps/mx('ps')*100).toFixed(1)}%"></u></div><span>฿${f0(r.ps)}</span></div>
-    </div>`).join('');
-  return `<div class="ppks">${kp('ยอดขายรวม','฿'+fmtN(Math.round(P.sales/1000))+'K',P.rows.length+' สาขา','sales')}${kp('%COL เฉลี่ย',f1(P.col)+'%','ถ่วงน้ำหนักยอดขาย','col')}${kp('Labour (hour) รวม',f0(P.hours),'ชั่วโมง','hours')}${kp('Productivity Trans',f1(P.pt),'บิล / ชม.','pt')}${kp('Productivity Sale','฿'+f0(P.ps),'บาท / ชม.','ps')}</div>
-    <div class="ppbar"><span class="ovseg"><button type="button" class="${PPL.f==='all'?'on':''}" data-ppf="all">ทั้งหมด ${P.rows.length}</button><button type="button" class="${PPL.f==='low'?'on':''}" data-ppf="low">Productivity Sale ต่ำกว่าเฉลี่ย ${P.rows.filter(r=>r.ps<P.ps*0.95).length}</button></span>
-      <span class="hint">เส้นดำบนแท่ง = ค่าเฉลี่ย · แท่งแดง = Productivity Sale ต่ำกว่าเฉลี่ยเกิน 5% · คลิกหัวคอลัมน์เพื่อเรียง · คลิกแถวเพื่อดูรายละเอียดสาขา</span></div>
-    <div class="pptb"><div class="ppr pph">${th('code','สาขา')}${th('sales','ยอดขาย')}${th('col','%COL')}${th('lh','Labour (hour)','r')}${th('pt','Productivity Trans')}${th('ps','Productivity Sale')}</div>${rowsH||'<div class="empty">ไม่มีสาขาตามเงื่อนไข</div>'}</div>`;
+  /* ---- ควอดแรนต์ %COL × Productivity Sale ---- */
+  const hiP=r=>r.ps>=P.ps, hiC=r=>r.col>P.col;
+  const quad=(pred,cls,title,cnt)=>{ const l=P.rows.filter(pred).sort((a,b)=>String(a.code).localeCompare(b.code));
+    return `<div class="pq ${cls}"><div class="pqh"><b>${l.length}</b><span>${title}</span></div><div class="pqc">${l.map(r=>`<i data-ssbr="${r.code}" title="${r.code} ${r.name}">${r.code}</i>`).join('')||'<em>—</em>'}</div></div>`; };
+  const quadH=`<div class="ppcard ppq"><div class="ppch"><b>ค่าแรง vs ผลิตภาพ</b><small>แบ่งตามค่าเฉลี่ย %COL และ Productivity Sale · ชี้รหัสเพื่อดูชื่อสาขา</small></div>
+    <div class="pqg"><span></span><span class="pqx">%COL ≤ ${f1(P.col)}%</span><span class="pqx">%COL &gt; ${f1(P.col)}%</span>
+      <span class="pqy">ผลิตภาพ ≥ ฿${f0(P.ps)}</span>${quad(r=>hiP(r)&&!hiC(r),'g','ดี – คุมค่าแรงได้ ผลิตภาพสูง')}${quad(r=>hiP(r)&&hiC(r),'y','ผลิตภาพดี แต่ค่าแรงสูง')}
+      <span class="pqy">ผลิตภาพ &lt; ฿${f0(P.ps)}</span>${quad(r=>!hiP(r)&&!hiC(r),'n','ค่าแรงต่ำ แต่ผลิตภาพต่ำ')}${quad(r=>!hiP(r)&&hiC(r),'r','ต้องดูแล – ค่าแรงสูง ผลิตภาพต่ำ')}</div></div>`;
+  /* ---- ต้องดูแลก่อน (Productivity Sale ต่ำสุด) ---- */
+  const worst=P.low.slice().sort((a,b)=>a.ps-b.ps).slice(0,7);
+  const wH=`<div class="ppcard ppw"><div class="ppch"><b>ต้องดูแลก่อน</b><small>Productivity Sale ต่ำสุด จาก ${P.low.length} สาขาที่ต่ำกว่าเกณฑ์</small></div>
+    ${worst.map((r,i)=>`<div class="ppwr" data-ssbr="${r.code}"><span class="ppwi">${i+1}</span><div><b>${r.code}</b> ${r.name}<small>%COL ${f1(r.col)}% · ${f1(r.pt)} บิล/ชม.</small></div><div class="ppwv">฿${f0(r.ps)}<small>−${Math.abs((r.ps/P.ps-1)*100).toFixed(1)}%</small></div></div>`).join('')||'<div class="empty">ไม่มีสาขาที่ต่ำกว่าเกณฑ์</div>'}</div>`;
+  const nCol=P.rows.filter(r=>r.col>25).length;
+  const th=(k,t,cls)=>`<div class="${cls||''}" data-ppsort="${k}">${t}<i>${PPL.sort===k?(PPL.dir==='asc'?'▲':'▼'):'↕'}</i></div>`;
+  const tab=(k,t)=>`<button type="button" class="${PPL.f===k?'on':''}" data-ppf="${k}">${t}</button>`;
+  return `<div class="ppsub">ผลิตภาพแรงงาน ${n} สาขา · ${label(m)}</div>
+    <div class="ppks">${kp('ยอดขายรวม','฿'+fmtN(Math.round(P.sales/1000))+'K',n+' สาขา','sales')}${kp('%COL เฉลี่ย',f1(P.col)+'%','ถ่วงน้ำหนักตามยอดขาย','col')}${kp('ชั่วโมงแรงงานรวม',f0(P.hours),'ชั่วโมง','hours')}${kp('Productivity Trans',f1(P.pt),'บิล / ชั่วโมง','pt')}${kp('Productivity Sale','฿'+f0(P.ps),'บาท / ชั่วโมง · ต่ำกว่าเกณฑ์ '+P.low.length+' สาขา','ps')}</div>
+    <div class="ppg2">${quadH}${wH}</div>
+    <div class="ppcard ppt"><div class="ppth"><b>รายสาขา</b><span class="ovseg">${tab('all','ทั้งหมด '+n)}${tab('low','ต่ำกว่าเกณฑ์ '+P.low.length)}${tab('col','%COL เกิน 25% · '+nCol)}</span>
+      <input type="search" class="ppsearch" id="ppQ" placeholder="ค้นหารหัส / ชื่อสาขา" value="${(PPL.q||'').replace(/"/g,'&quot;')}" autocomplete="off"></div>
+      <div class="ppleg"><span><u></u> เส้นกลาง = ค่าเฉลี่ย ฿${f0(P.ps)}</span><span><i class="good"></i> สูงกว่าเฉลี่ย</span><span><i class="bad"></i> ต่ำกว่าเกณฑ์ (ต่ำกว่าเฉลี่ยเกิน 5% · &lt; ฿${f0(thr)})</span><span><i class="soft"></i> ต่ำกว่าเฉลี่ยเล็กน้อย</span></div>
+      <div class="ppr pph">${th('code','สาขา')}${th('sales','ยอดขาย')}${th('col','%COL')}${th('lh','ชม.แรงงาน','r')}${th('pt','บิล/ชม.','r')}${th('ps','Productivity Sale (บาท/ชม.) เทียบค่าเฉลี่ย')}</div>
+      <div id="ppRows">${peopleRowsHtml(P)}</div>
+      <div class="ppfoot">Productivity Sale = ยอดขาย ÷ ชั่วโมงแรงงาน · Productivity Trans = จำนวนบิล ÷ ชั่วโมงแรงงาน · คลิกหัวคอลัมน์เพื่อเรียง</div></div>`;
 }
 function peopleSection(m){
   const S=SCP||{}, mm=S.multi?S.last:m;
   return sec('people','People Performance',label(mm),peopleBody(mm));
 }
 function ppRender(){ const b=document.querySelector('#people .body'); if(!b||!SCP) return; const m=SCP.multi?SCP.last:curM; b.innerHTML=peopleBody(m); }
+function ppRows(){ const el=document.getElementById('ppRows'); if(!el||!SCP) return; const P=peopleData(SCP.multi?SCP.last:curM); if(P) el.innerHTML=peopleRowsHtml(P); }
 document.addEventListener('click',e=>{
-  const so=e.target.closest&&e.target.closest('#people [data-ppsort]'); if(so){ const k=so.dataset.ppsort; if(PPL.sort===k) PPL.dir=PPL.dir==='asc'?'desc':'asc'; else { PPL.sort=k; PPL.dir=k==='code'?'asc':'desc'; } ppRender(); return; }
+  const so=e.target.closest&&e.target.closest('#people [data-ppsort]'); if(so){ const k=so.dataset.ppsort; if(PPL.sort===k) PPL.dir=PPL.dir==='asc'?'desc':'asc'; else { PPL.sort=k; PPL.dir=k==='code'?'asc':(k==='ps'?'asc':'desc'); } ppRender(); return; }
   const fl=e.target.closest&&e.target.closest('#people [data-ppf]'); if(fl){ PPL.f=fl.dataset.ppf; ppRender(); } });
+document.addEventListener('input',e=>{ if(e.target&&e.target.id==='ppQ'){ PPL.q=e.target.value; ppRows(); } });
 function customersSection(m){
   const S=SCP||{multi:false}, T='Customers & Average Ticket';
   const CMP=CUS.cmp==='ly'?'ly':'lm', RNc=CMP==='ly'?'LY':'LM';
