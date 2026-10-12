@@ -5705,7 +5705,7 @@ async function syncEnc(obj){ const raw=new TextEncoder().encode(JSON.stringify(o
 async function syncDec(blob){ const o=JSON.parse(blob); let p=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:B64(o.i)},SYNC.key,B64(o.c)));
   if(o.z) p=await syncGz(p,1); return JSON.parse(new TextDecoder().decode(p)); }
 const sbH=()=>({apikey:SB_KEY,'Content-Type':'application/json'});
-function syncBadge(st){ const el=document.getElementById('syncSt'); if(!el) return; el.hidden=false; el.className='syncst '+st;
+function syncBadge(st){ const el=document.getElementById('syncSt'); if(!el) return; el.hidden=(st==='ok'); el.className='syncst '+st;   // ปกติไม่โชว์ป้าย 'ข้อมูลล่าสุด' · โชว์เฉพาะตอนซิงก์ไม่สำเร็จ
   el.textContent=st==='ok'?'ข้อมูลล่าสุด':'ซิงก์ไม่สำเร็จ';
   el.title=st==='ok'?'ข้อมูลที่นำเข้าเก็บในฐานข้อมูลกลาง ทุกเครื่องเห็นชุดเดียวกัน':'ต่อฐานข้อมูลกลางไม่ได้ (ใช้ข้อมูลในเครื่องนี้แทน): '+((SYNC.err&&SYNC.err.message)||''); }
 async function syncPush(id,s){ if(!SYNC.key||!SYNC.token) return;
