@@ -2051,7 +2051,7 @@ i.good{background:#12A367}i.bad{background:#F43F5E}i.soft{background:#C9CDD3}
 .ppt3{font-weight:800;font-size:15px;margin:14px 0 6px}
 .ppr.ppch{cursor:default;grid-template-columns:minmax(110px,.8fr) minmax(150px,1fr) minmax(150px,1fr) 90px 70px;font-size:14.5px}.ppr.ppch:hover{background:transparent}
 @media (max-width:1100px){.ppr.ppz,.ppr.ppch{grid-template-columns:1fr 1fr}}
-.insr{grid-template-columns:minmax(130px,1.1fr) repeat(11,minmax(60px,1fr)) 84px 112px;gap:8px;cursor:pointer;font-size:14px;align-items:center}
+.insr{grid-template-columns:minmax(130px,1.1fr) repeat(11,minmax(60px,1fr)) 130px 112px;gap:8px;cursor:pointer;font-size:14px;align-items:center}
 .insr.pph,.insr.insavg{cursor:default}.insr.insavg{background:#F6F2EC;border-radius:10px;font-weight:700}.insr.insavg:hover{background:#F6F2EC}
 .insr .r{text-align:right}.insc{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;border-radius:8px;padding:5px 8px}
 .insc.g{background:#DDF3E8;color:#0B7A4B}.insc.b{background:#FFE1E4;color:#B4233A}
@@ -2072,6 +2072,24 @@ i.good{background:#12A367}i.bad{background:#F43F5E}i.soft{background:#C9CDD3}
 .aud-c .ppr:not(.pph){font-size:14.5px}
 .insev{display:block;margin-top:4px;font-size:12.5px;line-height:1.5;color:#6B7280;font-weight:500}
 .aud-ks b{color:var(--accent-ink)}
+.insgrp{cursor:default!important;padding-bottom:0!important;border-bottom:0!important}.insgrp:hover{background:transparent!important}
+.insg{text-align:center;font-size:12.5px;font-weight:700;color:#8A93A3;border-bottom:1px solid var(--line);padding-bottom:4px;margin:0 4px}
+.insst2{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding-left:8px}.insst2 small{font-size:12px;color:#6B7280;font-weight:700}.insst2 .bd{color:#E11D48}.insst2 .gd{color:#12804F}
+.pips{display:inline-flex;gap:2px}.pip{display:inline-block;width:6px;height:16px;border-radius:2px;background:#E5E7EB}.pip.g{background:#12A367}.pip.b{background:#F43F5E}
+.inspill{display:inline-block;border-radius:999px;padding:3px 12px;font-size:13px;font-weight:800;margin-right:8px}.inspill.b{background:rgba(244,63,94,.28);color:#FDA4AF}.inspill.g{background:rgba(18,163,103,.28);color:#86EFAC}
+.insgolink{font-size:13px;color:#C7CFDB;font-weight:600}.insheroc{cursor:pointer}.insheroc:hover .insgolink{color:#fff}
+.insg2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.insli{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;padding:9px 2px;border-bottom:1px solid #f1ece6;font-size:15px}.insli:last-child{border-bottom:0}
+.insli .n1{font-weight:600}.insli b{font-variant-numeric:tabular-nums}.insli b.neg{color:#D13447}.insli b.pos{color:#12804F}.insli .n2{color:#8A93A3;font-size:13px;min-width:80px;text-align:right}
+.ppt2 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px}
+.insflow{display:flex;align-items:stretch;gap:8px;margin:6px 0 14px}.insfb{flex:1;border-radius:14px;padding:12px 16px;background:#F1F1EF}.insfb small{display:block;font-size:12.5px;color:#6B7280;font-weight:600}.insfb b{display:block;font-size:26px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}.insfb em{font-style:normal;font-size:12.5px;color:#8A93A3}
+.insfb.r{background:#FDE7EA}.insfb.g{background:#E1F5EA}.insfb.dk{background:#1F2530;color:#fff}.insfb.dk small,.insfb.dk em{color:#AEB7C6}.insfb b.neg{color:#D13447}.insfb b.pos{color:#12804F}.insar{align-self:center;color:#B8B2AB;font-size:18px}
+.ppr.ppch2{cursor:default;grid-template-columns:100px 90px 90px minmax(180px,1fr) 100px 80px;gap:12px;font-size:14.5px;align-items:center}.ppr.ppch2:not(.pph):hover{background:transparent}.ppr.ppch2 .c{text-align:center}.ppr.ppch2 .r{text-align:right}
+.insdrop{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px;font-size:14px;color:#6B7280}.insdrop i{font-style:normal}
+.ppr.insnow{background:#FFF1E6;border-radius:10px}
+.insrecn{list-style:none;margin:0;padding:0}.insrecn li{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1ece6;font-size:15px;line-height:1.6}.insrecn li:last-child{border-bottom:0}
+.insn{flex:0 0 28px;height:28px;border-radius:50%;background:#FDE8DA;color:#C9490B;display:grid;place-items:center;font-size:13px;font-weight:800}
+.insrecn .insev{margin-top:3px;font-weight:500}.insrecn .insev b{color:#6B7280}
+@media (max-width:1100px){.insg2{grid-template-columns:1fr}.insflow{flex-direction:column}.insar{display:none}}
 .ppfoot{margin-top:12px;font-size:12.5px;color:#9AA3B0}
 .cosm-note{font-size:12.5px;color:#8A93A3;margin-top:12px}
 
@@ -3613,6 +3631,7 @@ function openPeopleBranch(code,keepList){
    รวมตัวชี้วัดจากทุกหมวด: ยอดขาย vs แผน · vs LM · บิล vs LM · เช็คเฉลี่ย · %COS · %COL · กำไรสุทธิ · CEM · OSS · Productivity Sale
    แต่ละตัวมีสีเขียว/แดงตามเกณฑ์ → นับ "ตัวชี้วัดที่ต้องดูแล" → คลิกเพื่อดูวิเคราะห์ (สาเหตุยอดเปลี่ยน · ช่องทาง · โอกาส · ข้อเสนอแนะ) */
 const INS={view:'zone',sort:'bad',dir:'desc',q:'',tab:'overview',zsel:'all'};
+const INS_TONED=['ach','tk','cos','col','net','cem','oss','ps'];
 const INS_M=[['sales','ยอดขาย'],['ach','vs แผน'],['mom','vs LM'],['trMom','บิล vs LM'],['tk','เช็คเฉลี่ย'],['cos','%COS'],['col','%COL'],['net','กำไรสุทธิ'],['cem','CEM'],['oss','OSS'],['ps','฿/ชม.']];
 function insTone(k,v,a){ if(v==null||!isFinite(v)) return '';
   switch(k){
@@ -3736,13 +3755,13 @@ function insChan(list){
     const br=comp.map(r=>({code:r.code,name:r.name,d:(r.raw[k]||0)-(r.p[k]||0)})).sort((a,b)=>a.d-b.d); return {k,n,c,p:p0,d:c-p0,br}; });
   const ct=comp.reduce((a,r)=>a+(r.tr||0),0), pt0=comp.reduce((a,r)=>a+(r.p.tr||0),0), cs=comp.reduce((a,r)=>a+r.sales,0), ps0=comp.reduce((a,r)=>a+r.p.sales,0);
   const tkC=ct?cs/ct:0, tkP=pt0?ps0/pt0:0;
-  return {n:comp.length,ch:out,dSales:cs-ps0,billEff:(ct-pt0)*tkP,tkEff:ct*(tkC-tkP)};
+  return {n:comp.length,ch:out,dSales:cs-ps0,billEff:(ct-pt0)*tkP,tkEff:ct*(tkC-tkP),prevSales:ps0,curSales:cs,tkP,tkC,billsPct:pt0?(ct/pt0-1)*100:null};
 }
 /* ---------- แท็บวิเคราะห์เชิงลึก: สาเหตุยอดตก · จัดอันดับสาขา · ต้นทุน · เป้าฟื้นยอดขาย ---------- */
 function insTbl(heads,grid,rows){
   const g=`grid-template-columns:${grid}`;
   return `<div class="ppr pph" style="${g};cursor:default">${heads.map(h=>`<div class="${h[1]||''}">${h[0]}</div>`).join('')}</div>`+
-    (rows.map(r=>`<div class="ppr"${r.key?` data-insopen="${r.key}" data-inskind="${r.kind||'branch'}"`:''} style="${g}${r.key?'':';cursor:default'}">${r.cells.join('')}</div>`).join('')||'<div class="empty">ไม่มีข้อมูล</div>');
+    (rows.map(r=>`<div class="ppr${r.cls?' '+r.cls:''}"${r.key?` data-insopen="${r.key}" data-inskind="${r.kind||'branch'}"`:''} style="${g}${r.key?'':';cursor:default'}">${r.cells.join('')}</div>`).join('')||'<div class="empty">ไม่มีข้อมูล</div>');
 }
 const insSg=v=>(v<0?'−':'+')+'฿'+fmtN(Math.round(Math.abs(v)/1000))+'K';
 const insCls=v=>v<0?'neg':'pos';
@@ -3855,21 +3874,22 @@ function insightBody(m){
   const worst=E.slice().sort((a,b)=>(b.bad*100-b.good)-(a.bad*100-a.good))[0];
   const metricBad=INS_M.map(([k,t])=>({k,t,n:E.filter(e=>insTone(k,e.a[k],A[k])==='b').length})).sort((a,b)=>b.n-a.n)[0];
   const nWorst=E.filter(e=>e.bad>=4).length, unit=INS.view==='zone'?'โซน':'สาขา';
-  const hero=`<div class="aud-k dark"><div class="aud-kh">${unit}ที่ต้องดูแลก่อน · ${label(m)}</div><div class="aud-kv" style="font-size:30px">${worst?worst.name:'—'}</div>
-      <div class="aud-ks">${worst?'ตัวชี้วัดต้องดูแล '+worst.bad+' ตัว · ดี '+worst.good+' ตัว':''}</div><span class="pk" data-pk="worst" hidden>${worst?worst.name:'—'}</span></div>`;
+  INS.nav=list.map(e=>e.key);
+  const hero=`<div class="aud-k dark insheroc"${worst?` data-insopen="${worst.key}" data-inskind="${INS.view}"`:''}><div class="aud-kh">${unit}ที่ต้องดูแลก่อน · ${label(m)}</div><div class="aud-kv" style="font-size:34px">${worst?worst.name:'—'}</div>
+      <div class="aud-kp">${worst?`<span class="inspill b">${worst.bad} แดง</span><span class="inspill g">${worst.good} เขียว</span><span class="insgolink">ดูรายละเอียด →</span>`:''}</div><span class="pk" data-pk="worst" hidden>${worst?worst.name:'—'}</span></div>`;
   const kc=(dot,l,v,sub,k)=>`<div class="aud-k"><div class="aud-kh"><i style="background:${dot}"></i>${l}</div><div class="aud-kv">${v}</div><div class="aud-ks">${sub}</div><span class="pk" data-pk="${k}" hidden>${v}</span></div>`;
-  const cards=`<div class="aud-kg">${hero}${kc('#F43F5E',unit+'ที่แดงตั้งแต่ 4 ตัวชี้วัด',nWorst+'<small>'+unit+'</small>','จาก '+E.length+' '+unit,'nworst')}${kc('#F59E0B','ตัวชี้วัดที่แดงบ่อยสุด',metricBad&&metricBad.n?metricBad.t:'—',metricBad&&metricBad.n?'แดงใน '+metricBad.n+' '+unit:'ไม่มี','mbad')}${kc('#12A367','ยอดขายรวม (ค่าเฉลี่ยทุก'+unit+')','฿'+fmtN(Math.round(A.sales/1000))+'K',A.n+' สาขา','sales')}</div>`;
+  const cards=`<div class="aud-kg">${hero}${kc('#F43F5E',unit+'ที่แดงตั้งแต่ 4 ตัวชี้วัด',nWorst+'<small>'+unit+'</small>','จาก '+E.length+' '+unit,'nworst')}${kc('#F59E0B','ตัวชี้วัดที่แดงบ่อยสุด',metricBad&&metricBad.n?metricBad.t:'—',metricBad&&metricBad.n?'แดงใน '+metricBad.n+' จาก '+E.length+' '+unit:'ไม่มี','mbad')}${kc('#12A367','ยอดขายรวม','฿'+fmtN(Math.round(A.sales/1000))+'K',A.n+' สาขา'+(A.ach!=null?' · แผน '+A.ach.toFixed(0)+'%':'')+(A.mom!=null?' · vs LM '+insFmt('mom',A.mom):''),'sales')}</div>`;
   const th=(k,t,cls)=>`<div class="${cls||''}" data-insort="${k}">${t}<i>${INS.sort===k?(INS.dir==='asc'?'▲':'▼'):'↕'}</i></div>`;
   const cell=(e,k)=>{ const v=e.a[k], t=insTone(k,v,A[k]); return `<div class="insc ${t}">${insFmt(k,v)}</div>`; };
   const rowsH=list.map(e=>`<div class="ppr insr" data-inskey="${e.key}"><div class="ppn">${INS.view==='zone'?'<b>'+e.key+'</b>'+'<small>'+e.a.n+' สาขา</small>':'<b>'+e.key+'</b>'+e.name.replace(e.key+' ','')}</div>${INS_M.map(([k])=>cell(e,k)).join('')}
-      <div class="insst"><span class="bd">${e.bad}</span><span class="gd">${e.good}</span></div><div class="insgo"><span class="insbtn">ดูรายละเอียด ›</span></div></div>`).join('')||'<div class="empty">ไม่พบข้อมูลตามคำค้น</div>';
+      <div class="insst2"><span class="pips">${INS_TONED.map(k=>{ const t=insTone(k,e.a[k],A[k]); return '<i class="pip '+(t||'n')+'"></i>'; }).join('')}</span><small><b class="bd">${e.bad}</b> • <b class="gd">${e.good}</b></small></div><div class="insgo"><span class="insbtn">ดูรายละเอียด ›</span></div></div>`).join('')||'<div class="empty">ไม่พบข้อมูลตามคำค้น</div>';
   const avgRow=`<div class="ppr insr insavg"><div class="ppn"><b>เฉลี่ยทุกสาขา</b></div>${INS_M.map(([k])=>`<div class="insc">${insFmt(k,A[k])}</div>`).join('')}<div></div><div></div></div>`;
   return `${tabBar}<div class="ppview"><span class="ovseg"><button type="button" class="${INS.view==='zone'?'on':''}" data-insview="zone">รายโซน</button><button type="button" class="${INS.view==='branch'?'on':''}" data-insview="branch">รายสาขา</button></span></div>${cards}
     <div class="aud-c ppt"><div class="ppth"><div class="ppt2" style="margin:0">${INS.view==='zone'?'รายโซน':'รายสาขา'}<small>ทุกเรื่องในที่เดียว · เขียว = ดี · แดง = ต้องดูแล · คลิกแถวเพื่อดูวิเคราะห์ละเอียด</small></div>
       ${INS.view==='branch'?`<input type="search" class="ppsearch" id="insQ" placeholder="ค้นหารหัส / ชื่อสาขา" value="${(INS.q||'').replace(/"/g,'&quot;')}" autocomplete="off">`:''}</div>
-      <div class="insleg"><span><i class="g"></i> ดี</span><span><i class="b"></i> ต้องดูแล</span><span class="insst"><span class="bd">n</span> = จำนวนตัวชี้วัดที่แดง</span><span class="insst"><span class="gd">n</span> = จำนวนที่เขียว</span>
-        <span>เกณฑ์: เทียบกับแถว “เฉลี่ยทุกสาขา” ทุกคอลัมน์ ยกเว้นยอดขาย · vs LM · บิล vs LM ซึ่งแสดงไว้ดูอย่างเดียว ไม่ลงสีและไม่นับสถานะ</span></div>
-      <div class="ppr insr pph"><div data-insort="name">${INS.view==='zone'?'โซน':'สาขา'}<i>${INS.sort==='name'?(INS.dir==='asc'?'▲':'▼'):'↕'}</i></div>${INS_M.map(([k,t])=>th(k,t,'r')).join('')}${th('bad','สถานะ','r')}<div></div></div>
+      <div class="insleg"><span><i class="g"></i> ดี</span><span><i class="b"></i> ต้องดูแล</span><span>เกณฑ์: เทียบกับแถว “เฉลี่ยทุกสาขา” ทุกคอลัมน์ ยกเว้นยอดขาย · vs LM · บิล vs LM ซึ่งแสดงไว้ดูอย่างเดียว ไม่ลงสีและไม่นับสถานะ</span></div>
+      <div class="ppr insr insgrp"><div></div><div class="insg" style="grid-column:span 5">ยอดขาย</div><div class="insg" style="grid-column:span 3">ต้นทุน · กำไร</div><div class="insg" style="grid-column:span 2">มาตรฐานร้าน</div><div class="insg" style="grid-column:span 1">แรงงาน</div><div></div><div></div></div>
+      <div class="ppr insr pph"><div data-insort="name">${INS.view==='zone'?'โซน':'สาขา'}<i>${INS.sort==='name'?(INS.dir==='asc'?'▲':'▼'):'↕'}</i></div>${INS_M.map(([k,t])=>th(k,t,'r')).join('')}${th('bad','สถานะ','')}<div></div></div>
       <div id="insRows">${avgRow}${rowsH}</div></div>`;
 }
 function insightSection(m){
@@ -3886,6 +3906,7 @@ function openInsight(key,view){ view=view||INS.view; Object.keys(INS_MEMO).forEa
     document.body.appendChild(el);
     el.addEventListener('click',ev=>{ if(ev.target.closest('[data-insx]')) el.classList.remove('open');
       const bb=ev.target.closest('[data-insbr]'); if(bb){ el.classList.remove('open'); openBranch(bb.dataset.insbr); return; }
+      const nv=ev.target.closest('[data-insnav]'); if(nv&&nv.dataset.insnav){ openInsight(nv.dataset.insnav,view); return; }
       const go=ev.target.closest('[data-insgo]'); if(go){ el.classList.remove('open'); goSec(go.dataset.insgo); } }); }
   const f0=v=>fmtN(Math.round(v)), f1=v=>v.toFixed(1), K=v=>fmtN(Math.round(Math.abs(v)/1000))+'K', sg=v=>(v<0?'−':'+')+'฿'+K(v);
   const a=e.a, C=insChan(e.list);
@@ -3914,31 +3935,46 @@ function openInsight(key,view){ view=view||INS.view; Object.keys(INS_MEMO).forEa
       <div class="ppv"><div class="ppb"><i style="width:${Math.max(1,c.p/mx*100).toFixed(1)}%;background:#C9CDD3"></i></div><span>${K(c.p)}</span></div>
       <div class="ppv"><div class="ppb"><i style="width:${Math.max(1,c.c/mx*100).toFixed(1)}%;background:${c.d<0?'#F43F5E':'#12A367'}"></i></div><span>${K(c.c)}</span></div>
       <div class="ppnum ${c.d<0?'neg':'pos'}">${sg(c.d)}</div><div class="ppnum ${c.d<0?'neg':'pos'}">${pc==null?'—':(pc>=0?'+':'−')+Math.abs(pc).toFixed(1)+'%'}</div></div>`; }).join('');
-  const topBr=worstCh&&e.list.length>1?worstCh.br.filter(b=>b.d<0).slice(0,3):[];
   const sc=(cls,t,v,sub)=>`<div class="aud-k ppc ${cls}"><div class="aud-kh">${t}</div><div class="aud-kv">${v}</div><div class="aud-ks">${sub}</div></div>`;
-  document.getElementById('insmBody').innerHTML=`<div class="cosm-top"><div><div class="cosm-sub">Insights · ${label(m)} · ${e.a.n} สาขา</div><div class="cosm-name"><span style="color:var(--accent)">${view==='zone'?e.name:e.key}</span> ${view==='zone'?'':e.name.replace(e.key+' ','')}</div></div>
-      <div class="cosm-nav">${view==='branch'?`<button type="button" data-insbr="${e.key}" style="width:auto;padding:0 14px;font-size:13px">ดูรายละเอียดสาขา ›</button>`:''}<button type="button" class="cosm-x" data-insx aria-label="ปิด">✕</button></div></div>
+  const nav=INS.nav||[], ni=nav.indexOf(key), pk=ni>0?nav[ni-1]:null, nk=ni>=0&&ni<nav.length-1?nav[ni+1]:null;
+  const nNet=insTone('net',a.net,A.net);
+  /* รายการ ต้องดูแล / จุดแข็ง */
+  const liRow=x=>`<div class="insli"><span class="n1">${x.t}</span><b class="${x.tone==='b'?'neg':'pos'}">${insFmt(x.k,x.v)}</b><span class="n2">${x.k==='ach'||x.k==='cem'||x.k==='oss'?'เฉลี่ย '+insFmt(x.k,x.avg):'เฉลี่ย '+insFmt(x.k,x.avg)}</span></div>`;
+  const toned=tones.filter(x=>INS_TONED.includes(x.k));
+  const badT=toned.filter(x=>x.tone==='b'), goodT=toned.filter(x=>x.tone==='g');
+  /* สาขาที่ยอดลดมากสุด (เฉพาะระดับโซน) */
+  const dropBr=e.list.length>1?e.list.map(r=>({r,c:insChan([r])})).filter(x=>x.c.n&&x.c.dSales<0).sort((x,y)=>x.c.dSales-y.c.dSales).slice(0,3):[];
+  const maxD=Math.max(...C.ch.map(c=>Math.abs(c.d)),1);
+  const chRows2=C.ch.map(c=>{ const pc=c.p?c.d/c.p*100:null, w=Math.abs(c.d)/maxD*50; return `<div class="ppr ppch2"><div class="ppn"><b>${c.n}</b></div><div class="ppnum" style="color:#8A93A3">${K(c.p)}</div><div class="ppnum"><b>${K(c.c)}</b></div>
+      <div class="ppdb"><u></u><i class="${c.d<0?'bad':'good'}" style="${c.d<0?'right:50%':'left:50%'};width:${Math.max(.6,w).toFixed(1)}%"></i></div>
+      <div class="ppnum ${c.d<0?'neg':'pos'}">${sg(c.d)}</div><div class="ppnum ${c.d<0?'neg':'pos'}">${pc==null?'—':(pc>=0?'+':'−')+Math.abs(pc).toFixed(1)+'%'}</div></div>`; }).join('');
+  const prevM=MONTH_TH[(m-2+12)%12], curMn=MONTH_TH[m-1];
+  const flow=C.n?`<div class="insflow"><div class="insfb"><small>เดือนก่อน</small><b>฿${K(C.prevSales)}</b><em>${prevM}</em></div><span class="insar">→</span>
+      <div class="insfb ${C.billEff<0?'r':'g'}"><small>จำนวนบิล</small><b class="${C.billEff<0?'neg':'pos'}">${sg(C.billEff)}</b><em>${C.billsPct!=null?(C.billsPct>=0?'+':'−')+Math.abs(C.billsPct).toFixed(1)+'% บิล':''}</em></div><span class="insar">→</span>
+      <div class="insfb ${C.tkEff<0?'r':'g'}"><small>เช็คเฉลี่ย</small><b class="${C.tkEff<0?'neg':'pos'}">${sg(C.tkEff)}</b><em>฿${f0(C.tkP)} → ฿${f0(C.tkC)}</em></div><span class="insar">→</span>
+      <div class="insfb dk"><small>เดือนนี้</small><b>฿${K(C.curSales)}</b><em>${curMn} · ${(C.dSales>=0?'+':'−')+Math.abs(C.prevSales?C.dSales/C.prevSales*100:0).toFixed(1)}%</em></div></div>`:'';
+  const recLi=rec.map(([sec,t,evd],i)=>{ const k=t.indexOf(' — '), lead=k>0?t.slice(0,k):t, rest=k>0?t.slice(k+3):''; return `<li><span class="insn">${i+1}</span><div><b>${lead}</b>${rest?' — '+rest:''}${evd?'<small class="insev"><b>ข้อมูลย้อนหลัง:</b> '+evd+'</small>':''}</div></li>`; }).join('');
+  const nowM=H.length?H[H.length-1].m:null;
+  document.getElementById('insmBody').innerHTML=`<div class="cosm-top"><div><div class="cosm-sub">Insights · ${label(m)} · ${e.a.n} สาขา</div><div class="cosm-name">${view==='zone'?e.name:'<span style="color:var(--accent)">'+e.key+'</span> '+e.name.replace(e.key+' ','')}</div></div>
+      <div class="cosm-nav">${view==='branch'?`<button type="button" data-insbr="${e.key}" style="width:auto;padding:0 14px;font-size:13px">ดูรายละเอียดสาขา ›</button>`:''}<button type="button" data-insnav="${pk||''}" ${pk?'':'disabled'}>‹</button><button type="button" data-insnav="${nk||''}" ${nk?'':'disabled'}>›</button><button type="button" class="cosm-x" data-insx aria-label="ปิด">✕</button></div></div>
     <div class="aud-kg ppm" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:12px">
-      <div class="aud-k dark"><div class="aud-kh">สถานะ</div><div class="aud-kv">${e.bad}<small>แดง</small> · ${e.good}<small>เขียว</small></div><div class="aud-ks">จาก ${INS_M.filter(([k])=>!['sales','mom','trMom'].includes(k)).length} ตัวชี้วัด</div></div>
-      <div class="aud-k"><div class="aud-kh">ยอดขาย</div><div class="aud-kv">${insFmt('sales',a.sales)}</div><div class="aud-ks">${a.mom!=null?'vs LM '+insFmt('mom',a.mom):''}</div></div>
+      <div class="aud-k dark"><div class="aud-kh">สถานะ</div><div class="aud-kv"><span style="color:#FDA4AF">${e.bad}</span><small>แดง</small> <span style="color:#86EFAC;margin-left:6px">${e.good}</span><small>เขียว</small></div><div class="aud-ks">จาก ${INS_TONED.length} ตัวชี้วัด</div></div>
+      <div class="aud-k"><div class="aud-kh">ยอดขาย</div><div class="aud-kv">${insFmt('sales',a.sales)}</div><div class="aud-ks">${a.mom!=null?'vs LM '+insFmt('mom',a.mom):''}${a.ach!=null?' · แผน '+a.ach.toFixed(0)+'%':''}</div></div>
       <div class="aud-k"><div class="aud-kh">จำนวนบิล</div><div class="aud-kv">${f0(a.tr)}</div><div class="aud-ks">${a.trMom!=null?'vs LM '+insFmt('trMom',a.trMom):''} · เช็ค ${insFmt('tk',a.tk)}</div></div>
-      <div class="aud-k"><div class="aud-kh">กำไรสุทธิ</div><div class="aud-kv">${insFmt('net',a.net)}</div><div class="aud-ks">%COS ${insFmt('cos',a.cos)} · %COL ${insFmt('col',a.col)}</div></div></div>
-    <div class="aud-c" style="margin-top:0"><div class="ppt2">ภาพรวมตัวชี้วัด</div>
-      <div class="ppt3" style="margin-top:0;color:#B4233A">ต้องดูแล</div><div class="inschips">${badL.map(chip).join('')||'<em>ไม่มี</em>'}</div>
-      <div class="ppt3" style="color:#0B7A4B">จุดแข็ง</div><div class="inschips">${goodL.map(chip).join('')||'<em>ไม่มี</em>'}</div></div>
-    <div class="aud-c" style="margin-top:12px"><div class="ppt2">ยอดขายเปลี่ยนเพราะอะไร<small>เทียบเดือนก่อน · ${C.n} สาขาที่เทียบได้</small></div>
-      ${C.n?`<ul class="ppbl"><li>ยอดขาย${C.dSales<0?'ลดลง':'เพิ่มขึ้น'} <b class="${C.dSales<0?'neg':'pos'}">${sg(C.dSales)}</b> · จากจำนวนบิล <b class="${C.billEff<0?'neg':'pos'}">${sg(C.billEff)}</b> และเช็คเฉลี่ย <b class="${C.tkEff<0?'neg':'pos'}">${sg(C.tkEff)}</b></li>
-      ${worstCh?`<li>ช่องทางที่ลดมากสุด: <b class="neg">${worstCh.n} ${sg(worstCh.d)}</b>${topBr.length?' · จากสาขา '+topBr.map(b=>b.code+' '+b.name+' ('+sg(b.d)+')').join(', '):''}</li>`:'<li>ไม่มีช่องทางที่ยอดลดลง</li>'}</ul>
-      <div class="ppr ppch pph"><div>ช่องทาง</div><div>เดือนก่อน</div><div>เดือนนี้</div><div class="r">ส่วนต่าง</div><div class="r">%</div></div>${chRows}`:'<div class="ppfoot">ยังไม่มีข้อมูลเดือนก่อนสำหรับเทียบ</div>'}</div>
-    ${(upTk>0||upPt>0||upPs>0)?`<div class="aud-c" style="margin-top:12px"><div class="ppt2">โอกาสเพิ่มยอดขาย (ประมาณการ)<small>เทียบค่าเฉลี่ยทุกสาขา · ไม่รวมปัจจัยอื่น</small></div>
+      <div class="aud-k"><div class="aud-kh">กำไรสุทธิ</div><div class="aud-kv ${nNet==='b'?'neg':nNet==='g'?'pos':''}">${insFmt('net',a.net)}</div><div class="aud-ks">%COS ${insFmt('cos',a.cos)} · %COL ${insFmt('col',a.col)}</div></div></div>
+    <div class="insg2"><div class="aud-c" style="margin-top:0"><div class="ppt2" style="border:0;padding:0"><i class="dot" style="background:#F43F5E"></i>ต้องดูแล <small style="display:inline;margin-left:6px">${badT.length} ตัว</small></div>${badT.map(liRow).join('')||'<div class="ppfoot">ไม่มี</div>'}</div>
+      <div class="aud-c" style="margin-top:0"><div class="ppt2" style="border:0;padding:0"><i class="dot" style="background:#12A367"></i>จุดแข็ง <small style="display:inline;margin-left:6px">${goodT.length} ตัว</small></div>${goodT.map(liRow).join('')||'<div class="ppfoot">ไม่มี</div>'}</div></div>
+    <div class="aud-c" style="margin-top:12px"><div class="ppt2">ยอดขายเปลี่ยนเพราะอะไร<small>เทียบเดือนก่อน (${prevM}) · ${C.n} สาขาที่เทียบได้</small></div>
+      ${C.n?flow+`<div class="ppr ppch2 pph"><div>ช่องทาง</div><div class="r">เดือนก่อน</div><div class="r">เดือนนี้</div><div class="c">เปลี่ยนแปลง</div><div class="r">ส่วนต่าง</div><div class="r">%</div></div>${chRows2}
+      ${dropBr.length?`<div class="insdrop"><span>ลดมากสุดจากสาขา</span>${dropBr.map(x=>`<i class="inschip b"><b>${x.r.code}</b> ${x.r.name} (${sg(x.c.dSales)})</i>`).join('')}</div>`:''}`:'<div class="ppfoot">ยังไม่มีข้อมูลเดือนก่อนสำหรับเทียบ</div>'}</div>
+    ${(upTk>0||upPt>0||upPs>0)?`<div class="aud-c" style="margin-top:12px"><div class="ppt2">โอกาสเพิ่มยอดขาย (ประมาณการ)<small>ถ้าตัวชี้วัดขึ้นไปถึงเกณฑ์ · คิดแยกทีละตัว ไม่รวมกัน</small></div>
       <div class="aud-kg" style="grid-template-columns:repeat(3,minmax(0,1fr))">
       ${sc('g','ถ้ายอดต่อบิลเพิ่มจาก ฿'+f0(a.tk||0)+' เป็น ฿'+f0(tkAvg||0),upTk>0?'+฿'+K(upTk):'ถึงแล้ว','บิลเท่าเดิม '+f0(a.tr)+' บิล')}
       ${sc('y','ถ้า Productivity Trans เพิ่มจาก '+(pt!=null?pt.toFixed(1):'—')+' เป็น '+(ptAvg?ptAvg.toFixed(1):'—'),upPt>0?'+฿'+K(upPt):'ถึงแล้ว','ชั่วโมงเท่าเดิม '+f0(a.hours||0)+' ชม.'+cutTxt(cutPt))}
-      ${sc('r','ถ้า Productivity Sale เพิ่มจาก ฿'+f0(a.ps||0)+' เป็น ฿'+f0(A.ps||0),upPs>0?'+฿'+K(upPs):'—','ชั่วโมงเท่าเดิม'+cutTxt(cutBr))}</div></div>`:''}
-
-    ${H.length>=2?`<div class="aud-c" style="margin-top:12px"><div class="ppt2">ย้อนหลังรายเดือน<small>ใช้ดูแนวโน้มและหาเดือนที่เคยทำได้ดี${ev.ly?' · '+ev.ly:''}</small></div>
-      ${insTbl([['เดือน'],['ยอดขาย','r'],['บิล','r'],['เช็คเฉลี่ย','r'],['%COS','r'],['%COL','r'],['฿/ชม.','r'],['CEM','r']],'80px repeat(7,minmax(80px,1fr))',H.slice(-9).map(x=>({cells:[`<div class="ppn"><b>${MONTH_TH[x.m-1]}</b></div>`].concat(['sales','tr','tk','cos','col','ps','cem'].map(k=>{ const t=k==='sales'||k==='tr'?'':insTone(k,x.a[k],x.A[k]); return `<div class="insc ${t}">${k==='tr'?(x.a.tr?fmtN(Math.round(x.a.tr)):'—'):insFmt(k,x.a[k])}</div>`; }))})))}</div>`:''}
-    <div class="aud-c" style="margin-top:12px"><div class="ppt2">ข้อเสนอแนะเบื้องต้น<small>สร้างจากตัวเลขและข้อมูลย้อนหลังอัตโนมัติ — ใช้ประกอบการตัดสินใจ</small></div><ul class="ppbl insrec">${rec.map(([sec,t,evd])=>'<li><span>'+t+(evd?'<small class="insev">📈 ข้อมูลย้อนหลัง: '+evd+'</small>':'')+'</span>'+'</li>').join('')}</ul></div>`;
+      ${sc('r',(e.list.length>1?'ถ้า '+e.list.filter(r=>r.lh>0&&A.ps&&r.sales/r.lh<A.ps).length+' สาขาที่ต่ำกว่าเฉลี่ย ขึ้นเป็น ฿'+f0(A.ps||0)+'/ชม.':'ถ้า Productivity Sale เพิ่มจาก ฿'+f0(a.ps||0)+' เป็น ฿'+f0(A.ps||0)),upPs>0?'+฿'+K(upPs):'—','ชั่วโมงเท่าเดิม'+cutTxt(cutBr))}</div></div>`:''}
+    ${H.length>=2?`<div class="aud-c" style="margin-top:12px"><div class="ppt2">ย้อนหลังรายเดือน<small>ดูแนวโน้มและเดือนที่เคยทำได้ดี · สีเทียบค่าเฉลี่ยทุกสาขา${ev.ly?' · '+ev.ly.replace(/ \(\d+ สาขาที่เทียบได้\)/,'').replace('เทียบเดือนเดียวกันปีก่อน','เทียบเดือนเดียวกันปีก่อน'):''}</small></div>
+      ${insTbl([['เดือน'],['ยอดขาย','r'],['บิล','r'],['เช็คเฉลี่ย','r'],['%COS','r'],['%COL','r'],['฿/ชม.','r'],['CEM','r']],'80px repeat(7,minmax(80px,1fr))',H.slice(-9).map(x=>({cls:x.m===nowM?'insnow':'',cells:[`<div class="ppn"><b>${MONTH_TH[x.m-1]}</b></div>`].concat(['sales','tr','tk','cos','col','ps','cem'].map(k=>{ const t=k==='sales'||k==='tr'?'':insTone(k,x.a[k],x.A[k]); return `<div class="insc ${t}">${k==='tr'?(x.a.tr?fmtN(Math.round(x.a.tr)):'—'):insFmt(k,x.a[k])}</div>`; }))})))}</div>`:''}
+    <div class="aud-c" style="margin-top:12px"><div class="ppt2">ข้อเสนอแนะเบื้องต้น<small>สร้างจากตัวเลขและข้อมูลย้อนหลังอัตโนมัติ — ใช้ประกอบการตัดสินใจ</small></div><ol class="insrecn">${recLi}</ol></div>`;
   el.classList.add('open'); }
 document.addEventListener('click',e=>{
   const vw=e.target.closest&&e.target.closest('#insight [data-insview]'); if(vw){ INS.view=vw.dataset.insview; INS.sort='bad'; INS.dir='desc'; INS.q=''; insRender(); return; }
