@@ -3617,7 +3617,7 @@ const INS_M=[['sales','ยอดขาย'],['ach','vs แผน'],['mom','vs LM
 function insTone(k,v,a){ if(v==null||!isFinite(v)) return '';
   switch(k){
     case 'ach': return a!=null&&v>=a+2?'g':a!=null&&v<a-2?'b':'';
-    case 'mom': case 'trMom': return v>=0?'g':v<-3?'b':'';
+    case 'mom': case 'trMom': return '';   // เทียบ LM/LY ไม่ลงสีและไม่นับ — แสดงไว้ให้ดูอย่างเดียว
     case 'tk': return a&&v>=a*1.03?'g':a&&v<a*0.97?'b':'';
     case 'cos': case 'col': return a!=null&&v<=a-0.5?'g':a!=null&&v>a+1?'b':'';
     case 'net': return a!=null&&v>=a+1?'g':a!=null&&v<a-1?'b':'';
@@ -3867,7 +3867,7 @@ function insightBody(m){
     <div class="aud-c ppt"><div class="ppth"><div class="ppt2" style="margin:0">${INS.view==='zone'?'รายโซน':'รายสาขา'}<small>ทุกเรื่องในที่เดียว · เขียว = ดี · แดง = ต้องดูแล · คลิกแถวเพื่อดูวิเคราะห์ละเอียด</small></div>
       ${INS.view==='branch'?`<input type="search" class="ppsearch" id="insQ" placeholder="ค้นหารหัส / ชื่อสาขา" value="${(INS.q||'').replace(/"/g,'&quot;')}" autocomplete="off">`:''}</div>
       <div class="insleg"><span><i class="g"></i> ดี</span><span><i class="b"></i> ต้องดูแล</span><span class="insst"><span class="bd">n</span> = จำนวนตัวชี้วัดที่แดง</span><span class="insst"><span class="gd">n</span> = จำนวนที่เขียว</span>
-        <span>เกณฑ์: ทุกคอลัมน์เทียบกับแถว “เฉลี่ยทุกสาขา” (ยอดขายไม่ลงสี) ยกเว้น vs LM และ บิล vs LM ที่ดูบวก/ลบเทียบเดือนก่อน (≥0 ดี · &lt;−3% แดง)</span></div>
+        <span>เกณฑ์: เทียบกับแถว “เฉลี่ยทุกสาขา” ทุกคอลัมน์ ยกเว้นยอดขาย · vs LM · บิล vs LM ซึ่งแสดงไว้ดูอย่างเดียว ไม่ลงสีและไม่นับสถานะ</span></div>
       <div class="ppr insr pph"><div data-insort="name">${INS.view==='zone'?'โซน':'สาขา'}<i>${INS.sort==='name'?(INS.dir==='asc'?'▲':'▼'):'↕'}</i></div>${INS_M.map(([k,t])=>th(k,t,'r')).join('')}${th('bad','สถานะ','r')}<div></div></div>
       <div id="insRows">${avgRow}${rowsH}</div></div>`;
 }
@@ -3918,7 +3918,7 @@ function openInsight(key,view){ view=view||INS.view; Object.keys(INS_MEMO).forEa
   document.getElementById('insmBody').innerHTML=`<div class="cosm-top"><div><div class="cosm-sub">Insights · ${label(m)} · ${e.a.n} สาขา</div><div class="cosm-name"><span style="color:var(--accent)">${view==='zone'?e.name:e.key}</span> ${view==='zone'?'':e.name.replace(e.key+' ','')}</div></div>
       <div class="cosm-nav">${view==='branch'?`<button type="button" data-insbr="${e.key}" style="width:auto;padding:0 14px;font-size:13px">ดูรายละเอียดสาขา ›</button>`:''}<button type="button" class="cosm-x" data-insx aria-label="ปิด">✕</button></div></div>
     <div class="aud-kg ppm" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:12px">
-      <div class="aud-k dark"><div class="aud-kh">สถานะ</div><div class="aud-kv">${e.bad}<small>แดง</small> · ${e.good}<small>เขียว</small></div><div class="aud-ks">จาก ${INS_M.length} ตัวชี้วัด</div></div>
+      <div class="aud-k dark"><div class="aud-kh">สถานะ</div><div class="aud-kv">${e.bad}<small>แดง</small> · ${e.good}<small>เขียว</small></div><div class="aud-ks">จาก ${INS_M.filter(([k])=>!['sales','mom','trMom'].includes(k)).length} ตัวชี้วัด</div></div>
       <div class="aud-k"><div class="aud-kh">ยอดขาย</div><div class="aud-kv">${insFmt('sales',a.sales)}</div><div class="aud-ks">${a.mom!=null?'vs LM '+insFmt('mom',a.mom):''}</div></div>
       <div class="aud-k"><div class="aud-kh">จำนวนบิล</div><div class="aud-kv">${f0(a.tr)}</div><div class="aud-ks">${a.trMom!=null?'vs LM '+insFmt('trMom',a.trMom):''} · เช็ค ${insFmt('tk',a.tk)}</div></div>
       <div class="aud-k"><div class="aud-kh">กำไรสุทธิ</div><div class="aud-kv">${insFmt('net',a.net)}</div><div class="aud-ks">%COS ${insFmt('cos',a.cos)} · %COL ${insFmt('col',a.col)}</div></div></div>
