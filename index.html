@@ -2071,6 +2071,7 @@ i.good{background:#12A367}i.bad{background:#F43F5E}i.soft{background:#C9CDD3}
 .insissue{font-size:13.5px;line-height:1.55;color:#4B5563}.insissue b{color:var(--accent-ink)}
 .aud-c .ppr:not(.pph){font-size:14.5px}
 .insev{display:block;margin-top:4px;font-size:12.5px;line-height:1.5;color:#6B7280;font-weight:500}
+.aud-ks b{color:var(--accent-ink)}
 .ppfoot{margin-top:12px;font-size:12.5px;color:#9AA3B0}
 .cosm-note{font-size:12.5px;color:#8A93A3;margin-top:12px}
 
@@ -3500,7 +3501,10 @@ function ppZoneStats(m,P){
       billEff:(ct-pt0)*tkP, tkEff:ct*(tkC-tkP)};   // แยกผลจากจำนวนบิล / เช็คเฉลี่ย
     const upTk=trans*Math.max(0,tkAvg-tk), upPt=hours*Math.max(0,ptAvg-pt)*tk;
     const upBr=R.reduce((a,r)=>a+Math.max(0,psAvg-r.ps)*r.lh,0);
-    return {z:o.z,rows:R,n:R.length,sales,hours,trans,col,ps,pt,tk,d,ch,upTk,upPt,upBr,low:R.filter(r=>r.ps<psAvg*(1-PP_TH)).sort((a,b)=>a.ps-b.ps)};
+    /* มุมมองลดคน: ยอด/บิลเท่าเดิม แต่ใช้ชั่วโมงลดลงจนถึงประสิทธิภาพเฉลี่ย → ประหยัด COL (ค่าแรงต่อชั่วโมง = %COL × ยอดขาย ÷ ชั่วโมง) */
+    const wage=hours?col/100*sales/hours:0, hrPt=pt<ptAvg?hours-trans/ptAvg:0, hrPs=ps<psAvg?hours-sales/psAvg:0;
+    const brCut=R.reduce((a,r)=>{ const h=r.ps<psAvg?r.lh-r.sales/psAvg:0; return {h:a.h+Math.max(0,h),v:a.v+Math.max(0,h)*(r.col/100*r.sales/r.lh)}; },{h:0,v:0});
+    return {z:o.z,rows:R,n:R.length,sales,hours,trans,col,ps,pt,tk,d,ch,upTk,upPt,upBr,cutPt:{h:Math.max(0,hrPt),v:Math.max(0,hrPt)*wage},cutPs:{h:Math.max(0,hrPs),v:Math.max(0,hrPs)*wage},cutBr:brCut,low:R.filter(r=>r.ps<psAvg*(1-PP_TH)).sort((a,b)=>a.ps-b.ps)};
   }).sort((a,b)=>a.ps-b.ps);
   return {Z:out,tkAvg,ptAvg,psAvg,hasPrev:prv.length>0};
 }
@@ -3521,10 +3525,11 @@ function peopleZoneHtml(m,P){
   const o=Z.find(x=>x.z===PPL.zone), dv=o.ps/S.psAvg-1;
   const tkDiff=o.tk-S.tkAvg, ptDiff=o.pt-S.ptAvg;
   const sc=(cls,t,v,sub)=>`<div class="aud-k ppc ${cls}"><div class="aud-kh">${t}</div><div class="aud-kv">${v}</div><div class="aud-ks">${sub}</div></div>`;
+  const dim=new Date(YEAR,m,0).getDate(), cutTxt=c=>c&&c.h>0&&c.v>0?`<br><b>มุมมองลดคน:</b> ลดได้ ${f0(c.h)} ชม. (≈ ${Math.max(1,Math.round(c.h/(dim*8)))} คน · 8 ชม./วัน) ประหยัด COL ≈ ฿${fmtN(Math.round(c.v/1000))}K`:'';
   const scen=`<div class="aud-kg" style="grid-template-columns:repeat(3,minmax(0,1fr));margin:12px 0">
     ${sc('g','ถ้ายอดต่อบิลเพิ่มจาก ฿'+f0(o.tk)+' เป็น ฿'+f0(S.tkAvg),o.upTk>0?'+฿'+fmtN(Math.round(o.upTk/1000))+'K':'ถึงแล้ว','บิลเท่าเดิม '+f0(o.trans)+' บิล · เช็คโซนนี้ ฿'+f0(o.tk)+(tkDiff<0?' (ต่ำกว่า ฿'+f0(-tkDiff)+')':' (สูงกว่า)'))}
-    ${sc('y','ถ้า Productivity Trans เพิ่มจาก '+f1(o.pt)+' เป็น '+f1(S.ptAvg),o.upPt>0?'+฿'+fmtN(Math.round(o.upPt/1000))+'K':'ถึงแล้ว','ชั่วโมงเท่าเดิม '+f0(o.hours)+' ชม. · โซนนี้ '+f1(o.pt)+' บิล/ชม.'+(ptDiff<0?'':' (สูงกว่า)'))}
-    ${sc('r','ถ้า Productivity Sale ของสาขาที่ต่ำกว่า ('+o.rows.filter(r=>r.ps<S.psAvg).length+' แห่ง) เพิ่มเป็น ฿'+f0(S.psAvg),o.upBr>0?'+฿'+fmtN(Math.round(o.upBr/1000))+'K':'—','ชั่วโมงเท่าเดิม · ยกประสิทธิภาพ ฿/ชม. ของสาขาที่ต่ำกว่า ฿'+f0(S.psAvg)+' ทุกแห่ง')}</div>`;
+    ${sc('y','ถ้า Productivity Trans เพิ่มจาก '+f1(o.pt)+' เป็น '+f1(S.ptAvg),o.upPt>0?'+฿'+fmtN(Math.round(o.upPt/1000))+'K':'ถึงแล้ว','ชั่วโมงเท่าเดิม '+f0(o.hours)+' ชม. · โซนนี้ '+f1(o.pt)+' บิล/ชม.'+(ptDiff<0?'':' (สูงกว่า)')+cutTxt(o.cutPt))}
+    ${sc('r','ถ้า Productivity Sale ของสาขาที่ต่ำกว่า ('+o.rows.filter(r=>r.ps<S.psAvg).length+' แห่ง) เพิ่มเป็น ฿'+f0(S.psAvg),o.upBr>0?'+฿'+fmtN(Math.round(o.upBr/1000))+'K':'—','ชั่วโมงเท่าเดิม · ยกประสิทธิภาพ ฿/ชม. ของสาขาที่ต่ำกว่า ฿'+f0(S.psAvg)+' ทุกแห่ง'+cutTxt(o.cutBr))}</div>`;
   const mx=Math.max(...o.ch.map(c=>Math.max(c.c,c.p)))||1;
   const worstCh=o.ch.filter(c=>c.d<0).sort((a,b)=>a.d-b.d)[0];
   const chRows=o.ch.map(c=>{ const pc=c.p?c.d/c.p*100:null; return `<div class="ppr ppch"><div class="ppn">${c.n}</div>
@@ -3893,6 +3898,11 @@ function openInsight(key,view){ view=view||INS.view; Object.keys(INS_MEMO).forEa
   const upTk=(a.tk!=null&&tkAvg&&a.tk<tkAvg)?a.tr*(tkAvg-a.tk):0;
   const upPt=(pt!=null&&ptAvg&&pt<ptAvg&&a.tk)?a.hours*(ptAvg-pt)*a.tk:0;
   const upPs=e.list.reduce((x,r)=>x+(r.lh>0&&A.ps&&r.sales/r.lh<A.ps?(A.ps-r.sales/r.lh)*r.lh:0),0);
+  /* มุมมองลดคน: ยอด/บิลเท่าเดิม ใช้ชั่วโมงลดลงถึงประสิทธิภาพเฉลี่ย → ประหยัด COL */
+  const dim=new Date(YEAR,m,0).getDate(), wage=(a.col!=null&&a.hours)?a.col/100*a.sales/a.hours:0;
+  const cutPt={h:(pt!=null&&ptAvg&&pt<ptAvg)?a.hours-a.tr/ptAvg:0}; cutPt.v=cutPt.h*wage;
+  const cutBr=e.list.reduce((o,r)=>{ const w=r.pl&&r.pl.col!=null?r.pl.col:(r.raw.col||0), h=(r.lh>0&&A.ps&&r.sales/r.lh<A.ps)?r.lh-r.sales/A.ps:0; return {h:o.h+Math.max(0,h),v:o.v+Math.max(0,h)*(w/100*r.sales/(r.lh||1))}; },{h:0,v:0});
+  const cutTxt=c=>c&&c.h>0&&c.v>0?`<br><b>มุมมองลดคน:</b> ลดได้ ${f0(c.h)} ชม. (≈ ${Math.max(1,Math.round(c.h/(dim*8)))} คน · 8 ชม./วัน) ประหยัด COL ≈ ฿${K(c.v)}`:'';
   /* ข้อเสนอแนะเบื้องต้น (rule-based จากตัวเลข) */
   const worstCh=C.ch.filter(c=>c.d<0).sort((x,y)=>x.d-y.d)[0];
   const H=insHist(e.list,m), LY=insLY(e.list,m), ev=insEvidence(e,A,H,LY);
@@ -3922,8 +3932,8 @@ function openInsight(key,view){ view=view||INS.view; Object.keys(INS_MEMO).forEa
     ${(upTk>0||upPt>0||upPs>0)?`<div class="aud-c" style="margin-top:12px"><div class="ppt2">โอกาสเพิ่มยอดขาย (ประมาณการ)<small>เทียบค่าเฉลี่ยทุกสาขา · ไม่รวมปัจจัยอื่น</small></div>
       <div class="aud-kg" style="grid-template-columns:repeat(3,minmax(0,1fr))">
       ${sc('g','ถ้ายอดต่อบิลเพิ่มจาก ฿'+f0(a.tk||0)+' เป็น ฿'+f0(tkAvg||0),upTk>0?'+฿'+K(upTk):'ถึงแล้ว','บิลเท่าเดิม '+f0(a.tr)+' บิล')}
-      ${sc('y','ถ้า Productivity Trans เพิ่มจาก '+(pt!=null?pt.toFixed(1):'—')+' เป็น '+(ptAvg?ptAvg.toFixed(1):'—'),upPt>0?'+฿'+K(upPt):'ถึงแล้ว','ชั่วโมงเท่าเดิม '+f0(a.hours||0)+' ชม.')}
-      ${sc('r','ถ้า Productivity Sale เพิ่มจาก ฿'+f0(a.ps||0)+' เป็น ฿'+f0(A.ps||0),upPs>0?'+฿'+K(upPs):'—','ชั่วโมงเท่าเดิม')}</div></div>`:''}
+      ${sc('y','ถ้า Productivity Trans เพิ่มจาก '+(pt!=null?pt.toFixed(1):'—')+' เป็น '+(ptAvg?ptAvg.toFixed(1):'—'),upPt>0?'+฿'+K(upPt):'ถึงแล้ว','ชั่วโมงเท่าเดิม '+f0(a.hours||0)+' ชม.'+cutTxt(cutPt))}
+      ${sc('r','ถ้า Productivity Sale เพิ่มจาก ฿'+f0(a.ps||0)+' เป็น ฿'+f0(A.ps||0),upPs>0?'+฿'+K(upPs):'—','ชั่วโมงเท่าเดิม'+cutTxt(cutBr))}</div></div>`:''}
 
     ${H.length>=2?`<div class="aud-c" style="margin-top:12px"><div class="ppt2">ย้อนหลังรายเดือน<small>ใช้ดูแนวโน้มและหาเดือนที่เคยทำได้ดี${ev.ly?' · '+ev.ly:''}</small></div>
       ${insTbl([['เดือน'],['ยอดขาย','r'],['บิล','r'],['เช็คเฉลี่ย','r'],['%COS','r'],['%COL','r'],['฿/ชม.','r'],['CEM','r']],'80px repeat(7,minmax(80px,1fr))',H.slice(-9).map(x=>({cells:[`<div class="ppn"><b>${MONTH_TH[x.m-1]}</b></div>`].concat(['sales','tr','tk','cos','col','ps','cem'].map(k=>{ const t=k==='sales'||k==='tr'?'':insTone(k,x.a[k],x.A[k]); return `<div class="insc ${t}">${k==='tr'?(x.a.tr?fmtN(Math.round(x.a.tr)):'—'):insFmt(k,x.a[k])}</div>`; }))})))}</div>`:''}
