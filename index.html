@@ -3713,12 +3713,12 @@ function openInsight(key){
   const upPs=e.list.reduce((x,r)=>x+(r.lh>0&&A.ps&&r.sales/r.lh<A.ps?(A.ps-r.sales/r.lh)*r.lh:0),0);
   /* ข้อเสนอแนะเบื้องต้น (rule-based จากตัวเลข) */
   const rec=[]; const worstCh=C.ch.filter(c=>c.d<0).sort((x,y)=>x.d-y.d)[0];
-  if(a.ach!=null&&a.ach<90) rec.push(`ยอดขายต่ำกว่าแผน (${f1(a.ach)}%) — ทบทวนแผนโปรโมชัน กิจกรรมหน้าร้าน และช่วงเวลาขายหลัก`);
+  if(a.ach!=null&&a.ach<90) rec.push(`ยอดขายต่ำกว่าแผน (${f1(a.ach)}%) — เชียร์ขายเพิ่มเติม`);
   if(a.trMom!=null&&a.trMom<-3) rec.push(`จำนวนบิลลดลง ${f1(Math.abs(a.trMom))}% จากเดือนก่อน — ตรวจทราฟฟิกห้าง/พื้นที่ และกิจกรรมดึงลูกค้าใหม่ ลูกค้าเดิมกลับมา`);
   if(a.tk!=null&&tkAvg&&a.tk<tkAvg*0.97) rec.push(`เช็คเฉลี่ยต่ำกว่าเฉลี่ย (฿${f0(a.tk)} vs ฿${f0(tkAvg)}) — ส่งเสริมการขายเพิ่ม (ชุดเมนู ของทานเล่น เครื่องดื่ม) ฝึกพนักงานแนะนำเมนู`);
   if(worstCh&&Math.abs(worstCh.d)>0) rec.push(`ช่องทาง ${worstCh.n} ลดลง ${sg(worstCh.d)} — ตรวจโปรโมชัน การมองเห็นบนแอป และเวลาเปิด-ปิดร้านบนแพลตฟอร์ม`);
   if(a.col!=null&&A.col!=null&&a.col>A.col+1&&a.ps!=null&&A.ps&&a.ps<A.ps) rec.push(`ค่าแรงสูงและประสิทธิภาพต่ำ (%COL ${f1(a.col)}% · ฿${f0(a.ps)}/ชม.) — ทบทวนตารางกะและจำนวนคนในแต่ละช่วงเวลา`);
-  if(a.cos!=null&&A.cos!=null&&a.cos>A.cos+1) rec.push(`%COS สูงกว่าเฉลี่ย (${f1(a.cos)}% vs ${f1(A.cos)}%) — ตรวจ waste พอร์ชัน และราคารับวัตถุดิบ`);
+  if(a.cos!=null&&A.cos!=null&&a.cos>A.cos+1) rec.push(`%COS สูงกว่าเฉลี่ย (${f1(a.cos)}% vs ${f1(A.cos)}%) — การใช้งานวัตถุดิบของพนักงาน`);
   if(a.cem!=null&&a.cem<92) rec.push(`คะแนน CEM ต่ำ (${f1(a.cem)}%) — ดูหมวดที่ถูกหักคะแนนในหัวข้อ CEM แล้วตามแก้รายข้อ`);
   if(a.oss!=null&&a.oss<85) rec.push(`คะแนน OSS ต่ำ (${f1(a.oss)}%) — ตรวจมาตรฐานปฏิบัติการตามหัวข้อ OSS ที่ไม่ผ่าน`);
   if(a.net!=null&&A.net!=null&&a.net<A.net-1) rec.push(`กำไรสุทธิต่ำกว่าเฉลี่ย (${f1(a.net)}% vs ${f1(A.net)}%) — ดูควบคู่ %COS %COL และค่าใช้จ่ายคงที่ในหัวข้อ Profitability`);
