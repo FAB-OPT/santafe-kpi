@@ -3688,28 +3688,42 @@ function insEvidence(e,A,H,LY){
   const ps=ser('ps'); if(ps.length>=3){ const c=last(ps), below=ps.filter(x=>x.A!=null&&x.v<x.A).length, b=best(ps,true);
     ev.ps=`ต่ำกว่าเฉลี่ยทุกสาขา ${below} จาก ${ps.length} เดือน · ดีที่สุดย้อนหลัง ฿${f0(b.v)}/ชม. (${M(b.m)})`+(b.m!==c.m&&e.a.hours?` → ถ้ากลับถึงระดับนั้น เพิ่มได้ ≈ ฿${K((b.v-c.v)*e.a.hours)}`:''); }
   const ach=ser('ach'); if(ach.length>=3){ const below=ach.filter(x=>x.v<100).length; ev.ach=`ต่ำกว่าแผน ${below} จาก ${ach.length} เดือน · ล่าสุด ${f1(last(ach).v)}%`+(LY&&LY.sales!=null?` · ยอดขายเทียบ LY ${pc(LY.sales)}`:''); }
-  [['cem','CEM'],['oss','OSS']].forEach(([k,n])=>{ const s=ser(k); if(s.length>=3){ const t=s.slice(-3); ev[k]=`${n} 3 เดือนล่าสุด: ${t.map(x=>f1(x.v)+'%').join(' → ')} (${t[2].v>=t[0].v?'ดีขึ้น':'แย่ลง'})`; } });
+  [['cem','CEM'],['oss','OSS']].forEach(([k,n])=>{ const s=ser(k); if(s.length>=3){ const t=s.slice(-3); ev[k]=`${n} 3 เดือนล่าสุด: ${t.map(x=>f1(x.v)+'%').join(' → ')} (${Math.abs(t[2].v-t[0].v)<0.05?'ทรงตัว':t[2].v>t[0].v?'ดีขึ้น':'แย่ลง'})`; } });
   const nt=ser('net'); if(nt.length>=3){ const t=nt.slice(-3); ev.net=`กำไรสุทธิ 3 เดือนล่าสุด: ${t.map(x=>f1(x.v)+'%').join(' → ')}`; }
   if(LY) ev.ly=`เทียบเดือนเดียวกันปีก่อน (${LY.n} สาขาที่เทียบได้): ยอดขาย ${pc(LY.sales)}${LY.bills!=null?' · บิล '+pc(LY.bills):''}${LY.ticket!=null?' · เช็คเฉลี่ย '+pc(LY.ticket):''}`;
   return ev;
 }
-function insRecs(e,A,C,ev){
-  ev=ev||{};
-  const a=e.a, f0=v=>fmtN(Math.round(v)), f1=v=>v.toFixed(1), K=v=>fmtN(Math.round(Math.abs(v)/1000))+'K', sg=v=>(v<0?'−':'+')+'฿'+K(v);
-  const tkAvg=A.tk, rec=[]; const worstCh=C.ch.filter(c=>c.d<0).sort((x,y)=>x.d-y.d)[0];
-  if(a.ach!=null&&A.ach!=null&&a.ach<A.ach-2) rec.push(['plan',`ยอดขายต่ำกว่าแผน (${f1(a.ach)}%) — เชียร์ขายเพิ่มเติม`,ev.ach]);
-  if(a.trMom!=null&&a.trMom<-3) rec.push(['customers',`บิลลด ${f1(Math.abs(a.trMom))}% — แยกดูวันและช่วงเวลาที่บิลลดมากที่สุด เพื่อวางกิจกรรมให้ตรงช่วง`,ev.tr]);
-  if(a.tk!=null&&tkAvg&&a.tk<tkAvg*0.97) rec.push(['customers',`เช็คเฉลี่ย ฿${f0(a.tk)} เทียบ ฿${f0(tkAvg)} — ตรวจจำนวนรายการต่อบิล และติดตามผลการแนะนำของทานเล่นหรือเครื่องดื่ม`,ev.tk]);
-  if(worstCh&&Math.abs(worstCh.d)>0){
-    if(worstCh.k==='dine') rec.push(['customers',`Dine In ลดลง ${sg(worstCh.d)} — ตรวจเรื่องลูกค้าเข้าร้าน ที่นั่ง ระยะเวลารอ และบริการ`,ev.tr]);
-    else if(worstCh.k==='take') rec.push(['customers',`Take away ลดลง ${sg(worstCh.d)} — ตรวจเวลารอรับของและการเสนอเมนูหน้าเคาน์เตอร์`,ev.tr]);
-    else rec.push(['delivery',`${worstCh.n} ลดลง ${sg(worstCh.d)} — ตรวจการมองเห็นในแอปและเวลาเปิด–ปิดบนแพลตฟอร์ม (ดูในหัวข้อ Delivery)`]); }
-  if(a.col!=null&&A.col!=null&&a.col>A.col+1&&a.ps!=null&&A.ps&&a.ps<A.ps) rec.push(['people',`ค่าแรงสูงและประสิทธิภาพต่ำ (%COL ${f1(a.col)}% · ฿${f0(a.ps)}/ชม.) — ทบทวนตารางกะและจำนวนคนในแต่ละช่วงเวลา`,[ev.ps,ev.col].filter(Boolean).join(' · ')]);
-  if(a.cos!=null&&A.cos!=null&&a.cos>A.cos+1) rec.push(['pl',`%COS ${f1(a.cos)}% เทียบ ${f1(A.cos)}% — ตรวจของเสีย ปริมาณเสิร์ฟ และส่วนต่างสต๊อก พร้อมกำหนดจุดที่ต้องแก้`,ev.cos]);
-  if(a.cem!=null&&A.cem!=null&&a.cem<A.cem-1) rec.push(['cem',`CEM ${f1(a.cem)}% — เลือกข้อที่ถูกหักคะแนนหรือเกิดซ้ำมาสอนงาน แล้วตรวจติดตาม`,ev.cem]);
-  if(a.oss!=null&&A.oss!=null&&a.oss<A.oss-1) rec.push(['oss',`OSS ${f1(a.oss)}% — ตรวจมาตรฐานปฏิบัติการตามหัวข้อ OSS ที่ไม่ผ่าน`,ev.oss]);
-  if(a.net!=null&&A.net!=null&&a.net<A.net-1) rec.push(['pl',`กำไรสุทธิต่ำกว่าเฉลี่ย (${f1(a.net)}% vs ${f1(A.net)}%) — ดูควบคู่ %COS %COL และค่าใช้จ่ายคงที่ในหัวข้อ Profitability`,ev.net]);
-  if(!rec.length) rec.push([null,'ตัวชี้วัดโดยรวมอยู่ในเกณฑ์ดี — รักษามาตรฐาน และเรียนรู้แนวปฏิบัติไปใช้กับสาขาที่ต่ำกว่า']);
+function insRecs(e,A,C,ev,ctx){
+  ev=ev||{}; ctx=ctx||{};
+  const a=e.a, L=e.list, f0=v=>fmtN(Math.round(v)), f1=v=>v.toFixed(1), K=v=>fmtN(Math.round(Math.abs(v)/1000))+'K', sg=v=>(v<0?'−':'+')+'฿'+K(v), pc=v=>(v>=0?'+':'−')+Math.abs(v).toFixed(1)+'%';
+  const tkAvg=A.tk, rec=[], zA=ctx.zA, days=ctx.days||30; const worstCh=C.ch.filter(c=>c.d<0).sort((x,y)=>x.d-y.d)[0];
+  const zt=(k,fmt)=>zA&&zA[k]!=null?` · เฉลี่ยโซน ${fmt(zA[k])}`:'';
+  /* ยอดขาย vs แผน → ต้องเพิ่มเท่าไรต่อวัน */
+  const pl=L.filter(r=>r.plan>0), plan=pl.reduce((x,r)=>x+r.plan,0), act=pl.reduce((x,r)=>x+r.sales,0), gap=plan-act;
+  if(a.ach!=null&&A.ach!=null&&a.ach<A.ach-2&&gap>0){ const tk=a.tk||A.tk||0, perDay=gap/days;
+    rec.push(['plan',`ยอดขาย ฿${K(act)} เทียบแผน ฿${K(plan)} (${f1(a.ach)}% · เฉลี่ยทุกสาขา ${f1(A.ach)}%) ขาด ฿${K(gap)} — เชียร์ขายเพิ่มเติม ให้ได้วันละ +฿${f0(perDay)}${tk?' (≈ '+f0(perDay/tk)+' บิล/วัน ที่เช็ค ฿'+f0(tk)+')':''}`,ev.ach]); }
+  /* บิลลด */
+  const cp=L.filter(r=>r.p&&r.p.tr>0&&r.tr>0), trN=cp.reduce((x,r)=>x+r.tr,0), trP=cp.reduce((x,r)=>x+r.p.tr,0);
+  if(a.trMom!=null&&a.trMom<-3&&trP) rec.push(['customers',`บิลลด ${f1(Math.abs(a.trMom))}% (${f0(trP)} → ${f0(trN)} บิล คิดเป็น ${sg(C.billEff)})${worstCh?' หนักสุดที่ '+worstCh.n+' '+sg(worstCh.d):''} — แยกดูวันและช่วงเวลาที่บิลลดมากที่สุด เพื่อวางกิจกรรมให้ตรงช่วง`,ev.tr]);
+  /* เช็คเฉลี่ย */
+  if(a.tk!=null&&tkAvg&&a.tk<tkAvg*0.97){ const up=a.tr*(tkAvg-a.tk);
+    rec.push(['customers',`เช็คเฉลี่ย ฿${f0(a.tk)} เทียบ ฿${f0(tkAvg)} (ต่ำกว่า ฿${f0(tkAvg-a.tk)}${zt('tk',v=>'฿'+f0(v))}) บิล ${f0(a.tr)} ใบ ถ้าเพิ่มเช็คถึงค่าเฉลี่ยได้ ≈ +฿${K(up)} — ตรวจจำนวนรายการต่อบิล และติดตามผลการแนะนำของทานเล่นหรือเครื่องดื่ม`,ev.tk]); }
+  /* ช่องทางที่ลด: Dine In/Take away อยู่กับหน้าร้าน · แพลตฟอร์มอยู่กับ Delivery */
+  if(worstCh&&Math.abs(worstCh.d)>0){ const pcv=worstCh.p?worstCh.d/worstCh.p*100:null, who=worstCh.br.filter(b=>b.d<0).slice(0,2).map(b=>b.code+' '+sg(b.d)).join(', ');
+    const base=`${worstCh.n} ลดลง ${sg(worstCh.d)}${pcv!=null?' ('+pc(pcv)+')':''}${e.list.length>1&&who?' · หนักที่สาขา '+who:''}`;
+    if(worstCh.k==='dine') rec.push(['customers',`${base} — ตรวจเรื่องลูกค้าเข้าร้าน ที่นั่ง ระยะเวลารอ และบริการ`,ev.tr]);
+    else if(worstCh.k==='take') rec.push(['customers',`${base} — ตรวจเวลารอรับของและการเสนอเมนูหน้าเคาน์เตอร์`,ev.tr]);
+    else rec.push(['delivery',`${base} — ตรวจการมองเห็นในแอปและเวลาเปิด–ปิดบนแพลตฟอร์ม (ดูในหัวข้อ Delivery)`]); }
+  /* ค่าแรง + ประสิทธิภาพ */
+  if(a.col!=null&&A.col!=null&&a.col>A.col+1&&a.ps!=null&&A.ps&&a.ps<A.ps){ const h=a.hours||0;
+    rec.push(['people',`%COL ${f1(a.col)}% (เฉลี่ย ${f1(A.col)}%) และขายได้ ฿${f0(a.ps)}/ชม. เทียบ ฿${f0(A.ps)}${h?' · ชั่วโมงรวม '+f0(h)+' ชม. ถ้ายก ฿/ชม. ถึงค่าเฉลี่ยได้ ≈ +฿'+K((A.ps-a.ps)*h):''} — ทบทวนตารางกะและจำนวนคนในแต่ละช่วงเวลา`,[ev.ps,ev.col].filter(Boolean).join(' · ')]); }
+  /* %COS */
+  if(a.cos!=null&&A.cos!=null&&a.cos>A.cos+1){ const ex=(a.cos-A.cos)/100*a.sales;
+    rec.push(['pl',`%COS ${f1(a.cos)}% เทียบ ${f1(A.cos)}% (สูงกว่า ${f1(a.cos-A.cos)} ppt${zt('cos',v=>f1(v)+'%')}) คิดเป็นต้นทุนส่วนเกิน ≈ ฿${K(ex)} — ตรวจของเสีย ปริมาณเสิร์ฟ และส่วนต่างสต๊อก พร้อมกำหนดจุดที่ต้องแก้`,ev.cos]); }
+  if(a.cem!=null&&A.cem!=null&&a.cem<A.cem-1) rec.push(['cem',`CEM ${f1(a.cem)}% (เฉลี่ยทุกสาขา ${f1(A.cem)}% · ต่ำกว่า ${f1(A.cem-a.cem)} ppt${zt('cem',v=>f1(v)+'%')}) — เลือกข้อที่ถูกหักคะแนนหรือเกิดซ้ำมาสอนงาน แล้วตรวจติดตาม`,ev.cem]);
+  if(a.oss!=null&&A.oss!=null&&a.oss<A.oss-1) rec.push(['oss',`OSS ${f1(a.oss)}% (เฉลี่ยทุกสาขา ${f1(A.oss)}% · ต่ำกว่า ${f1(A.oss-a.oss)} ppt${zt('oss',v=>f1(v)+'%')}) — ตรวจมาตรฐานปฏิบัติการตามหัวข้อ OSS ที่ไม่ผ่าน`,ev.oss]);
+  if(a.net!=null&&A.net!=null&&a.net<A.net-1) rec.push(['pl',`กำไรสุทธิ ${f1(a.net)}% เทียบ ${f1(A.net)}% (${f1(A.net-a.net)} ppt ≈ ฿${K((A.net-a.net)/100*a.sales)} ของยอดขาย) — ดูควบคู่ %COS %COL และค่าใช้จ่ายคงที่ในหัวข้อ Profitability`,ev.net]);
+  if(!rec.length) rec.push([null,`ตัวชี้วัดอยู่ในเกณฑ์ดี (ยอดขาย ${a.mom!=null?pc(a.mom)+' vs LM':'—'} · เช็ค ฿${f0(a.tk||0)} · %COS ${a.cos!=null?f1(a.cos)+'%':'—'}) — รักษามาตรฐาน และเรียนรู้แนวปฏิบัติไปใช้กับสาขาที่ต่ำกว่า`]);
   return rec;
 }
 function insChan(list){
@@ -3755,7 +3769,7 @@ function insCause(D,A,sc){
 function insRank(D,A,sc){
   const E=sc.map(r=>{ const a=insAgg([r]); let g=0,b=0; const bad=[]; INS_M.forEach(([k,t])=>{ const tn=insTone(k,a[k],A[k]); if(tn==='g') g++; else if(tn==='b'){ b++; bad.push([k,t,a[k]]); } });
     const C=insChan([r]); return {r,a,good:g,bad:b,badL:bad,C,key:r.code}; }).sort((x,y)=>(y.bad*100-y.good)-(x.bad*100-x.good)||((x.a.ach==null?999:x.a.ach)-(y.a.ach==null?999:y.a.ach)));
-  const rows=E.slice(0,15).map((e,i)=>{ const H=insHist([e.r],D.m), ev=insEvidence({a:e.a,list:[e.r]},A,H,null), rec=insRecs({a:e.a,list:[e.r]},A,e.C,ev).filter(x=>x[0]).slice(0,2);
+  const rows=E.slice(0,15).map((e,i)=>{ const H=insHist([e.r],D.m), ev=insEvidence({a:e.a,list:[e.r]},A,H,null), zr=D.rows.filter(x=>x.zone===e.r.zone&&x.code!==e.r.code), rec=insRecs({a:e.a,list:[e.r]},A,e.C,ev,{days:new Date(YEAR,D.m,0).getDate(),zA:zr.length?insAgg(zr):null}).filter(x=>x[0]).slice(0,2);
     return {key:e.key,kind:'branch',cells:[`<div class="ppwi" style="background:${i<3?'#FDE0E4':'#F1F3F6'};color:${i<3?'#B4233A':'#6B7280'}">${i+1}</div>`,
       `<div class="ppn"><b>${e.r.code}</b> ${e.r.name}<small>โซน ${e.r.zone}</small></div>`,
       `<div class="insst" style="justify-content:flex-start"><span class="bd">${e.bad}</span><span class="gd">${e.good}</span></div>`,
@@ -3881,7 +3895,9 @@ function openInsight(key,view){ view=view||INS.view; Object.keys(INS_MEMO).forEa
   const upPs=e.list.reduce((x,r)=>x+(r.lh>0&&A.ps&&r.sales/r.lh<A.ps?(A.ps-r.sales/r.lh)*r.lh:0),0);
   /* ข้อเสนอแนะเบื้องต้น (rule-based จากตัวเลข) */
   const worstCh=C.ch.filter(c=>c.d<0).sort((x,y)=>x.d-y.d)[0];
-  const H=insHist(e.list,m), LY=insLY(e.list,m), ev=insEvidence(e,A,H,LY), rec=insRecs(e,A,C,ev);
+  const H=insHist(e.list,m), LY=insLY(e.list,m), ev=insEvidence(e,A,H,LY);
+  const zRows=view==='branch'?D.rows.filter(r=>r.zone===e.list[0].zone&&r.code!==e.list[0].code):null, zA=zRows&&zRows.length?insAgg(zRows):null;
+  const rec=insRecs(e,A,C,ev,{days:new Date(YEAR,m,0).getDate(),zA});
   const mx=Math.max(...C.ch.map(c=>Math.max(c.c,c.p)))||1;
   const chRows=C.ch.map(c=>{ const pc=c.p?c.d/c.p*100:null; return `<div class="ppr ppch"><div class="ppn">${c.n}</div>
       <div class="ppv"><div class="ppb"><i style="width:${Math.max(1,c.p/mx*100).toFixed(1)}%;background:#C9CDD3"></i></div><span>${K(c.p)}</span></div>
