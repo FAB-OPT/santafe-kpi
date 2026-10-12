@@ -4580,7 +4580,7 @@ function smxHtml(){
     ${SMX_C.map(o=>`<span class="rl">${o.n} ${YEAR-1}</span>${shareRow(o.k)}`).join('')}</div></div>`;
   /* รายละเอียดรายเดือน: ยอดแต่ละช่องทาง · สัดส่วน · เทียบ LM ของช่องทางนั้น (ยอดแยกช่องทางปีก่อนไม่มีในข้อมูล) */
   const cell=(r,k,deli)=>{ const v=r.val(k); if(v==null) return '<td class="n">—</td>';
-    const base=deli?r.val('deli'):r.tot, sh=base?(!deli&&r.pr&&r.pr[k]!=null?r.pr[k]:Math.round(v/base*100))+'%'+(deli?' ของ Delivery':''):'';
+    const refv=lyM?(r.lyCh&&r.lyCh[k]>0?r.lyCh[k]:null):(r.prev&&r.prev.val(k)>0?r.prev.val(k):null), sh=refv!=null?RN+' '+fm(refv):'';   /* บรรทัดรองเป็นยอดเงินของช่วงที่เทียบ (LY/LM) แทนสัดส่วน % — ดูสัดส่วนที่ปุ่ม 'สัดส่วน %' ของกราฟ */
     let dd=''; if(!lyM&&r.prev&&r.prev.val(k)){ const p=pct(r.prev.val(k),v); dd=`<span class="tiny ${cls(p)}">${sgn(p)} vs LM</span>`; }
     else if(lyM&&r.lyCh&&r.lyCh[k]>0){ const p=pct(r.lyCh[k],v); dd=`<span class="tiny ${cls(p)}">${sgn(p)} vs LY</span>`; }
     return `<td class="n"><b>${fm(v)}</b><span class="tiny">${sh}</span>${dd}</td>`; };
