@@ -3938,7 +3938,7 @@ function openInsight(key,view){ view=view||INS.view; Object.keys(INS_MEMO).forEa
 
     ${H.length>=2?`<div class="aud-c" style="margin-top:12px"><div class="ppt2">ย้อนหลังรายเดือน<small>ใช้ดูแนวโน้มและหาเดือนที่เคยทำได้ดี${ev.ly?' · '+ev.ly:''}</small></div>
       ${insTbl([['เดือน'],['ยอดขาย','r'],['บิล','r'],['เช็คเฉลี่ย','r'],['%COS','r'],['%COL','r'],['฿/ชม.','r'],['CEM','r']],'80px repeat(7,minmax(80px,1fr))',H.slice(-9).map(x=>({cells:[`<div class="ppn"><b>${MONTH_TH[x.m-1]}</b></div>`].concat(['sales','tr','tk','cos','col','ps','cem'].map(k=>{ const t=k==='sales'||k==='tr'?'':insTone(k,x.a[k],x.A[k]); return `<div class="insc ${t}">${k==='tr'?(x.a.tr?fmtN(Math.round(x.a.tr)):'—'):insFmt(k,x.a[k])}</div>`; }))})))}</div>`:''}
-    <div class="aud-c" style="margin-top:12px"><div class="ppt2">ข้อเสนอแนะเบื้องต้น<small>สร้างจากตัวเลขและข้อมูลย้อนหลังอัตโนมัติ — ใช้ประกอบการตัดสินใจ</small></div><ul class="ppbl insrec">${rec.map(([sec,t,evd])=>'<li><span>'+t+(evd?'<small class="insev">📈 ข้อมูลย้อนหลัง: '+evd+'</small>':'')+'</span>'+(sec?'<button type="button" class="insbtn" data-insgo="'+sec+'">ดูข้อมูล ›</button>':'')+'</li>').join('')}</ul></div>`;
+    <div class="aud-c" style="margin-top:12px"><div class="ppt2">ข้อเสนอแนะเบื้องต้น<small>สร้างจากตัวเลขและข้อมูลย้อนหลังอัตโนมัติ — ใช้ประกอบการตัดสินใจ</small></div><ul class="ppbl insrec">${rec.map(([sec,t,evd])=>'<li><span>'+t+(evd?'<small class="insev">📈 ข้อมูลย้อนหลัง: '+evd+'</small>':'')+'</span>'+'</li>').join('')}</ul></div>`;
   el.classList.add('open'); }
 document.addEventListener('click',e=>{
   const vw=e.target.closest&&e.target.closest('#insight [data-insview]'); if(vw){ INS.view=vw.dataset.insview; INS.sort='bad'; INS.dir='desc'; INS.q=''; insRender(); return; }
