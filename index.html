@@ -3137,7 +3137,7 @@ const CUS_CH=[{k:'Dine In',n:'Dine in',c:'#D9822D',bg:'#FFF5EB',bd:'#F7DDC2',tx:
   {k:'Take away',n:'Takeaway',c:'#7C5CFC',bg:'#F5F3FF',bd:'#DDD6FE',tx:'#6D28D9'},
   {k:'Delivery',n:'Delivery',c:'#0F9488',bg:'#EEF8F6',bd:'#CBEAE5',tx:'#0B6E66'}];
 const chKey=v=>String(v||'').toLowerCase().replace(/[\s_\-]/g,'');
-/* LY จากประวัติรายสาขา (ไฟล์ STF): ชีต Ticket = จำนวนบิล · เช็คเฉลี่ย = ยอดขาย ÷ บิล · ลูกค้ารวมเฉพาะสาขาที่มีครบ
+/* LY จากประวัติรายสาขา (ไฟล์ STF): ชีต Ticket = จำนวนบิล · ยอดต่อบิลเฉลี่ย = ยอดขาย ÷ บิล · ลูกค้ารวมเฉพาะสาขาที่มีครบ
    แยกช่องทาง: Delivery = Grab+Line Man+Shopee · Dine in = รวม − Takeaway − Delivery (ต้องนำเข้าไฟล์ STF ใหม่เพื่อให้มีบิลแยกช่องทาง) */
 function lyTrAgg(ms){ let sales=0,trans=0,cu=0,cuS=0,cuT=0,any=false;
   const CH={dine:[0,0],take:[0,0],deli:[0,0]}; let chOk=true;
@@ -3511,7 +3511,7 @@ function peopleBody(m){
 }
 /* ========== People Performance · มุมมองรายโซน + วิเคราะห์ ==========
    - สรุปรายโซน (ยอดขาย · %COL · ชม. · บิล/ชม. · ฿/ชม.) เทียบค่าเฉลี่ยและเดือนก่อน
-   - ถ้า…จะเพิ่มยอดขายได้ประมาณเท่าไร: (1) เช็คเฉลี่ยถึงค่าเฉลี่ย (2) บิลต่อชม.ถึงค่าเฉลี่ย (3) สาขาที่ต่ำกว่าเกณฑ์ถึงค่าเฉลี่ย
+   - ถ้า…จะเพิ่มยอดขายได้ประมาณเท่าไร: (1) ยอดต่อบิลเฉลี่ยถึงค่าเฉลี่ย (2) บิลต่อชม.ถึงค่าเฉลี่ย (3) สาขาที่ต่ำกว่าเกณฑ์ถึงค่าเฉลี่ย
    - ยอดขายลดลงจากช่องทางไหน (Dine in · Take away · Grab · LINE MAN · Shopee) เทียบเดือนก่อน เฉพาะสาขาที่มียอดทั้งสองเดือน */
 const PP_CH=[['dine','Dine In'],['take','Take away'],['grab','Grab'],['lm','LINE MAN'],['sp','Shopee Food']];
 function ppZoneStats(m,P){
@@ -3533,7 +3533,7 @@ function ppZoneStats(m,P){
       const br=comp.map(b=>({code:b.code,name:(BRANCH_META&&BRANCH_META[b.code]&&BRANCH_META[b.code].name)||b.name,d:(b[k]||0)-(pm[b.code][k]||0)})).sort((a,b)=>a.d-b.d);
       return {k,n,c,p:p0,d:c-p0,br}; });
     const d={sales:cs-ps0, pct:ps0?(cs-ps0)/ps0*100:null, n:comp.length,
-      billEff:(ct-pt0)*tkP, tkEff:ct*(tkC-tkP)};   // แยกผลจากจำนวนบิล / เช็คเฉลี่ย
+      billEff:(ct-pt0)*tkP, tkEff:ct*(tkC-tkP)};   // แยกผลจากจำนวนบิล / ยอดต่อบิลเฉลี่ย
     const upTk=trans*Math.max(0,tkAvg-tk), upPt=hours*Math.max(0,ptAvg-pt)*tk;
     const upBr=R.reduce((a,r)=>a+Math.max(0,psAvg-r.ps)*r.lh,0);
     /* มุมมองลดคน: ยอด/บิลเท่าเดิม แต่ใช้ชั่วโมงลดลงจนถึงประสิทธิภาพเฉลี่ย → ประหยัด COL (ค่าแรงต่อชั่วโมง = %COL × ยอดขาย ÷ ชั่วโมง) */
@@ -3562,7 +3562,7 @@ function peopleZoneHtml(m,P){
   const sc=(cls,t,v,sub)=>`<div class="aud-k ppc ${cls}"><div class="aud-kh">${t}</div><div class="aud-kv">${v}</div><div class="aud-ks">${sub}</div></div>`;
   const dim=new Date(YEAR,m,0).getDate(), cutTxt=c=>c&&c.h>0&&c.v>0?`<br><b>มุมมองลดคน:</b> ลดได้ ${f0(c.h)} ชม. (≈ ${Math.max(1,Math.round(c.h/(dim*8)))} คน · 8 ชม./วัน) ประหยัด COL ≈ ฿${fmtN(Math.round(c.v/1000))}K`:'';
   const scen=`<div class="aud-kg" style="grid-template-columns:repeat(3,minmax(0,1fr));margin:12px 0">
-    ${sc('g','ถ้ายอดต่อบิลเพิ่มจาก ฿'+f0(o.tk)+' เป็น ฿'+f0(S.tkAvg),o.upTk>0?'+฿'+fmtN(Math.round(o.upTk/1000))+'K':'ถึงแล้ว','บิลเท่าเดิม '+f0(o.trans)+' บิล · เช็คโซนนี้ ฿'+f0(o.tk)+(tkDiff<0?' (ต่ำกว่า ฿'+f0(-tkDiff)+')':' (สูงกว่า)'))}
+    ${sc('g','ถ้ายอดต่อบิลเพิ่มจาก ฿'+f0(o.tk)+' เป็น ฿'+f0(S.tkAvg),o.upTk>0?'+฿'+fmtN(Math.round(o.upTk/1000))+'K':'ถึงแล้ว','บิลเท่าเดิม '+f0(o.trans)+' บิล · ยอดต่อบิลโซนนี้ ฿'+f0(o.tk)+(tkDiff<0?' (ต่ำกว่า ฿'+f0(-tkDiff)+')':' (สูงกว่า)'))}
     ${sc('y','ถ้า Productivity Trans เพิ่มจาก '+f1(o.pt)+' เป็น '+f1(S.ptAvg),o.upPt>0?'+฿'+fmtN(Math.round(o.upPt/1000))+'K':'ถึงแล้ว','ชั่วโมงเท่าเดิม '+f0(o.hours)+' ชม. · โซนนี้ '+f1(o.pt)+' บิล/ชม.'+(ptDiff<0?'':' (สูงกว่า)')+cutTxt(o.cutPt))}
     ${sc('r','ถ้า Productivity Sale ของสาขาที่ต่ำกว่า ('+o.rows.filter(r=>r.ps<S.psAvg).length+' แห่ง) เพิ่มเป็น ฿'+f0(S.psAvg),o.upBr>0?'+฿'+fmtN(Math.round(o.upBr/1000))+'K':'—','ชั่วโมงเท่าเดิม · ยกประสิทธิภาพ ฿/ชม. ของสาขาที่ต่ำกว่า ฿'+f0(S.psAvg)+' ทุกแห่ง'+cutTxt(o.cutBr))}</div>`;
   const mx=Math.max(...o.ch.map(c=>Math.max(c.c,c.p)))||1;
@@ -3575,7 +3575,7 @@ function peopleZoneHtml(m,P){
   const bullets=[];
   bullets.push(`ประสิทธิภาพ <b>฿${f0(o.ps)}/ชม.</b> ${dv>=0?'สูงกว่า':'ต่ำกว่า'}ค่าเฉลี่ยทุกสาขา ${Math.abs(dv*100).toFixed(1)}% · ${o.low.length} จาก ${o.n} สาขาต่ำกว่าเกณฑ์`);
   if(S.hasPrev&&o.d.n){ const sgn=o.d.sales<0?'ลดลง':'เพิ่มขึ้น';
-    bullets.push(`ยอดขาย${sgn} <b>฿${fmtN(Math.round(Math.abs(o.d.sales)/1000))}K (${o.d.pct>=0?'+':'−'}${Math.abs(o.d.pct).toFixed(1)}%)</b> จากเดือนก่อน (${o.d.n} สาขาที่เทียบได้) · เกิดจากจำนวนบิล <b class="${o.d.billEff<0?'neg':'pos'}">${B(o.d.billEff)}</b> และเช็คเฉลี่ย <b class="${o.d.tkEff<0?'neg':'pos'}">${B(o.d.tkEff)}</b>`); }
+    bullets.push(`ยอดขาย${sgn} <b>฿${fmtN(Math.round(Math.abs(o.d.sales)/1000))}K (${o.d.pct>=0?'+':'−'}${Math.abs(o.d.pct).toFixed(1)}%)</b> จากเดือนก่อน (${o.d.n} สาขาที่เทียบได้) · เกิดจากจำนวนบิล <b class="${o.d.billEff<0?'neg':'pos'}">${B(o.d.billEff)}</b> และยอดต่อบิลเฉลี่ย <b class="${o.d.tkEff<0?'neg':'pos'}">${B(o.d.tkEff)}</b>`); }
   if(worstCh) bullets.push(`ช่องทางที่ยอดลดลงมากสุด: <b class="neg">${worstCh.n} −฿${fmtN(Math.round(Math.abs(worstCh.d)/1000))}K</b>${top3.length?' · มาจากสาขา '+top3.map(b=>b.code+' '+b.name+' (−฿'+fmtN(Math.round(Math.abs(b.d)/1000))+'K)').join(', '):''}`);
   else if(S.hasPrev&&o.d.n) bullets.push('ไม่มีช่องทางใดยอดลดลงเมื่อเทียบเดือนก่อน');
   if(o.low.length) bullets.push(`สาขาที่ควรโฟกัส: ${o.low.slice(0,4).map(r=>`<b>${r.code}</b> ${r.name} (฿${f0(r.ps)}/ชม. · ถ้าถึงค่าเฉลี่ยได้เพิ่ม ≈ ฿${fmtN(Math.round((S.psAvg-r.ps)*r.lh/1000))}K)`).join(' · ')}`);
@@ -3584,7 +3584,7 @@ function peopleZoneHtml(m,P){
     <div class="ppt3">จะเพิ่มยอดขายได้ประมาณเท่าไร (ประมาณการจากค่าเฉลี่ยทุกสาขา · ไม่รวมปัจจัยอื่น)</div>${scen}
     ${S.hasPrev&&o.d.n?`<div class="ppt3">ยอดขายรายช่องทาง เทียบเดือนก่อน (${o.d.n} สาขาที่เทียบได้)</div>
       <div class="ppr ppch pph"><div>ช่องทาง</div><div>เดือนก่อน</div><div>เดือนนี้</div><div class="r">ส่วนต่าง</div><div class="r">%</div></div>${chRows}`:'<div class="ppfoot">ยังไม่มีข้อมูลเดือนก่อนสำหรับเทียบรายช่องทาง</div>'}
-    <div class="ppfoot">เช็คเฉลี่ย = ยอดขาย ÷ จำนวนบิล · ผลจากจำนวนบิล = ส่วนต่างบิล × เช็คเฉลี่ยเดือนก่อน · ผลจากเช็คเฉลี่ย = บิลเดือนนี้ × ส่วนต่างเช็ค</div></div>`;
+    <div class="ppfoot">ยอดต่อบิลเฉลี่ย = ยอดขาย ÷ จำนวนบิล · ผลจากจำนวนบิล = ส่วนต่างบิล × ยอดต่อบิลเฉลี่ยเดือนก่อน · ผลจากยอดต่อบิลเฉลี่ย = บิลเดือนนี้ × ส่วนต่างยอดต่อบิล</div></div>`;
   return zt+an;
 }
 function peopleSection(m){
@@ -3645,11 +3645,11 @@ function openPeopleBranch(code,keepList){
       <div class="ppr pph ppm1"><div>เดือน</div><div class="r">ยอดขาย</div><div>%COL</div><div class="r">ชม.แรงงาน</div><div class="r">บิล/ชม.</div><div class="r">฿/ชม.</div><div class="c">เทียบเฉลี่ยเดือนนั้น</div></div>${rows}</div>`;
   el.classList.add('open'); }
 /* ========================= Insights — วิเคราะห์ทุกเรื่องรายโซน / รายสาขา =========================
-   รวมตัวชี้วัดจากทุกหมวด: ยอดขาย vs แผน · vs LM · บิล vs LM · เช็คเฉลี่ย · %COS · %COL · กำไรสุทธิ · CEM · OSS · Productivity Sale
+   รวมตัวชี้วัดจากทุกหมวด: ยอดขาย vs แผน · vs LM · บิล vs LM · ยอดต่อบิลเฉลี่ย · %COS · %COL · กำไรสุทธิ · CEM · OSS · Productivity Sale
    แต่ละตัวมีสีเขียว/แดงตามเกณฑ์ → นับ "ตัวชี้วัดที่ต้องดูแล" → คลิกเพื่อดูวิเคราะห์ (สาเหตุยอดเปลี่ยน · ช่องทาง · โอกาส · ข้อเสนอแนะ) */
 const INS={view:'zone',sort:'bad',dir:'desc',q:'',tab:'overview',zsel:'all'};
 const INS_TONED=['ach','tk','cos','col','net','cem','oss','ps'];
-const INS_M=[['sales','ยอดขาย'],['ach','vs แผน'],['mom','vs LM'],['trMom','บิล vs LM'],['tk','เช็คเฉลี่ย'],['cos','%COS'],['col','%COL'],['net','กำไรสุทธิ'],['cem','CEM'],['oss','OSS'],['ps','฿/ชม.']];
+const INS_M=[['sales','ยอดขาย'],['ach','vs แผน'],['mom','vs LM'],['trMom','บิล vs LM'],['tk','ยอดต่อบิลเฉลี่ย'],['cos','%COS'],['col','%COL'],['net','กำไรสุทธิ'],['cem','CEM'],['oss','OSS'],['ps','฿/ชม.']];
 function insTone(k,v,a){ if(v==null||!isFinite(v)) return '';
   switch(k){
     case 'ach': return a!=null&&v>=a+2?'g':a!=null&&v<a-2?'b':'';
@@ -3720,7 +3720,7 @@ function insEvidence(e,A,H,LY){
   const down=s=>{ let n=0; for(let i=s.length-1;i>0&&s[i].v<s[i-1].v;i--) n++; return n; };
   const last=s=>s[s.length-1], best=(s,hi)=>s.reduce((x,y)=>(hi?y.v>x.v:y.v<x.v)?y:x);
   const tk=ser('tk'); if(tk.length>=2){ const c=last(tk), b=best(tk,true), d=down(tk);
-    ev.tk=(d>=2?`เช็คเฉลี่ยลดต่อเนื่อง ${d} เดือน (${tk.slice(-d-1).map(x=>'฿'+f0(x.v)).join(' → ')}) · `:'')+`ย้อนหลังสูงสุด ฿${f0(b.v)} (${M(b.m)})`+(b.m!==c.m&&e.a.tr?` → ถ้ากลับถึงระดับนั้น เพิ่มได้ ≈ ฿${K(e.a.tr*(b.v-c.v))}`:'')+(LY&&LY.ticket!=null?` · เทียบ LY ${pc(LY.ticket)}`:''); }
+    ev.tk=(d>=2?`ยอดต่อบิลเฉลี่ยลดต่อเนื่อง ${d} เดือน (${tk.slice(-d-1).map(x=>'฿'+f0(x.v)).join(' → ')}) · `:'')+`ย้อนหลังสูงสุด ฿${f0(b.v)} (${M(b.m)})`+(b.m!==c.m&&e.a.tr?` → ถ้ากลับถึงระดับนั้น เพิ่มได้ ≈ ฿${K(e.a.tr*(b.v-c.v))}`:'')+(LY&&LY.ticket!=null?` · เทียบ LY ${pc(LY.ticket)}`:''); }
   const tr=ser('tr'); if(tr.length>=3){ const c=last(tr), pv=tr.slice(-4,-1), avg=pv.reduce((a,x)=>a+x.v,0)/pv.length, b=best(tr,true);
     ev.tr=`บิลเดือนนี้ ${f0(c.v)} เทียบเฉลี่ย ${pv.length} เดือนก่อน ${f0(avg)} (${pc(c.v/avg-1)}) · ย้อนหลังสูงสุด ${f0(b.v)} (${M(b.m)})`+(LY&&LY.bills!=null?` · เทียบ LY ${pc(LY.bills)}`:''); }
   const lowBetter=(k,name)=>{ const s=ser(k); if(s.length<3) return; const c=last(s), above=s.filter(x=>x.A!=null&&x.v>x.A+0.5).length, b=best(s,false);
@@ -3731,7 +3731,7 @@ function insEvidence(e,A,H,LY){
   const ach=ser('ach'); if(ach.length>=3){ const below=ach.filter(x=>x.v<100).length; ev.ach=`ต่ำกว่าแผน ${below} จาก ${ach.length} เดือน · ล่าสุด ${f1(last(ach).v)}%`+(LY&&LY.sales!=null?` · ยอดขายเทียบ LY ${pc(LY.sales)}`:''); }
   [['cem','CEM'],['oss','OSS']].forEach(([k,n])=>{ const s=ser(k); if(s.length>=3){ const t=s.slice(-3); ev[k]=`${n} 3 เดือนล่าสุด: ${t.map(x=>f1(x.v)+'%').join(' → ')} (${Math.abs(t[2].v-t[0].v)<0.05?'ทรงตัว':t[2].v>t[0].v?'ดีขึ้น':'แย่ลง'})`; } });
   const nt=ser('net'); if(nt.length>=3){ const t=nt.slice(-3); ev.net=`กำไรสุทธิ 3 เดือนล่าสุด: ${t.map(x=>f1(x.v)+'%').join(' → ')}`; }
-  if(LY) ev.ly=`เทียบเดือนเดียวกันปีก่อน (${LY.n} สาขาที่เทียบได้): ยอดขาย ${pc(LY.sales)}${LY.bills!=null?' · บิล '+pc(LY.bills):''}${LY.ticket!=null?' · เช็คเฉลี่ย '+pc(LY.ticket):''}`;
+  if(LY) ev.ly=`เทียบเดือนเดียวกันปีก่อน (${LY.n} สาขาที่เทียบได้): ยอดขาย ${pc(LY.sales)}${LY.bills!=null?' · บิล '+pc(LY.bills):''}${LY.ticket!=null?' · ยอดต่อบิลเฉลี่ย '+pc(LY.ticket):''}`;
   return ev;
 }
 /* ---------- รายการย่อยในงบกำไรขาดทุน: หาว่า "เกินเฉลี่ยเพราะบรรทัดไหน" ---------- */
@@ -3763,26 +3763,26 @@ function insRecs(e,A,C,ev,ctx){
   /* 1) ยอดขาย vs แผน */
   const pl=L.filter(r=>r.plan>0), plan=pl.reduce((x,r)=>x+r.plan,0), act=pl.reduce((x,r)=>x+r.sales,0), gap=plan-act;
   if(a.ach!=null&&A.ach!=null&&a.ach<A.ach-2&&gap>0){ const tk=a.tk||A.tk||0, perDay=gap/days;
-    const dom=C.n?(Math.abs(C.billEff)>=Math.abs(C.tkEff)?`ยอดที่หายส่วนใหญ่มาจากจำนวนบิล (${sg(C.billEff)} · เช็ค ${sg(C.tkEff)})`:`ยอดที่หายส่วนใหญ่มาจากเช็คเฉลี่ย (${sg(C.tkEff)} · บิล ${sg(C.billEff)})`):'';
-    rec.push(['plan',`ยอดขาย ฿${K(act)} เทียบแผน ฿${K(plan)} (${f1(a.ach)}% · เฉลี่ยทุกสาขา ${f1(A.ach)}%) ขาด ฿${K(gap)}${dom?' · '+dom:''} — เชียร์ขายเพิ่มเติม ให้ได้วันละ +฿${f0(perDay)}${tk?' (≈ '+f0(perDay/tk)+' บิล/วัน ที่เช็ค ฿'+f0(tk)+')':''}`,ev.ach]); }
+    const dom=C.n?(Math.abs(C.billEff)>=Math.abs(C.tkEff)?`ยอดที่หายส่วนใหญ่มาจากจำนวนบิล (${sg(C.billEff)} · ยอดต่อบิล ${sg(C.tkEff)})`:`ยอดที่หายส่วนใหญ่มาจากยอดต่อบิลเฉลี่ย (${sg(C.tkEff)} · บิล ${sg(C.billEff)})`):'';
+    rec.push(['plan',`ยอดขาย ฿${K(act)} เทียบแผน ฿${K(plan)} (${f1(a.ach)}% · เฉลี่ยทุกสาขา ${f1(A.ach)}%) ขาด ฿${K(gap)}${dom?' · '+dom:''} — เชียร์ขายเพิ่มเติม ให้ได้วันละ +฿${f0(perDay)}${tk?' (≈ '+f0(perDay/tk)+' บิล/วัน ที่ยอดต่อบิล ฿'+f0(tk)+')':''}`,ev.ach]); }
   /* 2) บิลลด: บอกว่าช่องไหนบิลลดจริง */
   const trN=comp.filter(r=>r.p.tr>0&&r.tr>0).reduce((x,r)=>x+r.tr,0), trP=comp.filter(r=>r.p.tr>0&&r.tr>0).reduce((x,r)=>x+r.p.tr,0);
   if(a.trMom!=null&&a.trMom<-3&&trP){
     const dch=cur3.map((c,i)=>({n:c.n,p:prv3[i].bills,c:c.bills,pct:prv3[i].bills?(c.bills/prv3[i].bills-1)*100:null})).filter(x=>x.pct!=null).sort((x,y)=>x.pct-y.pct);
     const w=dch[0], oth=dch.slice(1).map(x=>`${x.n} ${pc(x.pct)}`).join(' · ');
     rec.push(['customers',`บิลลด ${f1(Math.abs(a.trMom))}% (${f0(trP)} → ${f0(trN)} บิล ${sg(C.billEff)})${w?' · ช่องที่ลดแรงสุด '+w.n+' '+f0(w.p)+' → '+f0(w.c)+' บิล ('+pc(w.pct)+')'+(oth?' ส่วน '+oth:''):''} — แยกดูวันและช่วงเวลาที่บิล${w?w.n:''}ลดมากที่สุด เพื่อวางกิจกรรมให้ตรงช่วง`,ev.tr]); }
-  /* 3) เช็คเฉลี่ย: หาช่องที่เช็คห่างระบบสุด + ผลจากสัดส่วนบิล */
+  /* 3) ยอดต่อบิลเฉลี่ย: หาช่องที่ยอดต่อบิลห่างระบบสุด + ผลจากสัดส่วนบิล */
   if(a.tk!=null&&tkAvg&&a.tk<tkAvg*0.97){ const up=a.tr*(tkAvg-a.tk), totB=cur3.reduce((x,c)=>x+c.bills,0), sysB=sys3?sys3.reduce((x,c)=>x+c.bills,0):0;
     const gaps=cur3.map((c,i)=>({n:c.n,tk:c.tk,sys:sys3?sys3[i].tk:null,share:totB?c.bills/totB*100:0,ssh:sysB&&sys3?sys3[i].bills/sysB*100:null,gap:(c.tk&&sys3&&sys3[i].tk)?(c.tk/sys3[i].tk-1)*100:null})).filter(x=>x.gap!=null).sort((x,y)=>x.gap-y.gap);
     const g=gaps[0], mixCh=gaps.slice().sort((x,y)=>(y.share-(y.ssh||0))-(x.share-(x.ssh||0))).find(x=>x.gap<0&&x.share-(x.ssh||0)>3);
-    let why; if(g&&g.gap<-3) why=`ต่ำสุดที่ ${g.n} ฿${f0(g.tk)} (ระบบ ฿${f0(g.sys)} · ${pc(g.gap)})`; else why='เช็คแต่ละช่องใกล้เคียงระบบ';
-    if(mixCh) why+=` · สัดส่วนบิล ${mixCh.n} ${f0(mixCh.share)}% (ระบบ ${f0(mixCh.ssh)}%) ดึงเช็คเฉลี่ยลง`;
-    rec.push(['customers',`เช็คเฉลี่ย ฿${f0(a.tk)} เทียบ ฿${f0(tkAvg)} (${why}${zt('tk',v=>'฿'+f0(v))}) ถ้าถึงค่าเฉลี่ยได้ ≈ +฿${K(up)} — ตรวจจำนวนรายการต่อบิล${g&&g.gap<-3?'ของ'+g.n:''} และติดตามผลการแนะนำของทานเล่นหรือเครื่องดื่ม`,ev.tk]); }
+    let why; if(g&&g.gap<-3) why=`ต่ำสุดที่ ${g.n} ฿${f0(g.tk)} (ระบบ ฿${f0(g.sys)} · ${pc(g.gap)})`; else why='ยอดต่อบิลแต่ละช่องใกล้เคียงระบบ';
+    if(mixCh) why+=` · สัดส่วนบิล ${mixCh.n} ${f0(mixCh.share)}% (ระบบ ${f0(mixCh.ssh)}%) ดึงยอดต่อบิลเฉลี่ยลง`;
+    rec.push(['customers',`ยอดต่อบิลเฉลี่ย ฿${f0(a.tk)} เทียบ ฿${f0(tkAvg)} (${why}${zt('tk',v=>'฿'+f0(v))}) ถ้าถึงค่าเฉลี่ยได้ ≈ +฿${K(up)} — ตรวจจำนวนรายการต่อบิล${g&&g.gap<-3?'ของ'+g.n:''} และติดตามผลการแนะนำของทานเล่นหรือเครื่องดื่ม`,ev.tk]); }
   /* 4) ช่องทางที่ลด */
   if(worstCh&&Math.abs(worstCh.d)>0){ const pcv=worstCh.p?worstCh.d/worstCh.p*100:null, who=worstCh.br.filter(b=>b.d<0).slice(0,2).map(b=>b.code+' '+sg(b.d)).join(', ');
     const base=`${worstCh.n} ลดลง ${sg(worstCh.d)}${pcv!=null?' ('+pc(pcv)+')':''}${e.list.length>1&&who?' · หนักที่สาขา '+who:''}`;
     const i3=worstCh.k==='dine'?0:worstCh.k==='take'?1:2, tkc=cur3[i3], tkp=prv3[i3];
-    const det=(worstCh.k==='dine'||worstCh.k==='take')&&tkc&&tkp&&tkp.bills?` · บิล ${f0(tkp.bills)} → ${f0(tkc.bills)} (${pc((tkc.bills/tkp.bills-1)*100)}) เช็ค ฿${f0(tkp.tk||0)} → ฿${f0(tkc.tk||0)}`:'';
+    const det=(worstCh.k==='dine'||worstCh.k==='take')&&tkc&&tkp&&tkp.bills?` · บิล ${f0(tkp.bills)} → ${f0(tkc.bills)} (${pc((tkc.bills/tkp.bills-1)*100)}) ยอดต่อบิล ฿${f0(tkp.tk||0)} → ฿${f0(tkc.tk||0)}`:'';
     if(worstCh.k==='dine') rec.push(['customers',`${base}${det} — ตรวจเรื่องลูกค้าเข้าร้าน ที่นั่ง ระยะเวลารอ และบริการ`,ev.tr]);
     else if(worstCh.k==='take') rec.push(['customers',`${base}${det} — ตรวจเวลารอรับของและการเสนอเมนูหน้าเคาน์เตอร์`,ev.tr]);
     else rec.push(['delivery',`${base} — ตรวจการมองเห็นในแอปและเวลาเปิด–ปิดบนแพลตฟอร์ม (ดูในหัวข้อ Delivery)`]); }
@@ -3799,7 +3799,7 @@ function insRecs(e,A,C,ev,ctx){
   /* 8) กำไรสุทธิ: แยกว่าส่วนต่างมาจากหมวดไหน + ค่าใช้จ่ายคงที่ */
   if(a.net!=null&&A.net!=null&&a.net<A.net-1){ const g=PL?PL.grp.filter(x=>x.d>0.3).slice(0,2):[], sgl=PL?PL.sga.filter(x=>x.d>0.5)[0]:null;
     rec.push(['pl',`กำไรสุทธิ ${f1(a.net)}% เทียบ ${f1(A.net)}% (ต่ำกว่า ${f1(A.net-a.net)} ppt ≈ ฿${K((A.net-a.net)/100*a.sales)})${g.length?' · ส่วนต่างมาจาก '+g.map(x=>plShort(x)+' +'+f1(x.d)+' ppt').join(' · '):''}${sgl?' · ค่าใช้จ่ายขายและบริหารที่เกิน: '+lineTxt(sgl)+(a.mom!=null&&a.mom<0?' (ยอดขายลด '+f1(Math.abs(a.mom))+'% ดันสัดส่วนคงที่ให้สูงขึ้น)':''):''} — ${g.length?'เริ่มแก้ที่ '+plShort(g[0])+' '+(sgl?'และ '+sgl.name+' ':''):'ดูควบคู่ %COS %COL และค่าใช้จ่ายคงที่ '}ในหัวข้อ Profitability`,ev.net]); }
-  if(!rec.length) rec.push([null,`ตัวชี้วัดอยู่ในเกณฑ์ดี (ยอดขาย ${a.mom!=null?pc(a.mom)+' vs LM':'—'} · เช็ค ฿${f0(a.tk||0)} · %COS ${a.cos!=null?f1(a.cos)+'%':'—'}) — รักษามาตรฐาน และเรียนรู้แนวปฏิบัติไปใช้กับสาขาที่ต่ำกว่า`]);
+  if(!rec.length) rec.push([null,`ตัวชี้วัดอยู่ในเกณฑ์ดี (ยอดขาย ${a.mom!=null?pc(a.mom)+' vs LM':'—'} · ยอดต่อบิล ฿${f0(a.tk||0)} · %COS ${a.cos!=null?f1(a.cos)+'%':'—'}) — รักษามาตรฐาน และเรียนรู้แนวปฏิบัติไปใช้กับสาขาที่ต่ำกว่า`]);
   return rec;
 }
 const PL_SHORT={cogs:'ต้นทุนขาย (COS)',labor:'ค่าแรง (COL)',sga:'ค่าขายและบริหาร',opex:'ค่าใช้จ่ายดำเนินงาน',central:'ค่าใช้จ่ายส่วนกลาง',dep:'ค่าเสื่อม'};
@@ -3824,7 +3824,7 @@ function insCause(D,A,sc){
   const worst=C.ch.filter(c=>c.d<0).sort((x,y)=>x.d-y.d)[0];
   const k=(cl,l,v,sub)=>`<div class="aud-k ppc ${cl||''}"><div class="aud-kh">${l}</div><div class="aud-kv" style="font-size:30px">${v}</div><div class="aud-ks">${sub||''}</div></div>`;
   const cards=`<div class="aud-kg">${k('',  'ยอดขายเทียบเดือนก่อน',`<span class="${insCls(C.dSales)}">${insSg(C.dSales)}</span>`,C.n+' สาขาที่เทียบได้')}
-    ${k(C.billEff<0?'r':'g','เกิดจากจำนวนบิล',insSg(C.billEff),'ส่วนต่างบิล × เช็คเฉลี่ยเดือนก่อน')}${k(C.tkEff<0?'r':'g','เกิดจากยอดต่อบิล (เช็คเฉลี่ย)',insSg(C.tkEff),'บิลเดือนนี้ × ส่วนต่างเช็ค')}
+    ${k(C.billEff<0?'r':'g','เกิดจากจำนวนบิล',insSg(C.billEff),'ส่วนต่างบิล × ยอดต่อบิลเฉลี่ยเดือนก่อน')}${k(C.tkEff<0?'r':'g','เกิดจากยอดต่อบิล (ยอดต่อบิลเฉลี่ย)',insSg(C.tkEff),'บิลเดือนนี้ × ส่วนต่างยอดต่อบิล')}
     ${k(worst?'r':'g','ช่องทางที่ลดมากสุด',worst?worst.n:'—',worst?insSg(worst.d):'ไม่มีช่องทางที่ลดลง')}</div>`;
   const mxc=Math.max(...C.ch.map(c=>Math.max(c.c,c.p)))||1;
   const chT=insTbl([['ช่องทาง'],['เดือนก่อน'],['เดือนนี้'],['ส่วนต่าง','r'],['%','r']],'minmax(110px,.8fr) minmax(150px,1fr) minmax(150px,1fr) 90px 70px',C.ch.map(c=>({cells:[
@@ -3836,7 +3836,7 @@ function insCause(D,A,sc){
   const mkRow=(key,kind,name,c)=>{ const w=c.ch.filter(x=>x.d<0).sort((x,y)=>x.d-y.d)[0];
     return {key,kind,cells:[`<div class="ppn">${name}</div>`,`<div class="ppnum ${insCls(c.dSales)}"><b>${insSg(c.dSales)}</b></div>`,`<div class="ppnum ${insCls(c.billEff)}">${insSg(c.billEff)}</div>`,`<div class="ppnum ${insCls(c.tkEff)}">${insSg(c.tkEff)}</div>`,
       `<div><span class="inschip ${c.dSales<0?'b':'g'}">${c.dSales<0?'ตกเพราะ'+main(c.billEff,c.tkEff)+'ลด':'เพิ่มขึ้น'}</span></div>`,`<div class="ppn">${w?w.n+' <b class="neg">'+insSg(w.d)+'</b>':'<span class="ppfoot">—</span>'}</div>`]}; };
-  const heads=[['โซน / สาขา'],['ยอดขายเปลี่ยน','r'],['จากบิล','r'],['จากเช็ค','r'],['สาเหตุหลัก'],['ช่องทางที่ลดมากสุด']], grid='minmax(170px,1.2fr) 110px 100px 100px 150px minmax(180px,1.2fr)';
+  const heads=[['โซน / สาขา'],['ยอดขายเปลี่ยน','r'],['จากบิล','r'],['จากยอดต่อบิล','r'],['สาเหตุหลัก'],['ช่องทางที่ลดมากสุด']], grid='minmax(170px,1.2fr) 110px 100px 100px 150px minmax(180px,1.2fr)';
   const Z={}; sc.forEach(r=>{ (Z[r.zone]=Z[r.zone]||[]).push(r); });
   const zr=Object.entries(Z).map(([z,l])=>({z,c:insChan(l)})).filter(x=>x.c.n).sort((a,b)=>a.c.dSales-b.c.dSales).map(x=>mkRow(x.z,'zone','โซน '+x.z,x.c));
   const br=rowsOf(sc).sort((a,b)=>a.c.dSales-b.c.dSales).slice(0,12).map(x=>mkRow(x.r.code,'branch','<b>'+x.r.code+'</b> '+x.r.name,x.c));
@@ -3898,9 +3898,9 @@ function insTarget(D,A,sc){
   const cards=`<div class="aud-kg">${k('','แผนเดือนนี้ ('+label(D.m)+')','฿'+fmtN(Math.round(all.plan/1000))+'K',all.n+' สาขามีแผน · จริง ฿'+fmtN(Math.round(all.act/1000))+'K ('+(all.ach==null?'—':all.ach.toFixed(0))+'%)')}
     ${k(all.gap>0?'r':'g','ยอดที่ขาดจากแผน',all.gap>0?'฿'+fmtN(Math.round(all.gap/1000))+'K':'ถึงแผนแล้ว','เฉลี่ย '+days+' วัน/เดือน')}
     ${k('y','ต้องเพิ่มวันละ',all.gap>0?'฿'+fmtN(Math.round(all.perDay)):'—','ทั้งขอบเขตที่เลือก · เทียบยอดจริงเดือนนี้')}
-    ${k('y','หรือเพิ่มบิลวันละ',all.gap>0?fmtN(Math.round(all.billsDay))+' บิล':'—','ที่เช็คเฉลี่ย ฿'+fmtN(Math.round(all.tk))+' · ตอนนี้ '+fmtN(Math.round(all.curBillsDay))+' บิล/วัน')}</div>`;
+    ${k('y','หรือเพิ่มบิลวันละ',all.gap>0?fmtN(Math.round(all.billsDay))+' บิล':'—','ที่ยอดต่อบิลเฉลี่ย ฿'+fmtN(Math.round(all.tk))+' · ตอนนี้ '+fmtN(Math.round(all.curBillsDay))+' บิล/วัน')}</div>`;
   const H=[['โซน / สาขา'],['แผน','r'],['จริง','r'],['ถึงแผน','r'],['ขาด','r'],['เพิ่มวันละ (฿)','r'],['เพิ่มบิล/วัน','r'],['บิล/วัน ตอนนี้ → ที่ต้องมี','r']], G='minmax(190px,1.3fr) 100px 100px 80px 110px 120px 100px 150px';
-  return cards+`<div class="aud-c"><div class="ppt2">เป้าหมายฟื้นยอดขาย รายโซน<small>ยอดที่ขาดจากแผน ÷ ${days} วัน · บิลที่ต้องเพิ่ม = ยอดที่ขาด ÷ เช็คเฉลี่ยของโซน ÷ ${days} วัน</small></div>${insTbl(H,G,zr)}</div>
+  return cards+`<div class="aud-c"><div class="ppt2">เป้าหมายฟื้นยอดขาย รายโซน<small>ยอดที่ขาดจากแผน ÷ ${days} วัน · บิลที่ต้องเพิ่ม = ยอดที่ขาด ÷ ยอดต่อบิลเฉลี่ยของโซน ÷ ${days} วัน</small></div>${insTbl(H,G,zr)}</div>
     <div class="aud-c" style="margin-top:14px"><div class="ppt2">20 สาขาที่ขาดจากแผนมากสุด<small>เรียงตามยอดที่ขาด (฿) · คลิกเพื่อดูวิเคราะห์</small></div>${insTbl(H,G,br)}</div>`;
 }
 function insightBody(m){
@@ -3932,7 +3932,7 @@ function insightBody(m){
   const hero=`<div class="aud-k dark insheroc"${worst?` data-insopen="${worst.key}" data-inskind="${INS.view}"`:''}><div class="aud-kh">${unit}ที่ต้องดูแลก่อน · ${label(m)}</div><div class="aud-kv" style="font-size:34px">${worst?worst.name:'—'}</div>
       <div class="aud-kp">${worst?`<span class="inspill b">${worst.bad} แดง</span><span class="inspill g">${worst.good} เขียว</span><span class="insgolink">ดูรายละเอียด →</span>`:''}</div><span class="pk" data-pk="worst" hidden>${worst?worst.name:'—'}</span></div>`;
   const kc=(dot,l,v,sub,k)=>`<div class="aud-k"><div class="aud-kh"><i style="background:${dot}"></i>${l}</div><div class="aud-kv">${v}</div><div class="aud-ks">${sub}</div><span class="pk" data-pk="${k}" hidden>${v}</span></div>`;
-  const cards=`<div class="aud-kg">${hero}${kc('#F43F5E',unit+'ที่แดงตั้งแต่ 4 ตัวชี้วัด',nWorst+'<small>'+unit+'</small>','จาก '+E.length+' '+unit,'nworst')}${kc('#F59E0B','ตัวชี้วัดที่แดงบ่อยสุด',metricBad&&metricBad.n?metricBad.t:'—',metricBad&&metricBad.n?'แดงใน '+metricBad.n+' จาก '+E.length+' '+unit+' · แดง = '+({ach:'ถึงแผนต่ำกว่าเฉลี่ยเกิน 2 ppt',tk:'เช็คต่ำกว่าเฉลี่ยเกิน 3%',cos:'%COS สูงกว่าเฉลี่ยเกิน 1 ppt',col:'%COL สูงกว่าเฉลี่ยเกิน 1 ppt',net:'กำไรสุทธิต่ำกว่าเฉลี่ยเกิน 1 ppt',cem:'CEM ต่ำกว่าเฉลี่ยเกิน 1 ppt',oss:'OSS ต่ำกว่าเฉลี่ยเกิน 1 ppt',ps:'฿/ชม. ต่ำกว่าเฉลี่ยเกิน 5%'}[metricBad.k]||''):'ไม่มี','mbad')}${kc('#12A367','ยอดขายรวม','฿'+fmtN(Math.round(A.sales/1000))+'K',A.n+' สาขา'+(A.ach!=null?' · แผน '+A.ach.toFixed(0)+'%':'')+(A.mom!=null?' · vs LM '+insFmt('mom',A.mom):''),'sales')}</div>`;
+  const cards=`<div class="aud-kg">${hero}${kc('#F43F5E',unit+'ที่แดงตั้งแต่ 4 ตัวชี้วัด',nWorst+'<small>'+unit+'</small>','จาก '+E.length+' '+unit,'nworst')}${kc('#F59E0B','ตัวชี้วัดที่แดงบ่อยสุด',metricBad&&metricBad.n?metricBad.t:'—',metricBad&&metricBad.n?'แดงใน '+metricBad.n+' จาก '+E.length+' '+unit+' · แดง = '+({ach:'ถึงแผนต่ำกว่าเฉลี่ยเกิน 2 ppt',tk:'ยอดต่อบิลต่ำกว่าเฉลี่ยเกิน 3%',cos:'%COS สูงกว่าเฉลี่ยเกิน 1 ppt',col:'%COL สูงกว่าเฉลี่ยเกิน 1 ppt',net:'กำไรสุทธิต่ำกว่าเฉลี่ยเกิน 1 ppt',cem:'CEM ต่ำกว่าเฉลี่ยเกิน 1 ppt',oss:'OSS ต่ำกว่าเฉลี่ยเกิน 1 ppt',ps:'฿/ชม. ต่ำกว่าเฉลี่ยเกิน 5%'}[metricBad.k]||''):'ไม่มี','mbad')}${kc('#12A367','ยอดขายรวม','฿'+fmtN(Math.round(A.sales/1000))+'K',A.n+' สาขา'+(A.ach!=null?' · แผน '+A.ach.toFixed(0)+'%':'')+(A.mom!=null?' · vs LM '+insFmt('mom',A.mom):''),'sales')}</div>`;
   const th=(k,t,cls)=>`<th class="${cls||''}" data-insort="${k}">${t}<i>${INS.sort===k?(INS.dir==='asc'?'▲':'▼'):'↕'}</i></th>`;
   const cell=(e,k)=>{ const v=e.a[k], t=insTone(k,v,A[k]); return `<td class="r"><span class="insc ${t}">${insFmt(k,v)}</span></td>`; };
   const rowsH=list.map(e=>`<tr class="insrow" data-inskey="${e.key}"><td class="insname" title="${e.name.replace(/"/g,'&quot;')}">${INS.view==='zone'?'<b>'+e.key+'</b><small>'+e.a.n+' สาขา</small>':'<b>'+e.key+'</b> '+e.name.replace(e.key+' ','')}</td>${INS_M.map(([k])=>cell(e,k)).join('')}
@@ -3940,7 +3940,7 @@ function insightBody(m){
   const avgRow=`<tr class="insavg"><td class="insname"><b>เฉลี่ยทุกสาขา</b></td>${INS_M.map(([k])=>`<td class="r"><span class="insc">${insFmt(k,A[k])}</span></td>`).join('')}<td></td></tr>`;
   const cols=`<colgroup><col style="width:${INS.view==='branch'?'280px':'150px'}">${INS_M.map(()=>'<col style="width:84px">').join('')}<col style="width:290px"></colgroup>`;
   const mo=MONTH_TH[m-1];
-  const src=`<div class="inssrc"><b>เกณฑ์สี:</b> เทียบกับแถว “เฉลี่ยทุกสาขา” ทุกคอลัมน์ ยกเว้นยอดขาย · vs LM · บิล vs LM ที่แสดงไว้ดูอย่างเดียว ไม่ลงสีและไม่นับสถานะ<br><b>ที่มาของตัวเลข (${mo} ${YEAR}):</b> ยอดขาย · แผน · จำนวนบิล · เช็คเฉลี่ย · ช่องทาง · ชั่วโมงแรงงาน = ไฟล์ “แบบฟอร์มส่งยอดขาย” รายสาขา · %COS · %COL · กำไรสุทธิ = งบกำไรขาดทุนรายสาขา (ไฟล์ P&L) · CEM · OSS = ผลสำรวจรายสาขา · vs LM = เทียบเดือนก่อน (เฉพาะสาขาที่มียอดทั้งสองเดือน) · แถวเฉลี่ยทุกสาขา = รวมทุกสาขาที่มีข้อมูลก่อนหาร (ไม่ใช่เฉลี่ยของเฉลี่ย)</div>`;
+  const src=`<div class="inssrc"><b>เกณฑ์สี:</b> เทียบกับแถว “เฉลี่ยทุกสาขา” ทุกคอลัมน์ ยกเว้นยอดขาย · vs LM · บิล vs LM ที่แสดงไว้ดูอย่างเดียว ไม่ลงสีและไม่นับสถานะ<br><b>ที่มาของตัวเลข (${mo} ${YEAR}):</b> ยอดขาย · แผน · จำนวนบิล · ยอดต่อบิลเฉลี่ย · ช่องทาง · ชั่วโมงแรงงาน = ไฟล์ “แบบฟอร์มส่งยอดขาย” รายสาขา · %COS · %COL · กำไรสุทธิ = งบกำไรขาดทุนรายสาขา (ไฟล์ P&L) · CEM · OSS = ผลสำรวจรายสาขา · vs LM = เทียบเดือนก่อน (เฉพาะสาขาที่มียอดทั้งสองเดือน) · แถวเฉลี่ยทุกสาขา = รวมทุกสาขาที่มีข้อมูลก่อนหาร (ไม่ใช่เฉลี่ยของเฉลี่ย)</div>`;
   return `${tabBar}<div class="ppview"><span class="ovseg"><button type="button" class="${INS.view==='zone'?'on':''}" data-insview="zone">รายโซน</button><button type="button" class="${INS.view==='branch'?'on':''}" data-insview="branch">รายสาขา</button></span></div>${cards}
     <div class="aud-c ppt"><div class="ppth"><div class="ppt2" style="margin:0">${INS.view==='zone'?'รายโซน':'รายสาขา'}<small>เขียว = ดี · แดง = ต้องดูแล · คลิกแถวเพื่อดูวิเคราะห์</small></div>
       ${INS.view==='branch'?`<input type="search" class="ppsearch" id="insQ" placeholder="ค้นหารหัส / ชื่อสาขา" value="${(INS.q||'').replace(/"/g,'&quot;')}" autocomplete="off">`:''}</div>
@@ -4010,7 +4010,7 @@ function openInsight(key,view){ view=view||INS.view; Object.keys(INS_MEMO).forEa
   const prevM=MONTH_TH[(m-2+12)%12], curMn=MONTH_TH[m-1];
   const flow=C.n?`<div class="insflow"><div class="insfb"><small>เดือนก่อน</small><b>฿${K(C.prevSales)}</b><em>${prevM}</em></div><span class="insar">→</span>
       <div class="insfb ${C.billEff<0?'r':'g'}"><small>จำนวนบิล</small><b class="${C.billEff<0?'neg':'pos'}">${sg(C.billEff)}</b><em>${C.billsPct!=null?(C.billsPct>=0?'+':'−')+Math.abs(C.billsPct).toFixed(1)+'% บิล':''}</em></div><span class="insar">→</span>
-      <div class="insfb ${C.tkEff<0?'r':'g'}"><small>เช็คเฉลี่ย</small><b class="${C.tkEff<0?'neg':'pos'}">${sg(C.tkEff)}</b><em>฿${f0(C.tkP)} → ฿${f0(C.tkC)}</em></div><span class="insar">→</span>
+      <div class="insfb ${C.tkEff<0?'r':'g'}"><small>ยอดต่อบิลเฉลี่ย</small><b class="${C.tkEff<0?'neg':'pos'}">${sg(C.tkEff)}</b><em>฿${f0(C.tkP)} → ฿${f0(C.tkC)}</em></div><span class="insar">→</span>
       <div class="insfb insdark"><small>เดือนนี้</small><b>฿${K(C.curSales)}</b><em>${curMn} · ${(C.dSales>=0?'+':'−')+Math.abs(C.prevSales?C.dSales/C.prevSales*100:0).toFixed(1)}%</em></div></div>`:'';
   const recLi=rec.map(([sec,t,evd],i)=>{ const k=t.indexOf(' — '), lead=k>0?t.slice(0,k):t, rest=k>0?t.slice(k+3):''; return `<li><span class="insn">${i+1}</span><div><b>${lead}</b>${rest?' — '+rest:''}${evd?'<small class="insev"><b>ข้อมูลย้อนหลัง:</b> '+evd+'</small>':''}</div></li>`; }).join('');
   const nowM=H.length?H[H.length-1].m:null;
@@ -4019,12 +4019,12 @@ function openInsight(key,view){ view=view||INS.view; Object.keys(INS_MEMO).forEa
     <div class="aud-kg ppm" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:12px">
       <div class="aud-k dark"><div class="aud-kh">สถานะ</div><div class="aud-kv"><span style="color:#FDA4AF">${e.bad}</span><small>แดง</small> <span style="color:#86EFAC;margin-left:6px">${e.good}</span><small>เขียว</small></div><div class="aud-ks">จาก ${INS_TONED.length} ตัวชี้วัด</div></div>
       <div class="aud-k"><div class="aud-kh">ยอดขาย</div><div class="aud-kv">${insFmt('sales',a.sales)}</div><div class="aud-ks">${a.mom!=null?'vs LM '+insFmt('mom',a.mom):''}${a.ach!=null?' · แผน '+a.ach.toFixed(0)+'%':''}</div></div>
-      <div class="aud-k"><div class="aud-kh">จำนวนบิล</div><div class="aud-kv">${f0(a.tr)}</div><div class="aud-ks">${a.trMom!=null?'vs LM '+insFmt('trMom',a.trMom):''} · เช็ค ${insFmt('tk',a.tk)}</div></div>
+      <div class="aud-k"><div class="aud-kh">จำนวนบิล</div><div class="aud-kv">${f0(a.tr)}</div><div class="aud-ks">${a.trMom!=null?'vs LM '+insFmt('trMom',a.trMom):''} · ยอดต่อบิล ${insFmt('tk',a.tk)}</div></div>
       <div class="aud-k"><div class="aud-kh">กำไรสุทธิ</div><div class="aud-kv ${nNet==='b'?'neg':nNet==='g'?'pos':''}">${insFmt('net',a.net)}</div><div class="aud-ks">%COS ${insFmt('cos',a.cos)} · %COL ${insFmt('col',a.col)}</div></div></div>
     <div class="insg2"><div class="aud-c" style="margin-top:0"><div class="ppt2" style="border:0;padding:0"><i class="dot" style="background:#F43F5E"></i>ต้องดูแล <small style="display:inline;margin-left:6px">${badT.length} ตัว</small></div>${badT.map(liRow).join('')||'<div class="ppfoot">ไม่มี</div>'}</div>
       <div class="aud-c" style="margin-top:0"><div class="ppt2" style="border:0;padding:0"><i class="dot" style="background:#12A367"></i>จุดแข็ง <small style="display:inline;margin-left:6px">${goodT.length} ตัว</small></div>${goodT.map(liRow).join('')||'<div class="ppfoot">ไม่มี</div>'}</div></div>
     <div class="aud-c" style="margin-top:12px"><div class="ppt2">ยอดขายเปลี่ยนเพราะอะไร<small>เทียบเดือนก่อน (${prevM}) · ${C.n} สาขาที่เทียบได้</small></div>
-      ${C.n?flow+insTbl(chHeads,'',chRows2)+`<div class="inssrc">ที่มา: ยอดขายแยกช่องทาง (Dine In · Take away · Grab · LINE MAN · Shopee) จากไฟล์ “แบบฟอร์มส่งยอดขาย” ${MONTH_TH[(m-2+12)%12]} เทียบ ${MONTH_TH[m-1]} · บิล/เช็คเฉลี่ย = ยอดขาย ÷ จำนวนบิล · ผลจากบิล = ส่วนต่างบิล × เช็คเดือนก่อน · ผลจากเช็ค = บิลเดือนนี้ × ส่วนต่างเช็ค</div>
+      ${C.n?flow+insTbl(chHeads,'',chRows2)+`<div class="inssrc">ที่มา: ยอดขายแยกช่องทาง (Dine In · Take away · Grab · LINE MAN · Shopee) จากไฟล์ “แบบฟอร์มส่งยอดขาย” ${MONTH_TH[(m-2+12)%12]} เทียบ ${MONTH_TH[m-1]} · บิล/ยอดต่อบิลเฉลี่ย = ยอดขาย ÷ จำนวนบิล · ผลจากบิล = ส่วนต่างบิล × ยอดต่อบิลเดือนก่อน · ผลจากยอดต่อบิล = บิลเดือนนี้ × ส่วนต่างยอดต่อบิล</div>
       ${dropBr.length?`<div class="insdrop"><span>ลดมากสุดจากสาขา</span>${dropBr.map(x=>`<i class="inschip b"><b>${x.r.code}</b> ${x.r.name} (${sg(x.c.dSales)})</i>`).join('')}</div>`:''}`:'<div class="ppfoot">ยังไม่มีข้อมูลเดือนก่อนสำหรับเทียบ</div>'}</div>
     ${(upTk>0||upPt>0||upPs>0)?`<div class="aud-c" style="margin-top:12px"><div class="ppt2">โอกาสเพิ่มยอดขาย (ประมาณการ)<small>ถ้าตัวชี้วัดขึ้นไปถึงเกณฑ์ · คิดแยกทีละตัว ไม่รวมกัน</small></div>
       <div class="aud-kg" style="grid-template-columns:repeat(3,minmax(0,1fr))">
@@ -4032,7 +4032,7 @@ function openInsight(key,view){ view=view||INS.view; Object.keys(INS_MEMO).forEa
       ${sc('y','ถ้า Productivity Trans เพิ่มจาก '+(pt!=null?pt.toFixed(1):'—')+' เป็น '+(ptAvg?ptAvg.toFixed(1):'—'),upPt>0?'+฿'+K(upPt):'ถึงแล้ว','ชั่วโมงเท่าเดิม '+f0(a.hours||0)+' ชม.'+cutTxt(cutPt)+'')}
       ${sc('r',(e.list.length>1?'ถ้า '+e.list.filter(r=>r.lh>0&&A.ps&&r.sales/r.lh<A.ps).length+' สาขาที่ต่ำกว่าเฉลี่ย ขึ้นเป็น ฿'+f0(A.ps||0)+'/ชม.':'ถ้า Productivity Sale เพิ่มจาก ฿'+f0(a.ps||0)+' เป็น ฿'+f0(A.ps||0)),upPs>0?'+฿'+K(upPs):'—','ชั่วโมงเท่าเดิม'+cutTxt(cutBr)+'')}</div></div>`:''}
     ${H.length>=2?`<div class="aud-c" style="margin-top:12px"><div class="ppt2">ย้อนหลังรายเดือน<small>ดูแนวโน้มและเดือนที่เคยทำได้ดี · สีเทียบค่าเฉลี่ยทุกสาขา${ev.ly?' · '+ev.ly.replace(/ \(\d+ สาขาที่เทียบได้\)/,'').replace('เทียบเดือนเดียวกันปีก่อน','เทียบเดือนเดียวกันปีก่อน'):''}</small></div>
-      ${insTbl([['เดือน'],['ยอดขาย','r'],['บิล','r'],['เช็คเฉลี่ย','r'],['%COS','r'],['%COL','r'],['฿/ชม.','r'],['CEM','r']],'80px repeat(7,minmax(80px,1fr))',H.slice(-9).map(x=>({cls:x.m===nowM?'insnow':'',cells:[`<div class="ppn"><b>${MONTH_TH[x.m-1]}</b></div>`].concat(['sales','tr','tk','cos','col','ps','cem'].map(k=>{ const t=k==='sales'||k==='tr'?'':insTone(k,x.a[k],x.A[k]); return `<div class="insc ${t}">${k==='tr'?(x.a.tr?fmtN(Math.round(x.a.tr)):'—'):insFmt(k,x.a[k])}</div>`; }))})))}</div>`:''}
+      ${insTbl([['เดือน'],['ยอดขาย','r'],['บิล','r'],['ยอดต่อบิลเฉลี่ย','r'],['%COS','r'],['%COL','r'],['฿/ชม.','r'],['CEM','r']],'80px repeat(7,minmax(80px,1fr))',H.slice(-9).map(x=>({cls:x.m===nowM?'insnow':'',cells:[`<div class="ppn"><b>${MONTH_TH[x.m-1]}</b></div>`].concat(['sales','tr','tk','cos','col','ps','cem'].map(k=>{ const t=k==='sales'||k==='tr'?'':insTone(k,x.a[k],x.A[k]); return `<div class="insc ${t}">${k==='tr'?(x.a.tr?fmtN(Math.round(x.a.tr)):'—'):insFmt(k,x.a[k])}</div>`; }))})))}</div>`:''}
     <div class="aud-c" style="margin-top:12px"><div class="ppt2">ข้อเสนอแนะเบื้องต้น<small>สร้างจากตัวเลขและข้อมูลย้อนหลังอัตโนมัติ — ใช้ประกอบการตัดสินใจ</small></div><ol class="insrecn">${recLi}</ol></div>`;
   el.classList.add('open'); }
 document.addEventListener('click',e=>{
@@ -4928,7 +4928,7 @@ function drawBranch(code,target){
       ${card('เทียบแผน', b.ach==null?'—':b.ach.toFixed(0)+'%', b.plan?'แผน '+M(b.plan):'', b.ach==null?'':cls(b.ach-100))}
       ${card('Delivery', M(b.deli), b.sales?(b.deli/b.sales*100).toFixed(1)+'% ของยอดสาขา':'')}
       ${card('จำนวนบิล', fmtN(b.tr), b.trMom==null?'':(BR_CTX.momLab||'MoM')+' '+sgn(b.trMom), b.trMom==null?'':cls(b.trMom))}
-      ${card('เช็คเฉลี่ย', b.tk==null?'—':'฿'+b.tk, b.cust?fmtN(b.cust)+' ลูกค้า':'')}
+      ${card('ยอดต่อบิลเฉลี่ย', b.tk==null?'—':'฿'+b.tk, b.cust?fmtN(b.cust)+' ลูกค้า':'')}
       ${pl?card('%กำไร', pl.gp.toFixed(1)+'%', 'กำไร '+KB(pl.profit), cls(pl.gp)):''}
       ${pl?card('%COS / %COL', pl.cos.toFixed(1)+' / '+pl.col.toFixed(1), 'ต้นทุนอาหาร / ค่าแรง'):''}
       ${ce?card('CEM', ce.score.toFixed(0)+'%', 'ผลสำรวจลูกค้า', ce.score>=92?'pos':'neg'):''}
@@ -4940,7 +4940,7 @@ function drawBranch(code,target){
       </table></div>`:''}
     ${hist.length>1?`<div class="grp" style="margin-top:16px">ยอดขายรายเดือนของสาขานี้</div>`+branchLine(hist):''}
     ${hist.length>1?`<div class="grp" style="margin-top:16px">ย้อนหลังรายเดือน</div>
-      <div class="scroll"><table><tr><th>เดือน</th><th class="n">ยอดขาย</th><th class="n">%แผน</th><th class="n">MoM</th><th class="n">Delivery</th><th class="n">บิล</th><th class="n">เช็คเฉลี่ย</th></tr>
+      <div class="scroll"><table><tr><th>เดือน</th><th class="n">ยอดขาย</th><th class="n">%แผน</th><th class="n">MoM</th><th class="n">Delivery</th><th class="n">บิล</th><th class="n">ยอดต่อบิลเฉลี่ย</th></tr>
       ${hist.map(h=>`<tr class="${h.m===BR_CTX.m?'hi':''}"><td>${h.m===BR_CTX.m?'★ ':''}${MONTH_TH[h.m-1]}</td><td class="n">${M(h.r.sales)}</td>
         <td class="n ${h.r.ach==null?'':cls(h.r.ach-100)}">${h.r.ach==null?'—':h.r.ach.toFixed(0)+'%'}</td>
         <td class="n">${pill(h.r.mom)}</td><td class="n">${M(h.r.deli)}</td>
@@ -5142,7 +5142,7 @@ function ovTrendHtml(){
     if(vl!=null) p1.push('ปีก่อน '+(vl>=0?'+':'-')+PP(vl));
     if(vm!=null) p1.push('เดือนก่อน '+(vm>=0?'+':'-')+PP(vm));
     L.push(p1.join(' · '));
-    /* 2. อะไรลดลงเทียบเดือนก่อน (ช่องทาง · แพลตฟอร์ม · บิล · เช็คเฉลี่ย) ตามขอบเขตที่เลือก */
+    /* 2. อะไรลดลงเทียบเดือนก่อน (ช่องทาง · แพลตฟอร์ม · บิล · ยอดต่อบิลเฉลี่ย) ตามขอบเขตที่เลือก */
     const keep=OVT.scope==='branch'?by.filter(b=>String(b.code)===String(OVT.code)):(OVT.scope==='zone'?by.filter(b=>b.zone===OVT.zone):null);
     const codes=keep?new Set(keep.map(b=>String(b.code))):null;
     const rowsOf=mm=>((DETAIL[mm]||{}).branchRows||[]).filter(b=>b.sales>0&&(!codes||codes.has(String(b.code))));
@@ -5159,7 +5159,7 @@ function ovTrendHtml(){
       const tr1=sum(both,'tr'), tr0=sum(prev,'tr');
       if(tr0&&tr1<tr0*0.995) parts.push('จำนวนบิล <b>-'+PP((tr1/tr0-1)*100)+'</b>');
       const t1=tr1?sum(both,'sales')/tr1:0, t0=tr0?sum(prev,'sales')/tr0:0;
-      if(t0&&t1<t0*0.995) parts.push('เช็คเฉลี่ย <b>-'+PP((t1/t0-1)*100)+'</b>');
+      if(t0&&t1<t0*0.995) parts.push('ยอดต่อบิลเฉลี่ย <b>-'+PP((t1/t0-1)*100)+'</b>');
       L.push(parts.length?'ที่ลดลงจากเดือนก่อน: '+parts.join(' · '):'ไม่มีช่องทางที่ลดลงจากเดือนก่อน');
     }
     /* 3. ความต่อเนื่อง */
@@ -5203,7 +5203,7 @@ function ovBrHtml(){
     const lyv=months.reduce((t,mm)=>t+(((b.m&&b.m[mm])||{}).ly||0),0);
     return {b,v,now,plan,ly:lyv,avg:has.length?has.reduce((a,c)=>a+c,0)/has.length:0,g:ref>0&&now>0?(now/ref-1)*100:null,
       gl:lmv>0&&now>0?(now/lmv-1)*100:null}; }).filter(r=>r.now>0);
-  /* คำอธิบายสั้น ๆ ว่าสาขานั้นโต/ลดมาจากอะไร · ใช้ประวัติรายสาขา (ยอดแยกช่องทาง · เช็คเฉลี่ย · ลูกค้า) */
+  /* คำอธิบายสั้น ๆ ว่าสาขานั้นโต/ลดมาจากอะไร · ใช้ประวัติรายสาขา (ยอดแยกช่องทาง · ยอดต่อบิลเฉลี่ย · ลูกค้า) */
   /* เรียงตาม % เทียบค่าที่เลือกของเดือนล่าสุด · สาขาที่ไม่มีค่าเทียบ (เช่น เปิดใหม่ไม่มียอด LY) อยู่ท้ายสุด */
   const f=v=>v>0?v.toFixed(2):'—';
   /* ปุ่มตัวเทียบชุดเดียวกับ Performance Trend · กดที่นี่ก็เปลี่ยนทั้งกราฟและตารางด้านบนด้วย */
@@ -5984,7 +5984,7 @@ function buildMain(m){
   const b=d.branches;
   const bt=(arr)=>{const f=arr.some(r=>r.length>3&&r[3]!=null);
     return `<table><tr><th>สาขา</th><th class="n">Trans %</th><th class="n">Ticket %</th>${f?'<th class="n">ยอดขาย MoM</th>':''}</tr>${arr.map(r=>`<tr><td>${r[0]}</td><td class="n">${pill(r[1])}</td><td class="n">${pill(r[2])}</td>${f?`<td class="n">${pill(r[3])}</td>`:''}</tr>`).join('')}</table>`;};
-  out.push(sec('branches','Branch Watchlist — best vs needs attention', b&&b.basis==='yoy'?'จำนวนบิล (Trans.) และเช็คเฉลี่ย (Ticket) เทียบเดือนเดียวกัน LY':'จำนวนบิล (Trans.) และเช็คเฉลี่ย (Ticket) เทียบ LM', !b?EMPTY('รายสาขา'):`
+  out.push(sec('branches','Branch Watchlist — best vs needs attention', b&&b.basis==='yoy'?'จำนวนบิล (Trans.) และยอดต่อบิลเฉลี่ย (Ticket) เทียบเดือนเดียวกัน LY':'จำนวนบิล (Trans.) และยอดต่อบิลเฉลี่ย (Ticket) เทียบ LM', !b?EMPTY('รายสาขา'):`
     <div class="two"><div><h3 class="g">สาขาที่ผลงานดี (Trans.+Ticket โตพร้อมกัน / ทรงตัว)</h3>${bt(b.good)}</div><div><h3 class="r">สาขาที่น่าเป็นห่วง (Trans.+Ticket ลดพร้อมกัน)</h3>${bt(b.bad)}</div></div>
     <div class="note">${b.note}</div>`));
 
@@ -6025,7 +6025,7 @@ function buildMain(m){
       <div id="brBody"></div>
       <div class="grp" style="margin-top:20px">ทุกสาขา — ${S.lab}</div>
       <div class="scroll"><table>
-        <tr><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">%สัดส่วน</th><th class="n">%แผน</th><th class="n">MoM</th><th class="n">Delivery</th><th class="n">%Deli</th><th class="n">บิล</th><th class="n">เช็คเฉลี่ย</th><th class="n">%กำไร</th><th class="n">CEM</th><th class="n">OSS</th></tr>
+        <tr><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">%สัดส่วน</th><th class="n">%แผน</th><th class="n">MoM</th><th class="n">Delivery</th><th class="n">%Deli</th><th class="n">บิล</th><th class="n">ยอดต่อบิลเฉลี่ย</th><th class="n">%กำไร</th><th class="n">CEM</th><th class="n">OSS</th></tr>
         ${rows.map(b=>{const pl=plMap[b.code],ce=cemMap[b.code],os=ossMap[b.code];
           return `<tr class="clk" data-ssbr="${b.code}"><td>${canonName(b)}</td><td class="n">${KB(b.sales)}</td><td class="n">${(b.sales/totS*100).toFixed(1)}%</td>
           <td class="n ${b.ach==null?'':cls(b.ach-100)}">${b.ach==null?'—':b.ach.toFixed(0)+'%'}</td>
@@ -6311,7 +6311,7 @@ function drawBranchPop(code,box){
     tile('ยอดขาย',KB(b.sales),mom(b.mom)),
     tile('เทียบแผน',b.ach==null?'—':b.ach.toFixed(0)+'%',b.plan?'แผน '+KB(b.plan):'',b.ach==null?'':(b.ach>=100?'pos':'neg')),
     tile('จำนวนบิล',b.tr?fmtN(b.tr):'—',mom(b.trMom)),
-    tile('เช็คเฉลี่ย',b.tk==null?'—':'฿'+fmtN(b.tk),b.cust?fmtN(b.cust)+' ลูกค้า':''),
+    tile('ยอดต่อบิลเฉลี่ย',b.tk==null?'—':'฿'+fmtN(b.tk),b.cust?fmtN(b.cust)+' ลูกค้า':''),
     tile('Delivery',KB(b.deli),b.sales?(b.deli/b.sales*100).toFixed(1)+'% ของยอดสาขา':''),
     pl?tile('%กำไร',pl.gp.toFixed(1)+'%','กำไร '+KB(pl.profit),pl.gp>=0?'pos':'neg'):'',
     pl?tile('%COS · %COL',pl.cos.toFixed(1)+'% · '+pl.col.toFixed(1)+'%','ต้นทุนอาหาร · ค่าแรง'):'',
@@ -6325,7 +6325,7 @@ function drawBranchPop(code,box){
       <div class="bp-plats">${plats.map(p=>`<div class="bp-row"><i style="background:${p[2]}"></i><span>${p[0]}</span><b>${KB(p[1])}</b><em>${dshare(p[1])}</em></div>`).join('')}</div></div>`:'';
   const trend=hist.length>1?`<div class="bp-card"><div class="bp-h"><span>ยอดขายรายเดือน เทียบแผน</span></div>${branchLine(hist)}</div>`:'';
   const tbl=hist.length?`<div class="bp-card"><div class="bp-h"><span>ย้อนหลังรายเดือน</span></div><div class="scroll"><table>
-      <tr><th>เดือน</th><th class="n">ยอดขาย</th><th class="n">%แผน</th><th class="n">${ML}</th><th class="n">Delivery</th><th class="n">บิล</th><th class="n">เช็คเฉลี่ย</th></tr>
+      <tr><th>เดือน</th><th class="n">ยอดขาย</th><th class="n">%แผน</th><th class="n">${ML}</th><th class="n">Delivery</th><th class="n">บิล</th><th class="n">ยอดต่อบิลเฉลี่ย</th></tr>
       ${hist.map(h=>`<tr class="${h.m===BR_CTX.m?'hi':''}"><td>${MONTH_TH[h.m-1]}</td><td class="n">${KB(h.r.sales)}</td>
         <td class="n ${h.r.ach==null?'':cls(h.r.ach-100)}">${h.r.ach==null?'—':h.r.ach.toFixed(0)+'%'}</td>
         <td class="n">${pill(h.r.mom)}</td><td class="n">${KB(h.r.deli)}</td>
@@ -6343,7 +6343,7 @@ function drawBranchCust(code,box){
   const b=cur.r, pr=(hist.find(h=>h.m===cur.m-1)||{}).r;
   const tkOf=x=>x&&x.tr?x.sales/x.tr:null, ca=x=>x&&x.cust&&x.tr?x.cust/x.tr:null, pb=x=>x&&x.cust?x.sales/x.cust:null;
   const fN=v=>v==null?'—':fmtN(Math.round(v)), fB=v=>v==null?'—':'฿'+fmtN(Math.round(v)), f2=v=>v==null?'—':(+v).toFixed(2);
-  /* LY ของสาขา จากประวัติรายสาขา (ไฟล์ STF): บิล = ชีต Ticket · เช็คเฉลี่ย = ยอดขาย ÷ บิล */
+  /* LY ของสาขา จากประวัติรายสาขา (ไฟล์ STF): บิล = ชีต Ticket · ยอดต่อบิลเฉลี่ย = ยอดขาย ÷ บิล */
   const by=filtZone(EXTRA.branchYears||[]).find(x=>String(x.code)===code), hy=by&&by.h&&by.h[YEAR-1];
   const lyv=(k,mm)=>{ const v=hy&&(hy[k]||[])[mm-1]; return v>0?v:null; };
   const lyOf=mm=>{ const t=lyv('k',mm), c=lyv('c',mm), s=lyv('s',mm);
@@ -6898,7 +6898,7 @@ function parseSalesForm(wb){
           {name:'Dine In',   trans:[S(prev,'trDine'),S(cur,'trDine')], ticket:[tkOf(prev,'dine','trDine'),tkOf(cur,'dine','trDine')]},
           {name:'Take away', trans:[S(prev,'trTake'),S(cur,'trTake')], ticket:[tkOf(prev,'take','trTake'),tkOf(cur,'take','trTake')]},
           {name:'Delivery',  trans:[S(prev,'trDeli'),S(cur,'trDeli')], ticket:[tkOf(prev,'deli','trDeli'),tkOf(cur,'deli','trDeli')]}],
-        note:'จำนวนบิล/เช็คเฉลี่ย/ลูกค้า จากแบบฟอร์มส่งยอดขายรายสาขา (เทียบ LM)'};
+        note:'จำนวนบิล/ยอดต่อบิลเฉลี่ย/ลูกค้า จากแบบฟอร์มส่งยอดขายรายสาขา (เทียบ LM)'};
 
       /* ---- สาขาดี / น่าเป็นห่วง (MoM) ---- */
       const byC={}; prev.forEach(b=>byC[b.code]=b);
@@ -6910,7 +6910,7 @@ function parseSalesForm(wb){
       if(good.length||bad.length)
         d.branches={good:good.map(r=>[r.name,+r.t.toFixed(1),+r.k.toFixed(1)]),
                     bad: bad.map(r=>[r.name,+r.t.toFixed(1),+r.k.toFixed(1)]),
-                    note:`เทียบ ${MONTH_TH[m-1]} กับ ${MONTH_TH[m-2>=0?m-2:11]} ${YEAR} · จำนวนบิลและเช็คเฉลี่ยรายสาขา`};
+                    note:`เทียบ ${MONTH_TH[m-1]} กับ ${MONTH_TH[m-2>=0?m-2:11]} ${YEAR} · จำนวนบิลและยอดต่อบิลเฉลี่ยรายสาขา`};
     }
   }
   return {mon,det,months:ms,partial,warn};
@@ -7034,7 +7034,7 @@ function parsePL(wb){
 /* ===== ไฟล์ STF - Data / STF - DataSummery (ยอดรายสาขารายเดือนย้อนหลัง 3 ปี) =====
    แถว = สาขา (Code · Name · Opening Date · Brand · Owner · Territory · Region)
    คอลัมน์แบ่งเป็นบล็อกตามตัวชี้วัด (Sales Total / Grab / Line Man / Shopee / Takeaway · Ticket · Cust.) แต่ละบล็อกเรียงเป็นเดือน (วันที่ของ Excel)
-   เก็บเป็นประวัติรายสาขา b.h[ปี] = {s,g,l,p,t,k,c} ปีละ 12 ช่อง (ยอด · Grab · Line Man · Shopee · Takeaway · เช็คเฉลี่ย · ลูกค้า) */
+   เก็บเป็นประวัติรายสาขา b.h[ปี] = {s,g,l,p,t,k,c} ปีละ 12 ช่อง (ยอด · Grab · Line Man · Shopee · Takeaway · ยอดต่อบิลเฉลี่ย · ลูกค้า) */
 const STF_MET={'sales/total':'s','sales/grab':'g','sales/line man':'l','sales/shopee':'p','sales/takeaway':'t','ticket/total':'k','cust./total':'c',
   'ticket/grab':'kg','ticket/line man':'kl','ticket/shopee':'kp','ticket/takeaway':'kt'};
 const STF_MN={s:'ยอดขาย',g:'Grab',l:'Line Man',p:'Shopee',t:'Takeaway',k:'จำนวนบิล',c:'ลูกค้า',kg:'บิล Grab',kl:'บิล Line Man',kp:'บิล Shopee',kt:'บิล Takeaway'};
@@ -7433,7 +7433,7 @@ function covTypes(){
     {g:'ยอดขาย',name:'ยอด LY',src:'Daily Sale',f:m=>R(m).ly!=null},
     {g:'ยอดขาย',name:'%SSSG',src:'Sales 2025_2026 (แถว SSSG)',f:m=>!!(DETAIL[m]||{}).sssgFile},
     {g:'ยอดขาย',name:'Delivery แยก Platform',src:'Daily Sale หรือ แบบฟอร์มส่งยอดขาย',f:m=>!!(D(m).delivery&&(D(m).delivery.platforms||[]).length)},
-    {g:'ยอดขาย',name:'บิล · เช็คเฉลี่ย · ลูกค้า',src:'แบบฟอร์มส่งยอดขาย',f:m=>!!D(m).trans},
+    {g:'ยอดขาย',name:'บิล · ยอดต่อบิลเฉลี่ย · ลูกค้า',src:'แบบฟอร์มส่งยอดขาย',f:m=>!!D(m).trans},
     {g:'ยอดขาย',name:'ยอดรายสาขา',src:'แบบฟอร์มส่งยอดขาย',exp:nBr,
       f:m=>Math.max((D(m).branchRows||[]).length,(D(m).planBranches||[]).length)},
     {g:'ยอดขาย',name:'ยอดรายสาขา 2 ปี',src:'ไฟล์ Sales 2025_2026 (เดือนที่ไฟล์ยังไม่มี ใช้แบบฟอร์มส่งยอดขาย)',fixed:1,exp:nBr,
