@@ -2001,6 +2001,7 @@ table.cosm-pl td.pos{color:var(--good)}table.cosm-pl td.neg{color:var(--bad)}tab
 .cosm-tp{display:none}.cosm-tp.on{display:block}
 .cosm-tp .cosm-plh+.scroll{background:#fff;border-radius:18px;padding:8px 10px;box-shadow:0 6px 18px -14px rgba(15,23,42,.3)}
 .cosm-t{font-size:18px}
+.cosm-plyr th:first-child,.cosm-plyr td:first-child{position:sticky;left:0;background:#fff;z-index:1;min-width:210px}.cosm-plyr td.n,.cosm-plyr th.n{white-space:nowrap}.cosm-plyr .ytdc{border-left:2px solid var(--line);font-weight:700}
 .cosm-note{font-size:12.5px;color:#8A93A3;margin-top:12px}
 
 #plbr .plbc{display:flex;flex-direction:column}
@@ -3160,14 +3161,37 @@ function openCosModal(code){
   const labs=mons.map(o=>MONTH_TH[o.m-1]);
   const chart=(title,k,color)=>{ const ser=[{name:'สาขานี้',color:color,w:3,label:'all',fade:Math.max(0,bs.length-2),vals:bs.map(b=>b[k]==null?null:+b[k].toFixed(1))},{name:'เฉลี่ยทุกสาขา',color:'#9AA3B0',dash:1,w:1.8,label:'last',vals:av.map(a=>a[k]==null?null:+a[k].toFixed(1))}];
     return `<div class="cosm-ch"><div class="cosm-t">${title}<small>เส้นประ = เฉลี่ยทุกสาขา</small></div>${lineSeries(labs,ser,{w:470,h:330,R:46,fmt:v=>v.toFixed(0)+'%',lfmt:v=>v.toFixed(1),tipFmt:v=>v.toFixed(1)+'%'})}</div>`; };
-  const plTbl=(()=>{ const FB=F.branch[code];
-    /* ใช้เดือนล่าสุดที่สาขานี้มีงบจริง (สาขาเปิดใหม่/ยังไม่ส่งงบเดือนล่าสุด ก็ยังเห็นงบของเดือนที่มี) */
-    let j=mons.length-1; while(j>=0&&!(FB[mons[j].k]&&FB[mons[j].k][iRev])) j--;
-    if(j<0) return `<div class="cosm-plh"><b>งบกำไรขาดทุนเต็ม</b></div><div class="cosm-note">ยังไม่มีงบกำไรขาดทุนของสาขานี้</div>`;
-    const cm=FB[mons[j].k], ytd=plVals(FB,mons.slice(0,j+1).map(o=>o.m)), cur={m:mons[j].m};
-    const rv=cm[iRev], rvY=ytd?ytd[iRev]:0, f0=v=>v==null?'—':(v<0?'−':'')+fmtN(Math.round(Math.abs(v)*1000))+'K'   /* ข้อมูลงบรายสาขาเก็บเป็นล้านบาท → แสดงเป็นพันบาท */, pc=(v,r)=>v==null||!r?'—':(v/r*100).toFixed(1)+'%';
+  const FBr=F.branch[code], LYB=F.branchLY&&F.branchLY[code];
+  const itById=id=>items.find(x=>x.id===id);
+  /* ---- ภาพรวม COS / COL: การ์ด %COS %COL + กราฟต้นทุนหลัก / ค่าใช้จ่ายรอง ทั้งปี (แบบเดียวกับหน้า P&L) ---- */
+  const ovHtml=(()=>{
+    const yrMs=mons.filter(o=>FBr[o.k]&&FBr[o.k][iRev]>0).map(o=>o.m);
+    if(yrMs.length<1) return '<div class="cosm-note">ยังไม่มีงบกำไรขาดทุนของสาขานี้</div>';
+    const SERC={cogs:['#F0954F'],sga:['#A778F0'],labor:['#5B8DEF'],opex:['#20B2A5'],central:['#EF5B5B'],dep:['#8A93A3']};
+    const mkSer=ids=>ids.filter(id=>itById(id)).map(id=>({key:id,name:plLabel(itById(id)),color:SERC[id][0],w:2.6,label:'all',
+      vals:yrMs.map(mm=>{ const a=FBr[PL_MONKEY[mm-1]], i=itById(id).index; return a&&a[iRev]>0&&a[i]!=null?a[i]/a[iRev]*100:null; })}));
+    const serMain=mkSer(['cogs','sga','labor']), serSub=mkSer(['opex','central','dep']);
+    const lm=yrMs[yrMs.length-1], pm=yrMs.length>1?yrMs[yrMs.length-2]:null;
+    const A0=FBr[PL_MONKEY[lm-1]], P0=pm?FBr[PL_MONKEY[pm-1]]:null, Y0=LYB?LYB[PL_MONKEY[lm-1]]:null;
+    const pp2=(a,b2,l)=>a==null?'':`<span class="pill ${b2-a<=0?'pos':'neg'}">${b2-a>=0?'+':'−'}${Math.abs(b2-a).toFixed(1)} ppt</span><small>vs ${l}</small>`;
+    const ccard=(id,label,col)=>{ const it=itById(id); if(!it||!A0||!A0[iRev]) return '';
+      const v=A0[it.index], pcv=v/A0[iRev]*100, pp=P0&&P0[iRev]?P0[it.index]/P0[iRev]*100:null, lpp=Y0&&Y0[iRev]?Y0[it.index]/Y0[iRev]*100:null;
+      return `<div class="plcc"><div class="plccl"><i style="background:${col}"></i>${label}</div><div class="plccv"><b>${pcv.toFixed(1)}%</b><small>฿${v.toFixed(2)}M</small></div><div class="plccp">${pp2(pp,pcv,MONTH_TH[pm-1]||'')}${pp2(lpp,pcv,'LY')}</div></div>`; };
+    const lg=ser=>ser.map(o=>`<span><i style="background:${o.color}"></i>${o.name}</span>`).join('');
+    const labsY=yrMs.map(mm=>MONTH_TH[mm-1]);
+    const chartsOk=yrMs.length>=2;
+    return `<div class="plcc2">${ccard('cogs','%COS ต้นทุนอาหาร','#F0954F')}${ccard('labor','%COL ค่าแรง','#5B8DEF')}</div>`+
+      (chartsOk?`<div class="plch2"><div class="plcp"><div class="plcpt">ต้นทุนหลัก</div><div class="plleg">${lg(serMain)}</div>${lineSeries(labsY,serMain,{w:560,h:300,fmt:v=>v.toFixed(0)+'%',tipFmt:v=>v.toFixed(1)+'%'})}</div>
+        <div class="plcp"><div class="plcpt">ค่าใช้จ่ายรอง</div><div class="plleg">${lg(serSub)}</div>${lineSeries(labsY,serSub,{w:560,h:300,fmt:v=>v.toFixed(1)+'%',tipFmt:v=>v.toFixed(1)+'%'})}</div></div>`
+        :'<div class="cosm-note">มีงบเพียงเดือนเดียว จึงยังไม่มีกราฟแนวโน้ม</div>');
+  })();
+  /* ---- งบกำไรขาดทุน ทั้งปี: คอลัมน์รายเดือน + รวมทั้งปี (พันบาท) ---- */
+  const plTbl=(()=>{ const FB=FBr;
+    const pm=mons.filter(o=>FB[o.k]&&FB[o.k][iRev]);
+    if(!pm.length) return `<div class="cosm-plh"><b>งบกำไรขาดทุนเต็ม</b></div><div class="cosm-note">ยังไม่มีงบกำไรขาดทุนของสาขานี้</div>`;
+    const ytd=plVals(FB,pm.map(o=>o.m)), rvY=ytd?ytd[iRev]:0;
+    const f0=v=>v==null?'—':(v<0?'−':'')+fmtN(Math.round(Math.abs(v)*1000))+'K'   /* งบรายสาขาเก็บเป็นล้านบาท → แสดงเป็นพันบาท */, pc=(v,r)=>v==null||!r?'—':(v/r*100).toFixed(1)+'%';
     const z0=v=>v==null||Math.round(v*1000)===0;
-    /* สีเหมือนตาราง P&L หลัก: ติดลบแดง (ลบหนัก >5% ของรายได้ ตัวหนาเข้ม + พื้นแดงยิ่งลบยิ่งเข้ม) · บรรทัดรายได้/กำไรที่เป็นบวกเขียว (พื้นเขียวยิ่งมากยิ่งเข้ม) · ต้นทุนที่เป็นบวกไม่ใส่สี */
     const PIDS=['revenue','gp1','gp2','gp3','op','net-bd','net'];
     const PBC={revenue:'#3B4455',cogs:'#F0954F',labor:'#5B8DEF',sga:'#A778F0',opex:'#20B2A5',central:'#EF5B5B',dep:'#8A93A3',gp1:'#1FA463',gp2:'#1FA463',gp3:'#1FA463',op:'#1FA463','net-bd':'#1FA463',net:'#1FA463'};
     const nc=(v,base,isP)=>v==null?'':(v<0?((base&&v/base<-0.05)?'neg2':'neg'):((isP&&v>0)?((base&&v/base>0.05)?'pos2':'pos'):''));
@@ -3176,16 +3200,17 @@ function openCosModal(code){
       if(isP&&q>0){ const a=0.10+Math.min(q/0.20,1)*0.55; return ` style="background:rgba(22,163,74,${a.toFixed(2)});color:${a>0.42?'#fff':'#065F46'}"`; }
       return ''; };
     const pb=(v,base,id)=>!base||v==null?'':`<span class="pbw"><i style="width:${Math.min(100,Math.abs(v/base)*100).toFixed(1)}%;background:${PBC[id]||'#94A3B8'}"></i></span>`;
-    const trs=items.map(it=>{ const v=cm[it.index], y=ytd?ytd[it.index]:null, zero=z0(v)&&z0(y), isP=!it.depth&&PIDS.includes(it.id);
-      return `<tr class="${(it.depth?'sub':(it.highlight?'hl':'main'))+(zero?' zero':'')}"><td style="padding-left:${10+it.depth*16}px">${plLabel(it)}</td><td class="n ${nc(v,rv,isP)}"${ht(v,rv,isP)}>${f0(v)}</td><td class="n ${nc(v,rv,isP)}"${ht(v,rv,isP)}>${it.depth?'':pb(v,rv,it.id)}${pc(v,rv)}</td><td class="n ${nc(y,rvY,isP)}"${ht(y,rvY,isP)}>${f0(y)}</td><td class="n ${nc(y,rvY,isP)}"${ht(y,rvY,isP)}>${it.depth?'':pb(y,rvY,it.id)}${pc(y,rvY)}</td></tr>`; }).join('');
-    const nz=items.filter(it=>{ const v=cm[it.index], y=ytd?ytd[it.index]:null; return z0(v)&&z0(y); }).length;
-    return `<div class="cosm-plh"><b>งบกำไรขาดทุน</b><small>หน่วย: พันบาท (K)${j<mons.length-1?' · เดือนล่าสุดที่สาขามีงบ: '+MONTH_TH[cur.m-1]:''}</small>${nz?`<button type="button" class="btn small" data-cmzero style="margin-left:auto">แสดงแถวที่เป็น 0</button>`:''}<button type="button" class="btn small" data-cmsub${nz?'':' style="margin-left:auto"'}>ซ่อนหมวดย่อย</button></div>
-      <div class="scroll"><table class="cosm-pl"><tr><th>รายการ</th><th class="n">${MONTH_TH[cur.m-1]} ${YEAR}</th><th class="n">% รายได้</th><th class="n">YTD ถึง ${MONTH_TH[cur.m-1]}</th><th class="n">% รายได้</th></tr>${trs}</table></div>`; })();
+    const trs=items.map(it=>{ const y=ytd?ytd[it.index]:null, isP=!it.depth&&PIDS.includes(it.id);
+      const vals=pm.map(o=>FB[o.k][it.index]), zero=z0(y)&&vals.every(z0);
+      const cells=pm.map((o,i)=>{ const v=vals[i], base=FB[o.k][iRev]; return `<td class="n ${nc(v,base,isP)}"${ht(v,base,isP)}>${f0(v)}</td>`; }).join('');
+      return `<tr class="${(it.depth?'sub':(it.highlight?'hl':'main'))+(zero?' zero':'')}"><td style="padding-left:${10+it.depth*16}px">${plLabel(it)}</td>${cells}<td class="n ytdc ${nc(y,rvY,isP)}"${ht(y,rvY,isP)}>${f0(y)}</td><td class="n ${nc(y,rvY,isP)}"${ht(y,rvY,isP)}>${it.depth?'':pb(y,rvY,it.id)}${pc(y,rvY)}</td></tr>`; }).join('');
+    const nz=items.filter(it=>{ const y=ytd?ytd[it.index]:null; return z0(y)&&pm.every(o=>z0(FB[o.k][it.index])); }).length;
+    return `<div class="cosm-plh"><b>งบกำไรขาดทุน</b><small>ทั้งปี ${MONTH_TH[pm[0].m-1]}–${MONTH_TH[pm[pm.length-1].m-1]} ${YEAR} · หน่วย: พันบาท (K)</small>${nz?`<button type="button" class="btn small" data-cmzero style="margin-left:auto">แสดงแถวที่เป็น 0</button>`:''}<button type="button" class="btn small" data-cmsub${nz?'':' style="margin-left:auto"'}>ซ่อนหมวดย่อย</button></div>
+      <div class="scroll"><table class="cosm-pl cosm-plyr"><tr><th>รายการ</th>${pm.map(o=>`<th class="n">${MONTH_TH[o.m-1]}</th>`).join('')}<th class="n ytdc">รวม ${MONTH_TH[pm[0].m-1]}–${MONTH_TH[pm[pm.length-1].m-1]}</th><th class="n">% รายได้</th></tr>${trs}</table></div>`; })();
   document.getElementById('cosmBody').innerHTML=`<div class="cosm-top"><div><div class="cosm-sub">${zone?'โซน '+zone+' · ':''}รายได้ ${MONTH_TH[cur.m-1]} ${cur.rev!=null?KM(cur.rev):''}</div><div class="cosm-name">${code} ${nm}</div></div>
     <div class="cosm-nav"><button type="button" data-cmnav="-1" ${COSM.list[COSM.i-1]?'':'disabled'}>‹</button><button type="button" data-cmnav="1" ${COSM.list[COSM.i+1]?'':'disabled'}>›</button><button type="button" class="cosm-x" data-cmx aria-label="ปิด">✕</button></div></div>
-    <div class="cosm-cards">${card('%COS ต้นทุนอาหาร','#F0954F','cos')}${card('%COL ค่าแรง','#5B8DEF','col')}</div>
     <div class="cosm-tabs" data-cmtabs><button type="button" class="on" data-cmtab="a">ภาพรวม COS / COL</button><button type="button" data-cmtab="b">งบกำไรขาดทุน</button></div>
-    <div class="cosm-tp on" data-cmp="a"><div class="cosm-charts">${chart('%COS ทั้งปี','cos','#F0954F')}${chart('%COL ทั้งปี','col','#2F6FE0')}</div></div>
+    <div class="cosm-tp on" data-cmp="a">${ovHtml}</div>
     <div class="cosm-tp" data-cmp="b">${plTbl}</div>
     <div class="cosm-note">ข้อมูลจริงจากงบกำไรขาดทุนรายสาขา ${labs[0]}–${labs[L]} ${YEAR}</div>`;
   el.classList.add('open'); }
