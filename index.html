@@ -2051,7 +2051,7 @@ i.good{background:#12A367}i.bad{background:#F43F5E}i.soft{background:#C9CDD3}
 .ppt3{font-weight:800;font-size:15px;margin:14px 0 6px}
 .ppr.ppch{cursor:default;grid-template-columns:minmax(110px,.8fr) minmax(150px,1fr) minmax(150px,1fr) 90px 70px;font-size:14.5px}.ppr.ppch:hover{background:transparent}
 @media (max-width:1100px){.ppr.ppz,.ppr.ppch{grid-template-columns:1fr 1fr}}
-.insr{grid-template-columns:minmax(130px,1.1fr) repeat(11,minmax(64px,1fr)) 84px;gap:8px;cursor:pointer;font-size:14px;align-items:center}
+.insr{grid-template-columns:minmax(130px,1.1fr) repeat(11,minmax(60px,1fr)) 84px 112px;gap:8px;cursor:pointer;font-size:14px;align-items:center}
 .insr.pph,.insr.insavg{cursor:default}.insr.insavg{background:#F6F2EC;border-radius:10px;font-weight:700}.insr.insavg:hover{background:#F6F2EC}
 .insr .r{text-align:right}.insc{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;border-radius:8px;padding:5px 8px}
 .insc.g{background:#DDF3E8;color:#0B7A4B}.insc.b{background:#FFE1E4;color:#B4233A}
@@ -2062,6 +2062,9 @@ i.good{background:#12A367}i.bad{background:#F43F5E}i.soft{background:#C9CDD3}
 .inschip.g{background:#E1F5EA;border-color:#BFE6CF;color:#0B7A4B}.inschip.b{background:#FDE3E7;border-color:#F6B9C2;color:#B4233A}
 #insModal .cosm-p{width:min(1180px,96vw)}
 @media (max-width:1100px){.insr{grid-template-columns:repeat(3,1fr)}.insr.pph{display:none}.insr .ppn{grid-column:1/-1}}
+.insgo{text-align:right}.insbtn{display:inline-block;border:1px solid var(--accent);color:var(--accent-ink);background:var(--accent-2);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;white-space:nowrap;cursor:pointer;font-family:inherit}
+.insr:not(.pph):not(.insavg):hover .insbtn,.insbtn:hover{background:var(--accent);color:#fff}
+.insrec li{display:flex;gap:12px;align-items:center;justify-content:space-between}.insrec li span{flex:1}
 .ppfoot{margin-top:12px;font-size:12.5px;color:#9AA3B0}
 .cosm-note{font-size:12.5px;color:#8A93A3;margin-top:12px}
 
@@ -3675,14 +3678,14 @@ function insightBody(m){
   const th=(k,t,cls)=>`<div class="${cls||''}" data-insort="${k}">${t}<i>${INS.sort===k?(INS.dir==='asc'?'▲':'▼'):'↕'}</i></div>`;
   const cell=(e,k)=>{ const v=e.a[k], t=insTone(k,v,A[k]); return `<div class="insc ${t}">${insFmt(k,v)}</div>`; };
   const rowsH=list.map(e=>`<div class="ppr insr" data-inskey="${e.key}"><div class="ppn">${INS.view==='zone'?'<b>'+e.key+'</b>'+'<small>'+e.a.n+' สาขา</small>':'<b>'+e.key+'</b>'+e.name.replace(e.key+' ','')}</div>${INS_M.map(([k])=>cell(e,k)).join('')}
-      <div class="insst"><span class="bd">${e.bad}</span><span class="gd">${e.good}</span></div></div>`).join('')||'<div class="empty">ไม่พบข้อมูลตามคำค้น</div>';
-  const avgRow=`<div class="ppr insr insavg"><div class="ppn"><b>เฉลี่ยทุกสาขา</b></div>${INS_M.map(([k])=>`<div class="insc">${insFmt(k,A[k])}</div>`).join('')}<div></div></div>`;
+      <div class="insst"><span class="bd">${e.bad}</span><span class="gd">${e.good}</span></div><div class="insgo"><span class="insbtn">ดูรายละเอียด ›</span></div></div>`).join('')||'<div class="empty">ไม่พบข้อมูลตามคำค้น</div>';
+  const avgRow=`<div class="ppr insr insavg"><div class="ppn"><b>เฉลี่ยทุกสาขา</b></div>${INS_M.map(([k])=>`<div class="insc">${insFmt(k,A[k])}</div>`).join('')}<div></div><div></div></div>`;
   return `<div class="ppview"><span class="ovseg"><button type="button" class="${INS.view==='zone'?'on':''}" data-insview="zone">รายโซน</button><button type="button" class="${INS.view==='branch'?'on':''}" data-insview="branch">รายสาขา</button></span></div>${cards}
     <div class="aud-c ppt"><div class="ppth"><div class="ppt2" style="margin:0">${INS.view==='zone'?'รายโซน':'รายสาขา'}<small>ทุกเรื่องในที่เดียว · เขียว = ดี · แดง = ต้องดูแล · คลิกแถวเพื่อดูวิเคราะห์ละเอียด</small></div>
       ${INS.view==='branch'?`<input type="search" class="ppsearch" id="insQ" placeholder="ค้นหารหัส / ชื่อสาขา" value="${(INS.q||'').replace(/"/g,'&quot;')}" autocomplete="off">`:''}</div>
       <div class="insleg"><span><i class="g"></i> ดี</span><span><i class="b"></i> ต้องดูแล</span><span class="insst"><span class="bd">n</span> = จำนวนตัวชี้วัดที่แดง</span><span class="insst"><span class="gd">n</span> = จำนวนที่เขียว</span>
         <span>เกณฑ์: แผน ≥100% ดี/&lt;90% แดง · LM ≥0 ดี/&lt;−3% แดง · CEM ≥100 ดี/&lt;92 แดง · OSS ≥90 ดี/&lt;85 แดง · COS COL กำไร เช็ค ฿/ชม. เทียบค่าเฉลี่ย</span></div>
-      <div class="ppr insr pph"><div data-insort="name">${INS.view==='zone'?'โซน':'สาขา'}<i>${INS.sort==='name'?(INS.dir==='asc'?'▲':'▼'):'↕'}</i></div>${INS_M.map(([k,t])=>th(k,t,'r')).join('')}${th('bad','สถานะ','r')}</div>
+      <div class="ppr insr pph"><div data-insort="name">${INS.view==='zone'?'โซน':'สาขา'}<i>${INS.sort==='name'?(INS.dir==='asc'?'▲':'▼'):'↕'}</i></div>${INS_M.map(([k,t])=>th(k,t,'r')).join('')}${th('bad','สถานะ','r')}<div></div></div>
       <div id="insRows">${avgRow}${rowsH}</div></div>`;
 }
 function insightSection(m){
@@ -3698,7 +3701,8 @@ function openInsight(key){
     el.innerHTML='<div class="cosm-bg" data-insx></div><div class="cosm-p" role="dialog" aria-modal="true"><div id="insmBody"></div></div>';
     document.body.appendChild(el);
     el.addEventListener('click',ev=>{ if(ev.target.closest('[data-insx]')) el.classList.remove('open');
-      const bb=ev.target.closest('[data-insbr]'); if(bb){ el.classList.remove('open'); openBranch(bb.dataset.insbr); } }); }
+      const bb=ev.target.closest('[data-insbr]'); if(bb){ el.classList.remove('open'); openBranch(bb.dataset.insbr); return; }
+      const go=ev.target.closest('[data-insgo]'); if(go){ el.classList.remove('open'); goSec(go.dataset.insgo); } }); }
   const f0=v=>fmtN(Math.round(v)), f1=v=>v.toFixed(1), K=v=>fmtN(Math.round(Math.abs(v)/1000))+'K', sg=v=>(v<0?'−':'+')+'฿'+K(v);
   const a=e.a, C=insChan(e.list);
   /* จุดแข็ง / ต้องดูแล */
@@ -3713,16 +3717,16 @@ function openInsight(key){
   const upPs=e.list.reduce((x,r)=>x+(r.lh>0&&A.ps&&r.sales/r.lh<A.ps?(A.ps-r.sales/r.lh)*r.lh:0),0);
   /* ข้อเสนอแนะเบื้องต้น (rule-based จากตัวเลข) */
   const rec=[]; const worstCh=C.ch.filter(c=>c.d<0).sort((x,y)=>x.d-y.d)[0];
-  if(a.ach!=null&&a.ach<90) rec.push(`ยอดขายต่ำกว่าแผน (${f1(a.ach)}%) — เชียร์ขายเพิ่มเติม`);
-  if(a.trMom!=null&&a.trMom<-3) rec.push(`จำนวนบิลลดลง ${f1(Math.abs(a.trMom))}% จากเดือนก่อน — ตรวจทราฟฟิกห้าง/พื้นที่ และกิจกรรมดึงลูกค้าใหม่ ลูกค้าเดิมกลับมา`);
-  if(a.tk!=null&&tkAvg&&a.tk<tkAvg*0.97) rec.push(`เช็คเฉลี่ยต่ำกว่าเฉลี่ย (฿${f0(a.tk)} vs ฿${f0(tkAvg)}) — ส่งเสริมการขายเพิ่ม (ชุดเมนู ของทานเล่น เครื่องดื่ม) ฝึกพนักงานแนะนำเมนู`);
-  if(worstCh&&Math.abs(worstCh.d)>0) rec.push(`ช่องทาง ${worstCh.n} ลดลง ${sg(worstCh.d)} — ตรวจโปรโมชัน การมองเห็นบนแอป และเวลาเปิด-ปิดร้านบนแพลตฟอร์ม`);
-  if(a.col!=null&&A.col!=null&&a.col>A.col+1&&a.ps!=null&&A.ps&&a.ps<A.ps) rec.push(`ค่าแรงสูงและประสิทธิภาพต่ำ (%COL ${f1(a.col)}% · ฿${f0(a.ps)}/ชม.) — ทบทวนตารางกะและจำนวนคนในแต่ละช่วงเวลา`);
-  if(a.cos!=null&&A.cos!=null&&a.cos>A.cos+1) rec.push(`%COS สูงกว่าเฉลี่ย (${f1(a.cos)}% vs ${f1(A.cos)}%) — การใช้งานวัตถุดิบของพนักงาน`);
-  if(a.cem!=null&&a.cem<92) rec.push(`คะแนน CEM ต่ำ (${f1(a.cem)}%) — ดูหมวดที่ถูกหักคะแนนในหัวข้อ CEM แล้วตามแก้รายข้อ`);
-  if(a.oss!=null&&a.oss<85) rec.push(`คะแนน OSS ต่ำ (${f1(a.oss)}%) — ตรวจมาตรฐานปฏิบัติการตามหัวข้อ OSS ที่ไม่ผ่าน`);
-  if(a.net!=null&&A.net!=null&&a.net<A.net-1) rec.push(`กำไรสุทธิต่ำกว่าเฉลี่ย (${f1(a.net)}% vs ${f1(A.net)}%) — ดูควบคู่ %COS %COL และค่าใช้จ่ายคงที่ในหัวข้อ Profitability`);
-  if(!rec.length) rec.push('ตัวชี้วัดโดยรวมอยู่ในเกณฑ์ดี — รักษามาตรฐาน และเรียนรู้แนวปฏิบัติไปใช้กับสาขาที่ต่ำกว่า');
+  if(a.ach!=null&&a.ach<90) rec.push(['plan',`ยอดขายต่ำกว่าแผน (${f1(a.ach)}%) — เชียร์ขายเพิ่มเติม`]);
+  if(a.trMom!=null&&a.trMom<-3) rec.push(['customers',`จำนวนบิลลดลง ${f1(Math.abs(a.trMom))}% จากเดือนก่อน — ตรวจทราฟฟิกห้าง/พื้นที่ และกิจกรรมดึงลูกค้าใหม่ ลูกค้าเดิมกลับมา`]);
+  if(a.tk!=null&&tkAvg&&a.tk<tkAvg*0.97) rec.push(['customers',`เช็คเฉลี่ยต่ำกว่าเฉลี่ย (฿${f0(a.tk)} vs ฿${f0(tkAvg)}) — ส่งเสริมการขายเพิ่ม (ชุดเมนู ของทานเล่น เครื่องดื่ม) ฝึกพนักงานแนะนำเมนู`]);
+  if(worstCh&&Math.abs(worstCh.d)>0) rec.push(['delivery',`ช่องทาง ${worstCh.n} ลดลง ${sg(worstCh.d)} — ตรวจโปรโมชัน การมองเห็นบนแอป และเวลาเปิด-ปิดร้านบนแพลตฟอร์ม`]);
+  if(a.col!=null&&A.col!=null&&a.col>A.col+1&&a.ps!=null&&A.ps&&a.ps<A.ps) rec.push(['people',`ค่าแรงสูงและประสิทธิภาพต่ำ (%COL ${f1(a.col)}% · ฿${f0(a.ps)}/ชม.) — ทบทวนตารางกะและจำนวนคนในแต่ละช่วงเวลา`]);
+  if(a.cos!=null&&A.cos!=null&&a.cos>A.cos+1) rec.push(['pl',`%COS สูงกว่าเฉลี่ย (${f1(a.cos)}% vs ${f1(A.cos)}%) — การใช้งานวัตถุดิบของพนักงาน`]);
+  if(a.cem!=null&&a.cem<92) rec.push(['cem',`คะแนน CEM ต่ำ (${f1(a.cem)}%) — ดูหมวดที่ถูกหักคะแนนในหัวข้อ CEM แล้วตามแก้รายข้อ`]);
+  if(a.oss!=null&&a.oss<85) rec.push(['oss',`คะแนน OSS ต่ำ (${f1(a.oss)}%) — ตรวจมาตรฐานปฏิบัติการตามหัวข้อ OSS ที่ไม่ผ่าน`]);
+  if(a.net!=null&&A.net!=null&&a.net<A.net-1) rec.push(['pl',`กำไรสุทธิต่ำกว่าเฉลี่ย (${f1(a.net)}% vs ${f1(A.net)}%) — ดูควบคู่ %COS %COL และค่าใช้จ่ายคงที่ในหัวข้อ Profitability`]);
+  if(!rec.length) rec.push([null,'ตัวชี้วัดโดยรวมอยู่ในเกณฑ์ดี — รักษามาตรฐาน และเรียนรู้แนวปฏิบัติไปใช้กับสาขาที่ต่ำกว่า']);
   const mx=Math.max(...C.ch.map(c=>Math.max(c.c,c.p)))||1;
   const chRows=C.ch.map(c=>{ const pc=c.p?c.d/c.p*100:null; return `<div class="ppr ppch"><div class="ppn">${c.n}</div>
       <div class="ppv"><div class="ppb"><i style="width:${Math.max(1,c.p/mx*100).toFixed(1)}%;background:#C9CDD3"></i></div><span>${K(c.p)}</span></div>
@@ -3749,7 +3753,7 @@ function openInsight(key){
       ${sc('g','ถ้าเช็คเฉลี่ยถึง ฿'+f0(tkAvg||0),upTk>0?'+฿'+K(upTk):'ถึงแล้ว','บิลเท่าเดิม '+f0(a.tr)+' บิล')}
       ${sc('y','ถ้าบิลต่อชม.ถึง '+(ptAvg?ptAvg.toFixed(1):'—'),upPt>0?'+฿'+K(upPt):'ถึงแล้ว','ชั่วโมงเท่าเดิม '+f0(a.hours||0)+' ชม.')}
       ${sc('r','ถ้าสาขาที่ต่ำกว่าเฉลี่ยถึง ฿'+f0(A.ps||0)+'/ชม.',upPs>0?'+฿'+K(upPs):'—','ชั่วโมงเท่าเดิม')}</div></div>`:''}
-    <div class="aud-c" style="margin-top:12px"><div class="ppt2">ข้อเสนอแนะเบื้องต้น<small>สร้างจากตัวเลขอัตโนมัติ — ใช้ประกอบการตัดสินใจ</small></div><ul class="ppbl">${rec.map(x=>'<li>'+x+'</li>').join('')}</ul></div>`;
+    <div class="aud-c" style="margin-top:12px"><div class="ppt2">ข้อเสนอแนะเบื้องต้น<small>สร้างจากตัวเลขอัตโนมัติ — ใช้ประกอบการตัดสินใจ</small></div><ul class="ppbl insrec">${rec.map(([sec,t])=>'<li><span>'+t+'</span>'+(sec?'<button type="button" class="insbtn" data-insgo="'+sec+'">ดูข้อมูล ›</button>':'')+'</li>').join('')}</ul></div>`;
   el.classList.add('open'); }
 document.addEventListener('click',e=>{
   const vw=e.target.closest&&e.target.closest('#insight [data-insview]'); if(vw){ INS.view=vw.dataset.insview; INS.sort='bad'; INS.dir='desc'; INS.q=''; insRender(); return; }
