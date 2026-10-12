@@ -4529,6 +4529,12 @@ function smxHtml(){
       const T=(h.t||[])[i]||0, G=(h.g||[])[i]||0, L=(h.l||[])[i]||0, P=(h.p||[])[i]||0;
       t.take+=T; t.grab+=G; t.lm+=L; t.sp+=P; t.deli+=G+L+P; t.dine+=S-T-(G+L+P); });
     r.lyCh=has?Object.fromEntries(Object.entries(t).map(([k,v])=>[k,v/1e6])):null; });
+  /* ปัดเศษเป็น % จำนวนเต็มแบบรวมกันได้ 100 พอดี (ปัดทีละช่องแล้วรวมกันได้ 101% ได้) */
+  const lrPct=a=>{ const v=a.map(x=>Math.max(0,x||0)), t=v.reduce((q,w)=>q+w,0); if(!(t>0)) return a.map(()=>null);
+    const raw=v.map(x=>x/t*100), fl=raw.map(Math.floor); const left=100-fl.reduce((q,w)=>q+w,0);
+    raw.map((x,i)=>[x-fl[i],i]).sort((q,w)=>w[0]-q[0]).slice(0,Math.max(0,left)).forEach(z=>fl[z[1]]++); return fl; };
+  rows.forEach(r=>{ if(r.seg){ const q=lrPct(r.seg.map(sg=>sg.v)); r.pr={}; r.seg.forEach((sg,j)=>{ r.pr[sg.o.k]=q[j]; }); }
+    if(r.lyCh){ const q=lrPct([r.lyCh.dine,r.lyCh.take,r.lyCh.deli]); r.lyPr={dine:q[0],take:q[1],deli:q[2]}; } });
   const anyLyCh=rows.some(r=>r.lyCh);
   const lyM=SMX.mode==='ly', RN=lyM?'LY':'LM', ref=r=>lyM?r.ly:r.lm, MS=mm=>MONTH_EN[mm-1].slice(0,3);
   const fm=v=>v==null?'—':(v>=10?v.toFixed(1):v.toFixed(2))+'M';
@@ -4556,25 +4562,25 @@ function smxHtml(){
       let yb=T+tot;
       r.seg.forEach((sg,j)=>{ const h=hs[j], y0=yb-h;
         g+=`<rect x="${cx-bw/2}" y="${y0}" width="${bw}" height="${h}" fill="${sg.o.c}" ${j===r.seg.length-1?'rx="3"':''}/>`;
-        g+=`<text x="${cx}" y="${y0+h/2+4}" font-size="${j===0?(now?14:13):(now?12.5:12)}" font-weight="${now?800:700}" fill="#fff" text-anchor="middle">${Math.round(ps[j])}%</text>`;
+        g+=`<text x="${cx}" y="${y0+h/2+4}" font-size="${j===0?(now?14:13):(now?12.5:12)}" font-weight="${now?800:700}" fill="#fff" text-anchor="middle">${r.pr?r.pr[sg.o.k]:Math.round(ps[j])}%</text>`;
         yb=y0; }); }
     else if(r.tot!=null) g+=`<rect x="${cx-bw/2}" y="${y(100)}" width="${bw}" height="${y(0)-y(100)}" fill="#E2E8F0" rx="3"/><text x="${cx}" y="${y(50)+4}" font-size="11" fill="#64748B" text-anchor="middle">ไม่มียอดแยก</text>`;
     g+=`<text x="${cx}" y="${H-14}" font-size="12.5" fill="${now?'#0F172A':'#64748B'}" font-weight="${now?700:400}" text-anchor="middle">${MONTH_TH[r.m-1]}</text>`; });
   rows.forEach((r,i)=>{ const t=[`${MONTH_TH[r.m-1]} ${YEAR} · รวม ${fm(r.tot)}`];
-    if(r.seg) r.seg.forEach(sg=>t.push(`${sg.o.n} ${Math.round(sg.v/r.tot*100)}% · ${fm(sg.v)}`)); else if(r.tot!=null) t.push('ยังไม่มียอดแยกช่องทาง');
+    if(r.seg) r.seg.forEach(sg=>t.push(`${sg.o.n} ${r.pr?r.pr[sg.o.k]:Math.round(sg.v/r.tot*100)}% · ${fm(sg.v)}`)); else if(r.tot!=null) t.push('ยังไม่มียอดแยกช่องทาง');
     const b=ref(r); if(b!=null&&r.tot!=null) t.push(`${RN} ${fm(b)} (${sgn(pct(b,r.tot))})`);
     g+=`<rect x="${L+colW*i}" y="${T}" width="${colW}" height="${H-B-T}" fill="transparent" data-tip="${t.join('\n')}"/>`; });
   const leg=`<div class="legend lcleg">${SMX_C.map(o=>`<span><i style="background:${o.c}"></i>${o.n}</span>`).join('')}${rows.some(r=>r.tot!=null&&!r.seg)?'<span><i style="background:#E2E8F0"></i>ยังไม่มียอดแยกช่องทาง</span>':''}</div>`;
   /* แถวสัดส่วนของปีก่อน · ของปีนี้ดูจากตัวเลขบนแท่งกราฟได้อยู่แล้ว จึงไม่ต้องซ้ำ */
   const lyTot=r=>r.lyCh?(r.lyCh.dine+r.lyCh.take+r.lyCh.deli):0;
   const shareRow=k=>rows.map(r=>{ const t=lyTot(r);
-    return `<span class="mh">${t?Math.round(r.lyCh[k]/t*100)+'%':'—'}</span>`; }).join('');
+    return `<span class="mh">${t?(r.lyPr?r.lyPr[k]:Math.round(r.lyCh[k]/t*100))+'%':'—'}</span>`; }).join('');
   const pills=`<div class="ovpw"><div class="ovpills" style="--n:${n}"><span></span>${rows.map(r=>`<span class="mh">${MS(r.m)}</span>`).join('')}
     <span class="rl">vs ${RN}</span>${rows.map(r=>`<span>${pill(r.tot!=null&&ref(r)?pct(ref(r),r.tot):null)}</span>`).join('')}
     ${SMX_C.map(o=>`<span class="rl">${o.n} ${YEAR-1}</span>${shareRow(o.k)}`).join('')}</div></div>`;
   /* รายละเอียดรายเดือน: ยอดแต่ละช่องทาง · สัดส่วน · เทียบ LM ของช่องทางนั้น (ยอดแยกช่องทางปีก่อนไม่มีในข้อมูล) */
   const cell=(r,k,deli)=>{ const v=r.val(k); if(v==null) return '<td class="n">—</td>';
-    const base=deli?r.val('deli'):r.tot, sh=base?Math.round(v/base*100)+'%'+(deli?' ของ Delivery':''):'';
+    const base=deli?r.val('deli'):r.tot, sh=base?(!deli&&r.pr&&r.pr[k]!=null?r.pr[k]:Math.round(v/base*100))+'%'+(deli?' ของ Delivery':''):'';
     let dd=''; if(!lyM&&r.prev&&r.prev.val(k)){ const p=pct(r.prev.val(k),v); dd=`<span class="tiny ${cls(p)}">${sgn(p)} vs LM</span>`; }
     else if(lyM&&r.lyCh&&r.lyCh[k]>0){ const p=pct(r.lyCh[k],v); dd=`<span class="tiny ${cls(p)}">${sgn(p)} vs LY</span>`; }
     return `<td class="n"><b>${fm(v)}</b><span class="tiny">${sh}</span>${dd}</td>`; };
