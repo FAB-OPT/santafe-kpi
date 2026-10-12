@@ -2044,6 +2044,13 @@ i.good{background:#12A367}i.bad{background:#F43F5E}i.soft{background:#C9CDD3}
 #ppModal .aud-c{padding:14px 18px;border-radius:18px}#ppModal .ppt2{font-size:17px;padding-left:10px;border-left-width:4px;margin-bottom:8px}#ppModal .ppt2 small{font-size:12px}
 #ppModal .ppr{font-size:14px;padding:7px 4px;gap:10px}#ppModal .ppr.pph{font-size:12px}#ppModal .ppp{font-size:12.5px;padding:3px 9px}#ppModal .ppdb{height:10px}
 #ppModal .ppleg{font-size:12px}
+.ppview{margin:0 0 12px}
+.ppr.ppz{cursor:pointer;grid-template-columns:minmax(80px,.7fr) 52px 86px 74px 70px 80px 70px 84px minmax(220px,1.6fr)}.ppr.ppz.pph{cursor:default}.ppr.ppz.sel{background:#FFF1E6;border-radius:10px}.ppr.ppz .c{text-align:center}
+.ppnum.neg,.ppbl b.neg{color:#E11D48}.ppnum.pos,.ppbl b.pos{color:#12804F}
+.ppan{margin-top:14px}.ppbl{margin:0 0 6px;padding-left:20px;font-size:15px;line-height:1.75}.ppbl li{margin-bottom:2px}
+.ppt3{font-weight:800;font-size:15px;margin:14px 0 6px}
+.ppr.ppch{cursor:default;grid-template-columns:minmax(110px,.8fr) minmax(150px,1fr) minmax(150px,1fr) 90px 70px;font-size:14.5px}.ppr.ppch:hover{background:transparent}
+@media (max-width:1100px){.ppr.ppz,.ppr.ppch{grid-template-columns:1fr 1fr}}
 .ppfoot{margin-top:12px;font-size:12.5px;color:#9AA3B0}
 .cosm-note{font-size:12.5px;color:#8A93A3;margin-top:12px}
 
@@ -3371,7 +3378,7 @@ function openCuDrawer(code){ code=String(code); const el=cuDrawerEl();
 /* ========================= People Performance =========================
    Labour (hour) · %COL · Productivity Trans (บิล/ชม.) · Productivity Sale (฿/ชม.) รายสาขา
    ข้อมูลจากแบบฟอร์มส่งยอดขาย (คอลัมน์ Labour(hour)) — ต้องนำเข้าไฟล์เวอร์ชันที่มีคอลัมน์นี้ */
-const PPL={sort:'ps',dir:'asc',f:'all',q:''};
+const PPL={sort:'ps',dir:'asc',f:'all',q:'',view:'branch',zone:null};
 const PP_TH=0.05;   // ต่ำกว่าค่าเฉลี่ยเกิน 5% = ต่ำกว่าเกณฑ์
 function peopleData(m){
   const d=DETAIL[m]||{};
@@ -3436,14 +3443,89 @@ function peopleBody(m){
   const nCol=P.rows.filter(r=>r.col>25).length;
   const th=(k,t,cls)=>`<div class="${cls||''}" data-ppsort="${k}">${t}<i>${PPL.sort===k?(PPL.dir==='asc'?'▲':'▼'):'↕'}</i></div>`;
   const tab=(k,t)=>`<button type="button" class="${PPL.f===k?'on':''}" data-ppf="${k}">${t}</button>`;
-  return `${cards}${metrics}
+  const tg=`<div class="ppview"><span class="ovseg"><button type="button" class="${PPL.view==='branch'?'on':''}" data-ppview="branch">รายสาขา</button><button type="button" class="${PPL.view==='zone'?'on':''}" data-ppview="zone">รายโซน + วิเคราะห์</button></span></div>`;
+  return `${tg}${cards}${metrics}${PPL.view==='zone'?peopleZoneHtml(m,P):`
     <div class="ppg2">${quadH}${wH}</div>
     <div class="aud-c ppt"><div class="ppth"><div class="ppt2" style="margin:0">รายสาขา</div><span class="ovseg">${tab('all','ทั้งหมด')}${tab('low','ต่ำกว่าเกณฑ์')}${tab('col','%COL เกิน 25%')}</span>
       <input type="search" class="ppsearch" id="ppQ" placeholder="ค้นหารหัส / ชื่อสาขา" value="${(PPL.q||'').replace(/"/g,'&quot;')}" autocomplete="off"></div>
       <div class="ppleg"><span><u></u> เส้นกลาง = ค่าเฉลี่ย ฿${f0(P.ps)}</span><span><i class="good"></i> สูงกว่าเฉลี่ย</span><span><i class="bad"></i> ต่ำกว่าเกณฑ์ (ต่ำกว่าเฉลี่ยเกิน 5% · &lt; ฿${f0(thr)})</span><span><i class="soft"></i> ต่ำกว่าเฉลี่ยเล็กน้อย</span></div>
       <div class="ppr pph">${th('code','สาขา')}${th('sales','ยอดขาย')}${th('col','%COL')}${th('lh','ชม.แรงงาน','r')}${th('pt','บิล/ชม.','r')}${th('ps','Productivity Sale (บาท/ชม.) เทียบค่าเฉลี่ย')}</div>
       <div id="ppRows">${peopleRowsHtml(P)}</div>
-      <div class="ppfoot">Productivity Sale = ยอดขาย ÷ ชั่วโมงแรงงาน · Productivity Trans = จำนวนบิล ÷ ชั่วโมงแรงงาน · คลิกหัวคอลัมน์เพื่อเรียง</div></div>`;
+      <div class="ppfoot">Productivity Sale = ยอดขาย ÷ ชั่วโมงแรงงาน · Productivity Trans = จำนวนบิล ÷ ชั่วโมงแรงงาน · คลิกหัวคอลัมน์เพื่อเรียง</div></div>`}`;
+}
+/* ========== People Performance · มุมมองรายโซน + วิเคราะห์ ==========
+   - สรุปรายโซน (ยอดขาย · %COL · ชม. · บิล/ชม. · ฿/ชม.) เทียบค่าเฉลี่ยและเดือนก่อน
+   - ถ้า…จะเพิ่มยอดขายได้ประมาณเท่าไร: (1) เช็คเฉลี่ยถึงค่าเฉลี่ย (2) บิลต่อชม.ถึงค่าเฉลี่ย (3) สาขาที่ต่ำกว่าเกณฑ์ถึงค่าเฉลี่ย
+   - ยอดขายลดลงจากช่องทางไหน (Dine in · Take away · Grab · LINE MAN · Shopee) เทียบเดือนก่อน เฉพาะสาขาที่มียอดทั้งสองเดือน */
+const PP_CH=[['dine','Dine In'],['take','Take away'],['grab','Grab'],['lm','LINE MAN'],['sp','Shopee Food']];
+function ppZoneStats(m,P){
+  const zoneOf=c=>(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone)||'ไม่ระบุโซน';
+  const cur=(DETAIL[m]||{}).branchRows||[], prv=(DETAIL[m-1]||{}).branchRows||[];
+  const pm={}; prv.forEach(b=>{ if(b.sales>0) pm[b.code]=b; });
+  const tkAvg=P.sales/P.trans, ptAvg=P.pt, psAvg=P.ps;
+  const Z={};
+  P.rows.forEach(r=>{ const z=zoneOf(r.code); (Z[z]=Z[z]||{z,rows:[]}).rows.push(r); });
+  const out=Object.values(Z).map(o=>{
+    const R=o.rows, sales=R.reduce((a,r)=>a+r.sales,0), hours=R.reduce((a,r)=>a+r.lh,0), trans=R.reduce((a,r)=>a+r.tr,0);
+    const col=R.reduce((a,r)=>a+r.col*r.sales,0)/sales, ps=sales/hours, pt=trans/hours, tk=trans?sales/trans:0;
+    /* เทียบเดือนก่อน: เฉพาะสาขาที่มียอดทั้งสองเดือน */
+    const comp=cur.filter(b=>b.sales>0&&pm[b.code]&&zoneOf(b.code)===o.z);
+    const cs=comp.reduce((a,b)=>a+b.sales,0), ps0=comp.reduce((a,b)=>a+pm[b.code].sales,0);
+    const ct=comp.reduce((a,b)=>a+(b.tr||0),0), pt0=comp.reduce((a,b)=>a+(pm[b.code].tr||0),0);
+    const tkC=ct?cs/ct:0, tkP=pt0?ps0/pt0:0;
+    const ch=PP_CH.map(([k,n])=>{ const c=comp.reduce((a,b)=>a+(b[k]||0),0), p0=comp.reduce((a,b)=>a+(pm[b.code][k]||0),0);
+      const br=comp.map(b=>({code:b.code,name:(BRANCH_META&&BRANCH_META[b.code]&&BRANCH_META[b.code].name)||b.name,d:(b[k]||0)-(pm[b.code][k]||0)})).sort((a,b)=>a.d-b.d);
+      return {k,n,c,p:p0,d:c-p0,br}; });
+    const d={sales:cs-ps0, pct:ps0?(cs-ps0)/ps0*100:null, n:comp.length,
+      billEff:(ct-pt0)*tkP, tkEff:ct*(tkC-tkP)};   // แยกผลจากจำนวนบิล / เช็คเฉลี่ย
+    const upTk=trans*Math.max(0,tkAvg-tk), upPt=hours*Math.max(0,ptAvg-pt)*tk;
+    const upBr=R.reduce((a,r)=>a+Math.max(0,psAvg-r.ps)*r.lh,0);
+    return {z:o.z,rows:R,n:R.length,sales,hours,trans,col,ps,pt,tk,d,ch,upTk,upPt,upBr,low:R.filter(r=>r.ps<psAvg*(1-PP_TH)).sort((a,b)=>a.ps-b.ps)};
+  }).sort((a,b)=>a.ps-b.ps);
+  return {Z:out,tkAvg,ptAvg,psAvg,hasPrev:prv.length>0};
+}
+function peopleZoneHtml(m,P){
+  const S=ppZoneStats(m,P), Z=S.Z;
+  if(!Z.length) return '';
+  if(!PPL.zone||!Z.some(o=>o.z===PPL.zone)) PPL.zone=Z[0].z;
+  const f1=v=>v.toFixed(1), f0=v=>fmtN(Math.round(v)), fK=v=>fmtN(Math.round(v/1000))+'K', B=v=>(v<0?'−':'+')+'฿'+fmtN(Math.round(Math.abs(v)/1000))+'K';
+  const mxD=Math.max(...Z.map(o=>Math.abs(o.ps/S.psAvg-1)))||1;
+  const rowsH=Z.map(o=>{ const dv=o.ps/S.psAvg-1, tone=dv<-PP_TH?'bad':dv<0?'soft':'good', w=Math.abs(dv)/mxD*50;
+    return `<div class="ppr ppz${o.z===PPL.zone?' sel':''}" data-ppzone="${o.z}"><div class="ppn"><b>${o.z}</b></div><div class="ppnum">${o.n}</div><div class="ppnum">${fK(o.sales)}</div>
+      <div class="ppnum ${o.d.pct==null?'':(o.d.pct<0?'neg':'pos')}">${o.d.pct==null?'—':(o.d.pct>=0?'+':'−')+Math.abs(o.d.pct).toFixed(1)+'%'}</div>
+      <div class="ppnum">${f1(o.col)}%</div><div class="ppnum">${f0(o.hours)}</div><div class="ppnum">${f1(o.pt)}</div><div class="ppnum"><b>฿${f0(o.ps)}</b></div>
+      <div class="ppd2"><div class="ppdb"><u></u><i class="${tone}" style="${dv<0?'right:50%':'left:50%'};width:${Math.max(.6,w).toFixed(1)}%"></i></div><span class="ppdp ${dv<-PP_TH?'neg':dv>0?'pos':''}">${dv>=0?'+':'−'}${Math.abs(dv*100).toFixed(1)}%</span></div></div>`; }).join('');
+  const zt=`<div class="aud-c ppt"><div class="ppt2">รายโซน<small>เรียงจากประสิทธิภาพต่ำสุด · คลิกโซนเพื่อดูการวิเคราะห์ด้านล่าง</small></div>
+    <div class="ppr ppz pph"><div>โซน</div><div class="r">สาขา</div><div class="r">ยอดขาย</div><div class="r">vs LM</div><div class="r">%COL</div><div class="r">ชม.</div><div class="r">บิล/ชม.</div><div class="r">฿/ชม.</div><div class="c">เทียบเฉลี่ยทุกสาขา ฿${f0(S.psAvg)}</div></div>${rowsH}</div>`;
+  /* ---- วิเคราะห์โซนที่เลือก ---- */
+  const o=Z.find(x=>x.z===PPL.zone), dv=o.ps/S.psAvg-1;
+  const tkDiff=o.tk-S.tkAvg, ptDiff=o.pt-S.ptAvg;
+  const sc=(cls,t,v,sub)=>`<div class="aud-k ppc ${cls}"><div class="aud-kh">${t}</div><div class="aud-kv">${v}</div><div class="aud-ks">${sub}</div></div>`;
+  const scen=`<div class="aud-kg" style="grid-template-columns:repeat(3,minmax(0,1fr));margin:12px 0">
+    ${sc('g','ถ้าเช็คเฉลี่ยถึงค่าเฉลี่ย (฿'+f0(S.tkAvg)+')',o.upTk>0?'+฿'+fmtN(Math.round(o.upTk/1000))+'K':'ถึงแล้ว','บิลเท่าเดิม '+f0(o.trans)+' บิล · เช็คโซนนี้ ฿'+f0(o.tk)+(tkDiff<0?' (ต่ำกว่า ฿'+f0(-tkDiff)+')':' (สูงกว่า)'))}
+    ${sc('y','ถ้าบิลต่อชม.ถึงค่าเฉลี่ย ('+f1(S.ptAvg)+')',o.upPt>0?'+฿'+fmtN(Math.round(o.upPt/1000))+'K':'ถึงแล้ว','ชั่วโมงเท่าเดิม '+f0(o.hours)+' ชม. · โซนนี้ '+f1(o.pt)+' บิล/ชม.'+(ptDiff<0?'':' (สูงกว่า)'))}
+    ${sc('r','ถ้าสาขาที่ต่ำกว่าเฉลี่ยทำถึงค่าเฉลี่ย',o.upBr>0?'+฿'+fmtN(Math.round(o.upBr/1000))+'K':'—','ชั่วโมงเท่าเดิม · ยกประสิทธิภาพ ฿/ชม. ของสาขาที่ต่ำกว่า ฿'+f0(S.psAvg)+' ทุกแห่ง')}</div>`;
+  const mx=Math.max(...o.ch.map(c=>Math.max(c.c,c.p)))||1;
+  const worstCh=o.ch.filter(c=>c.d<0).sort((a,b)=>a.d-b.d)[0];
+  const chRows=o.ch.map(c=>{ const pc=c.p?c.d/c.p*100:null; return `<div class="ppr ppch"><div class="ppn">${c.n}</div>
+      <div class="ppv"><div class="ppb"><i style="width:${Math.max(1,c.p/mx*100).toFixed(1)}%;background:#C9CDD3"></i></div><span>${fK(c.p)}</span></div>
+      <div class="ppv"><div class="ppb"><i style="width:${Math.max(1,c.c/mx*100).toFixed(1)}%;background:${c.d<0?'#F43F5E':'#12A367'}"></i></div><span>${fK(c.c)}</span></div>
+      <div class="ppnum ${c.d<0?'neg':'pos'}">${c.d>=0?'+':'−'}฿${fmtN(Math.round(Math.abs(c.d)/1000))}K</div><div class="ppnum ${c.d<0?'neg':'pos'}">${pc==null?'—':(pc>=0?'+':'−')+Math.abs(pc).toFixed(1)+'%'}</div></div>`; }).join('');
+  const top3=worstCh?worstCh.br.filter(b=>b.d<0).slice(0,3):[];
+  const bullets=[];
+  bullets.push(`ประสิทธิภาพ <b>฿${f0(o.ps)}/ชม.</b> ${dv>=0?'สูงกว่า':'ต่ำกว่า'}ค่าเฉลี่ยทุกสาขา ${Math.abs(dv*100).toFixed(1)}% · ${o.low.length} จาก ${o.n} สาขาต่ำกว่าเกณฑ์`);
+  if(S.hasPrev&&o.d.n){ const sgn=o.d.sales<0?'ลดลง':'เพิ่มขึ้น';
+    bullets.push(`ยอดขาย${sgn} <b>฿${fmtN(Math.round(Math.abs(o.d.sales)/1000))}K (${o.d.pct>=0?'+':'−'}${Math.abs(o.d.pct).toFixed(1)}%)</b> จากเดือนก่อน (${o.d.n} สาขาที่เทียบได้) · เกิดจากจำนวนบิล <b class="${o.d.billEff<0?'neg':'pos'}">${B(o.d.billEff)}</b> และเช็คเฉลี่ย <b class="${o.d.tkEff<0?'neg':'pos'}">${B(o.d.tkEff)}</b>`); }
+  if(worstCh) bullets.push(`ช่องทางที่ยอดลดลงมากสุด: <b class="neg">${worstCh.n} −฿${fmtN(Math.round(Math.abs(worstCh.d)/1000))}K</b>${top3.length?' · มาจากสาขา '+top3.map(b=>b.code+' '+b.name+' (−฿'+fmtN(Math.round(Math.abs(b.d)/1000))+'K)').join(', '):''}`);
+  else if(S.hasPrev&&o.d.n) bullets.push('ไม่มีช่องทางใดยอดลดลงเมื่อเทียบเดือนก่อน');
+  if(o.low.length) bullets.push(`สาขาที่ควรโฟกัส: ${o.low.slice(0,4).map(r=>`<b>${r.code}</b> ${r.name} (฿${f0(r.ps)}/ชม. · ถ้าถึงค่าเฉลี่ยได้เพิ่ม ≈ ฿${fmtN(Math.round((S.psAvg-r.ps)*r.lh/1000))}K)`).join(' · ')}`);
+  const an=`<div class="aud-c ppan"><div class="ppt2">วิเคราะห์โซน ${o.z}<small>${o.n} สาขา · ยอดขาย ฿${fK(o.sales).replace('K','')}K · %COL ${f1(o.col)}%</small></div>
+    <ul class="ppbl">${bullets.map(x=>'<li>'+x+'</li>').join('')}</ul>
+    <div class="ppt3">จะเพิ่มยอดขายได้ประมาณเท่าไร (ประมาณการจากค่าเฉลี่ยทุกสาขา · ไม่รวมปัจจัยอื่น)</div>${scen}
+    ${S.hasPrev&&o.d.n?`<div class="ppt3">ยอดขายรายช่องทาง เทียบเดือนก่อน (${o.d.n} สาขาที่เทียบได้)</div>
+      <div class="ppr ppch pph"><div>ช่องทาง</div><div>เดือนก่อน</div><div>เดือนนี้</div><div class="r">ส่วนต่าง</div><div class="r">%</div></div>${chRows}`:'<div class="ppfoot">ยังไม่มีข้อมูลเดือนก่อนสำหรับเทียบรายช่องทาง</div>'}
+    <div class="ppfoot">เช็คเฉลี่ย = ยอดขาย ÷ จำนวนบิล · ผลจากจำนวนบิล = ส่วนต่างบิล × เช็คเฉลี่ยเดือนก่อน · ผลจากเช็คเฉลี่ย = บิลเดือนนี้ × ส่วนต่างเช็ค</div></div>`;
+  return zt+an;
 }
 function peopleSection(m){
   const S=SCP||{}, mm=S.multi?S.last:m;
@@ -3454,7 +3536,9 @@ function ppRows(){ const el=document.getElementById('ppRows'); if(!el||!SCP) ret
 document.addEventListener('click',e=>{
   const br=e.target.closest&&e.target.closest('#people [data-ssbr]'); if(br){ openPeopleBranch(br.dataset.ssbr); return; }   // รหัสในกราฟ · แถวตาราง · ต้องดูแลก่อน → รายละเอียดสาขา
   const so=e.target.closest&&e.target.closest('#people [data-ppsort]'); if(so){ const k=so.dataset.ppsort; if(PPL.sort===k) PPL.dir=PPL.dir==='asc'?'desc':'asc'; else { PPL.sort=k; PPL.dir=k==='code'?'asc':(k==='ps'?'asc':'desc'); } ppRender(); return; }
-  const fl=e.target.closest&&e.target.closest('#people [data-ppf]'); if(fl){ PPL.f=fl.dataset.ppf; ppRender(); } });
+  const fl=e.target.closest&&e.target.closest('#people [data-ppf]'); if(fl){ PPL.f=fl.dataset.ppf; ppRender(); return; }
+  const vw=e.target.closest&&e.target.closest('#people [data-ppview]'); if(vw){ PPL.view=vw.dataset.ppview; ppRender(); return; }
+  const zn=e.target.closest&&e.target.closest('#people [data-ppzone]'); if(zn){ PPL.zone=zn.dataset.ppzone; ppRender(); } });
 document.addEventListener('input',e=>{ if(e.target&&e.target.id==='ppQ'){ PPL.q=e.target.value; ppRows(); } });
 /* รายละเอียดสาขา (People Performance): ทั้งปีรายเดือน — ยอดขาย · %COL · ชม.แรงงาน · บิล/ชม. · ฿/ชม. เทียบค่าเฉลี่ยทุกสาขาของเดือนนั้น */
 const PPM={list:[],i:0};
