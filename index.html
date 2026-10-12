@@ -3418,7 +3418,7 @@ function peopleBody(m){
   const th=(k,t,cls)=>`<div class="${cls||''}" data-ppsort="${k}">${t}<i>${PPL.sort===k?(PPL.dir==='asc'?'▲':'▼'):'↕'}</i></div>`;
   const tab=(k,t)=>`<button type="button" class="${PPL.f===k?'on':''}" data-ppf="${k}">${t}</button>`;
   return `<div class="ppsub">ผลิตภาพแรงงาน ${n} สาขา · ${label(m)}</div>
-    <div class="ppks">${kp('ยอดขายรวม','฿'+fmtN(Math.round(P.sales/1000))+'K',n+' สาขา','sales')}${kp('%COL เฉลี่ย',f1(P.col)+'%','ถ่วงน้ำหนักตามยอดขาย','col')}${kp('ชั่วโมงแรงงานรวม',f0(P.hours),'ชั่วโมง','hours')}${kp('Productivity Trans',f1(P.pt),'บิล / ชั่วโมง','pt')}${kp('Productivity Sale','฿'+f0(P.ps),'บาท / ชั่วโมง · ต่ำกว่าเกณฑ์ '+P.low.length+' สาขา','ps')}</div>
+    <div class="ppks">${kp('ยอดขายรวม','฿'+fmtN(Math.round(P.sales/1000))+'K',n+' สาขา','sales')}${kp('%COL · เฉลี่ย',f1(P.col)+'%','เฉลี่ยทุกสาขา ถ่วงน้ำหนักตามยอดขาย','col')}${kp('ชั่วโมงแรงงานรวม',f0(P.hours),'ชั่วโมง','hours')}${kp('Productivity Trans · เฉลี่ย',f1(P.pt),'บิล / ชั่วโมง · เฉลี่ยทุกสาขา (บิลรวม ÷ ชม.รวม)','pt')}${kp('Productivity Sale · เฉลี่ย','฿'+f0(P.ps),'บาท / ชั่วโมง · เฉลี่ยทุกสาขา (ยอดขายรวม ÷ ชม.รวม) · ต่ำกว่าเกณฑ์ '+P.low.length+' สาขา','ps')}</div>
     <div class="ppg2">${quadH}${wH}</div>
     <div class="ppcard ppt"><div class="ppth"><b>รายสาขา</b><span class="ovseg">${tab('all','ทั้งหมด '+n)}${tab('low','ต่ำกว่าเกณฑ์ '+P.low.length)}${tab('col','%COL เกิน 25% · '+nCol)}</span>
       <input type="search" class="ppsearch" id="ppQ" placeholder="ค้นหารหัส / ชื่อสาขา" value="${(PPL.q||'').replace(/"/g,'&quot;')}" autocomplete="off"></div>
