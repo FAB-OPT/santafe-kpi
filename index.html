@@ -3444,6 +3444,7 @@ function peopleSection(m){
 function ppRender(){ const b=document.querySelector('#people .body'); if(!b||!SCP) return; const m=SCP.multi?SCP.last:curM; b.innerHTML=peopleBody(m); }
 function ppRows(){ const el=document.getElementById('ppRows'); if(!el||!SCP) return; const P=peopleData(SCP.multi?SCP.last:curM); if(P) el.innerHTML=peopleRowsHtml(P); }
 document.addEventListener('click',e=>{
+  const br=e.target.closest&&e.target.closest('#people [data-ssbr]'); if(br){ openBranch(br.dataset.ssbr); return; }   // รหัสในกราฟ · แถวตาราง · ต้องดูแลก่อน → รายละเอียดสาขา
   const so=e.target.closest&&e.target.closest('#people [data-ppsort]'); if(so){ const k=so.dataset.ppsort; if(PPL.sort===k) PPL.dir=PPL.dir==='asc'?'desc':'asc'; else { PPL.sort=k; PPL.dir=k==='code'?'asc':(k==='ps'?'asc':'desc'); } ppRender(); return; }
   const fl=e.target.closest&&e.target.closest('#people [data-ppf]'); if(fl){ PPL.f=fl.dataset.ppf; ppRender(); } });
 document.addEventListener('input',e=>{ if(e.target&&e.target.id==='ppQ'){ PPL.q=e.target.value; ppRows(); } });
