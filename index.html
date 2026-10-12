@@ -1801,6 +1801,9 @@ table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD
 #customers .cuins b.pos{color:#12804F}#customers .cuins b.neg{color:#D13447}
 #customers .cpns2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media (max-width:1000px){#customers .cpns2{grid-template-columns:1fr}}
+#customers .chbar.ly{opacity:.5;height:8px;margin-top:5px}
+#customers .chsh small{margin-left:10px;font-size:12px;font-weight:500;color:var(--mute)}
+#customers .chleg em{font-style:normal;color:var(--mute);font-size:12.5px;margin-left:4px}
 #customers .cutabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
 #customers .cutabs button{height:36px;padding:0 16px;border:1.5px solid var(--line);border-radius:99px;background:#fff;font:inherit;font-size:13.5px;font-weight:700;color:var(--mute);cursor:pointer}
 #customers .cutabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -3057,6 +3060,7 @@ function cuPanel(title,unit,labs,cur,ly,color,dec){
   const chip=lastD!=null?`<span class="cchip ${lastD>=0?'pos':'neg'}">${labs[n-1]} ${sg(lastD)} vs LY</span>`:'';
   return `<div class="cpn"><div class="cph"><b>${title}</b><small>${unit}</small>${chip}</div><svg class="cusvg" viewBox="0 0 ${W} ${H}">${g}</svg></div>`; }
 const CUC={br:'all',ctx:null};
+const CUS={cmp:'lm'};   /* ตารางรายเดือน/รายสาขา/สัดส่วนบิล: เทียบ LM หรือ LY */
 /* กราฟรายเดือนของส่วนลูกค้า: All = ทั้งบริษัท · เลือกสาขา = เฉพาะสาขานั้น (LY จากประวัติรายสาขา STF) */
 /* กราฟรายเดือนของส่วนลูกค้า: การ์ดเดียว สลับหัวข้อด้วยแท็บ (Total Trans · Customers · Ticket Avg. · Per Customer · Customer Avg.)
    All = ทั้งบริษัท · เลือกสาขา = เฉพาะสาขานั้น (LY จากประวัติรายสาขา STF) · ป๊อปอัปสาขา (CU_SIMPLE) ยังใช้ 2 กราฟเล็กเดิม */
@@ -3088,7 +3092,9 @@ function cuChartsHtml(br){ const c=CUC.ctx; if(!c) return ''; if(br==null) br=CU
   window.CU_W=1100; window.CU_H=320;
   let svg=''; try{ svg=cuPanel(cur.title,cur.unit,c.labs,cur.vals,cur.ly,cur.color,cur.dec); } finally{ window.CU_W=W0; window.CU_H=H0; }
   return '<div class="cutabs">'+M.map(m=>'<button type="button" class="'+(m.k===cur.k?'on':'')+'" data-cutab="'+m.k+'">'+m.title+'</button>').join('')+'</div>'+(svg||'<div class="empty">ไม่มีข้อมูลของหัวข้อนี้</div>'); }
-document.addEventListener('click',e=>{ const t=e.target.closest&&e.target.closest('[data-cutab]'); if(!t) return; CUC.tab=t.dataset.cutab;
+document.addEventListener('click',e=>{ const cc=e.target.closest&&e.target.closest('[data-cucmp]');
+  if(cc){ CUS.cmp=cc.dataset.cucmp; anchorRender(cc,'[data-cucmp="'+CUS.cmp+'"]',()=>build(curM)); return; }
+  const t=e.target.closest&&e.target.closest('[data-cutab]'); if(!t) return; CUC.tab=t.dataset.cutab;
   if(document.getElementById('cuCharts')) ovRender('cuCharts',()=>cuChartsHtml(CUC.br));
   if(document.getElementById('cuChartsAll')) ovRender('cuChartsAll',()=>cuChartsHtml('all')); });
 document.addEventListener('change',e=>{ const s2=e.target.closest&&e.target.closest('[data-cubr]'); if(!s2) return; CUC.br=s2.value; ovRender('cuCharts',()=>cuChartsHtml(CUC.br));
@@ -3236,6 +3242,25 @@ function openCuDrawer(code){ code=String(code); const el=cuDrawerEl();
   el.classList.add('open'); }
 function customersSection(m){
   const S=SCP||{multi:false}, T='Customers & Average Ticket';
+  const CMP=CUS.cmp==='ly'?'ly':'lm', RNc=CMP==='ly'?'LY':'LM';
+  const cmpSeg='<span class="ovseg">'+[['lm','vs LM'],['ly','vs LY']].map(([k,t])=>'<button type="button" class="'+(CMP===k?'on':'')+'" data-cucmp="'+k+'">'+t+'</button>').join('')+'</span>';
+  /* LY ในรูปแบบเดียวกับข้อมูลรายเดือน (trOf) */
+  const lyAsTr=a=>a?{trans:a.trans,ticket:a.ticket,customer:a.customer,ch:a.ch?[['Dine In','dine'],['Take away','take'],['Delivery','deli']].map(([n,k])=>({name:n,trans:a.ch[k]&&a.ch[k].trans,ticket:a.ch[k]&&a.ch[k].ticket})):[]}:null;
+  /* LY รายสาขา จากประวัติ STF (รูปแบบเดียวกับแถวสาขา: tr · tk · cust · sales · dine/take/deli + บิลรายช่องทาง) */
+  const lyBrMap=ms=>{ const o={};
+    filtZone(EXTRA.branchYears||[]).forEach(by=>{ const h=by.h&&by.h[YEAR-1]; if(!h) return;
+      let s=0,k=0,c=0,sC=0,t=0,kt=0,G=0,kd=0,chOk=true,any=false;
+      ms.forEach(mm=>{ const i=mm-1, S=(h.s||[])[i], K=(h.k||[])[i]; if(!(S>0&&K>0)) return; any=true; s+=S; k+=K;
+        const C=(h.c||[])[i]; if(C>0){ c+=C; sC+=S; }
+        const T0=(h.t||[])[i]||0, G0=((h.g||[])[i]||0)+((h.l||[])[i]||0)+((h.p||[])[i]||0);
+        const KT=(h.kt||[])[i], KD=((h.kg||[])[i]||0)+((h.kl||[])[i]||0)+((h.kp||[])[i]||0), kg=(h.kg||[])[i], kl=(h.kl||[])[i], kp=(h.kp||[])[i];
+        if((KT==null&&!KD&&(T0||G0))||(KT>0&&KT===kg&&kg===kl&&kl===kp)){ chOk=false; return; }
+        t+=T0; kt+=KT||0; G+=G0; kd+=KD; });
+      if(!any) return;
+      const r={tr:k, tk:s/k, cust:c||null, sales:sC};
+      if(chOk&&kt+kd>0){ r.take=t; r.trTake=kt; r.deli=G; r.trDeli=kd; r.dine=Math.max(0,s-t-G); r.trDine=Math.max(0,k-kt-kd); }
+      o[String(by.code)]=r; });
+    return o; };
   const now=aggTr(S.multi?S.ms:[m]), prv=S.multi?S.tP:aggTr(m>1?[m-1]:null);
   if(!now) return sec('customers',T,'',EMPTY('ลูกค้า/บิล'));
   const PV=S.multi?S.prevLabS:(m>1&&prv?MONTH_TH[m-2]:null), NW=S.multi?S.labS:MONTH_TH[m-1];
@@ -3244,7 +3269,7 @@ function customersSection(m){
   const findCh=(o,k)=>o&&o.ch.find(x=>chKey(x.name)===chKey(k));
   const P=prv||{};
   const vsL=(a,b)=>{ if(a==null||b==null||!a) return ''; const g=pct(a,b);
-    return `<span class="tiny ${Math.abs(g)<0.05?'':cls(g)}">${sgn(g)} vs LM</span>`; };
+    return `<span class="tiny ${Math.abs(g)<0.05?'':cls(g)}">${sgn(g)} vs ${RNc}</span>`; };
   const tile=(l,a,b,f,note)=>`<div class="st ${a!=null&&b!=null&&PV?cls(pct(a,b)):''}"><div class="l">${l}</div><div class="v">${f(b)}</div><div class="s">${a!=null&&b!=null&&PV?`${pill(pct(a,b))} vs ${PV} (${f(a)})`:(note||(S.multi?'ไม่มีช่วงก่อนหน้าให้เทียบ':''))}</div></div>`;
   const LYA=lyTrAgg(S.multi?S.ms:[m]);
   const kc=(l,a,b,f,note,ly,unit)=>{ const ok=a!=null&&b!=null&&PV&&a; const g=ok?pct(a,b):null;
@@ -3272,8 +3297,11 @@ function customersSection(m){
     if(!c) return `<div class="chc"><div class="chn"><i style="background:${o.c}"></i>${o.n}</div><div class="mute">ไม่มีข้อมูล</div></div>`;
     const m1=(lab,k,fm)=>{ const pv=p&&p[k], lv=L&&L[k]; return `<div class="chmm"><small>${lab}</small><b>${fm(c[k])}</b>${pv&&PV?`<div class="kp">${pill(pct(pv,c[k]))}<span>vs LM ${fm(pv)}</span></div>`:''}${lv?`<div class="kp">${pill(pct(lv,c[k]))}<span>vs LY ${fm(lv)}</span></div>`:''}</div>`; };
     return `<div class="chc"><div class="chn"><i style="background:${o.c}"></i>${o.n}<span>${chShare(o).toFixed(1)}%</span></div><div class="chm">${m1('จำนวนบิล','trans',fN)}${m1('ยอดเฉลี่ยต่อบิล','ticket',fB)}</div></div>`; };
-  const chTiles=`<div class="chsh">สัดส่วนจำนวนบิล</div><div class="chbar">${CUS_CH.map(o=>`<i style="flex:${Math.max(chShare(o),.6)};background:${o.c}"></i>`).join('')}</div>
-    <div class="chleg">${CUS_CH.map(o=>`<span><i style="background:${o.c}"></i>${o.n} <b>${chShare(o).toFixed(1)}%</b></span>`).join('')}</div>
+  const lyChK=['dine','take','deli'], lyChT=LYA&&LYA.ch?lyChK.reduce((a,k)=>a+((LYA.ch[k]||{}).trans||0),0):0;
+  const lyShare=o=>{ const k=lyChK[CUS_CH.indexOf(o)], c=LYA&&LYA.ch&&LYA.ch[k]; return c&&lyChT?c.trans/lyChT*100:null; };
+  const chTiles=`<div class="chsh">สัดส่วนจำนวนบิล<small>แถวบน = ปีนี้${lyChT?' · แถวล่าง (จาง) = LY':''}</small></div><div class="chbar">${CUS_CH.map(o=>`<i style="flex:${Math.max(chShare(o),.6)};background:${o.c}"></i>`).join('')}</div>
+    ${lyChT?`<div class="chbar ly">${CUS_CH.map(o=>`<i style="flex:${Math.max(lyShare(o)||0,.6)};background:${o.c}"></i>`).join('')}</div>`:''}
+    <div class="chleg">${CUS_CH.map(o=>`<span><i style="background:${o.c}"></i>${o.n} <b>${chShare(o).toFixed(1)}%</b>${lyShare(o)!=null?` <em>LY ${lyShare(o).toFixed(1)}%</em>`:''}</span>`).join('')}</div>
     <div class="chcs">${CUS_CH.map(chCard).join('')}</div>`;
   /* ---- รายเดือน ---- */
   const tm=(S.multi&&S.n>=2?S.ms:MONTHLY.map(r=>r.m).filter(x=>x<=m)).map(x=>({m:x,v:trOf(x)})).filter(r=>r.v);
@@ -3283,9 +3311,9 @@ function customersSection(m){
     const nm={}; tm.forEach(r=>filtZone((DETAIL[r.m]||{}).branchRows||[]).forEach(x=>{ if(x.tr>0) nm[String(x.code)]=x.name; }));
     const codes=Object.keys(nm).sort(); if(CUC.br!=='all'&&!nm[CUC.br]) CUC.br='all';
     CUC.ctx={tm,labs,nm};
-    trend=`<div class="grp big">รายเดือน<span class="gr">% เทียบเดือนก่อน (vs LM)</span></div>
+    trend=`<div class="grp big">รายเดือน<span class="gr">% เทียบ ${CMP==='ly'?'ปีก่อน (vs LY)':'เดือนก่อน (vs LM)'} ${cmpSeg}</span></div>
       <div class="scroll"><table><tr><th>เดือน</th><th class="n">Total Trans</th><th class="n">Ticket Avg.</th>${CUS_CH.map(o=>`<th class="n">Ticket ${o.n}</th>`).join('')}<th class="n">Customers</th><th class="n">Customer Avg.</th><th class="n">Per Customer</th></tr>
-      ${tm.map((r,i)=>{ const v=r.v, q=i>0&&tm[i-1].m===r.m-1?tm[i-1].v:null, ca=x=>x&&x.customer&&x.trans?x.customer/x.trans:null;
+      ${tm.map((r,i)=>{ const v=r.v, q=CMP==='ly'?lyAsTr(lyTrAgg([r.m])):(i>0&&tm[i-1].m===r.m-1?tm[i-1].v:null), ca=x=>x&&x.customer&&x.trans?x.customer/x.trans:null;
         return `<tr class="${r.m===m&&!S.multi?'hi':''}"><td>${r.m===m&&!S.multi?'★ ':''}${MONTH_TH[r.m-1]}</td><td class="n">${fN(v.trans)}${vsL(q&&q.trans,v.trans)}</td><td class="n"><b>${fB(v.ticket)}</b>${vsL(q&&q.ticket,v.ticket)}</td>${CUS_CH.map(o=>{ const c=findCh(v,o.k), pc=findCh(q,o.k); return `<td class="n">${c?fB(c.ticket):'—'}${c&&pc?vsL(pc.ticket,c.ticket):''}</td>`; }).join('')}<td class="n">${fN(v.customer)}${vsL(q&&q.customer,v.customer)}</td><td class="n">${ca(v)==null?'—':f2(ca(v))}${vsL(ca(q),ca(v))}</td><td class="n">${fB(spend(v))}${vsL(spend(q),spend(v))}</td></tr>`; }).join('')}
       ${S.multi?`<tr class="hi"><td><b>รวม ${S.labS}</b></td><td class="n"><b>${fN(now.trans)}</b></td><td class="n"><b>${fB(now.ticket)}</b></td>${CUS_CH.map(o=>{ const c=findCh(now,o.k); return `<td class="n">${c?fB(c.ticket):'—'}</td>`; }).join('')}<td class="n"><b>${fN(now.customer)}</b></td><td class="n">${f2(now.custAvg)}</td><td class="n">${fB(spend(now))}</td></tr>`:''}
       </table></div>`;
@@ -3293,6 +3321,7 @@ function customersSection(m){
   /* ---- รายสาขา ---- */
   const bRows=filtZone((S.multi?(S.br?S.br.rows:[]):(DETAIL[m]||{}).branchRows)||[]).filter(b=>b.tr>0);
   const pMap={}; ((S.multi?(S.prevBr?S.prevBr.rows:[]):(DETAIL[m-1]||{}).branchRows)||[]).forEach(b=>pMap[b.code]=b);
+  if(CMP==='ly'){ const ly=lyBrMap(S.multi?S.ms:[m]); Object.keys(pMap).forEach(k=>delete pMap[k]); Object.assign(pMap,ly); }
   let btbl='';
   if(bRows.length){ const list=bRows.slice().sort((a,b)=>(b.tr||0)-(a.tr||0));
     /* หัวตารางชุดเดียวกับรายเดือน · บิลเฉลี่ยรายช่องทาง = ยอดช่องทาง ÷ บิลช่องทาง (ต้องนำเข้าแบบฟอร์มส่งยอดขายรอบใหม่) */
@@ -3310,7 +3339,7 @@ function customersSection(m){
   const per=S.multi?S.labS:labelFull(m)+(PV?' · เทียบ '+PV:'');
   const lgd='<span class="cu-lg"><i class="ln"></i>ปีนี้<i class="ln ds"></i>ปีก่อน (LY)<em>ชี้ที่กราฟเพื่อดูรายละเอียด</em></span>';
   const searchBox='<span class="gr"><input class="cusearch" type="search" data-cusearch placeholder="ค้นหาสาขา หรือรหัส" autocomplete="off"></span>';
-  return sec('customers',T,'',W(strip+ins)+W(CUC.ctx?'<div id="cuChartsAll">'+cuChartsHtml('all')+'</div>':'','ลูกค้าและจำนวนบิล รายเดือน<span class="gr">'+lgd+'</span>')+W(chTiles,'ช่องทางการขาย<span class="gr">'+per+'</span>')+W(tTable)+W(cuBr,'รายสาขา · ลูกค้าและจำนวนบิล'+searchBox)+W(btbl,'รายสาขา'));
+  return sec('customers',T,'',W(strip+ins)+W(CUC.ctx?'<div id="cuChartsAll">'+cuChartsHtml('all')+'</div>':'','ลูกค้าและจำนวนบิล รายเดือน<span class="gr">'+lgd+'</span>')+W(chTiles,'ช่องทางการขาย<span class="gr">'+per+'</span>')+W(tTable)+W(cuBr,'รายสาขา · ลูกค้าและจำนวนบิล'+searchBox)+W(btbl,'รายสาขา<span class="gr">% เทียบ '+(CMP==='ly'?'ปีก่อน (vs LY)':'เดือนก่อน (vs LM)')+' '+cmpSeg+'</span>'));
 }
 
 /* ========================= CEM / OSS: กลุ่มคะแนน · เทียบเดือน/LY · เจาะรายสาขา ========================= */
