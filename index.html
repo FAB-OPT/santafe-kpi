@@ -5797,10 +5797,19 @@ async function decryptData(pass){
   return JSON.parse(new TextDecoder().decode(plain));
 }
 /* ========================= จัดโซนสาขาตามตารางผู้รับผิดชอบ =========================
-   โซน A–F = BZM 6 คน: A พี่นพ(นพชัย) · B พี่ปิ๊ก(พัทธดนย์) · C พี่รุต(นิรุต) · D พี่เจี๊ยบ(สิวิกา) · E พี่เอ็ม(อนุรักษ์) · F พี่หยี(ศุกร์แสง)
-   ทับโซนของสาขาที่อยู่ในตารางหลังถอดรหัส — สาขาที่ไม่อยู่ในตารางคงโซนเดิม (ปิดแล้ว/โซน G ฯลฯ) */
-const ZONE_PLAN={A:'5001 5002 5016 5045 5069 5072 5084 5085 5087 5091',B:'5003 5017 5021 5024 5031 5034 5040 5054 5071',C:'5005 5010 5019 5038 5046 5055 5065 5080 5088 5092',D:'5007 5011 5033 5036 5042 5052 5057 5066 5076 5082',E:'5012 5018 5026 5028 5030 5050 5068 5073 5089 5090',F:'5014 5015 5023 5035 5039 5049 5061 5062 5063 5064'};
-const ZONE_OF_CODE=(()=>{ const m={}; Object.entries(ZONE_PLAN).forEach(([z,s])=>s.split(' ').forEach(c=>{ m[c]=z; })); return m; })();
+   โซนในข้อมูล = ชื่อ BZM (เช่น "นพชัย") · ตารางนี้ระบุสาขาของแต่ละคน
+   หลังถอดรหัสจะหาชื่อโซนจริงในข้อมูลที่ตรงกับชื่อต้นของ BZM แล้วทับโซนของสาขาในตาราง
+   สาขาที่ไม่อยู่ในตารางคงโซนเดิม (ปิดแล้ว ฯลฯ) · ถ้าหาโซนของ BZM คนไหนไม่เจอจะไม่แตะกลุ่มนั้น */
+const ZONE_PLAN={'นพชัย':'5001 5002 5016 5045 5069 5072 5084 5085 5087 5091','พัทธดนย์':'5003 5017 5021 5024 5031 5034 5040 5054 5071','นิรุต':'5005 5010 5019 5038 5046 5055 5065 5080 5088 5092','สิวิกา':'5007 5011 5033 5036 5042 5052 5057 5066 5076 5082','อนุรักษ์':'5012 5018 5026 5028 5030 5050 5068 5073 5089 5090','ศุกร์แสง':'5014 5015 5023 5035 5039 5049 5061 5062 5063 5064'};
+const ZONE_ALIAS={'สิวิกา':['สิวิกา','สีวิกา']};
+let ZONE_OF_CODE={};
+function buildZoneMap(zones){
+  const out={}, zs=(zones||[]).map(String);
+  Object.entries(ZONE_PLAN).forEach(([who,s])=>{
+    const keys=ZONE_ALIAS[who]||[who], z=zs.find(x=>keys.some(k=>x.replace(/\s+/g,'').includes(k)));
+    if(z) s.split(' ').forEach(c=>{ out[c]=z; }); });
+  return out;
+}
 function applyZonePlan(node,key){
   if(!node||typeof node!=='object') return;
   if(Array.isArray(node)){ node.forEach(x=>applyZonePlan(x)); return; }
@@ -5809,8 +5818,8 @@ function applyZonePlan(node,key){
 }
 async function unlock(pass, remember){
   const data = await decryptData(pass);              // รหัสผิด = throw
-  applyZonePlan(data);
-  if(data.branchMeta&&!data.branchMeta['5092']) data.branchMeta['5092']={name:'สิงห์คอมเพลกซ์',zone:ZONE_OF_CODE['5092']};   // สาขาใหม่ที่ยังไม่มีในทะเบียนสาขาของข้อมูลฝัง
+  ZONE_OF_CODE=buildZoneMap(data.zones); applyZonePlan(data);
+  if(data.branchMeta&&!data.branchMeta['5092']&&ZONE_OF_CODE['5092']) data.branchMeta['5092']={name:'สิงห์คอมเพลกซ์',zone:ZONE_OF_CODE['5092']};   // สาขาใหม่ที่ยังไม่มีในทะเบียนสาขาของข้อมูลฝัง
   DEFAULT_MONTHLY = data.monthly; DEFAULT_DETAIL = data.detail; DATA_V = data.v || null; DATA_UPD = data.upd || null;
   BRANCH_META = data.branchMeta || null; ZONES_LIST = data.zones || [];
   EXTRA = {pnlFull:data.pnlFull, cemStoreYears:data.cemStoreYears, cemSummary:data.cemSummary,
