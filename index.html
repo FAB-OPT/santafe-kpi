@@ -3605,13 +3605,13 @@ const INS={view:'zone',sort:'bad',dir:'desc',q:''};
 const INS_M=[['sales','ยอดขาย'],['ach','vs แผน'],['mom','vs LM'],['trMom','บิล vs LM'],['tk','เช็คเฉลี่ย'],['cos','%COS'],['col','%COL'],['net','กำไรสุทธิ'],['cem','CEM'],['oss','OSS'],['ps','฿/ชม.']];
 function insTone(k,v,a){ if(v==null||!isFinite(v)) return '';
   switch(k){
-    case 'ach': return v>=100?'g':v<90?'b':'';
+    case 'ach': return a!=null&&v>=a+2?'g':a!=null&&v<a-2?'b':'';
     case 'mom': case 'trMom': return v>=0?'g':v<-3?'b':'';
     case 'tk': return a&&v>=a*1.03?'g':a&&v<a*0.97?'b':'';
     case 'cos': case 'col': return a!=null&&v<=a-0.5?'g':a!=null&&v>a+1?'b':'';
     case 'net': return a!=null&&v>=a+1?'g':a!=null&&v<a-1?'b':'';
-    case 'cem': return v>=100?'g':v<92?'b':'';
-    case 'oss': return v>=90?'g':v<85?'b':'';
+    case 'cem': return a!=null&&v>=a+1?'g':a!=null&&v<a-1?'b':'';
+    case 'oss': return a!=null&&v>=a+1?'g':a!=null&&v<a-1?'b':'';
     case 'ps': return a&&v>=a?'g':a&&v<a*(1-PP_TH)?'b':'';
   } return ''; }
 function insightData(m){
@@ -3684,7 +3684,7 @@ function insightBody(m){
     <div class="aud-c ppt"><div class="ppth"><div class="ppt2" style="margin:0">${INS.view==='zone'?'รายโซน':'รายสาขา'}<small>ทุกเรื่องในที่เดียว · เขียว = ดี · แดง = ต้องดูแล · คลิกแถวเพื่อดูวิเคราะห์ละเอียด</small></div>
       ${INS.view==='branch'?`<input type="search" class="ppsearch" id="insQ" placeholder="ค้นหารหัส / ชื่อสาขา" value="${(INS.q||'').replace(/"/g,'&quot;')}" autocomplete="off">`:''}</div>
       <div class="insleg"><span><i class="g"></i> ดี</span><span><i class="b"></i> ต้องดูแล</span><span class="insst"><span class="bd">n</span> = จำนวนตัวชี้วัดที่แดง</span><span class="insst"><span class="gd">n</span> = จำนวนที่เขียว</span>
-        <span>เกณฑ์: แผน ≥100% ดี/&lt;90% แดง · LM ≥0 ดี/&lt;−3% แดง · CEM ≥100 ดี/&lt;92 แดง · OSS ≥90 ดี/&lt;85 แดง · COS COL กำไร เช็ค ฿/ชม. เทียบค่าเฉลี่ย</span></div>
+        <span>เกณฑ์: ทุกคอลัมน์เทียบกับแถว “เฉลี่ยทุกสาขา” (ยอดขายไม่ลงสี) ยกเว้น vs LM และ บิล vs LM ที่ดูบวก/ลบเทียบเดือนก่อน (≥0 ดี · &lt;−3% แดง)</span></div>
       <div class="ppr insr pph"><div data-insort="name">${INS.view==='zone'?'โซน':'สาขา'}<i>${INS.sort==='name'?(INS.dir==='asc'?'▲':'▼'):'↕'}</i></div>${INS_M.map(([k,t])=>th(k,t,'r')).join('')}${th('bad','สถานะ','r')}<div></div></div>
       <div id="insRows">${avgRow}${rowsH}</div></div>`;
 }
@@ -3717,14 +3717,14 @@ function openInsight(key){
   const upPs=e.list.reduce((x,r)=>x+(r.lh>0&&A.ps&&r.sales/r.lh<A.ps?(A.ps-r.sales/r.lh)*r.lh:0),0);
   /* ข้อเสนอแนะเบื้องต้น (rule-based จากตัวเลข) */
   const rec=[]; const worstCh=C.ch.filter(c=>c.d<0).sort((x,y)=>x.d-y.d)[0];
-  if(a.ach!=null&&a.ach<90) rec.push(['plan',`ยอดขายต่ำกว่าแผน (${f1(a.ach)}%) — เชียร์ขายเพิ่มเติม`]);
+  if(a.ach!=null&&A.ach!=null&&a.ach<A.ach-2) rec.push(['plan',`ยอดขายต่ำกว่าแผน (${f1(a.ach)}%) — เชียร์ขายเพิ่มเติม`]);
   if(a.trMom!=null&&a.trMom<-3) rec.push(['customers',`จำนวนบิลลดลง ${f1(Math.abs(a.trMom))}% จากเดือนก่อน — ตรวจทราฟฟิกห้าง/พื้นที่ และกิจกรรมดึงลูกค้าใหม่ ลูกค้าเดิมกลับมา`]);
   if(a.tk!=null&&tkAvg&&a.tk<tkAvg*0.97) rec.push(['customers',`เช็คเฉลี่ยต่ำกว่าเฉลี่ย (฿${f0(a.tk)} vs ฿${f0(tkAvg)}) — ส่งเสริมการขายเพิ่ม (ชุดเมนู ของทานเล่น เครื่องดื่ม) ฝึกพนักงานแนะนำเมนู`]);
   if(worstCh&&Math.abs(worstCh.d)>0) rec.push(['delivery',`ช่องทาง ${worstCh.n} ลดลง ${sg(worstCh.d)} — ตรวจโปรโมชัน การมองเห็นบนแอป และเวลาเปิด-ปิดร้านบนแพลตฟอร์ม`]);
   if(a.col!=null&&A.col!=null&&a.col>A.col+1&&a.ps!=null&&A.ps&&a.ps<A.ps) rec.push(['people',`ค่าแรงสูงและประสิทธิภาพต่ำ (%COL ${f1(a.col)}% · ฿${f0(a.ps)}/ชม.) — ทบทวนตารางกะและจำนวนคนในแต่ละช่วงเวลา`]);
   if(a.cos!=null&&A.cos!=null&&a.cos>A.cos+1) rec.push(['pl',`%COS สูงกว่าเฉลี่ย (${f1(a.cos)}% vs ${f1(A.cos)}%) — การใช้งานวัตถุดิบของพนักงาน`]);
-  if(a.cem!=null&&a.cem<92) rec.push(['cem',`คะแนน CEM ต่ำ (${f1(a.cem)}%) — ดูหมวดที่ถูกหักคะแนนในหัวข้อ CEM แล้วตามแก้รายข้อ`]);
-  if(a.oss!=null&&a.oss<85) rec.push(['oss',`คะแนน OSS ต่ำ (${f1(a.oss)}%) — ตรวจมาตรฐานปฏิบัติการตามหัวข้อ OSS ที่ไม่ผ่าน`]);
+  if(a.cem!=null&&A.cem!=null&&a.cem<A.cem-1) rec.push(['cem',`คะแนน CEM ต่ำ (${f1(a.cem)}%) — ดูหมวดที่ถูกหักคะแนนในหัวข้อ CEM แล้วตามแก้รายข้อ`]);
+  if(a.oss!=null&&A.oss!=null&&a.oss<A.oss-1) rec.push(['oss',`คะแนน OSS ต่ำ (${f1(a.oss)}%) — ตรวจมาตรฐานปฏิบัติการตามหัวข้อ OSS ที่ไม่ผ่าน`]);
   if(a.net!=null&&A.net!=null&&a.net<A.net-1) rec.push(['pl',`กำไรสุทธิต่ำกว่าเฉลี่ย (${f1(a.net)}% vs ${f1(A.net)}%) — ดูควบคู่ %COS %COL และค่าใช้จ่ายคงที่ในหัวข้อ Profitability`]);
   if(!rec.length) rec.push([null,'ตัวชี้วัดโดยรวมอยู่ในเกณฑ์ดี — รักษามาตรฐาน และเรียนรู้แนวปฏิบัติไปใช้กับสาขาที่ต่ำกว่า']);
   const mx=Math.max(...C.ch.map(c=>Math.max(c.c,c.p)))||1;
