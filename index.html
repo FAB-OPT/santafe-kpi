@@ -3485,7 +3485,10 @@ function auditSection(id,title,m,d){
       return `<div class="aud-br"><div class="aud-brh"><span class="aud-brn">${b[0]}<small>${b[3]||''}</small></span><span class="aud-sp r">ถูกหัก ${b[2]} ข้อ</span><b style="color:${col}">${v.toFixed(1)}%</b></div><div class="aud-bar"><i style="width:${w.toFixed(1)}%;background:${col}"></i><u style="left:${refPos}%"></u></div></div>`; }).join('')}</div>`:'';
   // ---- การ์ดเทียบปี: คะแนนรายสาขา ปีนี้ เทียบ ปีก่อน (KPI · กราฟเส้น · ตารางรายสาขา) ----
   const hist=(()=>{
-    const PY=YEAR-1, maps={}; [PY,YEAR].forEach(y=>{ maps[y]={}; for(let mm=1;mm<=12;mm++){ const z=zoneStores(auditStores(kind,mm,y)); if(z) maps[y][mm]=z; } });
+    const PY=YEAR-1, maps={};
+    /* ตัดสาขาที่ปิดแล้วออก (ไม่มียอดขายในเดือนที่ดูหรือเดือนล่าสุดที่มีข้อมูลสาขา) ทั้ง 2 ปี → ค่าเฉลี่ยและการเทียบปีต่อปีใช้ชุดสาขาเดียวกัน */
+    const act=(()=>{ for(let mm=Math.min(curM,12);mm>=1;mm--){ const rows=filtZone((DETAIL[mm]||{}).branchRows||[]).filter(b=>b.sales>0); if(rows.length>=10) return new Set(rows.map(b=>String(b.code))); } return null; })();
+    [PY,YEAR].forEach(y=>{ maps[y]={}; for(let mm=1;mm<=12;mm++){ let z=zoneStores(auditStores(kind,mm,y)); if(z&&act){ const o={}; Object.keys(z).forEach(c=>{ if(act.has(String(c))) o[c]=z[c]; }); z=Object.keys(o).length?o:null; } if(z) maps[y][mm]=z; } });
     const msC=Object.keys(maps[YEAR]).map(Number), msP=Object.keys(maps[PY]).map(Number);
     if(!msC.length) return '';
     const hasP=msP.length>0, showP=hasP&&A.yrs[PY]!==false, showD=showP&&A.dl!==false;
