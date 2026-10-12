@@ -3753,7 +3753,8 @@ function zoneSection(){
 }
 
 /* ========================= ตาราง P&L สาขา × เดือน ========================= */
-const PLM={on:true, metric:'netPct'};
+const PLM={on:true, item:'net', unit:'pct', sort:'last', dir:'desc'};
+/* Branch × Month Matrix: เลือกหัวข้อ (กำไรสุทธิ · ต้นทุนอาหาร · ค่าแรง · รายได้) · หน่วย บาท / % · เรียงตามคอลัมน์ใดก็ได้ (คลิกหัวคอลัมน์) · มาก→น้อย / น้อย→มาก */
 function plMatrix(items){
   const F=EXTRA&&EXTRA.pnlFull; if(!F||!F.branch) return '';
   const mons=F.months.map((x,i)=>({key:x,m:i+1})).filter(o=>o.m<=curM);
@@ -3763,27 +3764,40 @@ function plMatrix(items){
   const brName=c=>(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].name)||c;
   const codes=Object.keys(F.branch).filter(c=>FILT.zone==='all'||inScopeCode(c));
   if(!codes.length) return '';
-  const MET={netPct:{t:'%กำไรสุทธิ',f:(a)=>a[iRev]?a[iNet]/a[iRev]*100:null,fmt:v=>v.toFixed(1)+'%',good:v=>v>=0},
-             net:{t:'กำไรสุทธิ',f:a=>a[iNet],fmt:KM,good:v=>v>=0},
-             rev:{t:'รายได้',f:a=>a[iRev],fmt:KM,good:()=>true},
-             cogsPct:{t:'%ต้นทุนอาหาร',f:a=>a[iRev]?a[iCogs]/a[iRev]*100:null,fmt:v=>v.toFixed(1)+'%',good:v=>v<=36},
-             labPct:{t:'%ค่าแรง',f:a=>a[iRev]?a[iLab]/a[iRev]*100:null,fmt:v=>v.toFixed(1)+'%',good:v=>v<=21}};
-  const M=MET[PLM.metric]||MET.netPct;
+  const ITEM={net:{t:'กำไรสุทธิ',i:iNet,good:{pct:v=>v>=0,baht:v=>v>=0}},
+              cogs:{t:'ต้นทุนอาหาร',i:iCogs,good:{pct:v=>v<=36,baht:()=>true}},
+              lab:{t:'ค่าแรง',i:iLab,good:{pct:v=>v<=21,baht:()=>true}},
+              rev:{t:'รายได้',i:iRev,good:{baht:()=>true},bahtOnly:true}};
+  if(!ITEM[PLM.item]) PLM.item='net';
+  const IT=ITEM[PLM.item], unit=IT.bahtOnly||PLM.unit==='baht'?'baht':'pct';
+  const M={t:IT.t+(unit==='pct'?' (% ของรายได้)':' (บาท)'),
+    f:unit==='pct'?(a=>a[iRev]?a[IT.i]/a[iRev]*100:null):(a=>a[IT.i]),
+    fmt:unit==='pct'?(v=>v.toFixed(1)+'%'):KM, good:IT.good[unit]};
   const rows=codes.map(c=>{ const vals=mons.map(o=>{const a=F.branch[c][o.key]; return a?M.f(a):null;});
     const last=[...vals].reverse().find(v=>v!=null);
     return {c,name:brName(c),zone:(BRANCH_META&&BRANCH_META[c]&&BRANCH_META[c].zone)||'',vals,last};})
-    .filter(r=>r.vals.some(v=>v!=null))
-    .sort((a,b)=>(b.last==null?-9e9:b.last)-(a.last==null?-9e9:a.last));
+    .filter(r=>r.vals.some(v=>v!=null));
+  const dk=PLM.dir==='asc'?1:-1, lastKey=mons[mons.length-1].key;
+  const keyOf=r=>PLM.sort==='name'?r.c:PLM.sort==='zone'?r.zone:PLM.sort==='last'?r.last:r.vals[mons.findIndex(o=>o.key===PLM.sort)];
+  rows.sort((a,b)=>{ const x=keyOf(a), y=keyOf(b);
+    if(typeof x==='string'||typeof y==='string') return dk*String(x||'').localeCompare(String(y||''),undefined,{numeric:true});
+    if(x==null||y==null) return (x==null)-(y==null);
+    return dk*(x-y); });
   const nums=rows.flatMap(r=>r.vals).filter(v=>v!=null);
   const lo=Math.min(...nums), hi=Math.max(...nums);
   const cell=v=>{ if(v==null) return '<td class="n">—</td>';
     const t=(v-lo)/((hi-lo)||1); const ok=M.good(v);
     const a=(ok?0.10+t*0.30:0.12+(1-t)*0.30);
     return `<td class="n plc" style="background:${ok?`rgba(16,185,129,${a.toFixed(2)})`:`rgba(244,63,94,${a.toFixed(2)})`}">${M.fmt(v)}</td>`; };
+  const act=k=>PLM.sort===k||(PLM.sort==='last'&&k===lastKey);
+  const th=(k,t,cls,extra)=>`<th class="${cls||''}srth${act(k)?' on':''}" data-plmsort="${k}"${extra||''}>${t}<i class="srt${act(k)?'':' off'}">${act(k)?(PLM.dir==='asc'?'▲':'▼'):'↕'}</i></th>`;
+  const seg=(attr,list,cur,dis)=>`<span class="ovseg">${list.map(([k,t])=>`<button type="button" class="${cur===k?'on':''}" ${dis?'disabled':''} data-${attr}="${k}">${t}</button>`).join('')}</span>`;
   return `<div class="grp big">Branch × Month Matrix — ${M.t}</div>
-    <div class="plbar"><label>ตัวเลข <select id="plmMetric">${Object.entries(MET).map(([k,v])=>`<option value="${k}" ${PLM.metric===k?'selected':''}>${v.t}</option>`).join('')}</select></label>
-      <span class="hint">เขียว = ดี · แดง = ต้องดู · คลิกชื่อสาขาเพื่อดูงบเต็มของสาขานั้น · ${rows.length} สาขา</span></div>
-    <div class="scroll"><table class="plmx"><tr><th>สาขา</th><th>โซน</th>${mons.map(o=>`<th class="n">${MONTH_TH[o.m-1]}</th>`).join('')}</tr>
+    <div class="plbar"><label>ตัวเลข <select id="plmMetric">${Object.entries(ITEM).map(([k,v])=>`<option value="${k}" ${PLM.item===k?'selected':''}>${v.t}</option>`).join('')}</select></label>
+      ${seg('plmunit',[['baht','บาท'],['pct','%']],unit,IT.bahtOnly)}
+      ${seg('plmdir',[['desc','มาก → น้อย'],['asc','น้อย → มาก']],PLM.dir)}
+      <span class="hint">เขียว = ดี · แดง = ต้องดู · คลิกหัวคอลัมน์เพื่อเรียง · คลิกชื่อสาขาเพื่อดูงบเต็ม · ${rows.length} สาขา</span></div>
+    <div class="scroll"><table class="plmx"><tr>${th('name','สาขา','')}${th('zone','โซน','')}${mons.map(o=>th(o.key,MONTH_TH[o.m-1],'n ')).join('')}</tr>
     ${rows.map(r=>`<tr class="clk" data-plbr="${r.c}"><td>${r.c} ${r.name}</td><td>${r.zone}</td>${r.vals.map(cell).join('')}</tr>`).join('')}
     </table></div>`;
 }
@@ -3832,7 +3846,11 @@ function bindExtra2(){
   on('#zone [data-znclose]',()=>{ ZON.pick=null; r(); });
   on('#zone [data-zfilter]',el=>{ FILT.zone=el.dataset.zfilter; const z=$('#fZone'); if(z) z.value=FILT.zone; ZON.pick=null; r(); });
   document.querySelectorAll('[data-mtab]').forEach(b=>b.onclick=()=>{ MON.tab=b.dataset.mtab; r(); });
-  const pm=$('#plmMetric'); if(pm) pm.onchange=e=>{ PLM.metric=e.target.value; rebuildPL(); };
+  const pm=$('#plmMetric'); if(pm) pm.onchange=e=>{ PLM.item=e.target.value; rebuildPL(); };
+  on('[data-plmunit]',el=>{ PLM.unit=el.dataset.plmunit; rebuildPL(); });
+  on('[data-plmdir]',el=>{ PLM.dir=el.dataset.plmdir; rebuildPL(); });
+  on('th[data-plmsort]',el=>{ const k=el.dataset.plmsort, same=PLM.sort===k||(PLM.sort==='last'&&el.classList.contains('on'));
+    if(same) PLM.dir=PLM.dir==='asc'?'desc':'asc'; else { PLM.sort=k; PLM.dir=(k==='name'||k==='zone')?'asc':'desc'; } rebuildPL(); });
   on('tr[data-plbr]',el=>{ if(el.dataset.cos) openCosModal(el.dataset.plbr); else openBranch(el.dataset.plbr); });
   const cs=$('#csSort'); if(cs) cs.onchange=e=>{ CST.sort=e.target.value; rebuildPL(); };
 }
