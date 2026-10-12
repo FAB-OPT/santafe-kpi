@@ -2105,6 +2105,8 @@ i.good{background:#12A367}i.bad{background:#F43F5E}i.soft{background:#C9CDD3}
 .instb td .neg{color:#E11D48}.instb td .pos{color:#12804F}
 .inssrc{margin-top:12px;padding:10px 14px;border-radius:12px;background:#F6F2EC;font-size:12.5px;line-height:1.65;color:#6B7280}.inssrc b{color:#4B5563}
 .inssrc2{display:block;margin-top:6px;font-size:11.5px;line-height:1.5;color:#8A93A3;font-weight:500}
+.instb td .ppdb{height:16px;margin:0 6px;border-radius:8px;background:linear-gradient(90deg,transparent 24.8%,#E4E0DA 25%,transparent 25.2%,transparent 74.8%,#E4E0DA 75%,transparent 75.2%),#F2F0ED}.instb td .ppdb i{border-radius:5px}.instb td .ppdb u{top:-5px;bottom:-5px;width:2px;background:#191512;opacity:.9}
+.insax{display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:600;color:#8A93A3;font-size:12px}.insax b{color:#6B7280;font-size:12.5px}
 .ppfoot{margin-top:12px;font-size:12.5px;color:#9AA3B0}
 .cosm-note{font-size:12.5px;color:#8A93A3;margin-top:12px}
 
@@ -3963,10 +3965,11 @@ function openInsight(key,view){ view=view||INS.view; Object.keys(INS_MEMO).forEa
   /* สาขาที่ยอดลดมากสุด (เฉพาะระดับโซน) */
   const dropBr=e.list.length>1?e.list.map(r=>({r,c:insChan([r])})).filter(x=>x.c.n&&x.c.dSales<0).sort((x,y)=>x.c.dSales-y.c.dSales).slice(0,3):[];
   const maxD=Math.max(...C.ch.map(c=>Math.abs(c.d)),1);
-  const chRows2=C.ch.map(c=>{ const pc=c.p?c.d/c.p*100:null, w=Math.abs(c.d)/maxD*50; return {cells:[`<b class="insch">${c.n}</b>`,`<span style="color:#8A93A3">${K(c.p)}</span>`,`<b>${K(c.c)}</b>`,
+  const maxP=Math.max(...C.ch.map(c=>c.p?Math.abs(c.d/c.p*100):0),1);
+  const chRows2=C.ch.map(c=>{ const pc=c.p?c.d/c.p*100:null, w=(pc==null?0:Math.abs(pc))/maxP*50; return {cells:[`<b class="insch">${c.n}</b>`,`<span style="color:#8A93A3">${K(c.p)}</span>`,`<b>${K(c.c)}</b>`,
       `<div class="ppdb"><u></u><i class="${c.d<0?'bad':'good'}" style="${c.d<0?'right:50%':'left:50%'};width:${Math.max(.6,w).toFixed(1)}%"></i></div>`,
       `<span class="${c.d<0?'neg':'pos'}"><b>${sg(c.d)}</b></span>`,`<span class="${c.d<0?'neg':'pos'}">${pc==null?'—':(pc>=0?'+':'−')+Math.abs(pc).toFixed(1)+'%'}</span>`]}; });
-  const chHeads=[['ช่องทาง'],['เดือนก่อน','r'],['เดือนนี้','r'],['เปลี่ยนแปลง','c insbar'],['ส่วนต่าง','r'],['%','r']];
+  const chHeads=[['ช่องทาง'],['เดือนก่อน','r'],['เดือนนี้','r'],['<span class="insax"><span>◀ ลดลง</span><b>เปลี่ยนแปลง (%)</b><span>เพิ่มขึ้น ▶</span></span>','c insbar'],['ส่วนต่าง','r'],['%','r']];
   const prevM=MONTH_TH[(m-2+12)%12], curMn=MONTH_TH[m-1];
   const flow=C.n?`<div class="insflow"><div class="insfb"><small>เดือนก่อน</small><b>฿${K(C.prevSales)}</b><em>${prevM}</em></div><span class="insar">→</span>
       <div class="insfb ${C.billEff<0?'r':'g'}"><small>จำนวนบิล</small><b class="${C.billEff<0?'neg':'pos'}">${sg(C.billEff)}</b><em>${C.billsPct!=null?(C.billsPct>=0?'+':'−')+Math.abs(C.billsPct).toFixed(1)+'% บิล':''}</em></div><span class="insar">→</span>
