@@ -2038,6 +2038,12 @@ i.good{background:#12A367}i.bad{background:#F43F5E}i.soft{background:#C9CDD3}
 .ppdp{text-align:right;font-weight:800}.ppdp.neg{color:#E11D48}.ppdp.pos{color:#12804F}
 .ppr.ppm1{cursor:default;grid-template-columns:minmax(90px,.5fr) 96px 80px 96px 76px 86px minmax(260px,2fr)}.ppr.ppm1 .c{text-align:center}.ppd2{display:grid;grid-template-columns:1fr 64px;gap:12px;align-items:center}.ppch2{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:8px}.ppvs{font-size:12.5px;color:#A9B3C4}.ppr.ppm1:not(.pph):hover{background:transparent}
 .ppr.tot{background:#FFF6EC;border-radius:10px;font-weight:800}
+#ppModal .cosm-p{width:min(1180px,96vw);padding:18px 22px 20px}
+#ppModal .cosm-name{font-size:26px}#ppModal .cosm-sub{font-size:12.5px}
+#ppModal .aud-kg{gap:10px}#ppModal .aud-k{padding:12px 16px;gap:4px;border-radius:16px}#ppModal .aud-kv{font-size:26px}#ppModal .aud-kv small{font-size:13px}#ppModal .aud-kh{font-size:12px}#ppModal .aud-ks,#ppModal .ppvs{font-size:11.5px}
+#ppModal .aud-c{padding:14px 18px;border-radius:18px}#ppModal .ppt2{font-size:17px;padding-left:10px;border-left-width:4px;margin-bottom:8px}#ppModal .ppt2 small{font-size:12px}
+#ppModal .ppr{font-size:14px;padding:7px 4px;gap:10px}#ppModal .ppr.pph{font-size:12px}#ppModal .ppp{font-size:12.5px;padding:3px 9px}#ppModal .ppdb{height:10px}
+#ppModal .ppleg{font-size:12px}
 .ppfoot{margin-top:12px;font-size:12.5px;color:#9AA3B0}
 .cosm-note{font-size:12.5px;color:#8A93A3;margin-top:12px}
 
@@ -3480,7 +3486,7 @@ function openPeopleBranch(code,keepList){
   const lbl=ms.map(x=>MONTH_TH[x.m-1]);
   const ser=[{name:'สาขานี้',color:'#F66B21',w:3,label:'all',vals:ms.map(x=>+x.r.ps.toFixed(0))},{name:'เฉลี่ยทุกสาขา',color:'#9AA3B0',dash:1,w:1.8,label:'last',vals:ms.map(x=>+x.P.ps.toFixed(0))}];
   const chart=ms.length>=2?`<div class="aud-c" style="margin-top:0"><div class="ppch2"><div class="ppt2" style="margin:0">Productivity Sale รายเดือน<small>บาท / ชั่วโมง</small></div>
-      <div class="ppleg" style="margin:0"><span><i style="background:#F66B21;height:4px"></i> สาขานี้</span><span><i style="background:repeating-linear-gradient(90deg,#9AA3B0 0 4px,transparent 4px 7px);height:3px"></i> เฉลี่ยทุกสาขา</span></div></div>${lineSeries(lbl,ser,{w:900,h:260,R:46,fmt:v=>'฿'+fmtN(Math.round(v)),tipFmt:v=>'฿'+fmtN(Math.round(v))})}</div>`:'';
+      <div class="ppleg" style="margin:0"><span><i style="background:#F66B21;height:4px"></i> สาขานี้</span><span><i style="background:repeating-linear-gradient(90deg,#9AA3B0 0 4px,transparent 4px 7px);height:3px"></i> เฉลี่ยทุกสาขา</span></div></div>${lineSeries(lbl,ser,{w:1300,h:250,R:50,fmt:v=>'฿'+fmtN(Math.round(v)),tipFmt:v=>'฿'+fmtN(Math.round(v))})}</div>`:'';
   const dAvg=ps/cps-1, pill=dAvg>=0?'pos':'neg';
   const rng=RNG(ms.map(x=>x.m))+' '+YEAR;
   document.getElementById('ppmBody').innerHTML=`<div class="cosm-top"><div><div class="cosm-sub">${zone?'โซน '+zone+' · ':''}People Performance · ${rng}</div><div class="cosm-name"><span style="color:var(--accent)">${code}</span> ${nm}</div></div>
