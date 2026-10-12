@@ -2830,6 +2830,7 @@ function plSection(m){
       ${ly?`<th class="n">${RNG(months)} ${YEAR-1}</th><th class="n">Δ</th>`:''}</tr>`}
       ${rowsOut.join('')}
     </table></div></div>
+    ${(h=>h?`<div class="plblock">${h}</div>`:'')(plbrBody())}
     ${(mx=>mx?`<div class="plblock">${mx}</div>`:'')(plMatrix(items))}
     ${cosBody()||''}
     <div class="note">ตัวเลขเต็มหน่วยบาทจากไฟล์ PL · Δ = ส่วนต่างเป็นบาท${ly?" · LY มีความละเอียดถึงหลักพันบาท":""} · สีเขียว/แดงตามทิศทางที่ดี (ต้นทุนลดลง = เขียว, กำไรเพิ่มขึ้น = เขียว) · กดปุ่ม ▸ หน้าหมวดเพื่อพับ/กางรายการย่อย</div>`);
@@ -3883,7 +3884,7 @@ function goSec(id){ const g=SEC_GROUP[id];
 
 /* ========================= ต้นทุนอาหาร (COS) และค่าแรง (COL) ========================= */
 const CST={sort:'cos'};
-/* Profit by Branch: ต่อท้ายหัวข้อ P&L หลังกราฟ %COS และ %COL รายเดือน */
+/* Profit by Branch: ต่อจากงบกำไรขาดทุน (P&L) ในหัวข้อ P&L */
 function plbrBody(){
   const S=SCP||{}, m=S.multi?S.last:curM, d0=DETAIL[m]||{}, d=S.multi?Object.assign({},d0,{plBranches:S.plb?S.plb.rows:[]}):d0;
   let plb=jdOpenB(filtZone(d.plBranches)), plbM=m;
@@ -3952,7 +3953,6 @@ function cosBody(){
              {name:'%COL ค่าแรง',color:'var(--chart-1)',label:1,vals:mons.map(o=>+P(F.actual[o.k]).col.toFixed(1))}];
   const charts=`<h3>%COS และ %COL รายเดือน</h3>${lineSeries(labels,ser,{w:1180,h:260,fmt:v=>v.toFixed(1)+'%',tipFmt:v=>v.toFixed(1)+'%'})}
     <div class="legend">${ser.map(s=>`<span><i style="background:${s.color}"></i>${s.name}</span>`).join('')}</div>`;
-  const plbrHtml=plbrBody();
   /* รายสาขา */
   const brName=brNameOf;
   const codes=Object.keys(F.branch||{}).filter(c=>FILT.zone==='all'||inScopeCode(c));
@@ -3980,7 +3980,6 @@ function cosBody(){
       </table></div>`;
   }
   return ''
-    +(plbrHtml?`<div class="plblock">${plbrHtml}</div>`:'')
     +(tbl?`<div class="plblock"><div class="grp big">%COS / %COL รายสาขา</div>${tbl}<div class="note">ป้ายเขียวหมายถึงลดลง (ดีขึ้น) ป้ายแดงหมายถึงเพิ่มขึ้น</div></div>`:'');
 }
 
