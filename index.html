@@ -2911,7 +2911,10 @@ function plSection(m){
     ['ก่อนค่าดำเนินงาน','gp3','t','#1FA463'],['OPEX','opex','d','#20B2A5'],['OP','op','t','#1FA463'],['ส่วนกลาง','central','d','#EF5B5B'],['ค่าเสื่อม','dep','d','#8A93A3'],['กำไรสุทธิ','net','t','#0F172A']]
     .filter(x=>idx(x[1]));
   const waterfall=(()=>{ const W=1100,H=330,L=24,R=24,T=34,B=62,n=WF.length; if(n<4||!(rev>0)) return '';
-    const colW=(W-L-R)/n, bw=Math.min(76,colW*.62), Y=v=>T+(H-T-B)*(1-v/(rev*1.02));
+    const colW=(W-L-R)/n, bw=Math.min(76,colW*.62);
+    /* ยอดสะสมติดลบ (เช่น ขาดทุน): ขยายแกนลงใต้เส้นศูนย์ ไม่ให้แท่งทะลุไปทับป้ายชื่อด้านล่าง */
+    let lo=0; { let l=0; WF.forEach(([nm,id,k])=>{ const v=cur[idx(id).index]; if(k==='t') l=v; else l=l-v; lo=Math.min(lo,l); }); }
+    const hi=rev*1.02, Y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
     let lvl=0, g=`<line x1="${L}" x2="${W-R}" y1="${Y(0)}" y2="${Y(0)}" stroke="#E4E8EE"/>`;
     const lab=v=>isCo?v.toFixed(2):fm(v);
     WF.forEach(([nm,id,k,c],i)=>{ const v=cur[idx(id).index], cx=L+colW*(i+.5);
