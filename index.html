@@ -2529,7 +2529,8 @@ const MONTH_FULL = ['มกราคม','กุมภาพันธ์','ม�
 const MONTH_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTH_EN_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MONTH_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-const YEAR = 2026;
+let YEAR = 2026;            // ปีที่กำลังแสดง (เลือกปีย้อนหลังที่ช่อง "ปี" แล้วค่านี้เปลี่ยนตาม)
+const YEAR_REAL = 2026;     // ปีของข้อมูลจริงในระบบ
 // ชื่อย่อที่ใช้ในแถบเมนูด้านบน (หัวข้อเต็มยังอยู่ในแถบหัวข้อของแต่ละส่วน)
 const NAV_SHORT={insight:'Insights',people:'People Performance',overview:'Monthly KPI',salesmix:'Sales Mix & Customers',monthly:'Performance Trend',sssg:'%SSSG by Month',
   delivery:'Delivery by Platform',decline:'Delivery Declines',trans:'Bills & Ticket by Channel',customers:'Customers & Avg Ticket',
@@ -4163,7 +4164,7 @@ function auditStores(kind,mm,yr){
   if(kind==='oss'){ if(yr!==YEAR){ const oy=EXTRA&&EXTRA.ossStoreYears; if(!oy) return null; const o={}; let n=0; oy.forEach(s=>{ const v=s['y'+yr]&&s['y'+yr][mm-1]; if(typeof v==='number'&&isFinite(v)){ o[String(s.code)]={name:s.name,score:v}; n++; } }); return n?o:null; }
     const s=d.ossStores; return s&&Object.keys(s).length?s:null; }
   if(yr===YEAR&&d.cemStores&&Object.keys(d.cemStores).length) return d.cemStores;
-  const ys=EXTRA.cemStoreYears; if(!ys) return null; const key=yr===YEAR?'y2026':'y2025'; const out={}; let n=0;
+  const ys=EXTRA.cemStoreYears; if(!ys) return null; const key='y'+yr; const out={}; let n=0;
   ys.forEach(s=>{ const v=s[key]&&s[key][mm-1]; if(typeof v==='number'&&isFinite(v)){ out[String(s.code)]={name:s.name,score:v}; n++; } });
   return n?out:null;
 }
@@ -5965,7 +5966,7 @@ function buildMain(m){
     ${monthlyTabs()}
     ${gpv||lineChart(S.multi&&S.n>=2?rowsS:rows)}
     ${gpv?'':`<div class="scroll" style="margin-top:18px"><table>
-      <tr><th>เดือน</th><th class="n">Total Sales 2026</th><th class="n">Total Sales 2025</th><th class="n">YoY</th><th class="n">Budget 2026</th><th class="n">vs Budget</th><th class="n">SSSG Sales</th><th class="n">SSSG %</th><th class="n">MoM %</th></tr>
+      <tr><th>เดือน</th><th class="n">Total Sales ${YEAR}</th><th class="n">Total Sales ${YEAR-1}</th><th class="n">YoY</th><th class="n">Budget ${YEAR}</th><th class="n">vs Budget</th><th class="n">SSSG Sales</th><th class="n">SSSG %</th><th class="n">MoM %</th></tr>
       ${rowsS.map(r=>`<tr class="${r.m===m&&!S.multi?'hi':''}"><td>${r.m===m&&!S.multi?'★ ':''}${MONTH_TH[r.m-1]}</td><td class="n">${fmtM(r.sales)}</td><td class="n">${fmtM(r.ly)}</td><td class="n">${pill(pct(r.ly,r.sales))}</td><td class="n">${fmtM(r.budget)}</td><td class="n">${pill(pct(r.budget,r.sales))}</td><td class="n">${fmtM(r.sssgSales)}</td><td class="n">${pill(r.sssg)}</td><td class="n">${pill(r.mom)}</td></tr>`).join('')}
       ${S.multi&&S.row?(r=>`<tr class="hi"><td><b>รวม ${S.labS}</b></td><td class="n"><b>${fmtM(r.sales)}</b></td><td class="n">${fmtM(r.ly)}</td><td class="n">${pill(pct(r.ly,r.sales))}</td><td class="n">${fmtM(r.budget)}</td><td class="n">${pill(pct(r.budget,r.sales))}</td><td class="n">${fmtM(r.sssgSales)}</td><td class="n">${pill(r.sssg)}</td><td class="n">${pill(r.mom)}</td></tr>`)(S.row):''}
     </table></div>`}`));
@@ -6513,11 +6514,13 @@ function applyBY(list){ if(!Array.isArray(list)||!list.length) return; BY_IMPORT
     if(n.h) b.h=n.h; if(n.region) b.region=n.region; if(n.owner) b.owner=n.owner; if(n.open) b.open=n.open;
     Object.entries(n.m||{}).forEach(([mm,v])=>{ const o=b.m[mm]||(b.m[mm]={});
       if(v.ly!=null) o.ly=v.ly; if(v.ty!=null){ o.ty=v.ty; delete o.src; } }); }); }
-function applyState(s){ if(!s||!Array.isArray(s.monthly)) return; if(!s.monthly.length&&!Object.keys(s.detail||{}).length) return;
+function applyState(s){ if(YEAR!==YEAR_REAL){ if(s&&Array.isArray(s.monthly)) YSTORE.pending=s; return; }   // กำลังดูปีย้อนหลัง: เก็บไว้ใช้ตอนกลับปีปัจจุบัน
+  if(!s||!Array.isArray(s.monthly)) return; if(!s.monthly.length&&!Object.keys(s.detail||{}).length) return;
   MONTHLY=s.monthly; DETAIL=s.detail||{}; if(s.by) applyBY(s.by); refreshMonths();
   if(curM==null){ const dm=Object.keys(DETAIL).map(Number).filter(Boolean); curM=dm.length?Math.max(...dm):null; }
   setMonth(curM); if(s.updatedAt) $('#status').textContent='อัปเดต '+new Date(s.updatedAt).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'}); }
 async function saveState(){
+  if(YEAR!==YEAR_REAL) return;   // ห้ามบันทึกข้อมูลย้อนหลัง (สร้างจากไฟล์ STF) ทับข้อมูลจริง
   fillLyFromBranches();
   const s={monthly:MONTHLY, detail:DETAIL, by:BY_IMPORT||undefined, v:DATA_V, updatedAt:new Date().toISOString()};
   /* บันทึกในเครื่องไม่สำเร็จ (เช่น พื้นที่เบราว์เซอร์เต็ม) ต้องบอก ไม่งั้นเปิดเว็บใหม่ข้อมูลที่นำเข้าจะหายเงียบ ๆ */
@@ -7548,6 +7551,7 @@ function importBadge(){ const b=$('#importBtn'); if(!b) return;
 
 function showMsg(t,c){const el=$('#msg');el.textContent=t;el.className='msg '+c;}
 async function importFile(file){
+  if(YEAR!==YEAR_REAL){ IMP=null; showMsg('กำลังดูข้อมูลปี '+YEAR+' (ย้อนหลัง) — เลือกปี '+YEAR_REAL+' ที่ช่อง "ปี" ก่อนจึงนำเข้าไฟล์ได้','err'); return; }
   IMP={file:file.name,size:file.size,kind:null,months:null};
   try{
     const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
@@ -7749,6 +7753,8 @@ $('#exportBtn').onclick=e=>{e.stopPropagation();$('#exportDd').classList.toggle(
 <style>
 /* ข้อมูลย้อนหลัง (เลือกปีที่แถบบน) */
 #fYear[hidden]{display:none}
+.top #fYear{order:4;height:42px;padding:0 30px 0 14px;border-radius:13px;background-color:rgba(255,255,255,.85);border:1px solid rgba(15,23,42,.07);font-weight:600}
+body.yr-past .top #fYear{border-color:var(--accent);color:var(--accent-ink);background-color:var(--accent-2)}
 body.hist-open{overflow:hidden}
 body.hist-open #fMode,body.hist-open #fMonthBox,body.hist-open #fQuarter,body.hist-open #fRangeBox,body.hist-open #presentBtn{display:none!important}
 #histView{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--bg);overflow:auto}
@@ -7806,7 +7812,7 @@ function hFmt(t,v){ if(!hNum(v)) return '—'; return t==='money'?hMoney(v):t===
 
 function histYears(){
   const ys=new Set();
-  (EXTRA.branchYears||[]).forEach(b=>Object.keys(b.h||{}).forEach(y=>{ if(+y<YEAR&&((b.h[y].s||[]).some(hNum))) ys.add(+y); }));
+  (EXTRA.branchYears||[]).forEach(b=>Object.keys(b.h||{}).forEach(y=>{ if(+y<YEAR_REAL&&((b.h[y].s||[]).some(hNum))) ys.add(+y); }));
   return [...ys].sort((a,b)=>b-a); }
 function hCell(b,y,m){ const h=(b.h||{})[y]; if(!h) return null; const o={}; let any=false;
   ['s','g','l','p','t','k','c'].forEach(k=>{ const v=(h[k]||[])[m-1]; if(hNum(v)){ o[k]=v; any=true; } });
@@ -7833,14 +7839,14 @@ function syncYearSel(){
   if(dd){ let hb=document.getElementById('histBtn');
     if(isKT&&!hb){ hb=document.createElement('button'); hb.id='histBtn'; hb.type='button'; dd.insertBefore(hb,dd.firstChild);
       hb.onclick=()=>{ dd.classList.remove('open'); const y=histYears(); if(y.length) histOpen(y[0]); else { const ib=document.getElementById('importBtn'); if(ib) ib.click(); } }; }
-    if(hb){ hb.hidden=!isKT; hb.textContent=ys.length?'🗓 ข้อมูลย้อนหลัง · ปี '+ys.join(' / '):'🗓 ข้อมูลย้อนหลัง (ยังไม่ได้นำเข้าไฟล์ STF)'; } }
+    if(hb){ hb.hidden=!isKT; hb.textContent=ys.length?'🗓 ตารางย้อนหลังรายสาขา × เดือน · ปี '+ys.join(' / '):'🗓 ข้อมูลย้อนหลัง (ยังไม่ได้นำเข้าไฟล์ STF)'; } }
   if(!ys.length){ sel.hidden=true; if(HIST.open) histClose(); return; }
   sel.hidden=false;
-  const want=HIST.open?String(HIST.year):String(YEAR), sig=ys.join(',');
+  const want=String(YEAR), sig=ys.join(',');
   if(sel.dataset.sig!==sig){
-    sel.innerHTML=`<option value="${YEAR}">ปี ${YEAR}</option>`+ys.map(y=>`<option value="${y}">ปี ${y} · ย้อนหลัง</option>`).join('');
+    sel.innerHTML=`<option value="${YEAR_REAL}">ปี ${YEAR_REAL}</option>`+ys.map(y=>`<option value="${y}">ปี ${y} · ย้อนหลัง</option>`).join('');
     sel.dataset.sig=sig; }
-  sel.value=want; }
+  sel.value=HIST.open?want:String(YEAR); }
 
 function histEl(){ let el=document.getElementById('histView');
   if(!el){ el=document.createElement('div'); el.id='histView'; el.hidden=true; document.body.appendChild(el);
@@ -7971,8 +7977,110 @@ function histCsv(){
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
   a.download='history-'+y+'-'+key+'.csv'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500); }
 
+
+/* ───── สลับปีทั้งแดชบอร์ด: ใช้เมนู/หัวข้อเดิม · ข้อมูลปีย้อนหลังสร้างจากประวัติรายสาขา (STF) แล้วสลับเข้าที่เดียวกับข้อมูลจริง ─────
+   ส่วนที่ไฟล์ STF ไม่มี (Budget · P&L · People · CEM/OSS ของปีเก่า) จะว่างเหมือนเดือนที่ยังไม่มีข้อมูล
+   ระหว่างดูปีย้อนหลัง: ห้ามบันทึก/นำเข้า (กันทับข้อมูลจริง) · ข้อมูลจริงเก็บไว้ใน YSTORE.real */
+const YSTORE={real:null,pending:null};
+function histBuildYear(y){
+  const R=YSTORE.real, BYr=(R.EXTRA&&R.EXTRA.branchYears)||[];
+  const g=(b,yy,k,m)=>{ const a=b.h&&b.h[yy]&&b.h[yy][k], v=a&&a[m-1]; return typeof v==='number'&&isFinite(v)?v:0; };
+  const listOf=(yy,m)=>BYr.map(b=>{ const s=g(b,yy,'s',m); if(!(s>0)) return null;
+    const G=g(b,yy,'g',m),L=g(b,yy,'l',m),P=g(b,yy,'p',m),T=g(b,yy,'t',m),K=g(b,yy,'k',m),C=g(b,yy,'c',m),
+          kg=g(b,yy,'kg',m),kl=g(b,yy,'kl',m),kp=g(b,yy,'kp',m),kt=g(b,yy,'kt',m), deli=G+L+P, trDeli=kg+kl+kp;
+    return {code:String(b.code),name:b.name||String(b.code),sales:s,plan:0,dine:Math.max(0,s-deli-T),take:T,deli,grab:G,lm:L,sp:P,
+            tr:K,cust:C,trDine:Math.max(0,K-trDeli-kt),trTake:kt,trDeli,colPct:0,labH:0}; }).filter(Boolean);
+  const S=(l,k)=>l.reduce((a,b)=>a+b[k],0), pct=(a,b)=>(a&&b)?(b-a)/a*100:null;
+  const mon=[], det={}, months=[];
+  for(let m=1;m<=12;m++){
+    const cur=listOf(y,m); if(!cur.length) continue; months.push(m);
+    const pl=m>1?listOf(y,m-1):listOf(y-1,12), prev=pl.length?pl:null, sales=S(cur,'sales');
+    const lyAll=BYr.reduce((a,b)=>a+g(b,y-1,'s',m),0);
+    let ssTy=0, ssLy=0; BYr.forEach(b=>{ const t=g(b,y,'s',m), l=g(b,y-1,'s',m); if(t>0&&l>0){ ssTy+=t; ssLy+=l; } });
+    mon.push({m, sales:+(sales/1e6).toFixed(2), ly:lyAll>0?+(lyAll/1e6).toFixed(2):null, budget:null,
+      sssgSales:ssLy?+(ssTy/1e6).toFixed(2):null, sssg:ssLy?+((ssTy/ssLy-1)*100).toFixed(1):null,
+      mom:prev?+pct(S(prev,'sales'),sales).toFixed(1):null});
+    const d=det[m]={};
+    if(ssLy) d.sssgFile={ty:ssTy,ly:ssLy};
+    const pv={}; if(prev) prev.forEach(x=>pv[x.code]=x);
+    d.branchRows=cur.map(b=>{ const p=pv[b.code];
+      return {code:b.code,name:b.name,sales:b.sales,plan:0,ach:null,
+        mom:p&&p.sales?+((b.sales-p.sales)/p.sales*100).toFixed(1):null,
+        dine:b.dine,take:b.take,deli:b.deli,grab:b.grab,lm:b.lm,sp:b.sp,tr:b.tr,cust:b.cust,
+        tk:b.tr?Math.round(b.sales/b.tr):null,trDine:b.trDine,trTake:b.trTake,trDeli:b.trDeli,
+        trMom:p&&p.tr?+((b.tr-p.tr)/p.tr*100).toFixed(1):null,col:0,lh:null}; });
+    const lyBr=BYr.filter(b=>g(b,y-1,'s',m)>0);
+    d.stores={now:cur.length, ly:lyBr.length||null, sameStore:lyBr.filter(b=>g(b,y,'s',m)>0).length||null};
+    if(prev){
+      const pf=[['Grab','grab'],['Line Man','lm'],['Shopee Food','sp']]
+        .map(([name,k])=>({name,prev:+(S(prev,k)/1e6).toFixed(2),now:+(S(cur,k)/1e6).toFixed(2)})).filter(p=>p.now>0||p.prev>0);
+      const pM=MONTH_TH[m>1?m-2:11], cM=MONTH_TH[m-1];
+      if(pf.length){
+        const tn=S(cur,'deli'), tp=S(prev,'deli'), sp=S(prev,'sales'), byC={}; prev.forEach(b=>byC[b.code]=b);
+        const drop=k=>cur.map(b=>{ const p=byC[b.code]; return p?[b.name,p[k],b[k]]:null; }).filter(x=>x&&x[1]>0&&x[2]<x[1]).sort((a,b)=>(a[2]-a[1])-(b[2]-b[1]));
+        d.delivery={compare:`${pM} vs ${cM} ${y}`,platforms:pf,sharePrev:sp?+(tp/sp*100).toFixed(1):null,shareNow:sales?+(tn/sales*100).toFixed(1):null,
+          topDecline:drop('deli').slice(0,8).map(r=>[r[0],Math.round(r[1]),Math.round(r[2])]),
+          lineManDecline:drop('lm').slice(0,7).map(r=>[r[0],Math.round(r[1]),Math.round(r[2])]),
+          note:`รวม Delivery ${(tn/1e6).toFixed(2)}M เทียบเดือนก่อน ${(tp/1e6).toFixed(2)}M — จากประวัติรายสาขา (ไฟล์ STF)`};
+      }
+      const tkOf=(l,sk,tk)=>{ const t=S(l,tk); return t?Math.round(S(l,sk)/t):0; };
+      const nz=(l,k)=>l.filter(b=>b[k]).length||1;
+      const ch=(name,sk,tk)=>({name,trans:[S(prev,tk),S(cur,tk)],ticket:[tkOf(prev,sk,tk),tkOf(cur,sk,tk)]});
+      if(S(cur,'tr')>0) d.trans={compare:`${cM} vs ${pM} ${y}`,trans:[S(prev,'tr'),S(cur,'tr')],ticket:[tkOf(prev,'sales','tr'),tkOf(cur,'sales','tr')],
+        customer:[S(prev,'cust'),S(cur,'cust')],custAvg:[S(prev,'tr')?+(S(prev,'cust')/S(prev,'tr')).toFixed(2):0,+(S(cur,'cust')/S(cur,'tr')).toFixed(2)],
+        channels:[ch('Dine In','dine','trDine'),ch('Take away','take','trTake'),ch('Delivery','deli','trDeli')].filter(c=>c.trans[0]||c.trans[1]),
+        note:'จำนวนบิล/Ticket Avg./ลูกค้า จากประวัติรายสาขา (ไฟล์ STF) เทียบเดือนก่อน'};
+      const byP={}; prev.forEach(b=>byP[b.code]=b);
+      const rowsB=cur.map(b=>{ const p=byP[b.code]; if(!p||!p.tr||!b.tr||!p.sales) return null;
+        const tp2=pct(p.tr,b.tr), kp2=pct(p.sales/p.tr,b.sales/b.tr); return (tp2==null||kp2==null)?null:{name:b.name,t:tp2,k:kp2}; }).filter(Boolean);
+      const good=rowsB.filter(r=>r.t>=0&&r.k>=-1).sort((a,b)=>(b.t+b.k)-(a.t+a.k)).slice(0,5),
+            bad=rowsB.filter(r=>r.t<0&&r.k<0).sort((a,b)=>(a.t+a.k)-(b.t+b.k)).slice(0,5);
+      if(good.length||bad.length) d.branches={good:good.map(r=>[r.name,+r.t.toFixed(1),+r.k.toFixed(1)]),bad:bad.map(r=>[r.name,+r.t.toFixed(1),+r.k.toFixed(1)]),
+        note:`เทียบ ${cM} กับ ${pM} ${y} · จำนวนบิลและ Ticket Avg. รายสาขา`};
+    }
+  }
+  /* ตารางยอดรายสาขา 2 ปี: ty = ปีที่เลือก · ly = ปีก่อนหน้า (h ติดไปด้วย — โค้ดเดิมอ่านปีก่อนจาก h[YEAR-1]) */
+  const BYy=BYr.map(b=>{ const nb={code:b.code,name:b.name,zone:b.zone,mall:b.mall,region:b.region,owner:b.owner,open:b.open,h:b.h,m:{}};
+    for(let mm=1;mm<=12;mm++){ const t=g(b,y,'s',mm), l=g(b,y-1,'s',mm); if(t>0||l>0) nb.m[mm]={ty:t>0?t:null,ly:l>0?l:null}; }
+    return nb; });
+  const rx=R.EXTRA||{}, meta=rx.pnlFull&&rx.pnlFull.meta;
+  const EX=Object.assign({},rx,{pnlFull:meta?{meta,months:[],actual:{},ly:{},branch:{},branchLY:{}}:null,cemSummary:null,branchYears:BYy});
+  return {MONTHLY:mon,DETAIL:det,EXTRA:EX,months};
+}
+function yearSwitch(y){
+  y=+y; const sel=document.getElementById('fYear');
+  if(!y||y===YEAR){ syncYearSel(); return; }
+  if(HIST.open) histClose();
+  try{ if(document.body.classList.contains('present')) exitPresent(); }catch(e){}
+  if(YEAR===YEAR_REAL) YSTORE.real={MONTHLY,DETAIL,EXTRA,BY_IMPORT,PNL_BASE,curM,BRANCH_META,ZONES_LIST};
+  const R=YSTORE.real; if(!R){ syncYearSel(); return; }
+  if(y===YEAR_REAL){
+    MONTHLY=R.MONTHLY; DETAIL=R.DETAIL; EXTRA=R.EXTRA; BY_IMPORT=R.BY_IMPORT; PNL_BASE=R.PNL_BASE; BRANCH_META=R.BRANCH_META; ZONES_LIST=R.ZONES_LIST;
+    YEAR=YEAR_REAL;
+  } else {
+    const H=histBuildYear(y);
+    if(!H.months.length){ if(sel) sel.value=String(YEAR); return; }
+    MONTHLY=H.MONTHLY; DETAIL=H.DETAIL; EXTRA=H.EXTRA; BY_IMPORT=null; PNL_BASE=null; BRANCH_META=R.BRANCH_META; ZONES_LIST=R.ZONES_LIST;
+    YEAR=y;
+  }
+  document.body.classList.toggle('yr-past',YEAR!==YEAR_REAL);
+  try{ AUD.cem.yrs={[YEAR]:true,[YEAR-1]:true}; AUD.oss.yrs={[YEAR]:true,[YEAR-1]:true}; }catch(e){}
+  FILT.zone='all'; FILT.mode='month';
+  refreshMonths();
+  curM=(y===YEAR_REAL&&R.curM&&months.includes(R.curM))?R.curM:(y===YEAR_REAL?defaultMonth():months[months.length-1]);
+  try{ renderFilters(); }catch(e){}
+  const st=document.getElementById('status');
+  if(y!==YEAR_REAL){ if(st){ st.dataset.keep=st.textContent; st.textContent='ข้อมูลย้อนหลังปี '+y+' · จากไฟล์ STF'; } }
+  else if(st&&st.dataset.keep){ st.textContent=st.dataset.keep; }
+  setMonth(curM);
+  if(y===YEAR_REAL&&YSTORE.pending){ const p=YSTORE.pending; YSTORE.pending=null; try{ applyState(p); }catch(e){} }
+  syncYearSel();
+}
+/* เปลี่ยนแบรนด์ระหว่างดูปีย้อนหลัง → กลับปีจริงก่อน (กันเก็บข้อมูลย้อนหลังลงที่เก็บของแบรนด์) */
+(function(){ if(typeof setBrand==='function'){ const s0=setBrand; setBrand=function(){ if(YEAR!==YEAR_REAL) yearSwitch(YEAR_REAL); return s0.apply(this,arguments); }; } })();
+
 /* เลือกปีที่แถบบน · เปิดจากศูนย์นำเข้า · ปิดด้วย Esc · วาดใหม่เมื่อขอบเขต (โซน/สาขา) เปลี่ยน */
-document.addEventListener('change',e=>{ if(e.target.id!=='fYear') return; const v=+e.target.value; if(v===YEAR) histClose(); else histOpen(v); });
+document.addEventListener('change',e=>{ if(e.target.id!=='fYear') return; yearSwitch(+e.target.value); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&HIST.open&&!document.querySelector('.modal.open')) histClose(); });
 window.addEventListener('resize',()=>{ if(HIST.open) histEl().style.top=histTop()+'px'; });
 document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-hist]'); if(!b) return;
