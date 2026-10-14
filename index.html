@@ -5090,7 +5090,6 @@ function ovChart(rows,main,refs){
     /* Same-store ปีก่อน ต้องเทียบกับ Same-store ปีนี้ (ssA) ไม่ใช่ยอดขายรวมที่มีสาขาเปิดใหม่ปนอยู่ — ไม่งั้น % ไม่ตรงกับ SSSG ในตาราง */
     refs.forEach(s=>{ const b=r[s.k];
       if(s.k==='ssL'&&main.k!=='ssA'){
-        t.push(`Same-store ${YEAR} ${r.ssA==null?'—':r.ssA.toFixed(2)+'M'}`);
         t.push(`${s.name} ${b==null?'—':b.toFixed(2)+'M'}${b!=null&&r.ssA!=null?' (SSSG '+sgn(pct(b,r.ssA))+')':''}`); return; }
       t.push(`${s.name} ${b==null?'—':b.toFixed(2)+'M'}${b!=null&&v!=null?' ('+sgn(pct(b,v))+')':''}`); });
     g+=`<rect x="${Math.max(L-20,x(i)-colW/2)}" y="${T-12}" width="${colW}" height="${H-B-T+12}" fill="transparent" data-tip="${t.join('\n')}"/>`; });
