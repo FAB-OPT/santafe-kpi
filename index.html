@@ -2428,6 +2428,7 @@ section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):n
   <h1>Monthly Performance Review <span id="hsub"></span></h1><span class="status" id="status"></span><span class="syncst" id="syncSt" hidden></span>
   <div class="brandsw" id="brandSw"></div>
   <div class="filters">
+    <select id="fYear" aria-label="ปีข้อมูล" hidden></select>
     <select id="fMode" aria-label="ช่วงข้อมูล">
       <option value="month">รายเดือน</option>
       <option value="quarter">ไตรมาส</option>
@@ -7509,7 +7510,7 @@ function renderImportPanel(){
   const ytab=ALLY.slice().reverse().map(y=>{ const TT=trk(y), ms=msOf(y), has=TT.reduce((a,t)=>a+ms.filter(m=>['ok','part'].includes(cellY(t,y,m).st)).length,0);
     return `<button class="cyt${y===COVY?' on':''}${has?'':' none'}" data-cy="${y}">${y}<small>${y===YEAR?'ปีนี้':(has?'มีข้อมูล':'ไม่มี')}</small></button>`; }).join('');
   cv.innerHTML=`<div class="cyts">${ytab}</div><div class="covwrap"><table class="cov"><tr class="yr"><th class="cn" rowspan="2">ข้อมูล</th>${yearBand}</tr><tr>${monHead}</tr>${rows}</table></div>
-    ${COVY<YEAR?`<div class="covhint">ปี ${COVY}: ระบบเก็บเฉพาะบางชนิดข้อมูล · ช่องที่เป็น – คือไม่ได้เก็บข้อมูลปีนั้น</div>`:''}`;
+    ${COVY<YEAR?`<div class="covhint">ปี ${COVY}: ระบบเก็บเฉพาะบางชนิดข้อมูล · ช่องที่เป็น – คือไม่ได้เก็บข้อมูลปีนั้น${(typeof histYears==='function'&&histYears().includes(COVY))?` · <button type="button" class="lnk" data-hist="${COVY}">ดูข้อมูลปี ${COVY} →</button>`:''}</div>`:''}`;
   cv.querySelectorAll('[data-cy]').forEach(b=>b.onclick=()=>{ COVY=+b.dataset.cy; renderImportPanel(); });
   /* ---- ต้องนำเข้าต่อ (เดือนที่กำลังดู) ---- */
   const miss=TN.map(t=>({t,c:cell(t,curM)})).filter(x=>x.c.st!=='ok');
@@ -7745,6 +7746,235 @@ $('#exportBtn').onclick=e=>{e.stopPropagation();$('#exportDd').classList.toggle(
     const n=document.querySelector('#importBtn .nbadge'), mb=$('#moreBadge'); if(!mb) return;
     mb.textContent=n?n.textContent:''; mb.hidden=!n; }; }
 </script>
+<style>
+/* ข้อมูลย้อนหลัง (เลือกปีที่แถบบน) */
+#fYear[hidden]{display:none}
+body.hist-open{overflow:hidden}
+body.hist-open #fMode,body.hist-open #fMonthBox,body.hist-open #fQuarter,body.hist-open #fRangeBox,body.hist-open #presentBtn{display:none!important}
+#histView{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--bg);overflow:auto}
+#histView[hidden]{display:none}
+.hv-in{max-width:1280px;margin:0 auto;padding:18px 22px 60px}
+.hv-hd{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.hv-hd h2{font-size:24px;margin:0;color:var(--ink)}.hv-hd p{margin:4px 0 0;color:var(--mute);font-size:13px}
+.hv-act{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.hv-yb,.hv-back,.hv-chip,.hv-csv{border:1px solid var(--line);background:var(--card);color:var(--ink-2);border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.hv-yb.on,.hv-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.hv-yb:hover,.hv-back:hover,.hv-chip:hover,.hv-csv:hover{border-color:var(--accent-3);color:var(--accent-ink)}.hv-yb.on:hover,.hv-chip.on:hover{color:#fff}
+.hv-back{margin-left:6px;background:var(--accent-2);border-color:var(--accent-3);color:var(--accent-ink)}
+.hv-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.hv-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px;min-height:190px}
+.hv-ch b{font-size:16px;color:var(--ink)}
+.hv-big{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:12px 0 10px;flex-wrap:wrap}
+.hv-big span{color:var(--mute);font-size:13px}.hv-big strong{font-size:30px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}.hv-big strong small{font-size:15px}
+.hv-row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-size:13px;color:var(--mute);border-top:1px solid var(--hair)}
+.hv-row b{color:var(--ink);font-variant-numeric:tabular-nums}.hv-row small{color:var(--mute);font-weight:600}
+.hv-pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:800;background:var(--surface);color:var(--mute);white-space:nowrap}
+.hv-pill.pos{background:#E8F7EE;color:#12853F}.hv-pill.neg{background:#FDECEC;color:#C6283A}
+.hv-na{background:repeating-linear-gradient(135deg,#fbf9f7,#fbf9f7 10px,#f7f3ef 10px,#f7f3ef 20px);border-style:dashed}
+.hv-nod{display:flex;flex-direction:column;gap:6px;margin-top:18px;color:var(--mute);font-size:13px;line-height:1.55}.hv-nod strong{font-size:16px;color:var(--ink-2)}
+.hv-sec{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px}
+.hv-sec h3{margin:0 0 8px;font-size:16px}.hv-sec h3 small{color:var(--mute);font-weight:600;font-size:12.5px;margin-left:6px}
+.hv-chart{width:100%;height:auto;display:block}
+.hv-th{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.hv-chips{display:flex;gap:6px;flex-wrap:wrap}
+.hv-tools{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap;align-items:center}
+.hv-tools input,.hv-tools select{border:1px solid var(--line);border-radius:9px;padding:7px 10px;font:inherit;font-size:13px;background:#fff;color:var(--ink-2)}.hv-tools input{min-width:240px}
+.hv-tw{overflow:auto;max-height:62vh;border:1px solid var(--line);border-radius:12px}
+.hv-t{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums}
+.hv-t th{position:sticky;top:0;z-index:2;background:var(--surface);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:right;color:var(--ink-2)}
+.hv-t td{padding:7px 10px;border-bottom:1px solid var(--hair);white-space:nowrap;text-align:right}
+.hv-t .hv-nm{position:sticky;left:0;z-index:1;background:var(--card);text-align:left;min-width:210px;max-width:260px;overflow:hidden;text-overflow:ellipsis}
+.hv-t th.hv-nm{z-index:3;background:var(--surface)}.hv-nm small{display:block;color:var(--mute);font-weight:500}
+.hv-t .hv-tot{font-weight:800;color:var(--ink)}
+.hv-t tr.hv-sum td{background:var(--accent-2);font-weight:800}.hv-t tr.hv-sum .hv-nm{background:var(--accent-2)}
+.hv-t tbody tr:hover td{background:#fffaf5}.hv-empty{text-align:center!important;color:var(--mute);padding:22px!important}
+.hv-note{color:var(--mute);font-size:12.5px;margin:12px 2px 0}
+@media(max-width:900px){.hv-cards{grid-template-columns:1fr}.hv-in{padding:14px 12px 50px}}
+</style>
+<script>
+/* ========================= ข้อมูลย้อนหลัง (ปีก่อน ๆ) =========================
+   ที่มา = ประวัติรายสาขาจากไฟล์ STF (b.h[ปี]: s ยอดขาย · g Grab · l Line Man · p Shopee · t Takeaway · k บิล · c ลูกค้า รายเดือน)
+   เลือกปีที่ช่อง "ปี" ในแถบบน → เปิดหน้าสรุปแบบการ์ดเดียวกับแดชบอร์ด + กราฟรายเดือน + ตารางสาขา × เดือน
+   การ์ดที่ไฟล์ STF ไม่มี (กำไร · People) แสดง "ไม่มีข้อมูลปีนี้" · CEM/OSS แสดงถ้าระบบเก็บไว้ (ปีก่อนหน้า 1 ปี) */
+const HIST={open:false,year:null,metric:'s',q:'',sort:'tot'};
+const HIST_M=[['s','ยอดขาย','money'],['g','Grab','money'],['l','Line Man','money'],['p','Shopee','money'],['t','Takeaway','money'],
+  ['k','จำนวนบิล','int'],['c','ลูกค้า','int'],['tk','Ticket Avg.','baht'],['cb','ลูกค้า/บิล','dec']];
+const hEsc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hNum=v=>typeof v==='number'&&isFinite(v);
+const hInt=v=>hNum(v)?Math.round(v).toLocaleString('en-US'):'—';
+const hMoney=v=>!hNum(v)?'—':(Math.abs(v)>=1e6?(v/1e6).toFixed(2)+'M':(Math.abs(v)>=1e3?Math.round(v/1e3)+'K':String(Math.round(v))));
+function hFmt(t,v){ if(!hNum(v)) return '—'; return t==='money'?hMoney(v):t==='baht'?'฿'+Math.round(v).toLocaleString('en-US'):t==='dec'?v.toFixed(2):hInt(v); }
+
+function histYears(){
+  const ys=new Set();
+  (EXTRA.branchYears||[]).forEach(b=>Object.keys(b.h||{}).forEach(y=>{ if(+y<YEAR&&((b.h[y].s||[]).some(hNum))) ys.add(+y); }));
+  return [...ys].sort((a,b)=>b-a); }
+function hCell(b,y,m){ const h=(b.h||{})[y]; if(!h) return null; const o={}; let any=false;
+  ['s','g','l','p','t','k','c'].forEach(k=>{ const v=(h[k]||[])[m-1]; if(hNum(v)){ o[k]=v; any=true; } });
+  return any?o:null; }
+/* รวมค่าของสาขาในขอบเขต · other = ปีที่ต้องมียอดคู่กัน (เทียบแบบสาขา-เดือนเดียวกัน) */
+function hSum(list,y,months,other){
+  const T={s:0,g:0,l:0,p:0,t:0,k:0,c:0,sB:0,kB:0,cC:0,kC:0,n:0};
+  list.forEach(b=>months.forEach(m=>{ const a=hCell(b,y,m); if(!a) return;
+    if(other){ const p=hCell(b,other,m); if(!p||!hNum(p.s)||!hNum(a.s)) return; }
+    T.n++; ['s','g','l','p','t','k','c'].forEach(k=>{ if(hNum(a[k])) T[k]+=a[k]; });
+    if(hNum(a.s)&&a.k>0){ T.sB+=a.s; T.kB+=a.k; }
+    if(hNum(a.c)&&a.k>0){ T.cC+=a.c; T.kC+=a.k; } }));
+  return T; }
+function hVal(T,key){ if(key==='tk') return T.kB?T.sB/T.kB:null; if(key==='cb') return T.kC?T.cC/T.kC:null; return T.n?T[key]:null; }
+const hPct=(a,b)=>(hNum(a)&&hNum(b)&&b)?(a/b-1)*100:null;
+function hMonthsOf(list,y){ const out=[]; for(let m=1;m<=12;m++) if(list.some(b=>{ const c=hCell(b,y,m); return c&&hNum(c.s); })) out.push(m); return out; }
+function hScopeLabel(){ return FILT.zone==='all'?'ทุกสาขา':scopeName(); }
+
+function syncYearSel(){
+  const sel=document.getElementById('fYear'); if(!sel) return;
+  const ys=(typeof BRAND==='undefined'||BRAND==='kt')?histYears():[];
+  if(!ys.length){ sel.hidden=true; if(HIST.open) histClose(); return; }
+  sel.hidden=false;
+  const want=HIST.open?String(HIST.year):String(YEAR), sig=ys.join(',');
+  if(sel.dataset.sig!==sig){
+    sel.innerHTML=`<option value="${YEAR}">ปี ${YEAR}</option>`+ys.map(y=>`<option value="${y}">ปี ${y} · ย้อนหลัง</option>`).join('');
+    sel.dataset.sig=sig; }
+  sel.value=want; }
+
+function histEl(){ let el=document.getElementById('histView');
+  if(!el){ el=document.createElement('div'); el.id='histView'; el.hidden=true; document.body.appendChild(el);
+    el.addEventListener('click',histClick); el.addEventListener('input',histInput); }
+  return el; }
+function histTop(){ const h=document.querySelector('header.top'); let t=h?h.getBoundingClientRect().bottom:0;
+  const sb=document.getElementById('scopeBar'); if(sb&&!sb.hidden) t=Math.max(t,sb.getBoundingClientRect().bottom);
+  return Math.max(0,Math.round(t)); }
+function histOpen(y){
+  if(!histYears().includes(+y)){ histClose(); return; }
+  HIST.open=true; HIST.year=+y; HIST.q='';
+  const el=histEl(); el.hidden=false; el.style.top=histTop()+'px';
+  document.body.classList.add('hist-open'); histRender(); syncYearSel(); el.scrollTop=0; }
+function histClose(){
+  HIST.open=false; const el=document.getElementById('histView'); if(el) el.hidden=true;
+  document.body.classList.remove('hist-open'); syncYearSel(); }
+
+function histRender(){
+  if(!HIST.open) return;
+  const el=histEl(), y=HIST.year, yp=y-1, L=filtZone(EXTRA.branchYears||[]);
+  el.style.top=histTop()+'px';
+  const months=hMonthsOf(L,y), hasPrev=L.some(b=>hMonthsOf([b],yp).length);
+  const cur=hSum(L,y,months), pair=hSum(L,y,months,yp), prevPair=hSum(L,yp,months,y);
+  const nBr=L.filter(b=>months.some(m=>{ const c=hCell(b,y,m); return c&&hNum(c.s); })).length;
+  const yoyS=hasPrev&&pair.n?hPct(pair.s,prevPair.s):null;
+  const mS=months.map(m=>({m,v:hSum(L,y,[m]).s})), best=mS.slice().sort((a,b)=>b.v-a.v)[0], low=mS.slice().sort((a,b)=>a.v-b.v)[0];
+  const range=months.length?(months.length===12?'ม.ค.–ธ.ค.':MONTH_TH[months[0]-1]+'–'+MONTH_TH[months[months.length-1]-1]):'';
+  const pillH=v=>v==null?'<span class="hv-pill">—</span>':`<span class="hv-pill ${v>=0?'pos':'neg'}">${v>=0?'▲':'▼'} ${Math.abs(v).toFixed(1)}%</span>`;
+
+  /* ---- การ์ด ---- */
+  const cards=[];
+  cards.push(`<div class="hv-card"><div class="hv-ch"><b>Sales Performance</b></div>
+    <div class="hv-big"><span>ยอดขายรวม ${range}</span><strong>฿${(cur.s/1e6).toFixed(1)}M</strong></div>
+    <div class="hv-row"><span>เทียบปี ${yp} (สาขา-เดือนเดียวกัน)</span>${pillH(yoyS)}</div>
+    <div class="hv-row"><span>สาขาที่มียอดขาย</span><b>${nBr} สาขา</b></div>
+    <div class="hv-row"><span>เดือนสูงสุด</span><b>${best?MONTH_TH[best.m-1]+' · '+hMoney(best.v):'—'}</b></div>
+    <div class="hv-row"><span>เดือนต่ำสุด</span><b>${low?MONTH_TH[low.m-1]+' · '+hMoney(low.v):'—'}</b></div></div>`);
+  cards.push(`<div class="hv-card"><div class="hv-ch"><b>Customer Traffic</b></div>
+    <div class="hv-big"><span>ลูกค้ารวม</span><strong>${cur.c?hInt(cur.c):'—'}${cur.c?'<small> คน</small>':''}</strong></div>
+    <div class="hv-row"><span>จำนวนบิลรวม</span><b>${cur.k?hInt(cur.k):'—'}</b></div>
+    <div class="hv-row"><span>ยอดเฉลี่ยต่อบิล (Ticket Avg.)</span><b>${hFmt('baht',hVal(cur,'tk'))}</b></div>
+    <div class="hv-row"><span>ลูกค้าเฉลี่ยต่อบิล</span><b>${hVal(cur,'cb')==null?'—':hVal(cur,'cb').toFixed(2)+' คน'}</b></div></div>`);
+  const dl=cur.g+cur.l+cur.p, plat=[['Grab',cur.g],['Line Man',cur.l],['Shopee',cur.p],['Takeaway',cur.t]];
+  cards.push(`<div class="hv-card"><div class="hv-ch"><b>Delivery by Platform</b></div>
+    <div class="hv-big"><span>ยอด Delivery (Grab + Line Man + Shopee)</span><strong>${dl?'฿'+(dl/1e6).toFixed(1)+'M':'—'}</strong></div>
+    <div class="hv-row"><span>สัดส่วนต่อยอดขายรวม</span><b>${cur.s&&dl?(dl/cur.s*100).toFixed(1)+'%':'—'}</b></div>
+    ${plat.map(([n,v])=>`<div class="hv-row"><span>${n}</span><b>${v?hMoney(v):'—'}${v&&cur.s?` <small>${(v/cur.s*100).toFixed(1)}%</small>`:''}</b></div>`).join('')}</div>`);
+  cards.push(histNoData('Profitability','ไฟล์ STF ไม่มีงบกำไรขาดทุน (P&L) — นำเข้าไฟล์ PL ของปีนี้เพื่อดูได้',y));
+  /* Store Excellence: CEM/OSS ที่ระบบเก็บไว้ (ย้อนได้ 1 ปี) */
+  let cemV=[], ossV=[];
+  for(let m=1;m<=12;m++){ [['cem',cemV],['oss',ossV]].forEach(([k,arr])=>{ let st=null; try{ st=zoneStores(auditStores(k,m,y)); }catch(e){}
+      if(st) Object.values(st).forEach(s=>{ if(hNum(s.score)) arr.push(s.score); }); }); }
+  const avg=a=>a.length?a.reduce((x,z)=>x+z,0)/a.length:null;
+  if(cemV.length||ossV.length) cards.push(`<div class="hv-card"><div class="hv-ch"><b>Store Excellence</b></div>
+    <div class="hv-big"><span>คะแนน CEM เฉลี่ย</span><strong>${cemV.length?avg(cemV).toFixed(1)+'%':'—'}</strong></div>
+    <div class="hv-row"><span>ผลประเมิน CEM (สาขา-เดือน)</span><b>${cemV.length}</b></div>
+    <div class="hv-row"><span>คะแนน OSS เฉลี่ย</span><b>${ossV.length?avg(ossV).toFixed(1)+'%':'—'}</b></div></div>`);
+  else cards.push(histNoData('Store Excellence','ระบบไม่ได้เก็บคะแนน CEM / OSS ของปีนี้',y));
+  cards.push(histNoData('People Performance','ไฟล์ STF ไม่มี Labour (ชั่วโมง) และ %COL — ดูได้เฉพาะปีที่นำเข้าแบบฟอร์มส่งยอดขาย',y));
+
+  /* ---- กราฟยอดขายรายเดือน (เทียบปีก่อน) ---- */
+  const prevM=months.map(m=>hSum(L,yp,[m]).n?hSum(L,yp,[m]).s:null);
+  const vals=mS.map(r=>r.v).concat(prevM.filter(hNum)), mx=Math.max(1,...vals)*1.12;
+  const W=1100,H=250,Lp=44,Rp=14,Tp=22,Bp=34, bw=Math.min(46,(W-Lp-Rp)/Math.max(1,months.length)*0.55);
+  const X=i=>Lp+(W-Lp-Rp)*((i+.5)/Math.max(1,months.length)), Y=v=>Tp+(H-Tp-Bp)*(1-v/mx);
+  let svg=`<svg viewBox="0 0 ${W} ${H}" class="hv-chart" role="img" aria-label="ยอดขายรายเดือนปี ${y}">`;
+  for(let k=0;k<=4;k++){ const v=mx/1.12*k/4; svg+=`<line x1="${Lp}" x2="${W-Rp}" y1="${Y(v)}" y2="${Y(v)}" stroke="#EDE7E1"/><text x="${Lp-6}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="#8a807a">${(v/1e6).toFixed(0)}M</text>`; }
+  mS.forEach((r,i)=>{ svg+=`<rect x="${X(i)-bw/2}" y="${Y(r.v)}" width="${bw}" height="${Math.max(0,H-Bp-Y(r.v))}" rx="4" fill="#F66B21"/>
+      <text x="${X(i)}" y="${Y(r.v)-6}" text-anchor="middle" font-size="11.5" font-weight="700" fill="#C9490B">${(r.v/1e6).toFixed(1)}</text>
+      <text x="${X(i)}" y="${H-12}" text-anchor="middle" font-size="12" fill="#3d3733">${MONTH_TH[r.m-1]}</text>`; });
+  const pp=prevM.map((v,i)=>hNum(v)?[X(i),Y(v)]:null).filter(Boolean);
+  if(pp.length>1) svg+=`<path d="${pp.map((p,i)=>(i?'L':'M')+p[0]+','+p[1]).join(' ')}" fill="none" stroke="#8a807a" stroke-width="2.2" stroke-dasharray="6 5"/>`;
+  pp.forEach(p=>{ svg+=`<circle cx="${p[0]}" cy="${p[1]}" r="3.4" fill="#8a807a"/>`; });
+  svg+='</svg>';
+
+  /* ---- ตารางสาขา × เดือน ---- */
+  const mt=HIST_M.find(x=>x[0]===HIST.metric)||HIST_M[0], key=mt[0], ty=mt[2];
+  const colMonths=Array.from({length:12},(_,i)=>i+1);
+  const per=b=>{ const rowM=colMonths.map(m=>{ const T=hSum([b],y,[m]); return T.n?hVal(T,key):null; });
+    const Tt=hSum([b],y,months), tot=Tt.n?hVal(Tt,key):null;
+    const a=hSum([b],y,months,yp), p=hSum([b],yp,months,y);
+    return {b,rowM,tot,yoy:(a.n&&p.n)?hPct(hVal(a,key),hVal(p,key)):null}; };
+  const q=HIST.q.trim().toLowerCase();
+  let rows=L.map(per).filter(r=>r.rowM.some(hNum)&&(!q||(String(r.b.code)+' '+(r.b.name||'')+' '+(r.b.zone||'')).toLowerCase().includes(q)));
+  rows.sort((a,b)=>HIST.sort==='code'?String(a.b.code).localeCompare(String(b.b.code)):(hNum(b.tot)?b.tot:-1)-(hNum(a.tot)?a.tot:-1));
+  const TT=hSum(L,y,months), TP=hSum(L,y,months,yp), TPp=hSum(L,yp,months,y);
+  const totRow={rowM:colMonths.map(m=>{ const T=hSum(L,y,[m]); return T.n?hVal(T,key):null; }), tot:hVal(TT,key), yoy:(TP.n&&TPp.n)?hPct(hVal(TP,key),hVal(TPp,key)):null};
+  const tr=(name,sub,r,cls)=>`<tr class="${cls||''}"><td class="hv-nm"><b>${hEsc(name)}</b>${sub?`<small>${hEsc(sub)}</small>`:''}</td>${r.rowM.map(v=>`<td class="n">${hFmt(ty,v)}</td>`).join('')}<td class="n hv-tot">${hFmt(ty,r.tot)}</td><td class="n">${pillH(r.yoy)}</td></tr>`;
+  const table=`<div class="hv-tw"><table class="hv-t"><thead><tr><th class="hv-nm">สาขา</th>${colMonths.map(m=>`<th class="n">${MONTH_TH[m-1]}</th>`).join('')}<th class="n">${key==='tk'||key==='cb'?'เฉลี่ย':'รวม'}</th><th class="n">vs ${yp}</th></tr></thead>
+    <tbody>${tr('รวม · '+hScopeLabel(),'',totRow,'hv-sum')}${rows.map(r=>tr(r.b.code+' '+(r.b.name||''),r.b.zone||'',r)).join('')||`<tr><td colspan="15" class="hv-empty">ไม่พบสาขาตามคำค้น</td></tr>`}</tbody></table></div>`;
+
+  const ys=histYears();
+  el.innerHTML=`<div class="hv-in">
+    <div class="hv-hd"><div><h2>ข้อมูลย้อนหลัง · ปี ${y}</h2><p>จากประวัติรายสาขาไฟล์ STF · ${hEsc(hScopeLabel())} · ${nBr} สาขา · ${hEsc(range)}</p></div>
+      <div class="hv-act">${ys.map(v=>`<button class="hv-yb${v===y?' on':''}" data-hy="${v}">${v}</button>`).join('')}<button class="hv-back" data-hback="1">← กลับแดชบอร์ด ${YEAR}</button></div></div>
+    <div class="hv-cards">${cards.join('')}</div>
+    <div class="hv-sec"><h3>ยอดขายรายเดือน <small>แท่ง = ปี ${y} · เส้นประ = ปี ${yp}${hasPrev?'':' (ไม่มีข้อมูล)'} · หน่วยล้านบาท</small></h3>${svg}</div>
+    <div class="hv-sec"><div class="hv-th"><h3>รายสาขา × เดือน</h3>
+      <span class="hv-chips">${HIST_M.map(x=>`<button class="hv-chip${x[0]===key?' on':''}" data-hm="${x[0]}">${x[1]}</button>`).join('')}</span></div>
+      <div class="hv-tools"><input type="search" id="hvQ" placeholder="ค้นหารหัส / ชื่อสาขา / โซน" value="${hEsc(HIST.q)}" aria-label="ค้นหาสาขา">
+        <select id="hvSort" aria-label="เรียง"><option value="tot"${HIST.sort==='tot'?' selected':''}>เรียงตามยอดรวม</option><option value="code"${HIST.sort==='code'?' selected':''}>เรียงตามรหัสสาขา</option></select>
+        <button class="hv-csv" data-hcsv="1">ดาวน์โหลด CSV</button></div>
+      ${table}</div>
+    <p class="hv-note">ตัวเลขรวมเฉพาะสาขา-เดือนที่ไฟล์ STF มีข้อมูล · "vs ${yp}" เทียบเฉพาะสาขา-เดือนที่มีทั้งสองปี · Ticket Avg. = ยอดขาย ÷ บิล · ลูกค้า/บิล = ลูกค้า ÷ บิล</p></div>`;
+  const qi=el.querySelector('#hvQ'); if(qi&&document.activeElement===document.body&&HIST._focusQ){ qi.focus(); const n=qi.value.length; qi.setSelectionRange(n,n); }
+  HIST._focusQ=false;
+}
+function histNoData(title,why,y){ return `<div class="hv-card hv-na"><div class="hv-ch"><b>${title}</b></div><div class="hv-nod"><strong>ไม่มีข้อมูลปี ${y}</strong><span>${why}</span></div></div>`; }
+function histClick(e){
+  const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.hback){ histClose(); return; }
+  if(b.dataset.hy){ histOpen(+b.dataset.hy); return; }
+  if(b.dataset.hm){ HIST.metric=b.dataset.hm; histRender(); return; }
+  if(b.dataset.hcsv){ histCsv(); return; } }
+function histInput(e){
+  if(e.target.id==='hvQ'){ HIST.q=e.target.value; HIST._focusQ=true; clearTimeout(histInput._t); histInput._t=setTimeout(()=>{ histRender(); const qi=document.getElementById('hvQ'); if(qi){ qi.focus(); const n=qi.value.length; qi.setSelectionRange(n,n); } },160); }
+}
+document.addEventListener('change',e=>{ if(e.target.id==='hvSort'){ HIST.sort=e.target.value; histRender(); } });
+function histCsv(){
+  const y=HIST.year, yp=y-1, L=filtZone(EXTRA.branchYears||[]), months=hMonthsOf(L,y), mt=HIST_M.find(x=>x[0]===HIST.metric)||HIST_M[0], key=mt[0];
+  const out=[['รหัส','สาขา','โซน'].concat(MONTH_TH,['รวม/เฉลี่ย','vs '+yp+' %'])];
+  L.forEach(b=>{ const row=Array.from({length:12},(_,i)=>{ const T=hSum([b],y,[i+1]); return T.n?hVal(T,key):''; });
+    if(!row.some(v=>v!=='')) return;
+    const Tt=hSum([b],y,months), a=hSum([b],y,months,yp), p=hSum([b],yp,months,y);
+    const yy=(a.n&&p.n)?hPct(hVal(a,key),hVal(p,key)):null;
+    out.push([b.code,b.name||'',b.zone||''].concat(row.map(v=>v===''?'':Math.round(v*100)/100),[Tt.n?Math.round(hVal(Tt,key)*100)/100:'',yy==null?'':yy.toFixed(1)])); });
+  const csv='﻿'+out.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='history-'+y+'-'+key+'.csv'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500); }
+
+/* เลือกปีที่แถบบน · เปิดจากศูนย์นำเข้า · ปิดด้วย Esc · วาดใหม่เมื่อขอบเขต (โซน/สาขา) เปลี่ยน */
+document.addEventListener('change',e=>{ if(e.target.id!=='fYear') return; const v=+e.target.value; if(v===YEAR) histClose(); else histOpen(v); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&HIST.open&&!document.querySelector('.modal.open')) histClose(); });
+window.addEventListener('resize',()=>{ if(HIST.open) histEl().style.top=histTop()+'px'; });
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-hist]'); if(!b) return;
+  const m=document.getElementById('importModal'); if(m) m.classList.remove('open'); histOpen(+b.dataset.hist); });
+(function(){ const b0=build;
+  build=function(){ const r=b0.apply(this,arguments); try{ syncYearSel(); if(HIST.open) histRender(); }catch(err){ console.warn('hist',err); } return r; }; })();
+</script>
+
 <script>
 /* ไอคอนเส้นของหัวข้อ (อยู่ในชิปสีตามหมวด) */
 function hvIcon(k,sm){ const P={
