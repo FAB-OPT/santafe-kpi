@@ -7827,7 +7827,13 @@ function hScopeLabel(){ return FILT.zone==='all'?'ทุกสาขา':scopeNa
 
 function syncYearSel(){
   const sel=document.getElementById('fYear'); if(!sel) return;
-  const ys=(typeof BRAND==='undefined'||BRAND==='kt')?histYears():[];
+  const isKT=(typeof BRAND==='undefined'||BRAND==='kt'), ys=isKT?histYears():[];
+  /* ทางเข้าสำรองในเมนู ⋯ : แสดงเสมอสำหรับ KT (ไม่มีประวัติ = พาไปศูนย์นำเข้า) */
+  const dd=document.getElementById('exportDd');
+  if(dd){ let hb=document.getElementById('histBtn');
+    if(isKT&&!hb){ hb=document.createElement('button'); hb.id='histBtn'; hb.type='button'; dd.insertBefore(hb,dd.firstChild);
+      hb.onclick=()=>{ dd.classList.remove('open'); const y=histYears(); if(y.length) histOpen(y[0]); else { const ib=document.getElementById('importBtn'); if(ib) ib.click(); } }; }
+    if(hb){ hb.hidden=!isKT; hb.textContent=ys.length?'🗓 ข้อมูลย้อนหลัง · ปี '+ys.join(' / '):'🗓 ข้อมูลย้อนหลัง (ยังไม่ได้นำเข้าไฟล์ STF)'; } }
   if(!ys.length){ sel.hidden=true; if(HIST.open) histClose(); return; }
   sel.hidden=false;
   const want=HIST.open?String(HIST.year):String(YEAR), sig=ys.join(',');
@@ -7973,6 +7979,11 @@ document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closes
   const m=document.getElementById('importModal'); if(m) m.classList.remove('open'); histOpen(+b.dataset.hist); });
 (function(){ const b0=build;
   build=function(){ const r=b0.apply(this,arguments); try{ syncYearSel(); if(HIST.open) histRender(); }catch(err){ console.warn('hist',err); } return r; }; })();
+/* ข้อมูลประวัติอาจมาทีหลัง (โหลดจากฐานข้อมูล/นำเข้าไฟล์) โดยไม่ผ่าน build → ซิงก์ช่องปีเป็นระยะและหลังนำเข้า */
+(function(){ const tick=()=>{ try{ syncYearSel(); }catch(e){} };
+  if(typeof applyBY==='function'){ const a0=applyBY; applyBY=function(){ const r=a0.apply(this,arguments); tick(); return r; }; }
+  if(typeof importBadge==='function'){ const i0=importBadge; importBadge=function(){ const r=i0.apply(this,arguments); tick(); return r; }; }
+  setInterval(tick,2000); tick(); })();
 </script>
 
 <script>
