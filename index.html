@@ -7440,6 +7440,8 @@ function dataVTime(){ if(DATA_UPD) return DATA_UPD; const v=String(DATA_V||''); 
 function covTypes(){
   const D=m=>DETAIL[m]||{}, R=m=>MONTHLY.find(x=>x.m===m)||{}, F=EXTRA&&EXTRA.pnlFull, K=m=>PL_MONKEY[m-1];
   const nBr=m=>(D(m).stores&&D(m).stores.now)||59;
+  /* ประวัติรายสาขาจากไฟล์ STF เก็บใน b.h[ปี].s[เดือน] — นับสาขาที่มียอดของปี/เดือนนั้น */
+  const hN=(y,m)=>(EXTRA.branchYears||[]).filter(b=>b.h&&b.h[y]&&typeof (b.h[y].s||[])[m-1]==='number').length;
   return [
     {g:'ยอดขาย',name:'ยอดขายรวม',src:'Daily Sale หรือ แบบฟอร์มส่งยอดขาย',f:m=>R(m).sales!=null,p:(y,m)=>y===YEAR-1&&R(m).ly!=null},
     {g:'ยอดขาย',name:'แผน (Budget)',src:'แบบฟอร์มส่งยอดขาย',f:m=>R(m).budget!=null},
@@ -7452,6 +7454,7 @@ function covTypes(){
     {g:'ยอดขาย',name:'ยอดรายสาขา 2 ปี',src:'ไฟล์ Sales 2025_2026 (เดือนที่ไฟล์ยังไม่มี ใช้แบบฟอร์มส่งยอดขาย)',fixed:1,exp:nBr,
       f:m=>(EXTRA.branchYears||[]).filter(b=>b.m&&b.m[m]&&b.m[m].ty).length,
       p:(y,m)=>y===YEAR-1?(EXTRA.branchYears||[]).filter(b=>b.m&&b.m[m]&&b.m[m].ly).length:0},
+    {g:'ยอดขาย',name:'ประวัติรายสาขา (STF)',src:'ไฟล์ STF - Data / DataSummery',hist:1,exp:nBr,f:m=>hN(YEAR,m),p:(y,m)=>hN(y,m)},
     {g:'P&L',name:'งบกำไรขาดทุน',src:'ไฟล์ PL',f:m=>!!((F&&F.actual&&F.actual[K(m)])||D(m).pl)},
     {g:'P&L',name:'กำไรรายสาขา',src:'ไฟล์ PL (ชีต SUM)',exp:nBr,
       f:m=>Math.max((D(m).plBranches||[]).length,F&&F.branch?Object.values(F.branch).filter(b=>b&&b[K(m)]).length:0)},
@@ -7475,11 +7478,11 @@ function covCell(t,m,nowM){ const v=t.f(m), exp=t.exp?t.exp(m):null;
 let COVY=YEAR;
 function renderImportPanel(){
   const cv=$('#impCov'); if(!cv) return;
-  const {nowM,cols}=covCols(), T=covTypes();
+  const {nowM,cols}=covCols(), T=covTypes(), TN=T.filter(t=>!t.hist);   // hist = ประวัติเสริม (STF) แสดงในตารางแต่ไม่นับเป็น "ข้อมูลที่ต้องครบ"
   const done=cols.filter(m=>m<nowM);                         // เดือนที่ปิดแล้ว ใช้คิดความครบ
   const cell=(t,m)=>covCell(t,m,nowM);
   const okN=(list,ms)=>list.reduce((a,t)=>a+ms.filter(m=>cell(t,m).st==='ok').length,0);
-  const allN=T.length*done.length, okAll=okN(T,done), pctAll=allN?Math.round(okAll/allN*100):0;
+  const allN=TN.length*done.length, okAll=okN(TN,done), pctAll=allN?Math.round(okAll/allN*100):0;
   /* ---- ตารางแบบจุด · ย้อนหลัง 5 ปี เลื่อนซ้าย-ขวาดูได้ (ปีที่ไม่ได้เก็บข้อมูลขึ้น –) ---- */
   const ALLY=Array.from({length:5},(_,i)=>YEAR-4+i); if(!ALLY.includes(COVY)) COVY=YEAR; const YRS=[COVY];
   const pcell=(t,y,m)=>{ if(!t.p) return {st:'na',tip:'ไม่ได้เก็บข้อมูลปี '+y};
@@ -7489,26 +7492,27 @@ function renderImportPanel(){
     return {st:'miss',tip:'ยังไม่มีข้อมูล'}; };
   const cellY=(t,y,m)=>y===YEAR?cell(t,m):pcell(t,y,m);
   const msOf=y=>y===YEAR?cols:Array.from({length:12},(_,i)=>i+1);
-  const trk=y=>y===YEAR?T:T.filter(t=>t.p);
+  const trk=y=>y===YEAR?TN:T.filter(t=>t.p);
   const chip=c=>c.st==='ok'?'<i class="dk ok">✓</i>':c.st==='part'?`<i class="dk part">${c.txt}</i>`:c.st==='miss'?'<i class="dk miss">✕</i>':c.st==='na'?'<i class="dk na">–</i>':'<i class="dk open"></i>';
-  const yearBand=YRS.map(y=>{ const TT=trk(y), ms=msOf(y), tot=TT.length*(y===YEAR?done.length:12), ok=TT.reduce((a,t)=>a+ms.filter(m=>(y!==YEAR||m<nowM)&&cellY(t,y,m).st==='ok').length,0);
-    return `<th class="yb ys${y===YEAR?' cur':''}" colspan="${ms.length}"><b>${y}</b><em>${tot?(y===YEAR?'ครบ '+Math.round(ok/tot*100)+'%':(ok?'มีข้อมูล '+ok+' ช่อง':'ยังไม่มีข้อมูลในระบบ')):'—'}</em></th>`; }).join('');
+  const yearBand=YRS.map(y=>{ const TT=trk(y), ms=msOf(y), tot=TT.length*(y===YEAR?done.length:12), ok=TT.reduce((a,t)=>a+ms.filter(m=>(y!==YEAR||m<nowM)&&cellY(t,y,m).st==='ok').length,0),
+      any=TT.reduce((a,t)=>a+ms.filter(m=>['ok','part'].includes(cellY(t,y,m).st)).length,0);
+    return `<th class="yb ys${y===YEAR?' cur':''}" colspan="${ms.length}"><b>${y}</b><em>${tot?(y===YEAR?'ครบ '+Math.round(ok/tot*100)+'%':(any?'มีข้อมูล '+any+' ช่อง':'ยังไม่มีข้อมูลในระบบ')):'—'}</em></th>`; }).join('');
   const monHead=YRS.map(y=>msOf(y).map((m,i)=>{ const TT=trk(y), n=TT.filter(t=>cellY(t,y,m).st==='ok').length, p=TT.length?Math.round(n/TT.length*100):0, isNow=y===YEAR&&m===nowM;
     return `<th class="mh${i===0?' ys':''}${y===YEAR&&m===curM?' cur':''}${isNow?' now':''}"><span class="mn">${MONTH_TH[m-1]}</span>
       <span class="mb"><i style="width:${isNow&&!n?0:p}%"></i></span><span class="mc">${isNow&&!n?'ยังไม่ปิด':n+'/'+TT.length}</span></th>`; }).join('')).join('');
   const nCol=YRS.reduce((a,y)=>a+msOf(y).length,0);
   let g0='', rows='';
-  T.forEach(t=>{ if(t.g!==g0){ g0=t.g; const G=T.filter(x=>x.g===g0), gp=G.length*done.length?Math.round(okN(G,done)/(G.length*done.length)*100):0;
+  T.forEach(t=>{ if(t.g!==g0){ g0=t.g; const G=TN.filter(x=>x.g===g0), gp=G.length*done.length?Math.round(okN(G,done)/(G.length*done.length)*100):0;
       rows+=`<tr class="cg"><td colspan="${nCol+1}"><span>${g0}</span><em>ปี ${YEAR} ครบ ${gp}%</em></td></tr>`; }
     rows+=`<tr><td class="cn"><b>${t.name}</b><small>${t.fixed?'ฝังในเว็บ · ผู้ดูแลอัปเดตให้':t.src}</small></td>
       ${YRS.map(y=>msOf(y).map((m,i)=>{ const c=cellY(t,y,m); return `<td class="cc${i===0?' ys':''}${y===YEAR&&m===curM?' cur':''}" title="${t.name} ${MONTH_TH[m-1]} ${y}: ${c.tip}">${chip(c)}</td>`; }).join('')).join('')}</tr>`; });
-  const ytab=ALLY.slice().reverse().map(y=>{ const TT=trk(y), ms=msOf(y), has=TT.reduce((a,t)=>a+ms.filter(m=>cellY(t,y,m).st==='ok').length,0);
+  const ytab=ALLY.slice().reverse().map(y=>{ const TT=trk(y), ms=msOf(y), has=TT.reduce((a,t)=>a+ms.filter(m=>['ok','part'].includes(cellY(t,y,m).st)).length,0);
     return `<button class="cyt${y===COVY?' on':''}${has?'':' none'}" data-cy="${y}">${y}<small>${y===YEAR?'ปีนี้':(has?'มีข้อมูล':'ไม่มี')}</small></button>`; }).join('');
   cv.innerHTML=`<div class="cyts">${ytab}</div><div class="covwrap"><table class="cov"><tr class="yr"><th class="cn" rowspan="2">ข้อมูล</th>${yearBand}</tr><tr>${monHead}</tr>${rows}</table></div>
     ${COVY<YEAR?`<div class="covhint">ปี ${COVY}: ระบบเก็บเฉพาะบางชนิดข้อมูล · ช่องที่เป็น – คือไม่ได้เก็บข้อมูลปีนั้น</div>`:''}`;
   cv.querySelectorAll('[data-cy]').forEach(b=>b.onclick=()=>{ COVY=+b.dataset.cy; renderImportPanel(); });
   /* ---- ต้องนำเข้าต่อ (เดือนที่กำลังดู) ---- */
-  const miss=T.map(t=>({t,c:cell(t,curM)})).filter(x=>x.c.st!=='ok');
+  const miss=TN.map(t=>({t,c:cell(t,curM)})).filter(x=>x.c.st!=='ok');
   $('#impMiss').innerHTML=miss.length
     ? `<div class="todo"><div class="th"><b>ต้องนำเข้าต่อ · ${label(curM)}</b><span>${miss.length} รายการ</span></div>
         ${miss.map(x=>`<div class="ti ${x.c.st}${x.t.fixed?' fixed':''}"><i class="dk ${x.c.st}">${x.c.st==='part'?x.c.txt:(x.c.st==='miss'?'✕':'')}</i>
@@ -7538,7 +7542,7 @@ function renderImportPanel(){
 }
 /* ป้ายตัวเลขบนปุ่มนำเข้า = จำนวนชนิดข้อมูลที่ยังขาดของเดือนที่ดูอยู่ (ไม่นับชนิดที่ผู้ดูแลอัปเดตให้) */
 function importBadge(){ const b=$('#importBtn'); if(!b) return;
-  const {nowM}=covCols(); const n=covTypes().filter(t=>!t.fixed).map(t=>covCell(t,curM,nowM).st).filter(s=>s==='miss'||s==='part').length;
+  const {nowM}=covCols(); const n=covTypes().filter(t=>!t.fixed&&!t.hist).map(t=>covCell(t,curM,nowM).st).filter(s=>s==='miss'||s==='part').length;
   b.innerHTML='⤒ นำเข้าข้อมูล'+(n?`<span class="nbadge" title="${label(curM)} ยังขาด ${n} ชนิดข้อมูล">${n}</span>`:''); }
 
 function showMsg(t,c){const el=$('#msg');el.textContent=t;el.className='msg '+c;}
