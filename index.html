@@ -5087,7 +5087,12 @@ function ovChart(rows,main,refs){
   });
   const colW=(W-L-R)/Math.max(1,n-1);
   rows.forEach((r,i)=>{ const v=r[main.k], t=[`${MONTH_TH[r.m-1]} ${YEAR}`, `${main.name} ${v==null?'—':v.toFixed(2)+'M'}`];
-    refs.forEach(s=>{ const b=r[s.k]; t.push(`${s.name} ${b==null?'—':b.toFixed(2)+'M'}${b!=null&&v!=null?' ('+sgn(pct(b,v))+')':''}`); });
+    /* Same-store ปีก่อน ต้องเทียบกับ Same-store ปีนี้ (ssA) ไม่ใช่ยอดขายรวมที่มีสาขาเปิดใหม่ปนอยู่ — ไม่งั้น % ไม่ตรงกับ SSSG ในตาราง */
+    refs.forEach(s=>{ const b=r[s.k];
+      if(s.k==='ssL'&&main.k!=='ssA'){
+        t.push(`Same-store ${YEAR} ${r.ssA==null?'—':r.ssA.toFixed(2)+'M'}`);
+        t.push(`${s.name} ${b==null?'—':b.toFixed(2)+'M'}${b!=null&&r.ssA!=null?' (SSSG '+sgn(pct(b,r.ssA))+')':''}`); return; }
+      t.push(`${s.name} ${b==null?'—':b.toFixed(2)+'M'}${b!=null&&v!=null?' ('+sgn(pct(b,v))+')':''}`); });
     g+=`<rect x="${Math.max(L-20,x(i)-colW/2)}" y="${T-12}" width="${colW}" height="${H-B-T+12}" fill="transparent" data-tip="${t.join('\n')}"/>`; });
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Performance Trend">${g}</svg>
     <div class="legend lcleg"><span><i class="ln" style="background:#D9822D"></i>${main.name}</span>${refs.map(s=>`<span><i class="ln${s.dash?' dash':''}"${s.dash?'':` style="background:${s.c}"`}></i>${s.name}</span>`).join('')}<span class="hint">ชี้ที่เดือนเพื่อดูตัวเลข</span></div>`;
