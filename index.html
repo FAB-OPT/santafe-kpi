@@ -7901,13 +7901,18 @@ function syncYearSel(){
       hr.onclick=()=>{ dd.classList.remove('open'); hrOpen(); }; }
     if(hr){ hr.hidden=!isKT; const n=Object.keys(HOURLY).length; hr.textContent='🕐 ยอดขายรายชั่วโมง'+(n?' · '+n+' เดือน':' (ยังไม่ได้นำเข้า)'); }
     if(hb){ hb.hidden=!isKT; hb.textContent=ys.length?'🗓 ตารางย้อนหลังรายสาขา × เดือน · ปี '+ys.join(' / '):'🗓 ข้อมูลย้อนหลัง (ยังไม่ได้นำเข้าไฟล์ STF)'; } }
-  if(!ys.length){ sel.hidden=true; if(HIST.open&&HIST.mode!=='hourly') histClose(); return; }
+  /* ปีที่มีแค่ข้อมูลรายชั่วโมง (ไม่มีประวัติรายสาขา STF) ก็อยู่ในรายการ — เลือกแล้วเปิดหน้ายอดขายรายชั่วโมงของปีนั้น */
+  const hyo=isKT?hrYears().filter(y=>!ys.includes(y)):[];
+  if(!ys.length&&!hyo.length){ sel.hidden=true; if(HIST.open&&HIST.mode!=='hourly') histClose(); return; }
   sel.hidden=false;
-  const want=String(YEAR), sig=ys.join(',');
+  let want=String(YEAR);
+  if(HIST.open&&HIST.mode==='hourly'&&HIST.hr){ const hy=+HIST.hr.slice(0,4); if(hyo.includes(hy)) want=String(hy); }
+  const sig=ys.join(',')+'|'+hyo.join(',');
   if(sel.dataset.sig!==sig){
-    sel.innerHTML=`<option value="${YEAR_REAL}">ปี ${YEAR_REAL}</option>`+ys.map(y=>`<option value="${y}">ปี ${y} · ย้อนหลัง</option>`).join('');
+    sel.innerHTML=`<option value="${YEAR_REAL}">ปี ${YEAR_REAL}</option>`+ys.map(y=>`<option value="${y}">ปี ${y} · ย้อนหลัง</option>`).join('')+hyo.map(y=>`<option value="${y}">ปี ${y} · ยอดขายรายชั่วโมง</option>`).join('');
     sel.dataset.sig=sig; }
   sel.value=HIST.open?want:String(YEAR); }
+function hrYears(){ return [...new Set(Object.keys(HOURLY).map(k=>+k.slice(0,4)))].filter(y=>y!==YEAR_REAL).sort((a,b)=>b-a); }
 
 function histEl(){ let el=document.getElementById('histView');
   if(!el){ el=document.createElement('div'); el.id='histView'; el.hidden=true; document.body.appendChild(el);
@@ -8219,7 +8224,9 @@ function yearSwitch(y){
 (function(){ if(typeof setBrand==='function'){ const s0=setBrand; setBrand=function(){ if(YEAR!==YEAR_REAL) yearSwitch(YEAR_REAL); return s0.apply(this,arguments); }; } })();
 
 /* เลือกปีที่แถบบน · เปิดจากศูนย์นำเข้า · ปิดด้วย Esc · วาดใหม่เมื่อขอบเขต (โซน/สาขา) เปลี่ยน */
-document.addEventListener('change',e=>{ if(e.target.id!=='fYear') return; yearSwitch(+e.target.value); });
+document.addEventListener('change',e=>{ if(e.target.id!=='fYear') return; const v=+e.target.value;
+  if(v===YEAR_REAL||histYears().includes(v)){ if(HIST.open&&HIST.mode==='hourly') histClose(); yearSwitch(v); }
+  else if(hrYears().includes(v)){ const ym=hrMonths().find(k=>k.startsWith(v+'-')); hrOpen(ym); } });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&HIST.open&&!document.querySelector('.modal.open')) histClose(); });
 window.addEventListener('resize',()=>{ if(HIST.open) histEl().style.top=histTop()+'px'; });
 document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-hist]'); if(!b) return;
