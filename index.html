@@ -850,7 +850,9 @@ table.cov td.cc .dk{min-width:24px;height:24px}
 .ti .src{font-size:11px;font-weight:700;color:var(--accent-ink);background:var(--accent-2);border-radius:999px;padding:3px 9px;white-space:nowrap}
 .ti.fixed .src{color:var(--mute);background:var(--hair)}
 /* ประวัติ */
-#impLog{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto}
+#impLog{display:flex;flex-direction:column;gap:6px}
+.lg .lgx{margin-left:auto;flex:none;border:0;background:transparent;color:var(--faint);cursor:pointer;font-size:15px;line-height:1;padding:4px 7px;border-radius:7px}
+.lg .lgx:hover{background:rgba(220,38,38,.1);color:#dc2626}
 .lg{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 11px}
 .li{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:11px;font-weight:800;font-style:normal;flex:0 0 auto;background:#D1FAE5;color:#047857}
 .lg.err{border-color:#FECDD3;background:#FFF7F8} .lg.err .li{background:var(--bad);color:#fff}
@@ -2500,7 +2502,7 @@ section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):n
       <div class="fmt"><span>Daily Sale</span><span>แบบฟอร์มส่งยอดขาย</span><span>PL</span><span>CEM</span><span>OSS</span><span>ไฟล์ข้อมูลเว็บ</span></div>
       <div class="msg" id="msg"></div>
       <div id="impMiss"></div>
-      <div class="imph">นำเข้าล่าสุด<button class="lnk" id="logClear">ล้างประวัติ</button></div>
+      <div class="imph">นำเข้าล่าสุด<span style="margin-left:auto;display:flex;gap:12px"><button class="lnk" id="logClearErr" hidden>ลบที่ไม่สำเร็จ</button><button class="lnk" id="logClear">ล้างประวัติ</button></span></div>
       <div id="impLog"></div>
     </div>
     <div class="impR">
@@ -7571,8 +7573,12 @@ function renderImportPanel(){
       <i class="li">${e.ok?'✓':'!'}</i>
       <div class="lb"><div class="lf" title="${e.file}">${e.file}</div>
         <div class="lm"><span class="lk">${e.kind}</span>${e.months&&e.months.length?' · '+monRange(e.months):''}<span class="lt">${ago(e.t)}</span></div>
-        ${e.ok?'':`<div class="le">${e.msg}</div>`}</div></div>`).join('')
+        ${e.ok?'':`<div class="le">${e.msg}</div>`}</div><button type="button" class="lgx" data-lt="${e.t}" title="ลบรายการนี้ออกจากประวัติ" aria-label="ลบรายการนี้">✕</button></div>`).join('')
     :'<div class="lgnone">ยังไม่เคยนำเข้าไฟล์จากเครื่องนี้</div>';
+  $('#impLog').onclick=ev=>{ const b=ev.target.closest('[data-lt]'); if(!b) return;
+    try{ localStorage.setItem(LOG_KEY,JSON.stringify(getLog().filter(x=>x.t!==b.dataset.lt))); }catch(err){}
+    renderImportPanel(); };
+  const le=$('#logClearErr'); if(le){ const n=L.filter(x=>!x.ok).length; le.hidden=!n; le.textContent='ลบที่ไม่สำเร็จ ('+n+')'; }
   /* ---- แถบสรุปด้านบน ---- */
   const last=L[0], mk=miss.filter(x=>!x.t.fixed).length;
   $('#impStats').innerHTML=`
@@ -7753,6 +7759,7 @@ async function importFile(file){
 $('#importBtn').onclick=()=>{showMsg('','');
   const ih=document.querySelector('#importModal h2'); if(ih) ih.textContent='นำเข้าข้อมูล · '+((BRANDS.find(b=>b.k===BRAND)||{n:''}).n);
   renderImportPanel();$('#importModal').classList.add('open');};
+$('#logClearErr').onclick=()=>{ try{ localStorage.setItem(LOG_KEY,JSON.stringify(getLog().filter(x=>x.ok))); }catch(e){} renderImportPanel(); };
 $('#logClear').onclick=()=>{ if(!confirm('ล้างประวัติการนำเข้าในเครื่องนี้?')) return; try{localStorage.removeItem(LOG_KEY)}catch(e){} renderImportPanel(); };
 $('#closeModal').onclick=()=>$('#importModal').classList.remove('open');
 $('#importModal').onclick=e=>{if(e.target.id==='importModal')$('#importModal').classList.remove('open');};
