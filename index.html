@@ -7106,6 +7106,36 @@ function parseHourly(wb,fname){
   const rd=a=>a.map(x=>Math.round(x));
   Object.keys(ch).forEach(k=>{ ch[k]=rd(ch[k]); }); Object.keys(br).forEach(c=>{ br[c].h=rd(br[c].h); });
   return {y:ym.y,m:ym.m,key:ym.y+'-'+String(ym.m).padStart(2,'0'),ch,br,rows,net,branches:Object.keys(br).length}; }
+/* ไฟล์ HourlySaleReport แบบสรุป (Pivot ช่องทาง × สาขา · ไม่มีคอลัมน์ชั่วโมง): POSButtonCode · BranchCode · Sum of ExtendedPrice / NumOfCust / NumOfTran
+   เก็บในที่เดียวกับข้อมูลรายชั่วโมง (ยอดรวมทั้งเดือนวางไว้ที่ชั่วโมง 0) แต่ติดธง nh = ไม่มีรายละเอียดรายชั่วโมง → หน้ารายชั่วโมงแสดงเป็นสรุปช่องทาง/สาขา */
+const HRS_CH={dinein:'D',takeaway:'T',grab:'G',line:'L',lineman:'L',shopeefood:'S',shopee:'S'};
+function hrSumSheet(wb){
+  for(const n of wb.SheetNames){
+    const rs=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:null,range:'A1:L6'});
+    for(let i=0;i<rs.length;i++){ const H=(rs[i]||[]).map(v=>String(v==null?'':v).trim());
+      if(H.includes('POSButtonCode')&&H.includes('BranchCode')&&H.some(x=>/ExtendedPrice/.test(x))&&H.some(x=>/NumOfTran/.test(x))) return {name:n,hi:i,H}; } }
+  return null; }
+function isHourlySumWb(wb){ return !!hrSumSheet(wb); }
+function parseHourlySum(wb,fname){
+  const sh=hrSumSheet(wb), ym=hrYM(sh.name)||hrYM(fname);
+  if(!ym) throw new Error('ดูเดือน-ปีของข้อมูลจากชื่อไฟล์ไม่ได้ (เช่น "HourlySaleReport.csv 4-2023") — ตั้งชื่อให้มีเดือน-ปี');
+  const rs=XLSX.utils.sheet_to_json(wb.Sheets[sh.name],{header:1,defval:null,raw:true}), H=sh.H;
+  const num=v=>{ const x=typeof v==='number'?v:parseFloat(String(v==null?'':v).replace(/,/g,'')); return isFinite(x)?x:0; };
+  const iCh=H.indexOf('POSButtonCode'), iB=H.indexOf('BranchCode'), iN=H.indexOf('BranchName'), iP=H.findIndex(x=>/ExtendedPrice/.test(x)), iC=H.findIndex(x=>/NumOfCust/.test(x)), iT=H.findIndex(x=>/NumOfTran/.test(x));
+  const ch={D:new Array(72).fill(0),T:new Array(72).fill(0),G:new Array(72).fill(0),S:new Array(72).fill(0),L:new Array(72).fill(0),O:new Array(72).fill(0)}, br={};
+  let cur='O', rows=0, net=0;
+  for(let r=sh.hi+1;r<rs.length;r++){ const a=rs[r]; if(!a) continue;
+    const lab=String(a[iCh]==null?'':a[iCh]).trim();
+    if(lab&&!/total$/i.test(lab)){ cur=HRS_CH[lab.toLowerCase().replace(/[\s_-]+/g,'')]||'O'; }
+    const code=String(a[iB]==null?'':a[iB]).trim(); if(!/^\d{4}$/.test(code)) continue;
+    const v=num(a[iP]), cu=num(a[iC]), tr=num(a[iT]);
+    ch[cur][0]+=v; ch[cur][1]+=cu; ch[cur][2]+=tr;
+    const b=br[code]||(br[code]={n:String(a[iN]||'').trim(),h:new Array(72).fill(0)});
+    b.h[0]+=v; b.h[1]+=cu; b.h[2]+=tr; rows++; net+=v; }
+  if(!rows) throw new Error('ไม่พบแถวสาขา (รหัส 4 หลัก) ในไฟล์สรุปนี้');
+  const rd=a=>a.map(x=>Math.round(x));
+  Object.keys(ch).forEach(k=>{ ch[k]=rd(ch[k]); }); Object.keys(br).forEach(c=>{ br[c].h=rd(br[c].h); });
+  return {y:ym.y,m:ym.m,key:ym.y+'-'+String(ym.m).padStart(2,'0'),ch,br,rows,net,branches:Object.keys(br).length}; }
 function hrCount(y,m){ const d=HOURLY[y+'-'+String(m).padStart(2,'0')]; return d?Object.keys(d.br||{}).length:0; }
 /* ========================= รายงานต้นทุนสินค้าขาย (COGS · รายงาน 401) =========================
    ไฟล์ที่รับ: (1) rptCOGSReport.csv — รายการสินค้า × สาขา (SaleAmount · TotalTheoCost · TotalActualCost)
@@ -7785,6 +7815,13 @@ async function importFile(file){
       IMP.months=R.y===YEAR?[R.m]:[]; await saveState();
       finish('นำเข้ารายงานต้นทุนสินค้าขายสำเร็จ: '+MONTH_FULL[R.m-1]+' '+R.y+' · '+R.branches+' สาขา'+(merged?' (อัปเดตเฉพาะสาขาในไฟล์ · รวมเป็น '+COGS[R.key].branches+' สาขา)':'')+' · ยอดขาย '+(R.sale/1e6).toFixed(2)+'M · ต้นทุนจริง '+(R.act/R.sale*100).toFixed(2)+'% (มาตรฐาน '+(R.theo/R.sale*100).toFixed(2)+'%)'+(R.adj.length?' · ปรับรายการราคาผิดปกติ '+R.adj.length+' รายการ':'')+(/csv/.test(R.fmt)&&!/20\d{2}/.test(file.name)?' · ไฟล์ไม่ระบุปี ใช้ปี '+R.y:'')+' — ดูที่หน้า Profit ต่อท้าย Branch × Month Matrix','ok');
       return; }
+    if(isHourlySumWb(wb)){ IMP.kind='ยอดขายรายช่องทาง (Hourly · ไฟล์สรุป ไม่มีชั่วโมง)';
+      const R=parseHourlySum(wb,file.name), old=HOURLY[R.key];
+      if(old&&!old.nh) throw new Error('เดือน '+MONTH_FULL[R.m-1]+' '+R.y+' มีข้อมูลรายชั่วโมงเต็มอยู่แล้ว — ไม่เขียนทับด้วยไฟล์สรุป');
+      HOURLY[R.key]={file:file.name,at:Date.now(),nh:1,ch:R.ch,br:R.br};
+      IMP.months=R.y===YEAR?[R.m]:[]; await saveState();
+      finish('นำเข้ายอดขายรายช่องทางสำเร็จ: '+MONTH_FULL[R.m-1]+' '+R.y+' · '+R.branches+' สาขา · ยอดขายรวม '+(R.net/1e6).toFixed(2)+'M (ก่อนภาษี) · ไฟล์นี้ไม่มีคอลัมน์ชั่วโมง จึงไม่มีกราฟรายชั่วโมง (ใช้ยอดขาย/บิล/ลูกค้า รายสาขาและช่องทางได้) — ดูที่เมนู ⋯ → "ยอดขายรายชั่วโมง"','ok');
+      return; }
     if(isHourlyWb(wb)){ IMP.kind='ยอดขายรายชั่วโมง (Hourly Sale)';
       const R=parseHourly(wb,file.name);
       HOURLY[R.key]={file:file.name,at:Date.now(),ch:R.ch,br:R.br};
@@ -8212,6 +8249,28 @@ function hrOpen(ym){
   const el=histEl(); el.hidden=false; el.style.top=histTop()+'px';
   document.body.classList.add('hist-open'); hrRender(); el.scrollTop=0; }
 function hrLabel(k){ const [y,m]=k.split('-'); return MONTH_FULL[+m-1]+' '+y; }
+function hrRenderSum(el,head,D){
+  const rowsB=Object.entries(D.br).filter(([c,b])=>inZone({code:c,name:b.n})), all=hScopeLabel()==='ทุกสาขา';
+  const T=rowsB.reduce((a,[c,b])=>({n:a.n+b.h[0],c:a.c+b.h[1],t:a.t+b.h[2]}),{n:0,c:0,t:0});
+  const chs=Object.keys(HR_CH).map(k=>({k,n:D.ch[k][0],c:D.ch[k][1],t:D.ch[k][2]})).filter(x=>x.n>0||x.t>0), chN=chs.reduce((a,x)=>a+x.n,0);
+  const q=HIST.hq.trim().toLowerCase();
+  const list=rowsB.map(([c,b])=>({c,n:b.n,v:b.h[0],cu:b.h[1],tr:b.h[2]})).filter(r=>r.v>0&&(!q||(r.c+' '+r.n).toLowerCase().includes(q)));
+  list.sort((a,b)=>HIST.hsort==='code'?a.c.localeCompare(b.c):b.v-a.v);
+  const tk=(n,t)=>t?'฿'+Math.round(n/t).toLocaleString('en-US'):'—';
+  el.innerHTML=`<div class="hv-in">${head}
+    <div class="hv-cards"><div class="hv-card"><div class="hv-ch"><b>ยอดขายรวม</b></div><div class="hv-big"><span>${rowsB.length} สาขา · ก่อนภาษี</span><strong>฿${(T.n/1e6).toFixed(2)}M</strong></div>
+      <div class="hv-row"><span>จำนวนบิล</span><b>${hInt(T.t)}</b></div><div class="hv-row"><span>จำนวนลูกค้า</span><b>${hInt(T.c)}</b></div><div class="hv-row"><span>Ticket Avg. (ต่อบิล)</span><b>${tk(T.n,T.t)}</b></div></div>
+      <div class="hv-card"><div class="hv-ch"><b>ไม่มีข้อมูลรายชั่วโมง</b></div><p class="hv-note" style="font-size:14px;margin:6px 0 0">ไฟล์เดือนนี้เป็นไฟล์สรุปตามช่องทาง × สาขา ไม่มีคอลัมน์ชั่วโมง จึงไม่มีกราฟและตารางรายชั่วโมง</p></div></div>
+    ${all?`<div class="hv-sec"><h3>แยกตามช่องทาง</h3><div class="hv-tw"><table class="hv-t"><thead><tr><th class="hv-nm">ช่องทาง</th><th class="n">ยอดขาย</th><th class="n">สัดส่วน</th><th class="n">บิล</th><th class="n">ลูกค้า</th><th class="n">Ticket Avg.</th></tr></thead><tbody>
+      ${chs.map(x=>`<tr><td class="hv-nm"><b>${HR_CH[x.k]}</b></td><td class="n">${hInt(x.n)}</td><td class="n">${chN?(x.n/chN*100).toFixed(1):'0.0'}%</td><td class="n">${hInt(x.t)}</td><td class="n">${hInt(x.c)}</td><td class="n">${tk(x.n,x.t)}</td></tr>`).join('')}</tbody></table></div></div>`:''}
+    <div class="hv-sec"><div class="hv-th"><h3>รายสาขา <small>ยอดขายก่อนภาษี · บาท</small></h3></div>
+      <div class="hv-tools"><input type="search" id="hrQ" placeholder="ค้นหารหัส / ชื่อสาขา" value="${hEsc(HIST.hq)}" aria-label="ค้นหาสาขา"><select id="hrSort" aria-label="เรียง"><option value="tot"${HIST.hsort!=='code'?' selected':''}>เรียงตามยอดขาย</option><option value="code"${HIST.hsort==='code'?' selected':''}>เรียงตามรหัสสาขา</option></select></div>
+      <div class="hv-tw"><table class="hv-t"><thead><tr><th class="hv-nm">สาขา</th><th class="n">ยอดขาย</th><th class="n">บิล</th><th class="n">ลูกค้า</th><th class="n">Ticket Avg.</th></tr></thead><tbody>
+      <tr class="hv-sum"><td class="hv-nm"><b>รวม · ${hEsc(hScopeLabel())}</b></td><td class="n hv-tot">${hInt(T.n)}</td><td class="n">${hInt(T.t)}</td><td class="n">${hInt(T.c)}</td><td class="n">${tk(T.n,T.t)}</td></tr>
+      ${list.map(r=>`<tr><td class="hv-nm"><b>${hEsc(r.c)} ${hEsc(String(r.n).replace(/^ซานตาเฟ่ สเต๊ก\s*/,''))}</b></td><td class="n">${hInt(r.v)}</td><td class="n">${hInt(r.tr)}</td><td class="n">${hInt(r.cu)}</td><td class="n">${tk(r.v,r.tr)}</td></tr>`).join('')}</tbody></table></div></div>
+    <p class="hv-note">ข้อมูลนำเข้า ${hEsc(new Date(D.at||Date.now()).toLocaleDateString('th-TH',{dateStyle:'medium'}))} · ไฟล์สรุป (ไม่มีรายละเอียดรายชั่วโมง)</p></div>`;
+  if(HIST._focusHq){ const qi=document.getElementById('hrQ'); if(qi){ qi.focus(); const L=qi.value.length; qi.setSelectionRange(L,L); } HIST._focusHq=false; }
+}
 function hrRender(){
   if(!(HIST.open&&HIST.mode==='hourly')) return;
   const el=histEl(); el.style.top=histTop()+'px';
@@ -8219,6 +8278,7 @@ function hrRender(){
   const head=`<div class="hv-hd"><div><h2>ยอดขายรายชั่วโมง${D?' · '+hrLabel(HIST.hr):''}</h2><p>${D?'จากไฟล์ '+hEsc(D.file||'HourlySaleReport')+' · ยอดขาย = ก่อนภาษี (ExtendedPrice) · '+hEsc(hScopeLabel()):'ยังไม่มีข้อมูลยอดขายรายชั่วโมง'}</p></div>
     <div class="hv-act">${ms.length?`<select id="hrMon" aria-label="เดือน" class="hr-sel">${ms.map(k=>`<option value="${k}"${k===HIST.hr?' selected':''}>${hrLabel(k)}</option>`).join('')}</select>`:''}<button class="hv-back" data-hback="1">← กลับแดชบอร์ด</button></div></div>`;
   if(!D){ el.innerHTML='<div class="hv-in">'+head+'<div class="hv-sec"><h3>ยังไม่มีข้อมูล</h3><p class="hv-note" style="font-size:14px">ลากไฟล์ <b>HourlySaleReport</b> (.xlsx / .xlsb · ไฟล์ละ 1 เดือน — ใส่เดือน-ปีในชื่อชีตหรือชื่อไฟล์ เช่น "HourlySaleReport.csv 1-2022") ลงในหน้า "นำเข้าข้อมูล" ระบบจำให้ทุกเดือนที่นำเข้า ดึงมาดูได้ที่นี่</p></div></div>'; return; }
+  if(D.nh) return hrRenderSum(el,head,D);
   const all=hScopeLabel()==='ทุกสาขา';
   const rowsB=Object.entries(D.br).filter(([c,b])=>inZone({code:c,name:b.n}));
   const tot=new Array(72).fill(0); rowsB.forEach(([c,b])=>{ for(let i=0;i<72;i++) tot[i]+=b.h[i]; });
