@@ -1692,6 +1692,7 @@ th.srth:hover .srt.off{color:var(--accent)}
 .tq:hover{background:rgba(255,255,255,.7);color:var(--ink)}
 .tq.on{background:#fff;color:var(--ink);border-color:var(--accent);box-shadow:0 4px 12px -8px rgba(246,107,33,.8);cursor:default}
 .tq:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tq.off{opacity:.45;font-weight:600}.tq.off:hover{opacity:.8}
 @media (max-width:1180px){.tq span:last-child{display:none}.tq.on span:last-child{display:inline}}
 @media (max-width:820px){#quickBar{flex:1 0 100%;order:99;margin:6px 0 0}}
 .tb-back{all:unset;box-sizing:border-box;cursor:pointer;font-size:14px;font-weight:600;color:var(--ink);padding:7px 12px;border-radius:9px;border:1px solid var(--line);background:#fff;min-height:36px}
@@ -8593,7 +8594,8 @@ function hubApply(){
     if(!ids.includes(TSEC)) TSEC=ids[0];
     secs.forEach(x=>x.classList.toggle('hhide',x.id!==TSEC));
     /* เมนูลัดข้ามหมวด: กดไปหมวดอื่นได้ทันที ไม่ต้องกลับหน้ารวมก่อน */
-    const quick='<div id="quickBar" role="tablist" aria-label="ไปหมวดอื่น">'+TOPICS.filter(x=>!x.soon&&avail.includes(x)).map(x=>'<button type="button" role="tab" class="tq'+(x.k===t.k?' on':'')+'" data-topic="'+x.k+'" aria-selected="'+(x.k===t.k)+'">'+hvIcon(x.k,1)+'<span>'+x.n+'</span></button>').join('')+'</div>';
+    const quick='<div id="quickBar" role="tablist" aria-label="ไปหมวดอื่น">'+TOPICS.filter(x=>!x.soon).map(x=>avail.includes(x)?'<button type="button" role="tab" class="tq'+(x.k===t.k?' on':'')+'" data-topic="'+x.k+'" aria-selected="'+(x.k===t.k)+'">'+hvIcon(x.k,1)+'<span>'+x.n+'</span></button>'
+      :'<button type="button" role="tab" class="tq off" data-imp-t="'+x.k+'" aria-selected="false" title="ยังไม่มีข้อมูลของ '+x.n+' ในช่วงที่เลือก · กดเพื่อนำเข้า (ต้องใช้: '+needT(x.k)+')">'+hvIcon(x.k,1)+'<span>'+x.n+'</span></button>').join('')+'</div>';
     place('<div id="topicBar"><div class="tb-row"><button type="button" class="tb-back" data-hub>‹ ภาพรวม</button>'+hvIcon(t.k,1)+'<h1 class="tb-t">'+t.n+'</h1>'
       +(ids.length>1?'<button type="button" class="btn small tb-pres" data-tpres>▶ พรีเซนต์หมวดนี้</button>':'')+'</div>'
       +((g=>g?'<div class="tb-nav">'+segHtml(t,ids)+(g>1?'<div class="tb-tabs" role="tablist">'+tabsHtml(t,ids)+'</div>':'')+'</div>':'')
@@ -8602,6 +8604,7 @@ function hubApply(){
     if(flt) flt.insertAdjacentHTML('beforebegin',quick); else if(topEl) topEl.insertAdjacentHTML('beforeend',quick);
     const hb=document.querySelector('[data-hub]'); if(hb) hb.onclick=goHub;
     document.querySelectorAll('#quickBar [data-topic]').forEach(x=>x.onclick=()=>{ if(x.dataset.topic!==TOPIC) openTopic(x.dataset.topic); });
+    document.querySelectorAll('#quickBar [data-imp-t]').forEach(x=>x.onclick=()=>$('#importBtn').click());
     document.querySelectorAll('[data-tsec]').forEach(x=>x.onclick=()=>{ TSEC=x.dataset.tsec; hubApply(); window.scrollTo({top:0}); });
     document.querySelectorAll('[data-tgrp]').forEach(x=>x.onclick=()=>{ const g=t.groups[+x.dataset.tgrp], first=g&&g.ids.find(id=>ids.includes(id)); if(first){ TSEC=first; hubApply(); window.scrollTo({top:0}); } });
     const tp=document.querySelector('[data-tpres]'); if(tp) tp.onclick=()=>startPresent(ids);
