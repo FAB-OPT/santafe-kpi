@@ -7142,15 +7142,23 @@ function parseCogs(wb,fname){
       rec.push({c:m[1],n:m[2],sale:num(a[iS]),item:String(a[iC]||''),desc:String(a[iD]||''),tu:num(a[iTu]),tc:num(a[iTc]),au:num(a[iAu]),ac:num(a[iAc])}); }
     ym=cgYM(fname,rs);
   } else {
+    /* คอลัมน์อ่านจากแถวหัวตาราง (Theo · Theo Cost · % · Actual · ต้นทุนจริง) — รายงานที่ออกทั้งบริษัทกับที่ออกรายสาขามีตำแหน่งคอลัมน์ไม่เท่ากัน */
+    let hdr=null; for(const a of rs){ if(a&&a[0]==='รหัส'){ const ix=[]; a.forEach((v,k)=>{ if(v!=null&&String(v).trim()!=='') ix.push([k,String(v).trim()]); });
+        const kT=ix.findIndex(x=>x[1]==='Theo'), kC=ix.findIndex(x=>x[1]==='Theo Cost'), kA=ix.findIndex(x=>x[1]==='Actual'); if(kT>=0&&kC>=0&&kA>=0){ hdr={tu:ix[kT][0],tc:ix[kC][0],au:ix[kA][0],ac:ix[kA+1]?ix[kA+1][0]:ix[kA][0]+3}; break; } } }
+    if(!hdr) throw new Error('ไม่พบหัวตาราง Theo / Theo Cost / Actual ในรายงาน 401');
+    const strs=a=>a.slice(1).filter(v=>v!=null&&String(v).trim()!==''&&isNaN(+v));
+    const nz=(a,k)=>typeof a[k]==='number'?a[k]:(typeof a[k+1]==='number'?a[k+1]:num(a[k]));
     let cur=null, pend=null, curN='';
     for(const a of rs){ if(!a) continue;
-      if(a[0]==='จำนวนการขาย'&&a[9]!=null){ pend=num(a[9]); continue; }
-      if(a[0]==='สาขา'){ const m=String(a[5]||'').trim().match(/^(\d{4})\s*(.*)$/); cur=m?m[1]:null; curN=m?m[2]:''; cur&&(cur=cur,0); if(cur) rec.push({c:cur,n:curN,sale:pend==null?0:pend,item:'',desc:'',tu:0,tc:0,au:0,ac:0,head:1}); pend=null; continue; }
+      if(a[0]==='จำนวนการขาย'){ const v=a.find((x,k)=>k>0&&typeof x==='number'); if(v==null) continue;
+        const hd=cur&&rec.filter(x=>x.c===cur&&x.head).pop();
+        if(hd&&!hd.sale&&!rec.some(x=>x.c===cur&&!x.head)) hd.sale=num(v); else pend=num(v); continue; }
+      if(a[0]==='สาขา'){ const t=strs(a).map(v=>String(v).trim()).find(v=>/^\d{4}\b/.test(v)); const m=t&&t.match(/^(\d{4})\s*:?\s*(.*)$/); cur=m?m[1]:null; curN=m?m[2]:''; if(cur) rec.push({c:cur,n:curN,sale:pend==null?0:pend,item:'',desc:'',tu:0,tc:0,au:0,ac:0,head:1}); pend=null; continue; }
       if(!cur) continue;
-      const code=a[0]!=null?String(a[0]).trim():'';
-      if(code&&a[6]&&!['รหัส','หมวดสินค้า','จำนวนการขาย','ยอดรวมทั้งหมด'].includes(code)){
+      const code=a[0]!=null?String(a[0]).trim():'', ds=strs(a)[0];
+      if(ds&&/^[A-Za-z]{1,4}\d{3,}/.test(code)){
         const hd=rec.filter(x=>x.c===cur&&x.head).pop();
-        rec.push({c:cur,n:curN,sale:hd?hd.sale:0,item:code,desc:String(a[6]),tu:num(a[14]),tc:num(a[15]),au:num(a[18]),ac:num(a[22])}); } }
+        rec.push({c:cur,n:curN,sale:hd?hd.sale:0,item:code,desc:String(ds),tu:num(a[hdr.tu]),tc:num(a[hdr.tc]),au:num(a[hdr.au]),ac:nz(a,hdr.ac)}); } }
     ym=cgThaiPeriod(rs)||cgYM(fname,rs);
   }
   if(!ym) throw new Error('ดูเดือน-ปีของรายงานไม่ได้ — ตั้งชื่อไฟล์ให้มีช่วงวันที่ เช่น "rptCOGSReport.csv 1-30 Sep"');
@@ -7768,9 +7776,12 @@ async function importFile(file){
     if(isJDPLWb(wb)) throw new Error('ไฟล์นี้เป็นงบกำไรขาดทุนของ Jaedang — เปิดหน้า Jaedang ก่อนนำเข้า');
     if(isCogsWb(wb)){ IMP.kind='ต้นทุนสินค้าขาย (COGS · รายงาน 401)';
       const R=parseCogs(wb,file.name);
-      COGS[R.key]={file:file.name,at:Date.now(),fmt:R.fmt,br:R.br,adj:R.adj,branches:R.branches};
+      /* ไฟล์เดือนเดิมนำเข้าซ้ำ = อัปเดตเฉพาะสาขาที่อยู่ในไฟล์ (ไฟล์แก้เฉพาะสาขาไม่ลบสาขาอื่นของเดือนนั้น) */
+      const old=COGS[R.key], got=Object.keys(R.br), merged=!!old&&got.length<Object.keys(old.br).length;
+      const nb=Object.assign({},old?old.br:{},R.br), na=((old&&old.adj)||[]).filter(x=>!R.br[x.c]).concat(R.adj);
+      COGS[R.key]={file:file.name,at:Date.now(),fmt:R.fmt,br:nb,adj:na,branches:Object.keys(nb).length};
       IMP.months=R.y===YEAR?[R.m]:[]; await saveState();
-      finish('นำเข้ารายงานต้นทุนสินค้าขายสำเร็จ: '+MONTH_FULL[R.m-1]+' '+R.y+' · '+R.branches+' สาขา · ยอดขาย '+(R.sale/1e6).toFixed(2)+'M · ต้นทุนจริง '+(R.act/R.sale*100).toFixed(2)+'% (มาตรฐาน '+(R.theo/R.sale*100).toFixed(2)+'%)'+(R.adj.length?' · ปรับรายการราคาผิดปกติ '+R.adj.length+' รายการ':'')+(/csv/.test(R.fmt)&&!/20\d{2}/.test(file.name)?' · ไฟล์ไม่ระบุปี ใช้ปี '+R.y:'')+' — ดูที่หน้า Profit ต่อท้าย Branch × Month Matrix','ok');
+      finish('นำเข้ารายงานต้นทุนสินค้าขายสำเร็จ: '+MONTH_FULL[R.m-1]+' '+R.y+' · '+R.branches+' สาขา'+(merged?' (อัปเดตเฉพาะสาขาในไฟล์ · รวมเป็น '+COGS[R.key].branches+' สาขา)':'')+' · ยอดขาย '+(R.sale/1e6).toFixed(2)+'M · ต้นทุนจริง '+(R.act/R.sale*100).toFixed(2)+'% (มาตรฐาน '+(R.theo/R.sale*100).toFixed(2)+'%)'+(R.adj.length?' · ปรับรายการราคาผิดปกติ '+R.adj.length+' รายการ':'')+(/csv/.test(R.fmt)&&!/20\d{2}/.test(file.name)?' · ไฟล์ไม่ระบุปี ใช้ปี '+R.y:'')+' — ดูที่หน้า Profit ต่อท้าย Branch × Month Matrix','ok');
       return; }
     if(isHourlyWb(wb)){ IMP.kind='ยอดขายรายชั่วโมง (Hourly Sale)';
       const R=parseHourly(wb,file.name);
