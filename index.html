@@ -7792,8 +7792,17 @@ function covCell(t,m,nowM){ const v=t.f(m), exp=t.exp?t.exp(m):null;
   if(m===nowM) return {st:'open',txt:'·',tip:'เดือนนี้ยังไม่ปิด'};
   return {st:'miss',txt:'✕',tip:'ยังไม่มีข้อมูล'}; }
 
-let COVY=YEAR;
+let COVY=YEAR_REAL;
+/* หน้านำเข้าข้อมูลต้องอิงปีจริง (YEAR_REAL) เสมอ ไม่ใช่ปีที่กำลังดูอยู่ — ตอนดูย้อนหลัง (เช่น 2023) เดิมแผงนี้ถอยเป็น 2023 แล้วนับ 5 ปีจาก 2023
+   ทำให้ปี 2026 / 2025 / 2024 หาย · แก้โดยสลับไปใช้ชุดข้อมูลจริงชั่วคราวระหว่างวาด แล้วคืนค่าเดิม */
 function renderImportPanel(){
+  const R=YSTORE.real;
+  if(YEAR===YEAR_REAL||!R) return renderImportPanel0();
+  const sv={YEAR,MONTHLY,DETAIL,EXTRA,curM};
+  YEAR=YEAR_REAL; MONTHLY=R.MONTHLY; DETAIL=R.DETAIL; EXTRA=R.EXTRA; curM=R.curM||curM;
+  try{ renderImportPanel0(); }
+  finally { YEAR=sv.YEAR; MONTHLY=sv.MONTHLY; DETAIL=sv.DETAIL; EXTRA=sv.EXTRA; curM=sv.curM; } }
+function renderImportPanel0(){
   const cv=$('#impCov'); if(!cv) return;
   const {nowM,cols}=covCols(), T=covTypes(), TN=T.filter(t=>!t.hist);   // hist = ประวัติเสริม (STF) แสดงในตารางแต่ไม่นับเป็น "ข้อมูลที่ต้องครบ"
   const done=cols.filter(m=>m<nowM);                         // เดือนที่ปิดแล้ว ใช้คิดความครบ
