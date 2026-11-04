@@ -3519,7 +3519,7 @@ function peopleBody(m){
   return `${tg}${cards}${metrics}${PPL.view==='zone'?peopleZoneHtml(m,P):`
     <div class="ppg2">${quadH}${wH}</div>
     <div class="aud-c ppt"><div class="ppth"><div class="ppt2" style="margin:0">รายสาขา</div><span class="ovseg">${tab('all','ทั้งหมด')}${tab('low','ต่ำกว่าเกณฑ์')}${tab('col','%COL เกิน 25%')}</span>
-      <input type="search" class="ppsearch" id="ppQ" placeholder="ค้นหารหัส / ชื่อสาขา" value="${(PPL.q||'').replace(/"/g,'&quot;')}" autocomplete="off"></div>
+      <input type="search" class="ppsearch" id="ppQ" placeholder="ค้นหารหัส / ชื่อสาขา / วัตถุดิบ" value="${(PPL.q||'').replace(/"/g,'&quot;')}" autocomplete="off"></div>
       <div class="ppleg"><span><u></u> เส้นกลาง = ค่าเฉลี่ย ฿${f0(P.ps)}</span><span><i class="good"></i> สูงกว่าเฉลี่ย</span><span><i class="bad"></i> ต่ำกว่าเกณฑ์ (ต่ำกว่าเฉลี่ยเกิน 5% · &lt; ฿${f0(thr)})</span><span><i class="soft"></i> ต่ำกว่าเฉลี่ยเล็กน้อย</span></div>
       <div class="ppr pph">${th('code','สาขา')}${th('sales','ยอดขาย')}${th('col','%COL')}${th('lh','ชม.แรงงาน','r')}${th('pt','บิล/ชม.','r')}${th('ps','Productivity Sale (บาท/ชม.) เทียบค่าเฉลี่ย')}</div>
       <div id="ppRows">${peopleRowsHtml(P)}</div>
@@ -6521,7 +6521,7 @@ function applyBY(list){ if(!Array.isArray(list)||!list.length) return; BY_IMPORT
       if(v.ly!=null) o.ly=v.ly; if(v.ty!=null){ o.ty=v.ty; delete o.src; } }); }); }
 function applyState(s){ if(YEAR!==YEAR_REAL){ if(s&&Array.isArray(s.monthly)) YSTORE.pending=s; return; }   // กำลังดูปีย้อนหลัง: เก็บไว้ใช้ตอนกลับปีปัจจุบัน
   if(!s||!Array.isArray(s.monthly)) return; if(!s.monthly.length&&!Object.keys(s.detail||{}).length) return;
-  MONTHLY=s.monthly; DETAIL=s.detail||{}; if(s.by) applyBY(s.by); if(s.hr) HOURLY=Object.assign({},HOURLY,s.hr); if(s.cg) COGS=Object.assign({},COGS,s.cg); refreshMonths();
+  MONTHLY=s.monthly; DETAIL=s.detail||{}; if(s.by) applyBY(s.by); if(s.hr) HOURLY=Object.assign({},HOURLY,s.hr); if(s.cg) COGS=Object.assign({},COGS,s.cg); cogsApplyBundle(); refreshMonths();
   if(curM==null){ const dm=Object.keys(DETAIL).map(Number).filter(Boolean); curM=dm.length?Math.max(...dm):null; }
   setMonth(curM); if(s.updatedAt) $('#status').textContent='อัปเดต '+new Date(s.updatedAt).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'}); }
 async function saveState(){
@@ -6606,7 +6606,7 @@ async function unlock(pass, remember){
            kpiMonths:data.kpiMonths, mallGroups:data.mallGroups};
   MONTHLY = JSON.parse(JSON.stringify(DEFAULT_MONTHLY));
   DETAIL  = JSON.parse(JSON.stringify(DEFAULT_DETAIL));
-  await syncKeys(pass);
+  await syncKeys(pass); cogsLoadBundle(pass);
   if(remember){ try{ localStorage.setItem('sf-kpi-pass', pass); }catch(e){} }
   document.getElementById('lock').classList.add('done');
   document.body.classList.remove('locked');
@@ -7142,7 +7142,7 @@ function hrCount(y,m){ const d=HOURLY[y+'-'+String(m).padStart(2,'0')]; return d
                (2) 401_xxx.xlsx — รายงานต้นทุนของสินค้าขายแบบพิมพ์ (ข้อมูลเดียวกัน)  → ได้ผลเดียวกัน
    เก็บต่อ "ปี-เดือน" รายสาขา: ยอดขาย · ต้นทุนมาตรฐาน (Theo) · ต้นทุนจริง (Actual) · รายการที่ปรับ (ราคาต่อหน่วยผิดปกติ > 20 เท่าของค่ากลางทุกสาขา → ใช้ค่ากลาง) */
 let COGS={};
-const CGS={cmp:'lm',sort:'over',q:'',all:false};
+const CGS={cmp:'lm',sort:'over',q:'',all:false,open:new Set(),openC:new Set()};
 function cgSheet(wb){
   for(const n of wb.SheetNames){
     const rs=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:null,range:'A1:AB14'});
@@ -7168,9 +7168,10 @@ function parseCogs(wb,fname){
   const num=v=>{ const x=typeof v==='number'?v:parseFloat(String(v==null?'':v).replace(/,/g,'')); return isFinite(x)?x:0; };
   const rec=[]; let ym=null;
   if(sh.kind==='csv'){
-    const H=sh.H, ix=n=>H.indexOf(n), iN=ix('BranchName'), iC=ix('ItemCode'), iD=ix('ItemDesc'), iS=ix('SaleAmount'), iTu=ix('TheoUsed'), iTc=ix('TotalTheoCost'), iAu=ix('ActualUsed'), iAc=ix('TotalActualCost');
+    const H=sh.H, ix=n=>H.indexOf(n), iN=ix('BranchName'), iC=ix('ItemCode'), iD=ix('ItemDesc'), iS=ix('SaleAmount'), iTu=ix('TheoUsed'), iTc=ix('TotalTheoCost'), iAu=ix('ActualUsed'), iAc=ix('TotalActualCost'), iCat=ix('CategoryName');
     for(let r=sh.hi+1;r<rs.length;r++){ const a=rs[r]; if(!a) continue;
-      const nm=String(a[iN]==null?'':a[iN]).trim(), m=nm.match(/^(\d{4})\s*(.*)$/); if(!m) continue;
+      const nm=String(a[iN]==null?'':a[iN]).trim(), m=nm.match(/^(\d{4})\s*(.*)$/); if(!m||m[1][0]!=='5') continue;
+      if(iCat>=0&&/^(06-|07-|Z\s*-)/.test(String(a[iCat]||'').trim())) continue;   /* ตัดหมวดที่ไม่ใช่วัตถุดิบอาหาร + สาขาแบรนด์อื่น ให้ตรงกับรายงาน 401 */
       rec.push({c:m[1],n:m[2],sale:num(a[iS]),item:String(a[iC]||''),desc:String(a[iD]||''),tu:num(a[iTu]),tc:num(a[iTc]),au:num(a[iAu]),ac:num(a[iAc])}); }
     ym=cgYM(fname,rs);
   } else {
@@ -7217,6 +7218,37 @@ const cgN=v=>v==null||!isFinite(v)?'—':Math.round(v).toLocaleString('en-US');
 const cgSg=(v,d)=>{ if(v==null||!isFinite(v)) return '—'; d=d==null?2:d; const t=Math.abs(v).toFixed(d); const sg=+t===0?'':v>0?'+':'−'; return sg+(d===0?(+t).toLocaleString('en-US'):t); };
 function cgKeyOf(y,m){ return y+'-'+String(m).padStart(2,'0'); }
 function cgPrevKey(y,m,cmp){ return cmp==='ly'?cgKeyOf(y-1,m):(m>1?cgKeyOf(y,m-1):cgKeyOf(y-1,12)); }
+
+/* ชุดข้อมูลรายการวัตถุดิบ (รายงาน 401) — ไฟล์ cogs401.enc.json เข้ารหัสด้วยรหัสเดียวกับเว็บ · ถอดหลังใส่รหัสแล้วเท่านั้น
+   รูปแบบเดือน: {key,short,label,note,b:[[รหัส,ชื่อ,ยอดขาย,ต้นทุนมาตรฐาน,ต้นทุนจริง,[[หมวด,std,act,[[รหัสสินค้า,ชื่อ,หน่วย,จำนวนสูตร,std,จำนวนจริง,act]]]]]]} */
+let COGS_BUNDLE=null, COGSI={};
+function cogsApplyBundle(){ if(!COGS_BUNDLE||!COGS_BUNDLE.months) return;
+  COGS_BUNDLE.months.forEach(M=>{ const br={}, by={};
+    M.b.forEach(b=>{ br[b[0]]={n:b[1],s:b[2],t:b[3],a:b[4]}; by[b[0]]=b[5]; });
+    COGS[M.key]={file:'รายงาน 401',at:Date.now(),fmt:'bundle',br,adj:[],branches:M.b.length};
+    COGSI[M.key]={note:M.note||'',by}; });
+  if(document.getElementById('cogsrep')) cogsRefresh(); }
+async function cogsLoadBundle(pass){
+  try{ const r=await fetch('cogs401.enc.json',{cache:'no-cache'}); if(!r.ok) return; const o=await r.json();
+    const kb=await crypto.subtle.importKey('raw',new TextEncoder().encode(pass),'PBKDF2',false,['deriveKey']);
+    const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:B64(o.s),iterations:o.n,hash:'SHA-256'},kb,{name:'AES-GCM',length:256},false,['decrypt']);
+    let pl=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:B64(o.i)},key,B64(o.c)));
+    if(o.z) pl=await syncGz(pl,1);
+    COGS_BUNDLE=JSON.parse(new TextDecoder().decode(pl)); cogsApplyBundle(); }
+  catch(e){ console.warn('cogs bundle',e); } }
+const cgQty=v=>v==null||!isFinite(v)?'—':(+v).toLocaleString('en-US',{maximumFractionDigits:1});
+const cgUnitPx=it=>{ const p=it[5]?it[6]/it[5]:(it[3]?it[4]/it[3]:0); return p?p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'; };
+const cgHit=(it,q)=>(it[0]+' '+it[1]).toLowerCase().includes(q);
+function cgItems(items,q){
+  let rows=items.slice().sort((x,y)=>(y[6]-y[4])-(x[6]-x[4]));
+  if(q){ const h=rows.filter(it=>cgHit(it,q)); if(h.length) rows=h; }
+  return `<table class="cgit"><tr><th>วัตถุดิบ</th><th class="n">ราคา/หน่วย</th><th class="n">จำนวนมาตรฐาน</th><th class="n">จำนวนใช้จริง</th><th class="n">ต้นทุนมาตรฐาน</th><th class="n">ต้นทุนจริง</th><th class="n">ส่วนต่าง</th></tr>`
+   +rows.map(it=>{ const d=it[6]-it[4]; return `<tr><td>${it[1]}<br><small>${it[0]}${it[2]?' · '+it[2]:''}</small></td><td class="n">${cgUnitPx(it)}</td><td class="n mute">${cgQty(it[3])}</td><td class="n mute">${cgQty(it[5])}</td><td class="n">${cgN(it[4])}</td><td class="n">${cgN(it[6])}</td><td class="n"><span class="cgp ${d>0?'neg':d<0?'pos':''}">${cgSg(d,0)}</span></td></tr>`; }).join('')+`</table>`; }
+function cgDetail(code,cats,q){
+  const cs=cats.map((c,ci)=>({c,ci})).sort((x,y)=>(y.c[2]-y.c[1])-(x.c[2]-x.c[1]));
+  return `<div class="cgdt"><div class="cgdt-h"><span>หมวดวัตถุดิบ</span><span class="n">ต้นทุนมาตรฐาน</span><span class="n">ต้นทุนจริง</span><span class="n">ส่วนต่าง</span></div>`
+   +cs.map(({c,ci})=>{ const k=code+':'+ci, d=c[2]-c[1], op=CGS.openC.has(k)||(q&&c[3].some(it=>cgHit(it,q)));
+     return `<div class="cgcat"><div class="cgcat-h" data-cgcat="${k}" role="button" tabindex="0" aria-expanded="${op?'true':'false'}"><span><i>${op?'▾':'▸'}</i> ${c[0]}</span><span class="n mute">${cgN(c[1])}</span><span class="n mute">${cgN(c[2])}</span><span class="n"><span class="cgp ${d>0?'neg':d<0?'pos':''}">${cgSg(d,0)}</span></span></div>${op?`<div class="cgit-w">${cgItems(c[3],q)}</div>`:''}</div>`; }).join('')+`</div>`; }
 function cogsReport(m){
   const avail=Object.keys(COGS).sort();
   const head=`<div class="grp big">รายงานต้นทุนสินค้าขาย<span class="gr">รายงาน 401 · ต้นทุนจริงเทียบมาตรฐาน (Theo)</span></div>`;
@@ -7238,7 +7270,9 @@ function cogsReport(m){
   const good=v=>v==null?'':(v<=0?'pos':'neg');
   const q=CGS.q.trim().toLowerCase();
   const SORT={over:(a,b)=>b.diff-a.diff,worse:(a,b)=>(b.d==null)-(a.d==null)||(b.d||0)-(a.d||0),better:(a,b)=>(a.d==null)-(b.d==null)||(a.d||0)-(b.d||0),pct:(a,b)=>b.act-a.act,sales:(a,b)=>b.s-a.s,code:(a,b)=>a.c.localeCompare(b.c)};
-  let list=rows.filter(r=>!q||(r.c+' '+r.name).toLowerCase().includes(q)).sort(SORT[CGS.sort]||SORT.over);
+  const IT=(COGSI[key]||{}).by||null;
+  const qItem=r=>!!(q&&IT&&(IT[r.c]||[]).some(c=>c[3].some(it=>cgHit(it,q))));
+  let list=rows.filter(r=>!q||(r.c+' '+r.name).toLowerCase().includes(q)||qItem(r)).sort(SORT[CGS.sort]||SORT.over);
   const total=list.length, showAll=CGS.all||!!q, vis=showAll?list:list.slice(0,10);
   const maxD=Math.max(1,...rows.map(r=>Math.abs(r.d||0)));
   const bar=r=>r.d==null?'':`<span class="cgbar"><i class="${r.d>0?'neg':'pos'}" style="width:${Math.min(100,Math.abs(r.d)/Math.min(maxD,3)*100).toFixed(0)}%"></i></span>`;
@@ -7247,7 +7281,7 @@ function cogsReport(m){
   return `<div id="cogsrep" class="cgr" data-m="${m}">
     <div class="cg-top">${head}
       <span class="ovseg cg-seg"><button type="button" class="${CGS.cmp==='lm'?'on':''}" data-cgcmp="lm">vs LM</button><button type="button" class="${CGS.cmp==='ly'?'on':''}" data-cgcmp="ly">vs LY</button></span></div>
-    ${note?`<div class="cg-note">${note}</div>`:''}
+    ${note?`<div class="cg-note">${note}</div>`:''}${(COGSI[key]&&COGSI[key].note)?`<div class="cg-note">${COGSI[key].note}</div>`:''}
     <div class="cg-hero">
       <div class="cg-h1"><span>ต้นทุนจริง · % ของยอดขาย</span><b>${act.toFixed(2)}%</b>
         <em class="${good(vsStd)}">${cgSg(vsStd)} vs มาตรฐาน</em><em class="${good(vsCmp)}">${vsCmp==null?`— vs ${cmpLbl}`:cgSg(vsCmp)+' vs '+cmpLbl}</em></div>
@@ -7260,11 +7294,11 @@ function cogsReport(m){
         <input type="search" id="cgq" placeholder="ค้นหารหัส / ชื่อสาขา" value="${(CGS.q||'').replace(/"/g,'&quot;')}" aria-label="ค้นหาสาขา"></div>
       <div class="cg-chips">${chip('over','เกินมาตรฐานมากสุด')}${chip('worse','แย่ลง vs '+cmpLbl+' มากสุด')}${chip('better','ดีขึ้น vs '+cmpLbl+' มากสุด')}${chip('pct','% ต้นทุนสูงสุด')}${chip('sales','ยอดขายสูงสุด')}${chip('code','รหัสสาขา')}</div>
       <div class="scroll"><table class="cgt"><tr><th></th><th>สาขา</th><th class="n">ยอดขาย</th><th class="n">% มาตรฐาน</th><th class="n">% ใช้จริง</th><th class="n">ส่วนต่าง (บาท)</th><th class="n">% ${cmpLbl}</th><th></th><th class="n">เปลี่ยนแปลง vs ${cmpLbl}</th></tr>
-      ${vis.map((r,i)=>`<tr><td class="no">${i+1}</td><td><span class="cc">${r.c}</span> ${r.name}</td><td class="n">${cgN(r.s)}</td><td class="n">${r.std.toFixed(2)}%</td><td class="n"><b>${r.act.toFixed(2)}%</b></td>
-        <td class="n"><span class="cgp ${good(r.diff)}">${cgSg(r.diff,0)}</span></td><td class="n">${r.cmp==null?'—':r.cmp.toFixed(2)+'%'}</td><td class="bc">${bar(r)}</td><td class="n"><span class="cgp ${good(r.d)}">${r.d==null?'—':cgSg(r.d)}</span></td></tr>`).join('')||`<tr><td colspan="9" class="cg-empty">ไม่พบสาขาตามคำค้น</td></tr>`}
+      ${vis.map((r,i)=>{ const has=!!(IT&&IT[r.c]), op=has&&(CGS.open.has(r.c)||qItem(r)); return `<tr class="${has?'cg-br':''}"${has?` data-cgbr="${r.c}" aria-expanded="${op?'true':'false'}"`:''}><td class="no">${i+1}</td><td>${has?`<i class="cgcar">${op?'▾':'▸'}</i> `:''}<span class="cc">${r.c}</span> ${r.name}</td><td class="n">${cgN(r.s)}</td><td class="n">${r.std.toFixed(2)}%</td><td class="n"><b>${r.act.toFixed(2)}%</b></td>
+        <td class="n"><span class="cgp ${good(r.diff)}">${cgSg(r.diff,0)}</span></td><td class="n">${r.cmp==null?'—':r.cmp.toFixed(2)+'%'}</td><td class="bc">${bar(r)}</td><td class="n"><span class="cgp ${good(r.d)}">${r.d==null?'—':cgSg(r.d)}</span></td></tr>`+(op?`<tr class="cg-dtr"><td colspan="9">${cgDetail(r.c,IT[r.c],q)}</td></tr>`:''); }).join('')||`<tr><td colspan="9" class="cg-empty">ไม่พบสาขาตามคำค้น</td></tr>`}
       </table></div>
       ${(!q&&total>10)?`<div class="cg-more"><button type="button" data-cgall="${CGS.all?0:1}">${CGS.all?'ย่อเหลือ 10 สาขาแรก ▴':`ดูทั้งหมด (${total} สาขา) ▾`}</button></div>`:''}
-      <div class="cg-foot">ข้อมูลจากรายงาน 401 · ${D.branches||Object.keys(D.br).length} สาขา · ${MONTH_FULL[km-1]} ${YEAR}${CGS.cmp==='lm'&&P?` · เทียบ ${MONTH_FULL[+cmpKey.slice(5)-1]}`:''}${adjN?` · ปรับรายการราคาต่อหน่วยผิดปกติ ${adjN} รายการ (${D.adj.slice(0,2).map(x=>x.c+' '+String(x.desc).replace(/\s*[(（].*$/,'')).join(', ')}${adjN>2?' …':''}) ใช้ราคากลางทุกสาขาแทน`:''}</div>
+      <div class="cg-foot">ข้อมูลจากรายงาน 401 · ${D.branches||Object.keys(D.br).length} สาขา${IT?' · คลิกสาขาเพื่อดูรายหมวดและวัตถุดิบ':''} · ${MONTH_FULL[km-1]} ${YEAR}${CGS.cmp==='lm'&&P?` · เทียบ ${MONTH_FULL[+cmpKey.slice(5)-1]}`:''}${adjN?` · ปรับรายการราคาต่อหน่วยผิดปกติ ${adjN} รายการ (${D.adj.slice(0,2).map(x=>x.c+' '+String(x.desc).replace(/\s*[(（].*$/,'')).join(', ')}${adjN>2?' …':''}) ใช้ราคากลางทุกสาขาแทน`:''}</div>
     </div></div>`;
 }
 function cogsRefresh(){ const el=document.getElementById('cogsrep'); if(!el) return; const m=+el.dataset.m||12;
@@ -7273,7 +7307,9 @@ function cogsRefresh(){ const el=document.getElementById('cogsrep'); if(!el) ret
   const sc=el.querySelector('.scroll'), x=sc?sc.scrollLeft:0; el.replaceWith(neu);
   const ns=neu.querySelector('.scroll'); if(ns) ns.scrollLeft=x;
   if(keepQ){ const qi=document.getElementById('cgq'); if(qi){ qi.focus(); const L=qi.value.length; qi.setSelectionRange(L,L); } } }
-document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('#cogsrep [data-cgcmp],#cogsrep [data-cgsort],#cogsrep [data-cgall]'); if(!b) return;
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('#cogsrep [data-cgcmp],#cogsrep [data-cgsort],#cogsrep [data-cgall],#cogsrep [data-cgbr],#cogsrep [data-cgcat]'); if(!b) return;
+  if(b.dataset.cgcat){ const c=b.dataset.cgcat; CGS.openC.has(c)?CGS.openC.delete(c):CGS.openC.add(c); cogsRefresh(); return; }
+  if(b.dataset.cgbr){ const c=b.dataset.cgbr; CGS.open.has(c)?CGS.open.delete(c):CGS.open.add(c); cogsRefresh(); return; }
   if(b.dataset.cgcmp){ CGS.cmp=b.dataset.cgcmp; CGS.sort=CGS.sort; } if(b.dataset.cgsort){ CGS.sort=b.dataset.cgsort; } if(b.dataset.cgall!=null){ CGS.all=b.dataset.cgall==='1'; }
   cogsRefresh(); });
 document.addEventListener('input',e=>{ if(e.target&&e.target.id==='cgq'){ CGS.q=e.target.value; clearTimeout(cogsRefresh._t); cogsRefresh._t=setTimeout(cogsRefresh,160); } });
@@ -8072,6 +8108,21 @@ body.hist-open #fMode,body.hist-open #fMonthBox,body.hist-open #fQuarter,body.hi
 @media(max-width:900px){.cg-hero{grid-template-columns:1fr 1fr}.cg-h1{grid-column:1/-1}.cg-k{border-top:1px solid var(--line)}}
 
 @media(max-width:900px){.hv-cards{grid-template-columns:1fr}.hv-in{padding:14px 12px 50px}}
+
+/* COGS: กางดูรายหมวด / รายวัตถุดิบ */
+.cgt tr.cg-br{cursor:pointer}.cgt tr.cg-br:hover td{background:#FFF8F2}.cgt tr.cg-br[aria-expanded="true"] td{background:#FFF3E8}
+.cgcar{font-style:normal;color:var(--accent-ink);display:inline-block;width:14px}
+.cgt tr.cg-dtr>td{padding:0 0 14px 44px;background:#FBFAF8;white-space:normal}
+.cgdt{border:1px solid var(--line);border-radius:14px;background:#fff;overflow:hidden;margin-top:6px}
+.cgdt-h,.cgcat-h{display:grid;grid-template-columns:minmax(220px,1fr) 150px 150px 130px;gap:10px;align-items:center;padding:9px 14px}
+.cgdt-h{font-size:12px;color:var(--mute);font-weight:600;border-bottom:1px solid var(--line);background:#FBFAF8}
+.cgcat-h{cursor:pointer;font-weight:700;font-size:14px;border-bottom:1px solid var(--hair)}.cgcat-h:hover{background:#FFF8F2}
+.cgcat-h i{font-style:normal;color:var(--accent-ink);margin-right:4px}
+.cgdt .n{text-align:right}.cgdt .mute{color:var(--ink-2);font-weight:500}
+.cgit-w{padding:4px 14px 12px 34px;overflow-x:auto;background:#FBFAF8}
+.cgit{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}.cgit th{font-size:11.5px;color:var(--mute);font-weight:600;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.cgit th.n,.cgit td.n{text-align:right}.cgit td{padding:7px 8px;border-bottom:1px solid var(--hair);white-space:nowrap}.cgit td small{color:var(--faint);font-size:11.5px}.cgit .mute{color:var(--ink-2)}
+@media (max-width:900px){.cgdt-h,.cgcat-h{grid-template-columns:minmax(140px,1fr) 90px 90px 90px}.cgt tr.cg-dtr>td{padding-left:8px}}
 </style>
 <script>
 /* ========================= ข้อมูลย้อนหลัง (ปีก่อน ๆ) =========================
