@@ -8207,7 +8207,10 @@ function hFmt(t,v){ if(!hNum(v)) return '—'; return t==='money'?hMoney(v):t===
 
 function histYears(){
   const ys=new Set();
-  (EXTRA.branchYears||[]).forEach(b=>Object.keys(b.h||{}).forEach(y=>{ if(+y<YEAR_REAL&&((b.h[y].s||[]).some(hNum))) ys.add(+y); }));
+  /* ปีที่มีข้อมูลต้องนับจากชุดข้อมูลจริงเสมอ — ตอนดูปีย้อนหลังที่สร้างจากยอดรายชั่วโมง (เช่น 2023) EXTRA ถูกสลับเป็นชุดชั่วคราวที่ไม่มีประวัติ STF
+     ถ้านับจากชุดนั้น ปี 2025 / 2024 จะหายไปจากช่องเลือกปี (ต้องแสดงครบทุกปีไม่ว่าจะเลือกปีไหนอยู่) */
+  let R=null; try{ R=YSTORE.real; }catch(e){}
+  ((YEAR!==YEAR_REAL&&R&&R.EXTRA&&R.EXTRA.branchYears)||EXTRA.branchYears||[]).forEach(b=>Object.keys(b.h||{}).forEach(y=>{ if(+y<YEAR_REAL&&((b.h[y].s||[]).some(hNum))) ys.add(+y); }));
   return [...ys].sort((a,b)=>b-a); }
 function hCell(b,y,m){ const h=(b.h||{})[y]; if(!h) return null; const o={}; let any=false;
   ['s','g','l','p','t','k','c'].forEach(k=>{ const v=(h[k]||[])[m-1]; if(hNum(v)){ o[k]=v; any=true; } });
