@@ -1109,6 +1109,15 @@ body.present .kf{font-size:14px;padding-top:10px} body.present .kf .pill{font-si
 
 /* คำอธิบายเส้นของกราฟยอดขายรายเดือน */
 .lcleg i.ln{width:18px;height:3px;border-radius:2px;vertical-align:middle}
+.ovyrs{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:2px 0 10px}
+.ovyrs>span{font-size:12.5px;color:var(--faint);font-weight:600;margin-right:2px}
+.ovy{display:inline-flex;align-items:center;gap:7px;padding:5px 12px 5px 9px;border:1px solid var(--hair);border-radius:999px;cursor:pointer;font-size:13px;font-weight:700;color:var(--ink);background:#fff;user-select:none;transition:background .12s,border-color .12s}
+.ovy input{position:absolute;opacity:0;pointer-events:none}
+.ovy i{width:14px;height:14px;border-radius:4px;border:2px solid var(--c);background:#fff;box-sizing:border-box;display:inline-block}
+.ovy.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 10%,#fff)}
+.ovy.on i{background:var(--c);box-shadow:inset 0 0 0 2px #fff}
+.ovy:focus-within{outline:2px solid var(--c);outline-offset:2px}
+.ovyx{border:0;background:none;color:var(--faint);font:inherit;font-size:12.5px;font-weight:600;text-decoration:underline;cursor:pointer;padding:4px 6px}
 .lcleg i.dash{background:repeating-linear-gradient(90deg,#38BDF8 0 6px,transparent 6px 10px)}
 .lcleg .hint{margin-left:auto}
 /* ---- tooltip ของกราฟ ---- */
@@ -5036,7 +5045,7 @@ function storeMoves(m){ const by=brOfYear(), opened={}, closed={}, add=(o,k,x)=>
     if(codes.has(c)||seen.has(c)||!(r.sales>0)) return; seen.add(c); add(opened,mm,{code:r.code,name:r.name,note:'ยังไม่อยู่ในไฟล์ยอด 2 ปี'}); });
   return {opened,closed}; }
 /* ===== Performance Trend บนหน้ายอดขาย: vs LY · vs Budget · vs LM · ขอบเขต All Stores / Branch / Zone ===== */
-const OVT={mode:'all',scope:'all',code:'',zone:''};
+const OVT={mode:'all',scope:'all',code:'',zone:'',yrs:(()=>{ try{ return (JSON.parse(localStorage.getItem('sf-kpi-ovyrs')||'[]')||[]).map(Number).filter(Boolean); }catch(e){ return []; } })()};
 function ovTrendData(){
   const S=SCP||{}, last=S.multi?S.last:curM, by=brOfYear(), nm=v=>String(v||'').replace(/\s+/g,'');
   const months=MONTHLY.filter(r=>r.m<=last&&r.sales!=null).map(r=>r.m).sort((a,b)=>a-b);
@@ -5057,6 +5066,46 @@ function ovTrendData(){
   rows.forEach((r,i)=>{ r.lm=i>0&&rows[i-1].m===r.m-1?rows[i-1].a:null; });
   return rows;
 }
+/* ───── เทียบยอดขายหลายปีบนกราฟเดียว: ติ๊กปีที่ต้องการ (ปีไหนก็ได้ที่มีข้อมูล · กี่ปีก็ได้) · เส้นละสี ─────
+   ปีปัจจุบัน = ยอดจริงของระบบ · ปีย้อนหลัง = ประวัติรายสาขา (STF) หรือถ้าไม่มี = ยอดขายรายชั่วโมง (ก่อนภาษี)
+   ขอบเขต (ทุกสาขา / สาขา / โซน) ตามที่เลือกอยู่ในการ์ด · ยอดรายเดือนเป็นล้านบาท */
+const OVY_PAL=['#2F80ED','#27AE60','#9B51E0','#E0467C','#0AA3BF','#B7791F','#EB5757','#64748B','#14B8A6','#7C3AED'];
+const ovyColor=y=>OVY_PAL[((YEAR_REAL-y)%OVY_PAL.length+OVY_PAL.length)%OVY_PAL.length];
+function ovyRealBY(){ const R=YSTORE&&YSTORE.real; return YEAR===YEAR_REAL?(EXTRA.branchYears||[]):((R&&R.EXTRA&&R.EXTRA.branchYears)||[]); }
+function ovyYears(){
+  const ys=new Set([YEAR_REAL]);
+  ovyRealBY().forEach(b=>Object.keys(b.h||{}).forEach(y=>{ if(+y<YEAR_REAL&&((b.h[y].s||[]).some(v=>typeof v==='number'&&v>0))) ys.add(+y); }));
+  try{ hrYears().forEach(y=>ys.add(y)); }catch(e){}
+  return [...ys].sort((a,b)=>b-a); }
+function ovyList(){
+  let L=filtZone(ovyRealBY());
+  if(OVT.scope==='branch') L=L.filter(b=>String(b.code)===String(OVT.code));
+  else if(OVT.scope==='zone') L=L.filter(b=>b.zone===OVT.zone);
+  return L; }
+/* คืน [ม.ค..ธ.ค.] เป็นล้านบาท (null = ไม่มีข้อมูล) */
+function ovyMonthly(y){
+  const R=YSTORE&&YSTORE.real, L=ovyList(), out=Array(12).fill(null), codes=new Set(L.map(b=>String(b.code)));
+  const hasH=ovyRealBY().some(b=>b.h&&b.h[y]&&(b.h[y].s||[]).some(v=>typeof v==='number'&&v>0));
+  for(let m=1;m<=12;m++){
+    let t=0, n=0;
+    if(y===YEAR_REAL){
+      const MR=YEAR===YEAR_REAL?MONTHLY:(R&&R.MONTHLY)||[];
+      if(OVT.scope==='all'&&FILT.zone==='all'){ const r=MR.find(x=>x.m===m); if(r&&r.sales!=null){ t=r.sales*1e6; n=1; } }
+      else L.forEach(b=>{ const x=(b.m&&b.m[m])||{}; if(x.ty>0){ t+=x.ty; n++; } });
+    } else if(hasH){
+      L.forEach(b=>{ const v=b.h&&b.h[y]&&(b.h[y].s||[])[m-1]; if(typeof v==='number'&&v>0){ t+=v; n++; } });
+    } else {
+      const d=(typeof HOURLY!=='undefined')&&HOURLY[y+'-'+String(m).padStart(2,'0')];
+      if(d&&d.br) Object.entries(d.br).forEach(([c,b])=>{ if(OVT.scope!=='all'||FILT.zone!=='all'){ if(!codes.has(String(c))) return; }
+        let net=0; for(let h=0;h<24;h++) net+=b.h[h*3]; if(net>0){ t+=net; n++; } });
+    }
+    out[m-1]=n&&t>0?t/1e6:null; }
+  return out; }
+function ovyChips(){
+  const ys=ovyYears().filter(y=>y!==YEAR); if(!ys.length) return '';
+  const on=new Set(OVT.yrs);
+  return `<div class="ovyrs"><span>เทียบหลายปี</span>${ys.map(y=>`<label class="ovy${on.has(y)?' on':''}" style="--c:${ovyColor(y)}"><input type="checkbox" data-ovyr="${y}" ${on.has(y)?'checked':''}><i></i>${y}</label>`).join('')}${[...on].some(y=>y!==YEAR&&ys.includes(y))?'<button type="button" class="ovyx" data-ovyclr="1">ล้าง</button>':''}</div>`; }
+
 /* กราฟเส้นโค้งแบบเดียวกับแท็บ Trend: เส้นหลักสีส้มมีพื้นไล่สีและตัวเลขบนจุด · เส้นเทียบสีเทา · แผนเส้นประสีฟ้า
    main = {k,name} · refs = [{k,name,c,dash}] · สเกลแกนปรับตามช่วงค่า (ทั้งบริษัทหลักสิบล้าน · รายสาขาหลักล้าน) */
 function ovChart(rows,main,refs){
@@ -5117,6 +5166,8 @@ function ovTrendHtml(){
   const head=`<div class="ovth"><h3>Performance Trend</h3><span class="ovseg">${MODES.map(([k,t])=>`<button type="button" class="${OVT.mode===k?'on':''}" data-ovmode="${k}">${t}</button>`).join('')}</span></div>`+
     (by.length?`<div class="ovscope"><span class="ovseg">${[['all','All Stores'],['branch','Branch'],['zone','Zone']].map(([k,t])=>`<button type="button" class="${OVT.scope===k?'on':''}" data-ovscope="${k}">${t}</button>`).join('')}</span>${sel}</div>`:'');
   if(!rows.length) return head+'<div class="empty">ยังไม่มียอดขาย</div>';
+  const yrsAvail=ovyYears(), yrsOn=OVT.yrs.filter(y=>y!==YEAR&&yrsAvail.includes(y)).sort((a,b)=>b-a);
+  yrsOn.forEach(y=>{ const sr=ovyMonthly(y); rows.forEach(r=>{ r['y'+y]=sr[r.m-1]; }); });
   const R=rows.map(ref), MS=mm=>MONTH_EN[mm-1].slice(0,3);
   const gr=r=>{ const a=act(r), b=ref(r); return (a!=null&&b)?(a/b-1)*100:null; };
   const pills=`<div class="ovpw"><div class="ovpills" style="--n:${rows.length}"><span></span>${rows.map(r=>`<span class="mh">${MS(r.m)}</span>`).join('')}<span class="rl">${MODES.find(q=>q[0]===OVT.mode)[1]}</span>${rows.map(r=>`<span>${pill(gr(r))}</span>`).join('')}</div></div>`;
@@ -5189,7 +5240,8 @@ function ovTrendHtml(){
     if(p3.length) L.push(p3.join(' · '));
     return `<div class="note focusnote"><b class="ttl">ควรโฟกัส</b>${L.map(x=>`<div>${x}</div>`).join('')}</div>`;
   })();
-  return head+`<div class="ovcap">${cap}</div><div class="ovchart">${ovChart(rows,MAIN,REFS)}</div>`+tbl+focus+note;
+  const REFS2=REFS.concat(yrsOn.map(y=>({k:'y'+y,name:'ยอดขาย '+y,c:ovyColor(y)})));
+  return head+ovyChips()+`<div class="ovcap">${cap}</div><div class="ovchart">${ovChart(rows,MAIN,REFS2)}</div>`+tbl+focus+note;
 }
 /* ยอดขายรายสาขารายเดือน เรียงตามเดือนล่าสุด · แสดง 10 อันดับ กดดูทั้งหมดได้ */
 const OVB={all:false,sort:'code',dir:'asc'};
@@ -5328,6 +5380,10 @@ document.addEventListener('click',e=>{
     if(OVT.scope==='branch'&&!by.some(b=>String(b.code)===String(OVT.code))) OVT.code=(by.slice().sort((p,q)=>String(p.code).localeCompare(String(q.code)))[0]||{}).code||'';
     if(OVT.scope==='zone'&&!by.some(b=>b.zone===OVT.zone)) OVT.zone=(by.find(b=>b.zone)||{}).zone||'';
     ovTrendRender(); ovRender('ovBranch',ovBrHtml); } });
+document.addEventListener('change',e=>{ const yc=e.target.closest&&e.target.closest('[data-ovyr]');
+  if(yc){ const y=+yc.dataset.ovyr, i=OVT.yrs.indexOf(y); if(yc.checked&&i<0) OVT.yrs.push(y); if(!yc.checked&&i>=0) OVT.yrs.splice(i,1);
+    try{ localStorage.setItem('sf-kpi-ovyrs',JSON.stringify(OVT.yrs)); }catch(_){} ovTrendRender(); return; } });
+document.addEventListener('click',e=>{ if(!(e.target.closest&&e.target.closest('[data-ovyclr]'))) return; OVT.yrs=[]; try{ localStorage.setItem('sf-kpi-ovyrs','[]'); }catch(_){} ovTrendRender(); });
 document.addEventListener('change',e=>{ const s2=e.target.closest('[data-ovsel]'); if(!s2) return; OVT[s2.dataset.ovsel]=s2.value; ovTrendRender(); ovRender('ovBranch',ovBrHtml); });
 /* ===== Sales Mix รายเดือน: แท่งสัดส่วน 100% Dine in · Takeaway · Delivery · ทั้งบริษัท หรือเลือกสาขา =====
    ทั้งบริษัท: ความสูงแท่ง = ยอดขายเดียวกับหน้า Overview (งบ P&L ถ้ามี) แบ่งตามสัดส่วนช่องทางจากแบบฟอร์มส่งยอดขาย
