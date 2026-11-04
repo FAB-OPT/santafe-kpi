@@ -16,7 +16,8 @@ function ask(q) {
       for (const c of ch) {
         if (c === '\r' || c === '\n') { if (si.isTTY) si.setRawMode(false); si.pause(); si.removeListener('data', on); process.stdout.write('\n'); return res(buf); }
         if (c === '\u0003') process.exit(1);
-        if (c === '\u007f' || c === '\b') buf = buf.slice(0, -1); else buf += c;
+        if (c === '\u007f' || c === '\b') { if (buf.length) { buf = buf.slice(0, -1); process.stdout.write('\b \b'); } }
+        else { buf += c; process.stdout.write('*'); }   /* โชว์ดอกจันให้รู้ว่าพิมพ์เข้า (ไม่โชว์ตัวอักษรจริง) */
       }
     });
   });
