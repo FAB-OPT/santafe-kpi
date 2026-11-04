@@ -29,8 +29,21 @@ function ask(q) {
   const j = html.indexOf('</script>', i);
   const raw = html.slice(i + tag.length, j);
   const data = JSON.parse(raw);                     // ตรวจว่าเป็น JSON ถูกต้อง
-  const pass = (await ask('รหัสผ่านเว็บ KPI: ')).trim();
-  if (!pass) throw new Error('ไม่ได้ใส่รหัส');
+  /* ตรวจรหัสกับข้อมูลหลักของเว็บ (index.html) ก่อนเข้ารหัส — กันพิมพ์ผิด/ลืมสลับเป็นแป้นภาษาอังกฤษ */
+  const idx = fs.readFileSync(__dirname + '/../index.html', 'utf8');
+  const m = idx.match(/const ENC=\{s:'([^']+)',i:'([^']+)',c:'([^']+)',n:(\d+)\}/);
+  const check = p => { if (!m) return true; try {
+      const k = crypto.pbkdf2Sync(p, Buffer.from(m[1], 'base64'), +m[4], 32, 'sha256'), buf = Buffer.from(m[3], 'base64');
+      const d = crypto.createDecipheriv('aes-256-gcm', k, Buffer.from(m[2], 'base64')); d.setAuthTag(buf.slice(buf.length - 16));
+      d.update(buf.slice(0, buf.length - 16)); d.final(); return true; } catch (e) { return false; } };
+  let pass = '';
+  for (let t = 0; t < 3; t++) {
+    pass = (await ask('รหัสผ่านเว็บ KPI: ')).trim();
+    if (!pass) throw new Error('ไม่ได้ใส่รหัส');
+    if (check(pass)) break;
+    if (process.env.COGS_PASS || t === 2) throw new Error('รหัสไม่ตรงกับรหัสเข้าเว็บ — ตรวจแป้นพิมพ์ว่าเป็นภาษาอังกฤษ/ไม่มีช่องว่าง แล้วรันใหม่');
+    console.log('รหัสไม่ตรงกับรหัสเข้าเว็บ — พิมพ์ใหม่อีกครั้ง (ตรวจแป้นพิมพ์ว่าเป็นภาษาอังกฤษ)');
+  }
   const salt = crypto.randomBytes(16), iv = crypto.randomBytes(12), n = 200000;
   const key = crypto.pbkdf2Sync(pass, salt, n, 32, 'sha256');
   const z = zlib.gzipSync(Buffer.from(JSON.stringify(data), 'utf8'), { level: 9 });
