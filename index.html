@@ -7142,7 +7142,7 @@ function hrCount(y,m){ const d=HOURLY[y+'-'+String(m).padStart(2,'0')]; return d
                (2) 401_xxx.xlsx — รายงานต้นทุนของสินค้าขายแบบพิมพ์ (ข้อมูลเดียวกัน)  → ได้ผลเดียวกัน
    เก็บต่อ "ปี-เดือน" รายสาขา: ยอดขาย · ต้นทุนมาตรฐาน (Theo) · ต้นทุนจริง (Actual) · รายการที่ปรับ (ราคาต่อหน่วยผิดปกติ > 20 เท่าของค่ากลางทุกสาขา → ใช้ค่ากลาง) */
 let COGS={};
-const CGS={cmp:'lm',sort:'over',q:'',all:false,open:new Set(),openC:new Set()};
+const CGS={mon:null,cmp:'lm',sort:'over',q:'',all:false,open:new Set(),openC:new Set()};
 function cgSheet(wb){
   for(const n of wb.SheetNames){
     const rs=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:null,range:'A1:AB14'});
@@ -7253,7 +7253,7 @@ function cogsReport(m){
   const avail=Object.keys(COGS).sort();
   const head=`<div class="grp big">รายงานต้นทุนสินค้าขาย<span class="gr">รายงาน 401 · ต้นทุนจริงเทียบมาตรฐาน (Theo)</span></div>`;
   if(!avail.length) return `<div id="cogsrep" class="cgr">${head}<div class="cg-empty">ยังไม่มีข้อมูล — ลากไฟล์ <b>rptCOGSReport.csv</b> หรือ <b>รายงาน 401 (.xlsx)</b> ลงที่ "นำเข้าข้อมูล" (ไฟล์ละ 1 เดือน · นำเข้าเดือนก่อนหน้าด้วยเพื่อเทียบ LM)</div></div>`;
-  let key=cgKeyOf(YEAR,m), note='';
+  let key=(CGS.mon&&COGS[cgKeyOf(YEAR,CGS.mon)])?cgKeyOf(YEAR,CGS.mon):cgKeyOf(YEAR,m), note='';
   if(!COGS[key]){ const mine=avail.filter(k=>k.slice(0,4)===String(YEAR)&&k<=key); const pick=(mine.length?mine:avail.filter(k=>k.slice(0,4)===String(YEAR))).pop();
     if(!pick) return `<div id="cogsrep" class="cgr">${head}<div class="cg-empty">ยังไม่มีข้อมูลต้นทุนสินค้าขายของปี ${YEAR}</div></div>`;
     note=`ยังไม่มีเดือน ${MONTH_FULL[m-1]} — แสดง ${MONTH_FULL[+pick.slice(5)-1]}`; key=pick; }
@@ -7280,7 +7280,7 @@ function cogsReport(m){
   const adjN=(D.adj||[]).length;
   return `<div id="cogsrep" class="cgr" data-m="${m}">
     <div class="cg-top">${head}
-      <span class="ovseg cg-seg"><button type="button" class="${CGS.cmp==='lm'?'on':''}" data-cgcmp="lm">vs LM</button><button type="button" class="${CGS.cmp==='ly'?'on':''}" data-cgcmp="ly">vs LY</button></span></div>
+      ${(()=>{ const ys=avail.filter(k=>k.slice(0,4)===String(YEAR)); return ys.length>1?`<span class="ovseg cg-mon">${ys.map(k=>`<button type="button" class="${k===key?'on':''}" data-cgmon="${+k.slice(5)}">${MONTH_TH[+k.slice(5)-1]}</button>`).join('')}</span>`:''; })()}<span class="ovseg cg-seg"><button type="button" class="${CGS.cmp==='lm'?'on':''}" data-cgcmp="lm">vs LM</button><button type="button" class="${CGS.cmp==='ly'?'on':''}" data-cgcmp="ly">vs LY</button></span></div>
     ${note?`<div class="cg-note">${note}</div>`:''}${(COGSI[key]&&COGSI[key].note)?`<div class="cg-note">${COGSI[key].note}</div>`:''}
     <div class="cg-hero">
       <div class="cg-h1"><span>ต้นทุนจริง · % ของยอดขาย</span><b>${act.toFixed(2)}%</b>
@@ -7307,7 +7307,8 @@ function cogsRefresh(){ const el=document.getElementById('cogsrep'); if(!el) ret
   const sc=el.querySelector('.scroll'), x=sc?sc.scrollLeft:0; el.replaceWith(neu);
   const ns=neu.querySelector('.scroll'); if(ns) ns.scrollLeft=x;
   if(keepQ){ const qi=document.getElementById('cgq'); if(qi){ qi.focus(); const L=qi.value.length; qi.setSelectionRange(L,L); } } }
-document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('#cogsrep [data-cgcmp],#cogsrep [data-cgsort],#cogsrep [data-cgall],#cogsrep [data-cgbr],#cogsrep [data-cgcat]'); if(!b) return;
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('#cogsrep [data-cgcmp],#cogsrep [data-cgsort],#cogsrep [data-cgall],#cogsrep [data-cgbr],#cogsrep [data-cgcat],#cogsrep [data-cgmon]'); if(!b) return;
+  if(b.dataset.cgmon){ CGS.mon=+b.dataset.cgmon; CGS.open=new Set(); CGS.openC=new Set(); cogsRefresh(); return; }
   if(b.dataset.cgcat){ const c=b.dataset.cgcat; CGS.openC.has(c)?CGS.openC.delete(c):CGS.openC.add(c); cogsRefresh(); return; }
   if(b.dataset.cgbr){ const c=b.dataset.cgbr; CGS.open.has(c)?CGS.open.delete(c):CGS.open.add(c); cogsRefresh(); return; }
   if(b.dataset.cgcmp){ CGS.cmp=b.dataset.cgcmp; CGS.sort=CGS.sort; } if(b.dataset.cgsort){ CGS.sort=b.dataset.cgsort; } if(b.dataset.cgall!=null){ CGS.all=b.dataset.cgall==='1'; }
@@ -8083,7 +8084,7 @@ body.hist-open #fMode,body.hist-open #fMonthBox,body.hist-open #fQuarter,body.hi
 #pl .cgr .grp.big{display:flex;align-items:center;gap:10px;flex:1 1 auto;font-size:20px;font-weight:800;color:var(--ink);letter-spacing:-.01em;text-transform:none;margin:0;padding:0;border:0}
 #pl .cgr .grp.big .gr{font-size:13px;font-weight:500;color:var(--mute)}
 #pl .cgr .grp.big::before{content:"";width:6px;height:22px;border-radius:3px;background:var(--accent);flex:0 0 auto}
-.cg-seg{margin-left:auto}.cg-empty{padding:18px;color:var(--mute);font-size:14px;text-align:center;border:1.5px dashed var(--line);border-radius:14px;background:#fff}
+.cg-mon{margin-left:auto}.cg-mon+.cg-seg{margin-left:0}.cg-seg{margin-left:auto}.cg-empty{padding:18px;color:var(--mute);font-size:14px;text-align:center;border:1.5px dashed var(--line);border-radius:14px;background:#fff}
 .cg-note{font-size:12.5px;color:#b45309;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:6px 12px;margin-bottom:10px}
 .cg-hero{display:grid;grid-template-columns:minmax(240px,1.15fr) repeat(4,minmax(0,1fr));background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden}
 .cg-h1{background:#1a1511;color:#fff;padding:20px 22px;display:flex;flex-direction:column;gap:7px;justify-content:center}
