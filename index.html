@@ -7221,7 +7221,7 @@ function cgPrevKey(y,m,cmp){ return cmp==='ly'?cgKeyOf(y-1,m):(m>1?cgKeyOf(y,m-1
 
 /* ชุดข้อมูลรายการวัตถุดิบ (รายงาน 401) — ไฟล์ cogs401.enc.json เข้ารหัสด้วยรหัสเดียวกับเว็บ · ถอดหลังใส่รหัสแล้วเท่านั้น
    รูปแบบเดือน: {key,short,label,note,b:[[รหัส,ชื่อ,ยอดขาย,ต้นทุนมาตรฐาน,ต้นทุนจริง,[[หมวด,std,act,[[รหัสสินค้า,ชื่อ,หน่วย,จำนวนสูตร,std,จำนวนจริง,act]]]]]]} */
-let COGS_BUNDLE=null, COGSI={};
+let COGS_BUNDLE=null, COGSI={}, COGS_ERR="";
 function cogsApplyBundle(){ if(!COGS_BUNDLE||!COGS_BUNDLE.months) return;
   COGS_BUNDLE.months.forEach(M=>{ const br={}, by={};
     M.b.forEach(b=>{ br[b[0]]={n:b[1],s:b[2],t:b[3],a:b[4]}; by[b[0]]=b[5]; });
@@ -7229,13 +7229,14 @@ function cogsApplyBundle(){ if(!COGS_BUNDLE||!COGS_BUNDLE.months) return;
     COGSI[M.key]={note:M.note||'',by}; });
   if(document.getElementById('cogsrep')) cogsRefresh(); }
 async function cogsLoadBundle(pass){
-  try{ const r=await fetch('cogs401.enc.json',{cache:'no-cache'}); if(!r.ok) return; const o=await r.json();
+  COGS_ERR="";
+  try{ const r=await fetch('cogs401.enc.json',{cache:'no-cache'}); if(!r.ok){ COGS_ERR="ไม่พบไฟล์รายละเอียดวัตถุดิบ (cogs401.enc.json · "+r.status+")"; if(document.getElementById('cogsrep')) cogsRefresh(); return; } const o=await r.json();
     const kb=await crypto.subtle.importKey('raw',new TextEncoder().encode(pass),'PBKDF2',false,['deriveKey']);
     const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:B64(o.s),iterations:o.n,hash:'SHA-256'},kb,{name:'AES-GCM',length:256},false,['decrypt']);
     let pl=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:B64(o.i)},key,B64(o.c)));
     if(o.z) pl=await syncGz(pl,1);
     COGS_BUNDLE=JSON.parse(new TextDecoder().decode(pl)); cogsApplyBundle(); }
-  catch(e){ console.warn('cogs bundle',e); } }
+  catch(e){ console.warn('cogs bundle',e); COGS_ERR=/decrypt|operation/i.test(String(e&&(e.name||e.message)))||(e&&e.name==='OperationError')?"ถอดรหัสรายละเอียดวัตถุดิบไม่ได้ — รหัสที่ใช้เข้ารหัสไฟล์ไม่ตรงกับรหัสเข้าเว็บ (รัน node tools/encrypt-cogs.js ใหม่ด้วยรหัสเดียวกับที่ล็อกอิน)":"โหลดรายละเอียดวัตถุดิบไม่สำเร็จ: "+String(e&&e.message||e); if(document.getElementById('cogsrep')) cogsRefresh(); } }
 const cgQty=v=>v==null||!isFinite(v)?'—':(+v).toLocaleString('en-US',{maximumFractionDigits:1});
 const cgUnitPx=it=>{ const p=it[5]?it[6]/it[5]:(it[3]?it[4]/it[3]:0); return p?p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'; };
 const cgHit=(it,q)=>(it[0]+' '+it[1]).toLowerCase().includes(q);
@@ -7298,7 +7299,7 @@ function cogsReport(m){
         <td class="n"><span class="cgp ${good(r.diff)}">${cgSg(r.diff,0)}</span></td><td class="n">${r.cmp==null?'—':r.cmp.toFixed(2)+'%'}</td><td class="bc">${bar(r)}</td><td class="n"><span class="cgp ${good(r.d)}">${r.d==null?'—':cgSg(r.d)}</span></td></tr>`+(op?`<tr class="cg-dtr"><td colspan="9">${cgDetail(r.c,IT[r.c],q)}</td></tr>`:''); }).join('')||`<tr><td colspan="9" class="cg-empty">ไม่พบสาขาตามคำค้น</td></tr>`}
       </table></div>
       ${(!q&&total>10)?`<div class="cg-more"><button type="button" data-cgall="${CGS.all?0:1}">${CGS.all?'ย่อเหลือ 10 สาขาแรก ▴':`ดูทั้งหมด (${total} สาขา) ▾`}</button></div>`:''}
-      <div class="cg-foot">ข้อมูลจากรายงาน 401 · ${D.branches||Object.keys(D.br).length} สาขา${IT?' · คลิกสาขาเพื่อดูรายหมวดและวัตถุดิบ':''} · ${MONTH_FULL[km-1]} ${YEAR}${CGS.cmp==='lm'&&P?` · เทียบ ${MONTH_FULL[+cmpKey.slice(5)-1]}`:''}${adjN?` · ปรับรายการราคาต่อหน่วยผิดปกติ ${adjN} รายการ (${D.adj.slice(0,2).map(x=>x.c+' '+String(x.desc).replace(/\s*[(（].*$/,'')).join(', ')}${adjN>2?' …':''}) ใช้ราคากลางทุกสาขาแทน`:''}</div>
+      <div class="cg-foot">ข้อมูลจากรายงาน 401 · ${D.branches||Object.keys(D.br).length} สาขา${IT?' · คลิกสาขาเพื่อดูรายหมวดและวัตถุดิบ':(COGS_ERR?' · <b style="color:#c42323">'+COGS_ERR+'</b>':' · ยังไม่มีรายละเอียดรายวัตถุดิบของเดือนนี้')} · ${MONTH_FULL[km-1]} ${YEAR}${CGS.cmp==='lm'&&P?` · เทียบ ${MONTH_FULL[+cmpKey.slice(5)-1]}`:''}${adjN?` · ปรับรายการราคาต่อหน่วยผิดปกติ ${adjN} รายการ (${D.adj.slice(0,2).map(x=>x.c+' '+String(x.desc).replace(/\s*[(（].*$/,'')).join(', ')}${adjN>2?' …':''}) ใช้ราคากลางทุกสาขาแทน`:''}</div>
     </div></div>`;
 }
 function cogsRefresh(){ const el=document.getElementById('cogsrep'); if(!el) return; const m=+el.dataset.m||12;
