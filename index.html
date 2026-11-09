@@ -5453,9 +5453,10 @@ function smxDeliHtml(mm,codes,lyM,totM){
   const lyMap={}; filtZone(EXTRA.branchYears||[]).forEach(b=>{ const h=b.h&&b.h[YEAR-1]; if(!h) return;
     const i=mm-1, g=(h.g||[])[i]||0, l=(h.l||[])[i]||0, sp2=(h.p||[])[i]||0;
     if(g||l||sp2) lyMap[String(b.code)]={grab:g, lm:l, sp:sp2, deli:g+l+sp2}; });
-  const sumRef=(map,k)=>{ let now=0, ref=0, n=0;
-    cur.forEach(b=>{ const x=map[String(b.code)]; if(!x) return; now+=b[k]||0; ref+=x[k]||0; n++; });
-    return n?{now,ref}:null; };
+  /* ตัวเทียบ = รวมทุกสาขาในขอบเขตเดียวกับตารางรายเดือนด้านบน (ไม่ตัดเหลือเฉพาะสาขาที่มีค่าเทียบ) เพื่อให้ ปีก่อน/เดือนก่อน และ % ตรงกับตาราง */
+  const sumRef=(map,k)=>{ let ref=0, n=0;
+    Object.keys(map).forEach(c=>{ if(codes&&!codes.has(c)) return; const x=map[c]; if(x&&x[k]>0){ ref+=x[k]; n++; } });
+    return n?{now:T(k),ref}:null; };
   const CARDS=[['deli','Total Delivery','#1F2A37'],['grab','Grab','#00B14F'],['lm','Line Man','#06C167'],['sp','Shopee Food','#EE4D2D']];
   /* การ์ดหนึ่งใบ = ยอดเดือนนี้ตัวใหญ่ + แถบสัดส่วน + บรรทัดเทียบเดือนก่อนและปีก่อน อย่างละบรรทัด */
   const cmpRow=(lab,ref,now)=>(ref?`<div class="dc-r"><span class="dc-l">${lab}</span><span class="dc-v">${MB(ref)}</span>${pill(pct(ref,now))}</div>`:'');
