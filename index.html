@@ -7457,13 +7457,16 @@ function mergeSTF(R){
   applyBY(base);
   return {hit:hit, skip:skip, filled:filled};
 }
+/* ไฟล์ Sales 2025_2026: ชีต "Santa Fe" = KT (50xx) · ชีต "Easy" = Santa Fe Easy (55xx) รูปแบบตารางเหมือนกัน */
+function s2ySheet(wb,brand){ return wb.SheetNames.find(n=>(brand==='ez'?/^(santa\s*fe\s*)?easy$/i:/^santa\s*fe$/i).test(n.trim())); }
 function isSales2YWb(wb){
-  const k=wb.SheetNames.find(n=>/^santa\s*fe$/i.test(n.trim())); if(!k) return false;
-  const rs=XLSX.utils.sheet_to_json(wb.Sheets[k],{header:1,defval:null,range:'A1:Z6'});
-  return rs.some(r=>r&&r.some(v=>typeof v==='string'&&v.trim()==='ST')&&r.some(v=>typeof v==='string'&&v.trim()==='BZM'));
+  return ['kt','ez'].some(b=>{ const k=s2ySheet(wb,b); if(!k) return false;
+    const rs=XLSX.utils.sheet_to_json(wb.Sheets[k],{header:1,defval:null,range:'A1:Z6'});
+    return rs.some(r=>r&&r.some(v=>typeof v==='string'&&v.trim()==='ST')&&r.some(v=>typeof v==='string'&&v.trim()==='BZM')); });
 }
 function parseSales2Y(wb){
-  const k=wb.SheetNames.find(n=>/^santa\s*fe$/i.test(n.trim()));
+  const k=s2ySheet(wb,(typeof BRAND!=='undefined'&&BRAND==='ez')?'ez':'kt');
+  if(!k) return {list:[],warn:['ไม่พบชีต '+((typeof BRAND!=='undefined'&&BRAND==='ez')?'Easy':'Santa Fe')+' ในไฟล์']};
   const rs=XLSX.utils.sheet_to_json(wb.Sheets[k],{header:1,defval:null});
   const hi=rs.findIndex(r=>r&&r.some(v=>typeof v==='string'&&v.trim()==='ST')&&r.some(v=>typeof v==='string'&&v.trim()==='BZM'));
   const warn=[]; if(hi<0) return {list:[],warn:['ไม่พบแถวหัวตาราง (ST / BZM)']};
@@ -7478,7 +7481,6 @@ function parseSales2Y(wb){
   for(let i=hi+1;i<rs.length;i++){ const r=rs[i]||[];
     /* แถว SSSG ท้ายตาราง: ยอด Same Store ทั้งบริษัท LY · ปีนี้ ของแต่ละเดือน (ไฟล์คิดเฉพาะสาขาเดิมให้แล้ว) */
     if(/^SSSG$/i.test(String(r[cName]==null?'':r[cName]).trim())){
-      if(BRAND==='ez') continue;   /* แถว SSSG ของไฟล์เป็นของ Santa Fe KT */
       for(let mm=1;mm<=12;mm++){ const ly=N(r[c0+3*(mm-1)]), ty=N(r[c0+3*(mm-1)+1]); if(ly&&ty) ss[mm]={ly,ty}; }
       continue; }
     const code=r[cST]==null?'':String(r[cST]).trim(); if(!brandCodeOk(code)) continue;
@@ -7495,7 +7497,7 @@ function parseSales2Y(wb){
    แถวหัว: Brand · Code · Stores · เดือน ม.ค.–ธ.ค. (วันที่) · รวมปี */
 /* รหัสสาขาของแบรนด์ที่เปิดอยู่: Santa Fe KT = 50xx · Santa Fe Easy = 55xx (ไฟล์นำเข้ารูปแบบเดียวกัน ดึงเฉพาะสาขาของแบรนด์) */
 function brandCodeOk(code){ code=String(code==null?'':code).trim(); return (typeof BRAND!=='undefined'&&BRAND==='ez')?/^55[0-9]{2}$/.test(code):/^50[0-9]{2}$/.test(code); }
-const SUMMARY_BRAND={kt:/^Santa Fe'?\s*KTR$/i, fs:/^Santa Fe'?\s*FS$/i, ez:/^Santa Fe'?\s*(Easy|EZ|ES)$/i, jd:/^Jaedang Samyan$/i};
+const SUMMARY_BRAND={kt:/^Santa Fe'?\s*KTR$/i, fs:/^Santa Fe'?\s*FS$/i, ez:/^Santa Fe'?\s*(Easy|EZ|ES)(\s*Steak)?$/i, jd:/^Jaedang Samyan$/i};
 function summarySheetKey(wb){ return wb.SheetNames.find(n=>/^Summary\s*Sal(se|es)\s*\d{4}$/i.test(n.trim())); }
 function isSalesSummaryWb(wb){ return !!summarySheetKey(wb); }
 function parseSalesSummary(wb,brand){
@@ -8104,14 +8106,15 @@ async function importFileOne(file){
 async function importFile(file){
   const cur=BRAND;
   if((cur!=='kt'&&cur!=='ez')||YEAR!==YEAR_REAL||/\.csv$/i.test(file.name)) return importFileOne(file);
-  let dual=false;
+  let dual=false, sumOnly=false;
   try{ const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
-    dual=!isCogsWb(wb)&&!isHourlySumWb(wb)&&!isHourlyWb(wb)&&!isCEMWb(wb)&&!isOSSWb(wb)&&!isJDPLWb(wb)&&!isPLWb(wb)&&(isSTFWb(wb)||isSales2YWb(wb)||isSalesFormWb(wb)||isDailySaleWb(wb));
+    sumOnly=isSalesSummaryWb(wb)&&!isJDPLWb(wb)&&!isPLWb(wb);   /* Daily Sale แบบ Summary Salse: ใช้กับ Easy (KT ใช้แบบฟอร์มส่งยอดขาย) */
+    dual=sumOnly||!isCogsWb(wb)&&!isHourlySumWb(wb)&&!isHourlyWb(wb)&&!isCEMWb(wb)&&!isOSSWb(wb)&&!isJDPLWb(wb)&&!isPLWb(wb)&&(isSTFWb(wb)||isSales2YWb(wb)||isSalesFormWb(wb)||isDailySaleWb(wb));
   }catch(e){ dual=false; }
   if(!dual) return importFileOne(file);
   const BN=k=>(BRANDS.find(b=>b.k===k)||{n:k}).n, res=[];
   try{
-    for(const B of [cur,cur==='kt'?'ez':'kt']){
+    for(const B of (sumOnly?['ez']:[cur,cur==='kt'?'ez':'kt'])){
       if(BRAND!==B){ BRAND=B; useBrandData(B); }
       IMP_QUIET={}; try{ await importFileOne(file); }catch(e){ IMP_QUIET.res={t:'นำเข้าไม่สำเร็จ: '+e.message,c:'err'}; }
       res.push({B,r:IMP_QUIET.res||{t:'ไม่มีผล',c:'err'}}); IMP_QUIET=null;
