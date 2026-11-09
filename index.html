@@ -5913,7 +5913,7 @@ function brandEmpty(){
   const b=BRANDS.find(x=>x.k===BRAND), kt=BRANDS[0].n;
   const ms=MONTHLY.map(r=>r.m).sort((a,c)=>a-c), rng=ms.length?RNG(ms)+' '+YEAR:'';
   $('#hsub').textContent=b.n;
-  const need=BRAND==='ez'?[['ยอดขายรายเดือน','ไฟล์ยอดรายสาขา 2 ปี · แบบฟอร์มส่งยอดขาย · Daily Sale (ดึงเฉพาะสาขารหัส 55xx)'],['ประวัติรายสาขา (STF)','ไฟล์ STF · ดึงเฉพาะสาขา 55xx']]:[['ยอดขายรายเดือน','แบบฟอร์มส่งยอดขาย หรือไฟล์ Daily Sale'],['งบกำไรขาดทุน (P&amp;L)','ไฟล์ P&amp;L ของแบรนด์'],['CEM','ผลสำรวจลูกค้า'],['OSS','ผลตรวจมาตรฐานร้าน']];
+  const need=BRAND==='ez'?[['ยอดขายรายเดือน','ไฟล์ยอดรายสาขา 2 ปี · แบบฟอร์มส่งยอดขาย · Daily Sale (ดึงเฉพาะสาขารหัส 55xx)'],['ประวัติรายสาขา (STF)','ไฟล์ STF · ดึงเฉพาะสาขา 55xx'],['งบกำไรขาดทุน (P&amp;L)','ไฟล์ P&amp;L (บล็อก Easy · ชีต ES · ชีตสาขา 55xx)']]:[['ยอดขายรายเดือน','แบบฟอร์มส่งยอดขาย หรือไฟล์ Daily Sale'],['งบกำไรขาดทุน (P&amp;L)','ไฟล์ P&amp;L ของแบรนด์'],['CEM','ผลสำรวจลูกค้า'],['OSS','ผลตรวจมาตรฐานร้าน']];
   $('#main').innerHTML=`<section class="slide" id="brandEmpty" data-title="${b.n}"><div class="body">
     <div class="bempty">
       <div class="be-top"><span class="bh-icw"><img class="bh-ico" src="${b.ico}" alt="โลโก้ ${b.n}">${b.tag?`<i>${b.tag}</i>`:''}</span><div class="be-h">ยังไม่มีข้อมูลของ ${b.n} ในระบบ</div></div>
@@ -7087,9 +7087,10 @@ function plFullFromSheet(ws){
 function isPLWb(wb){ return wb.SheetNames.some(n=>/^Dashboard\s*P[_ ]?L$/i.test(n.trim())); }
 function parsePL(wb){
   const N=v=>typeof v==='number'&&isFinite(v)?v:0;
+  const EZ=(typeof BRAND!=='undefined'&&BRAND==='ez'), SHEET_FULL=EZ?'ES':'SF';   /* Easy: บล็อก Easy ใน Dashboard P_L + ชีต ES + ชีตสาขา 55xx */
   /* ปีของไฟล์ (พ.ศ.) จากหัวชีต SF เช่น "เดือน ธันวาคม 2568" หรือชื่อชีต Sales01.68 → แปลงเป็น ค.ศ. */
   let yearBE=null;
-  const kSF0=wb.SheetNames.find(n=>n.trim().toUpperCase()==='SF');
+  const kSF0=wb.SheetNames.find(n=>n.trim().toUpperCase()===SHEET_FULL);
   if(kSF0) XLSX.utils.sheet_to_json(wb.Sheets[kSF0],{header:1,defval:null,range:'A1:A6'})
     .forEach(r=>{ const mt=String((r&&r[0])||'').match(/(25\d{2})/); if(mt&&!yearBE) yearBE=+mt[1]; });
   if(!yearBE){ const sn=wb.SheetNames.map(n=>n.trim().match(/^Sales\d{2}\.(\d{2})$/i)).find(Boolean); if(sn) yearBE=2500+(+sn[1]); }
@@ -7097,8 +7098,8 @@ function parsePL(wb){
   const k=wb.SheetNames.find(n=>/^Dashboard\s*P[_ ]?L$/i.test(n.trim()));
   const rs=XLSX.utils.sheet_to_json(wb.Sheets[k],{header:1,defval:null});
   // หาบล็อก "Santa Fe" แล้วอ่านบรรทัดที่ต้องการ (คอลัมน์ 2..13 = ม.ค..ธ.ค.)
-  let start=-1; rs.forEach((r,i)=>{ if(start<0&&typeof r[1]==='string'&&/^santa\s*fe$/i.test(r[1].trim())) start=i; });
-  if(start<0) return {det:{},warn:['ไม่พบบล็อก Santa Fe ในชีต Dashboard P_L'],year};
+  let start=-1; rs.forEach((r,i)=>{ if(start<0&&typeof r[1]==='string'&&(EZ?/^easy$/i:/^santa\s*fe$/i).test(r[1].trim())) start=i; });
+  if(start<0) return {det:{},warn:['ไม่พบบล็อก '+(EZ?'Easy':'Santa Fe')+' ในชีต Dashboard P_L'],year};
   const find=re=>{ for(let i=start+1;i<Math.min(rs.length,start+40);i++){ const v=rs[i]&&rs[i][1];
       if(typeof v==='string'&&re.test(v.trim())) return rs[i]; } return null; };
   const L={rev:find(/^Revenue from sale$/i), tot:find(/^Total Revenue$/i), food:find(/^Food$/i),
@@ -7133,7 +7134,7 @@ function parsePL(wb){
     }
   }
   // ---- ผังบัญชีเต็ม (ใช้กับหัวข้อ P&L, COL/COS, ตารางสาขา x เดือน) ----
-  const kSF=wb.SheetNames.find(n=>n.trim().toUpperCase()==='SF');
+  const kSF=wb.SheetNames.find(n=>n.trim().toUpperCase()===SHEET_FULL);
   if(kSF){
     const sf=plFullFromSheet(wb.Sheets[kSF]);
     const brs={}, weak=[];
@@ -7141,7 +7142,7 @@ function parsePL(wb){
       const R=plFullFromSheet(wb.Sheets[n]), b=R.months;
       if(R.guessed.length&&Object.keys(b).length) weak.push(n.trim()+' ('+R.guessed.join(', ')+')');
       Object.entries(b).forEach(([m,a])=>{ (brs[m]=brs[m]||{})[n.trim()]=a; }); });
-    if(sf.guessed.length) warn.push('ชีต SF หาชื่อบัญชีไม่เจอ: '+sf.guessed.join(', '));
+    if(sf.guessed.length) warn.push('ชีต '+SHEET_FULL+' หาชื่อบัญชีไม่เจอ: '+sf.guessed.join(', '));
     if(weak.length) warn.push('ชีตสาขาที่หาชื่อบัญชีไม่ครบ ตัวเลขบรรทัดนี้อาจคลาด: '+weak.join(' · '));
     Object.entries(sf.months).forEach(([m,a])=>{ det[m]=det[m]||{}; det[m].plFull={actual:a,branch:brs[m]||{}}; });
   }
@@ -7954,7 +7955,7 @@ async function importFileOne(file){
         const lr=R.mon[R.mon.length-1];
         finish('นำเข้ายอดขาย '+BN+' สำเร็จ: '+monRange(R.months)+' · '+R.branches+' สาขา · '+label(lr.m)+' '+lr.sales.toFixed(2)+'M','ok');
         return; }
-      if(isPLWb(wb)){ IMP.kind='งบกำไรขาดทุน (PL) · '+BN;
+      if(isPLWb(wb)&&BRAND!=='ez'){ IMP.kind='งบกำไรขาดทุน (PL) · '+BN;
         /* ชีต FS ในไฟล์ P&L เป็นงบรายได้ของบริษัทแม่ (ค่า Franchise Fee · ค่าการตลาด · ค่าบริหาร) ไม่ใช่งบของร้านแฟรนไชส์ ผังบัญชีไม่ตรงกัน จึงยังไม่นำเข้า */
         throw new Error(BRAND==='fs'
           ? 'ชีต FS ในไฟล์ P&L เป็นงบรายได้ค่าแฟรนไชส์ของบริษัท (Franchise Fee · ค่าการตลาด · ค่าบริหาร) ไม่ใช่งบกำไรขาดทุนของร้าน Santa Fe FS ผังบัญชีไม่ตรงกัน จึงยังนำเข้าไม่ได้'
@@ -8116,7 +8117,7 @@ async function importFile(file){
   let dual=false, sumOnly=false;
   try{ const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
     sumOnly=isSalesSummaryWb(wb)&&!isJDPLWb(wb)&&!isPLWb(wb);   /* Daily Sale แบบ Summary Salse: ใช้กับ Easy (KT ใช้แบบฟอร์มส่งยอดขาย) */
-    dual=sumOnly||!isCogsWb(wb)&&!isHourlySumWb(wb)&&!isHourlyWb(wb)&&!isCEMWb(wb)&&!isOSSWb(wb)&&!isJDPLWb(wb)&&!isPLWb(wb)&&(isSTFWb(wb)||isSales2YWb(wb)||isSalesFormWb(wb)||isDailySaleWb(wb));
+    dual=sumOnly||!isCogsWb(wb)&&!isHourlySumWb(wb)&&!isHourlyWb(wb)&&!isCEMWb(wb)&&!isOSSWb(wb)&&!isJDPLWb(wb)&&(isPLWb(wb)||isSTFWb(wb)||isSales2YWb(wb)||isSalesFormWb(wb)||isDailySaleWb(wb));
   }catch(e){ dual=false; }
   if(!dual) return importFileOne(file);
   const BN=k=>(BRANDS.find(b=>b.k===k)||{n:k}).n, res=[];
