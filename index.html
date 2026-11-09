@@ -517,6 +517,13 @@ body:not(.present) .dist span{font-size:11.5px}
 body:not(.present) .empty{font-size:12px;padding:18px 0}
 body:not(.present) .brpick input,body:not(.present) .brpick select{font-size:12.5px;padding:6px 10px}
 body:not(.present) .brcards{grid-template-columns:repeat(auto-fit,minmax(126px,1fr));gap:8px}
+/* ลูกศรย่อ/ขยายตาราง: หัวข้อ .grp.big ที่ตามด้วยตาราง + แถบเหนือตารางแนวโน้ม */
+.grp.big.fdh{cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none;-webkit-tap-highlight-color:transparent}
+.grp.big.fdh::after,.fdbar::before{content:"";flex:none;margin-left:6px;width:7px;height:7px;border:solid currentColor;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-2px,-2px);transition:transform .18s;opacity:.7}
+.grp.big.fdh.fold::after,.fdbar.fold::before{transform:rotate(-45deg) translate(-1px,-1px)}
+.grp.big.fdh:hover::after{opacity:1}
+.fdbar{display:flex;align-items:center;gap:8px;margin:10px 0 0;font-size:12px;font-weight:600;color:var(--mute);cursor:pointer;user-select:none}
+.fd-x{display:none!important}
 </style>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -8871,6 +8878,45 @@ goSec=function(id){ const t=TOPICS.find(x=>x.ids.includes(id)); if(!t) return; i
 const _sb=setBrand; setBrand=function(k){ TOPIC=null; TSEC=null; { const q=document.getElementById('quickBar'); if(q) q.remove(); } document.body.classList.remove('hub'); return _sb(k); };
 const _gh=goHome; goHome=function(){ TOPIC=null; TSEC=null; { const q=document.getElementById('quickBar'); if(q) q.remove(); } document.body.classList.remove('hub'); return _gh(); };
 window.__hub={openTopic,goHub,TOPICS};
+})();
+</script>
+<script>
+/* ลูกศรย่อ/ขยายตาราง — จำสถานะไว้ในเครื่อง (ต่อหัวข้อ) */
+(function(){
+  var KEY='opkt_fold_v1', st={};
+  try{ st=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){}
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(st)); }catch(e){} }
+  function isTbl(el){ return el&&el.nodeType===1&&(el.classList.contains('scroll')||el.tagName==='TABLE')&&(el.tagName==='TABLE'||el.querySelector('table')); }
+  /* องค์ประกอบที่พับไปพร้อมตาราง: ตาราง + hint/note ที่ตามมาทันที */
+  function body(h){ var a=[],n=h.nextElementSibling; if(!isTbl(n)) return a;
+    while(n&&(isTbl(n)||n.classList.contains('hint')||n.classList.contains('note'))){ a.push(n); n=n.nextElementSibling; } return a; }
+  function keyOf(h){ var t=''; h.childNodes.forEach(function(c){ if(c.nodeType===3) t+=c.textContent; }); var sec=h.closest('section'); return (sec&&sec.id||'')+'|'+t.trim(); }
+  function apply(h,fold){ h.classList.toggle('fold',fold); body(h).forEach(function(e){ e.classList.toggle('fd-x',fold); }); }
+  function scan(root){
+    (root||document).querySelectorAll('.grp.big').forEach(function(h){
+      if(h.dataset.fdk) return; if(!isTbl(h.nextElementSibling)) return;
+      var k=keyOf(h); h.dataset.fdk=k; h.classList.add('fdh'); h.title='กดเพื่อย่อ/ขยายตาราง';
+      if(st[k]) apply(h,true);
+    });
+    (root||document).querySelectorAll('.scroll').forEach(function(sc){
+      if(sc.dataset.fdk||!sc.querySelector('table.ovtab')) return;
+      var bar=document.createElement('div'); bar.className='fdbar'; bar.textContent='ตาราง';
+      var k='ovtab|'+((sc.closest('section')||{}).id||''); bar.dataset.fdk=k; sc.dataset.fdk=k; bar.title='กดเพื่อย่อ/ขยายตาราง';
+      sc.parentNode.insertBefore(bar,sc);
+      if(st[k]){ bar.classList.add('fold'); sc.classList.add('fd-x'); }
+    });
+  }
+  document.addEventListener('click',function(e){
+    if(e.target.closest('input,select,button,a,[data-cusearch]')) return;
+    var h=e.target.closest('.grp.big.fdh');
+    if(h){ var f=!h.classList.contains('fold'); apply(h,f); if(f) st[h.dataset.fdk]=1; else delete st[h.dataset.fdk]; save(); return; }
+    var b=e.target.closest('.fdbar');
+    if(b){ var f2=!b.classList.contains('fold'); b.classList.toggle('fold',f2); var sc=b.nextElementSibling; if(sc) sc.classList.toggle('fd-x',f2);
+      if(f2) st[b.dataset.fdk]=1; else delete st[b.dataset.fdk]; save(); }
+  });
+  var q=0; function sched(){ if(q) return; q=requestAnimationFrame(function(){ q=0; scan(); }); }
+  new MutationObserver(sched).observe(document.body,{childList:true,subtree:true});
+  scan();
 })();
 </script>
 </body>
