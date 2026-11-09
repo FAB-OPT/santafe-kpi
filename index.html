@@ -7477,11 +7477,15 @@ function parseSales2Y(wb){
   if(c0<0) return {list:[],warn:['ไม่พบคอลัมน์ปีของเดือนมกราคม']};
   const lyYear=H[c0], tyYear=H[c0+1];
   const N=v=>typeof v==='number'&&isFinite(v)&&v>0?Math.round(v):null;
-  const list=[], months=new Set(), ss={};
+  const list=[], months=new Set(), ss={}, bud={};
   for(let i=hi+1;i<rs.length;i++){ const r=rs[i]||[];
     /* แถว SSSG ท้ายตาราง: ยอด Same Store ทั้งบริษัท LY · ปีนี้ ของแต่ละเดือน (ไฟล์คิดเฉพาะสาขาเดิมให้แล้ว) */
     if(/^SSSG$/i.test(String(r[cName]==null?'':r[cName]).trim())){
       for(let mm=1;mm<=12;mm++){ const ly=N(r[c0+3*(mm-1)]), ty=N(r[c0+3*(mm-1)+1]); if(ly&&ty) ss[mm]={ly,ty}; }
+      continue; }
+    /* แถว Budget 2026 ท้ายตาราง: แผนยอดขายทั้งบริษัทรายเดือน (คอลัมน์ปีนี้) */
+    if(/^Budget\s*2026/i.test(String(r[cName]==null?'':r[cName]).trim())){
+      for(let mm=1;mm<=12;mm++){ const v=r[c0+3*(mm-1)+1]; if(typeof v==='number'&&v>0) bud[mm]=v/1e6; }
       continue; }
     const code=r[cST]==null?'':String(r[cST]).trim(); if(!brandCodeOk(code)) continue;
     const m={};
@@ -7490,7 +7494,7 @@ function parseSales2Y(wb){
     list.push({code, name:String(r[cName]||code).replace(/\s+/g,' ').trim(), zone:r[cZone]==null?'':String(r[cZone]).trim(),
       mall:r[cMall]==null?'':String(r[cMall]).trim(), m});
   }
-  return {list, lyYear, tyYear, months:[...months].sort((a,b)=>a-b), ss, warn};
+  return {list, lyYear, tyYear, months:[...months].sort((a,b)=>a-b), ss, bud, warn};
 }
 
 /* ===== ตัวอ่านไฟล์ Daily Sale ชีต Summary Salse ปี (ยอดขายรายเดือนรายสาขา ทุกแบรนด์) =====
@@ -8005,10 +8009,13 @@ async function importFileOne(file){
       /* แถว SSSG ของไฟล์ เก็บไว้กับเดือนนั้น ใช้เป็น SSSG ทั้งบริษัทบนหน้ายอดขาย */
       const ssM=Object.keys(R.ss||{}).map(Number).sort((a,b)=>a-b);
       ssM.forEach(mm=>{ (DETAIL[mm]=DETAIL[mm]||{}).sssgFile=R.ss[mm]; });
+      /* แผนยอดขาย (Budget 2026) จากไฟล์ ใช้เป็นแผนทั้งบริษัทของเดือนที่มีข้อมูลอยู่แล้ว */
+      const budChg=[]; Object.keys(R.bud||{}).map(Number).sort((a,b)=>a-b).forEach(mm=>{ const row=MONTHLY.find(x=>x.m===mm); if(!row) return;
+        const nb=+R.bud[mm].toFixed(2); if(row.budget!==nb){ budChg.push(MONTH_TH[mm-1]+' '+(row.budget==null?'—':row.budget)+'→'+nb+'M'); row.budget=nb; } });
       await saveState();
       const lastTy=R.months.length?R.months[R.months.length-1]:null, after=MONTHLY.map(r=>r.m).filter(x=>lastTy==null||x>lastTy);
       finish('นำเข้ายอดรายสาขา 2 ปีสำเร็จ: '+R.list.length+' สาขา · ยอดปี '+YEAR+' '+(R.months.length?monRange(R.months):'ยังไม่มี')+(ssM.length?' · SSSG '+monRange(ssM):'')+' · LY ม.ค.–ธ.ค. '+(YEAR-1)
-        +(after.length?' — '+monRange(after)+' ยังไม่มีในไฟล์ ใช้ยอดจากแบบฟอร์มส่งยอดขายแทน':'')+(R.warn.length?' ['+R.warn.join('; ')+']':''),'ok');
+        +(after.length?' — '+monRange(after)+' ยังไม่มีในไฟล์ ใช้ยอดจากแบบฟอร์มส่งยอดขายแทน':'')+(budChg.length?' · อัปเดต Budget '+budChg.join(', '):'')+(R.warn.length?' ['+R.warn.join('; ')+']':''),'ok');
       return;
     }
     if(isCEMWb(wb)){ IMP.kind='CEM';         // ไฟล์ CEM (ผลสำรวจลูกค้า ทุกสาขา)
