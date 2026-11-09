@@ -5913,7 +5913,7 @@ function brandEmpty(){
   const b=BRANDS.find(x=>x.k===BRAND), kt=BRANDS[0].n;
   const ms=MONTHLY.map(r=>r.m).sort((a,c)=>a-c), rng=ms.length?RNG(ms)+' '+YEAR:'';
   $('#hsub').textContent=b.n;
-  const need=[['ยอดขายรายเดือน','แบบฟอร์มส่งยอดขาย หรือไฟล์ Daily Sale'],['งบกำไรขาดทุน (P&amp;L)','ไฟล์ P&amp;L ของแบรนด์'],['CEM','ผลสำรวจลูกค้า'],['OSS','ผลตรวจมาตรฐานร้าน']];
+  const need=BRAND==='ez'?[['ยอดขายรายเดือน','ไฟล์ยอดรายสาขา 2 ปี · แบบฟอร์มส่งยอดขาย · Daily Sale (ดึงเฉพาะสาขารหัส 55xx)'],['ประวัติรายสาขา (STF)','ไฟล์ STF · ดึงเฉพาะสาขา 55xx']]:[['ยอดขายรายเดือน','แบบฟอร์มส่งยอดขาย หรือไฟล์ Daily Sale'],['งบกำไรขาดทุน (P&amp;L)','ไฟล์ P&amp;L ของแบรนด์'],['CEM','ผลสำรวจลูกค้า'],['OSS','ผลตรวจมาตรฐานร้าน']];
   $('#main').innerHTML=`<section class="slide" id="brandEmpty" data-title="${b.n}"><div class="body">
     <div class="bempty">
       <div class="be-top"><span class="bh-icw"><img class="bh-ico" src="${b.ico}" alt="โลโก้ ${b.n}">${b.tag?`<i>${b.tag}</i>`:''}</span><div class="be-h">ยังไม่มีข้อมูลของ ${b.n} ในระบบ</div></div>
@@ -6950,7 +6950,7 @@ function parseSalesForm(wb){
       const mt=c1.trim().match(/^(\d{4})\s+(.+)$/); if(!mt) continue;
       if(/^total$/i.test(String(c0||'').trim())) continue;
       if(!inSF) continue;
-      if(!/^50/.test(mt[1])) continue;          // เฉพาะสาขา Santa Fe รหัส 50xx
+      if(!brandCodeOk(mt[1])) continue;          // เฉพาะสาขาของแบรนด์ (KT 50xx · Easy 55xx)
       const act=N(r[C.act2])||N(r[C.act]);      // ใช้คอลัมน์ "Actual Sale สิ้นวัน" เป็นหลัก
       list.push({code:mt[1], name:mt[2].trim(), plan:N(r[C.plan]), sales:act,
         dine:N(r[C.dine]), take:N(r[C.take]), grab:N(r[C.grab]), lm:N(r[C.lm]), sp:N(r[C.sp]), deli:N(r[C.deli]),
@@ -7124,7 +7124,7 @@ function parsePL(wb){
     for(let m=1;m<=12;m++){ const c0=4+(m-1)*7, list=[];
       for(const r of sm){ if(!r) continue;
         const code=r[2]==null?'':String(r[2]).trim();
-        if(!/^50\d{2}$/.test(code)) continue;   // เฉพาะสาขา Santa Fe รหัส 50xx
+        if(!brandCodeOk(code)) continue;   // เฉพาะสาขาของแบรนด์ (KT 50xx · Easy 55xx)
         const sales=N(r[c0]); if(sales<=0) continue;
         list.push({code, name:String(r[1]||code).trim(), sales, profit:N(r[c0+1]),
           gp:N(r[c0+2])*100, cos:N(r[c0+3])*100, col:N(r[c0+4])*100});
@@ -7137,7 +7137,7 @@ function parsePL(wb){
   if(kSF){
     const sf=plFullFromSheet(wb.Sheets[kSF]);
     const brs={}, weak=[];
-    wb.SheetNames.filter(n=>/^50\d{2}$/.test(n.trim())).forEach(n=>{
+    wb.SheetNames.filter(n=>brandCodeOk(n)).forEach(n=>{
       const R=plFullFromSheet(wb.Sheets[n]), b=R.months;
       if(R.guessed.length&&Object.keys(b).length) weak.push(n.trim()+' ('+R.guessed.join(', ')+')');
       Object.entries(b).forEach(([m,a])=>{ (brs[m]=brs[m]||{})[n.trim()]=a; }); });
@@ -7429,7 +7429,7 @@ function parseSTF(wb){
     }
     if(!cols.length) return;
     for(let i=hi+1;i<rs.length;i++){ const r=rs[i]||[]; const code=String(r[1]==null?'':r[1]).trim();
-      if(!/^\d{4}$/.test(code)) continue;
+      if(!/^[0-9]{4}$/.test(code)||(BRAND==='ez'&&!brandCodeOk(code))) continue;
       let op=''; if(typeof r[3]==='number'&&r[3]>20000){ const d0=XLSX.SSF.parse_date_code(r[3]); if(d0) op=d0.y+'-'+String(d0.m).padStart(2,'0')+'-'+String(d0.d).padStart(2,'0'); }
       const b=out[code]||(out[code]={code:code, name:String(r[2]||code).replace(/\s+/g,' ').trim(),
         owner:r[5]==null?'':String(r[5]).trim(), region:r[7]==null?'':String(r[7]).trim(), open:op, h:{}});
@@ -7478,9 +7478,10 @@ function parseSales2Y(wb){
   for(let i=hi+1;i<rs.length;i++){ const r=rs[i]||[];
     /* แถว SSSG ท้ายตาราง: ยอด Same Store ทั้งบริษัท LY · ปีนี้ ของแต่ละเดือน (ไฟล์คิดเฉพาะสาขาเดิมให้แล้ว) */
     if(/^SSSG$/i.test(String(r[cName]==null?'':r[cName]).trim())){
+      if(BRAND==='ez') continue;   /* แถว SSSG ของไฟล์เป็นของ Santa Fe KT */
       for(let mm=1;mm<=12;mm++){ const ly=N(r[c0+3*(mm-1)]), ty=N(r[c0+3*(mm-1)+1]); if(ly&&ty) ss[mm]={ly,ty}; }
       continue; }
-    const code=r[cST]==null?'':String(r[cST]).trim(); if(!/^50\d{2}$/.test(code)) continue;
+    const code=r[cST]==null?'':String(r[cST]).trim(); if(!brandCodeOk(code)) continue;
     const m={};
     for(let mm=1;mm<=12;mm++){ const ly=N(r[c0+3*(mm-1)]), ty=N(r[c0+3*(mm-1)+1]);
       if(ly!=null||ty!=null){ m[mm]={ly,ty}; if(ty!=null) months.add(mm); } }
@@ -7492,6 +7493,8 @@ function parseSales2Y(wb){
 
 /* ===== ตัวอ่านไฟล์ Daily Sale ชีต Summary Salse ปี (ยอดขายรายเดือนรายสาขา ทุกแบรนด์) =====
    แถวหัว: Brand · Code · Stores · เดือน ม.ค.–ธ.ค. (วันที่) · รวมปี */
+/* รหัสสาขาของแบรนด์ที่เปิดอยู่: Santa Fe KT = 50xx · Santa Fe Easy = 55xx (ไฟล์นำเข้ารูปแบบเดียวกัน ดึงเฉพาะสาขาของแบรนด์) */
+function brandCodeOk(code){ code=String(code==null?'':code).trim(); return (typeof BRAND!=='undefined'&&BRAND==='ez')?/^55[0-9]{2}$/.test(code):/^50[0-9]{2}$/.test(code); }
 const SUMMARY_BRAND={kt:/^Santa Fe'?\s*KTR$/i, fs:/^Santa Fe'?\s*FS$/i, ez:/^Santa Fe'?\s*(Easy|EZ|ES)$/i, jd:/^Jaedang Samyan$/i};
 function summarySheetKey(wb){ return wb.SheetNames.find(n=>/^Summary\s*Sal(se|es)\s*\d{4}$/i.test(n.trim())); }
 function isSalesSummaryWb(wb){ return !!summarySheetKey(wb); }
@@ -7948,7 +7951,9 @@ async function importFile(file){
         throw new Error(BRAND==='fs'
           ? 'ชีต FS ในไฟล์ P&L เป็นงบรายได้ค่าแฟรนไชส์ของบริษัท (Franchise Fee · ค่าการตลาด · ค่าบริหาร) ไม่ใช่งบกำไรขาดทุนของร้าน Santa Fe FS ผังบัญชีไม่ตรงกัน จึงยังนำเข้าไม่ได้'
           : 'ไฟล์ P&L นี้ไม่มีงบของ '+BN+' (มีชีต SF · ES · MM · FS)'); }
-      throw new Error('หน้า '+BN+' รับไฟล์ Daily Sale (ชีต Summary Salse '+YEAR+')'+(BRAND==='jd'?' และไฟล์ PL Jaedang':'')+' · ไฟล์ชนิดนี้ใช้กับ Santa Fe KT');
+      if(BRAND!=='ez') throw new Error('หน้า '+BN+' รับไฟล์ Daily Sale (ชีต Summary Salse '+YEAR+')'+(BRAND==='jd'?' และไฟล์ PL Jaedang':'')+' · ไฟล์ชนิดนี้ใช้กับ Santa Fe KT');
+      /* Santa Fe Easy: ไฟล์รูปแบบเดียวกับ KT แต่ดึงเฉพาะสาขารหัส 55xx (ผ่านต่อไปยังตัวอ่านด้านล่าง) */
+      if(isCogsWb(wb)||isHourlySumWb(wb)||isHourlyWb(wb)||isCEMWb(wb)||isOSSWb(wb)) throw new Error('หน้า '+BN+' ยังไม่รองรับไฟล์ชนิดนี้ (รองรับ: ยอดรายสาขา 2 ปี · ประวัติ STF · แบบฟอร์มส่งยอดขาย · Daily Sale · Summary Salse)');
     }
     if(isJDPLWb(wb)) throw new Error('ไฟล์นี้เป็นงบกำไรขาดทุนของ Jaedang — เปิดหน้า Jaedang ก่อนนำเข้า');
     if(isCogsWb(wb)){ IMP.kind='ต้นทุนสินค้าขาย (COGS · รายงาน 401)';
@@ -7991,7 +7996,7 @@ async function importFile(file){
     if(isSales2YWb(wb)){ IMP.kind='ยอดรายสาขา 2 ปี';     // ไฟล์ Sales 2025_2026 (ชีต Santa Fe)
       const R=parseSales2Y(wb);
       if(R.tyYear&&R.tyYear!==YEAR) throw new Error(`ไฟล์นี้เป็นยอดปี ${R.tyYear} เทียบ ${R.lyYear} — ระบบใช้ปี ${YEAR} เทียบ ${YEAR-1}`);
-      if(!R.list.length) throw new Error('ไม่พบแถวสาขา (รหัส 50xx) ในชีต Santa Fe'+(R.warn.length?' ('+R.warn.join('; ')+')':''));
+      if(!R.list.length) throw new Error('ไม่พบแถวสาขา (รหัส '+(BRAND==='ez'?'55xx':'50xx')+') ในชีต Santa Fe'+(R.warn.length?' ('+R.warn.join('; ')+')':''));
       IMP.months=R.months; applyBY(R.list);
       /* แถว SSSG ของไฟล์ เก็บไว้กับเดือนนั้น ใช้เป็น SSSG ทั้งบริษัทบนหน้ายอดขาย */
       const ssM=Object.keys(R.ss||{}).map(Number).sort((a,b)=>a-b);
