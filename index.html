@@ -1639,6 +1639,8 @@ body:not(.present) .hhide{display:none!important}
 body.present #hubView, body.present #topicBar{display:none}
 body.present #quickBar{display:none}
 #hubView{padding:6px 0 12px}
+.hv-back{display:inline-flex;align-items:center;gap:6px;margin:0 0 8px;padding:6px 14px;border-radius:999px;border:1.5px solid var(--accent);background:var(--card,#fff);color:var(--accent-ink,var(--accent));font:inherit;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hv-back:hover{background:var(--accent);color:#fff}
 .hv-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:6px 2px 18px}
 .hv-t{font-size:30px;font-weight:800;letter-spacing:-.01em;color:var(--ink);line-height:1.15}
 .hv-s{font-size:14px;color:var(--mute);margin-top:4px}
@@ -5890,15 +5892,17 @@ function brandStoreKey(k){ return k==='kt'?'sf-kpi-data':'sf-kpi-data-'+k; }
 function brandHasData(){ return MONTHLY.length>0 || Object.keys(DETAIL||{}).some(k=>DETAIL[k]&&Object.keys(DETAIL[k]).length); }
 function useBrandData(k){
   if(k===DATA_BRAND) return;
-  BSTORE[DATA_BRAND]={MONTHLY,DETAIL,EXTRA,BY_IMPORT,PNL_BASE,curM,BRANCH_META,ZONES_LIST};
+  BSTORE[DATA_BRAND]={MONTHLY,DETAIL,EXTRA,BY_IMPORT,PNL_BASE,curM,BRANCH_META,ZONES_LIST,COGS,COGSI};
   let t=BSTORE[k];
   if(!t){ let loc=null; try{ loc=JSON.parse(localStorage.getItem(brandStoreKey(k))); }catch(e){}
     const ke=BSTORE.kt&&BSTORE.kt.EXTRA, meta=k==='jd'?JD_META:(ke&&ke.pnlFull&&ke.pnlFull.meta);
     t={MONTHLY:(loc&&loc.monthly)||[], DETAIL:(loc&&loc.detail)||{}, EXTRA:{pnlFull:meta?{meta,months:[],actual:{},ly:{},branch:{},branchLY:{}}:null, branchYears:[]},
-       BY_IMPORT:null, PNL_BASE:null, curM:null, BRANCH_META:null, ZONES_LIST:[]}; }
+       BY_IMPORT:null, PNL_BASE:null, curM:null, BRANCH_META:null, ZONES_LIST:[], COGS:{}, COGSI:{}}; }
+  COGS=t.COGS||{}; COGSI=t.COGSI||{};   /* รายงาน 401 (ต้นทุนสินค้าขาย) แยกตามแบรนด์ — ของ KT ไม่โผล่ในแบรนด์อื่น */
   MONTHLY=t.MONTHLY; DETAIL=t.DETAIL; EXTRA=t.EXTRA; BY_IMPORT=t.BY_IMPORT; PNL_BASE=t.PNL_BASE; BRANCH_META=t.BRANCH_META; ZONES_LIST=t.ZONES_LIST;
   if(k!=='kt'&&!BRANCH_META) BRANCH_META=brandMetaFromData();
   DATA_BRAND=k; FILT.zone='all';
+  if(k==='kt') cogsApplyBundle();
   refreshMonths();
   if(t.curM&&(months.includes(t.curM)||DETAIL[t.curM])) curM=t.curM;
   else if(months.length) curM=defaultMonth();
@@ -6619,13 +6623,13 @@ function applyBY(list){ if(!Array.isArray(list)||!list.length) return; BY_IMPORT
       if(v.ly!=null) o.ly=v.ly; if(v.ty!=null){ o.ty=v.ty; delete o.src; } }); }); }
 function applyState(s){ if(YEAR!==YEAR_REAL){ if(s&&Array.isArray(s.monthly)) YSTORE.pending=s; return; }   // กำลังดูปีย้อนหลัง: เก็บไว้ใช้ตอนกลับปีปัจจุบัน
   if(!s||!Array.isArray(s.monthly)) return; if(!s.monthly.length&&!Object.keys(s.detail||{}).length) return;
-  MONTHLY=s.monthly; DETAIL=s.detail||{}; if(s.by) applyBY(s.by); if(s.hr) HOURLY=Object.assign({},HOURLY,s.hr); if(s.cg) COGS=Object.assign({},COGS,s.cg); cogsApplyBundle(); refreshMonths();
+  MONTHLY=s.monthly; DETAIL=s.detail||{}; if(s.by) applyBY(s.by); if(s.hr) HOURLY=Object.assign({},HOURLY,s.hr); if(s.cg&&DATA_BRAND==='kt') COGS=Object.assign({},COGS,s.cg); if(DATA_BRAND==='kt'){ cogsApplyBundle(); cgOnlyKT(); } refreshMonths();
   if(curM==null){ const dm=Object.keys(DETAIL).map(Number).filter(Boolean); curM=dm.length?Math.max(...dm):null; }
   setMonth(curM); if(s.updatedAt) $('#status').textContent='อัปเดต '+new Date(s.updatedAt).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'}); }
 async function saveState(){
   if(YEAR!==YEAR_REAL) return;   // ห้ามบันทึกข้อมูลย้อนหลัง (สร้างจากไฟล์ STF) ทับข้อมูลจริง
   fillLyFromBranches();
-  const s={monthly:MONTHLY, detail:DETAIL, by:BY_IMPORT||undefined, hr:Object.keys(HOURLY).length?HOURLY:undefined, cg:Object.keys(COGS).length?COGS:undefined, v:DATA_V, updatedAt:new Date().toISOString()};
+  const s={monthly:MONTHLY, detail:DETAIL, by:BY_IMPORT||undefined, hr:Object.keys(HOURLY).length?HOURLY:undefined, cg:(DATA_BRAND==='kt'&&Object.keys(COGS).length)?COGS:undefined, v:DATA_V, updatedAt:new Date().toISOString()};
   /* บันทึกในเครื่องไม่สำเร็จ (เช่น พื้นที่เบราว์เซอร์เต็ม) ต้องบอก ไม่งั้นเปิดเว็บใหม่ข้อมูลที่นำเข้าจะหายเงียบ ๆ */
   SAVE_ERR=null;
   try{localStorage.setItem(brandStoreKey(DATA_BRAND),JSON.stringify(s))}catch(e){ console.warn(e); SAVE_ERR=e; }
@@ -7269,7 +7273,7 @@ function parseCogs(wb,fname){
   if(sh.kind==='csv'){
     const H=sh.H, ix=n=>H.indexOf(n), iN=ix('BranchName'), iC=ix('ItemCode'), iD=ix('ItemDesc'), iS=ix('SaleAmount'), iTu=ix('TheoUsed'), iTc=ix('TotalTheoCost'), iAu=ix('ActualUsed'), iAc=ix('TotalActualCost'), iCat=ix('CategoryName');
     for(let r=sh.hi+1;r<rs.length;r++){ const a=rs[r]; if(!a) continue;
-      const nm=String(a[iN]==null?'':a[iN]).trim(), m=nm.match(/^(\d{4})\s*(.*)$/); if(!m||m[1][0]!=='5') continue;
+      const nm=String(a[iN]==null?'':a[iN]).trim(), m=nm.match(/^(\d{4})\s*(.*)$/); if(!m||!brandCodeOk(m[1])) continue;
       if(iCat>=0&&/^(06-|07-|Z\s*-)/.test(String(a[iCat]||'').trim())) continue;   /* ตัดหมวดที่ไม่ใช่วัตถุดิบอาหาร + สาขาแบรนด์อื่น ให้ตรงกับรายงาน 401 */
       rec.push({c:m[1],n:m[2],sale:num(a[iS]),item:String(a[iC]||''),desc:String(a[iD]||''),tu:num(a[iTu]),tc:num(a[iTc]),au:num(a[iAu]),ac:num(a[iAc])}); }
     ym=cgYM(fname,rs);
@@ -7285,7 +7289,7 @@ function parseCogs(wb,fname){
       if(a[0]==='จำนวนการขาย'){ const v=a.find((x,k)=>k>0&&typeof x==='number'); if(v==null) continue;
         const hd=cur&&rec.filter(x=>x.c===cur&&x.head).pop();
         if(hd&&!hd.sale&&!rec.some(x=>x.c===cur&&!x.head)) hd.sale=num(v); else pend=num(v); continue; }
-      if(a[0]==='สาขา'){ const t=strs(a).map(v=>String(v).trim()).find(v=>/^\d{4}\b/.test(v)); const m=t&&t.match(/^(\d{4})\s*:?\s*(.*)$/); cur=m?m[1]:null; curN=m?m[2]:''; if(cur) rec.push({c:cur,n:curN,sale:pend==null?0:pend,item:'',desc:'',tu:0,tc:0,au:0,ac:0,head:1}); pend=null; continue; }
+      if(a[0]==='สาขา'){ const t=strs(a).map(v=>String(v).trim()).find(v=>/^\d{4}\b/.test(v)); const m=t&&t.match(/^(\d{4})\s*:?\s*(.*)$/); cur=m&&brandCodeOk(m[1])?m[1]:null; curN=m?m[2]:''; if(cur) rec.push({c:cur,n:curN,sale:pend==null?0:pend,item:'',desc:'',tu:0,tc:0,au:0,ac:0,head:1}); pend=null; continue; }
       if(!cur) continue;
       const code=a[0]!=null?String(a[0]).trim():'', ds=strs(a)[0];
       if(ds&&/^[A-Za-z]{1,4}\d{3,}/.test(code)){
@@ -7321,9 +7325,12 @@ function cgPrevKey(y,m,cmp){ return cmp==='ly'?cgKeyOf(y-1,m):(m>1?cgKeyOf(y,m-1
 /* ชุดข้อมูลรายการวัตถุดิบ (รายงาน 401) — ไฟล์ cogs401.enc.json เข้ารหัสด้วยรหัสเดียวกับเว็บ · ถอดหลังใส่รหัสแล้วเท่านั้น
    รูปแบบเดือน: {key,short,label,note,b:[[รหัส,ชื่อ,ยอดขาย,ต้นทุนมาตรฐาน,ต้นทุนจริง,[[หมวด,std,act,[[รหัสสินค้า,ชื่อ,หน่วย,จำนวนสูตร,std,จำนวนจริง,act]]]]]]} */
 let COGS_BUNDLE=null, COGSI={}, COGS_ERR="";
-function cogsApplyBundle(){ if(!COGS_BUNDLE||!COGS_BUNDLE.months) return;
+/* รายงาน 401 ของ KT เหลือเฉพาะสาขา 50xx (ไฟล์ทั้งบริษัทมีสาขา Easy 55xx ปนมาด้วย) */
+function cgOnlyKT(){ Object.keys(COGS).forEach(k=>{ const d=COGS[k]; if(!d) return; if(d.br) Object.keys(d.br).forEach(c=>{ if(!/^50[0-9]{2}$/.test(c)) delete d.br[c]; });
+  if(d.adj) d.adj=d.adj.filter(x=>/^50[0-9]{2}$/.test(String(x.c))); if(d.br) d.branches=Object.keys(d.br).length; }); }
+function cogsApplyBundle(){ if(!COGS_BUNDLE||!COGS_BUNDLE.months||DATA_BRAND!=='kt') return;
   COGS_BUNDLE.months.forEach(M=>{ const br={}, by={};
-    M.b.forEach(b=>{ br[b[0]]={n:b[1],s:b[2],t:b[3],a:b[4]}; by[b[0]]=b[5]; });
+    M.b.forEach(b=>{ if(!/^50[0-9]{2}$/.test(String(b[0]))) return; br[b[0]]={n:b[1],s:b[2],t:b[3],a:b[4]}; by[b[0]]=b[5]; });
     COGS[M.key]={file:'รายงาน 401',at:Date.now(),fmt:'bundle',br,adj:[],branches:M.b.length};
     COGSI[M.key]={note:M.note||'',by}; });
   if(document.getElementById('cogsrep')) cogsRefresh(); }
@@ -7962,7 +7969,7 @@ async function importFileOne(file){
           : 'ไฟล์ P&L นี้ไม่มีงบของ '+BN+' (มีชีต SF · ES · MM · FS)'); }
       if(BRAND!=='ez') throw new Error('หน้า '+BN+' รับไฟล์ Daily Sale (ชีต Summary Salse '+YEAR+')'+(BRAND==='jd'?' และไฟล์ PL Jaedang':'')+' · ไฟล์ชนิดนี้ใช้กับ Santa Fe KT');
       /* Santa Fe Easy: ไฟล์รูปแบบเดียวกับ KT แต่ดึงเฉพาะสาขารหัส 55xx (ผ่านต่อไปยังตัวอ่านด้านล่าง) */
-      if(isCogsWb(wb)||isHourlySumWb(wb)||isHourlyWb(wb)||isCEMWb(wb)||isOSSWb(wb)) throw new Error('หน้า '+BN+' ยังไม่รองรับไฟล์ชนิดนี้ (รองรับ: ยอดรายสาขา 2 ปี · ประวัติ STF · แบบฟอร์มส่งยอดขาย · Daily Sale · Summary Salse)');
+      if(isHourlySumWb(wb)||isHourlyWb(wb)||isCEMWb(wb)||isOSSWb(wb)) throw new Error('หน้า '+BN+' ยังไม่รองรับไฟล์ชนิดนี้ (รองรับ: ยอดรายสาขา 2 ปี · ประวัติ STF · แบบฟอร์มส่งยอดขาย · Daily Sale · Summary Salse · P&L · รายงาน 401)');
     }
     if(isJDPLWb(wb)) throw new Error('ไฟล์นี้เป็นงบกำไรขาดทุนของ Jaedang — เปิดหน้า Jaedang ก่อนนำเข้า');
     if(isCogsWb(wb)){ IMP.kind='ต้นทุนสินค้าขาย (COGS · รายงาน 401)';
@@ -8117,7 +8124,7 @@ async function importFile(file){
   let dual=false, sumOnly=false;
   try{ const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
     sumOnly=isSalesSummaryWb(wb)&&!isJDPLWb(wb)&&!isPLWb(wb);   /* Daily Sale แบบ Summary Salse: ใช้กับ Easy (KT ใช้แบบฟอร์มส่งยอดขาย) */
-    dual=sumOnly||!isCogsWb(wb)&&!isHourlySumWb(wb)&&!isHourlyWb(wb)&&!isCEMWb(wb)&&!isOSSWb(wb)&&!isJDPLWb(wb)&&(isPLWb(wb)||isSTFWb(wb)||isSales2YWb(wb)||isSalesFormWb(wb)||isDailySaleWb(wb));
+    dual=sumOnly||!isHourlySumWb(wb)&&!isHourlyWb(wb)&&!isCEMWb(wb)&&!isOSSWb(wb)&&!isJDPLWb(wb)&&(isCogsWb(wb)||isPLWb(wb)||isSTFWb(wb)||isSales2YWb(wb)||isSalesFormWb(wb)||isDailySaleWb(wb));
   }catch(e){ dual=false; }
   if(!dual) return importFileOne(file);
   const BN=k=>(BRANDS.find(b=>b.k===k)||{n:k}).n, res=[];
@@ -8842,7 +8849,7 @@ function hubApply(){
   if(!TOPIC){
     secs.forEach(x=>x.classList.add('hhide'));
     const b=(typeof BRANDS!=='undefined'&&BRANDS.find(x=>x.k===BRAND))||{n:'Santa Fe'};
-    place('<div id="hubView"><div class="hv-head"><div><div class="hv-t">'+b.n+'</div><div class="hv-s">'+((SCP&&SCP.lab)||label(curM))+(FILT.zone!=='all'?' · '+scopeName():'')+' · เลือกหัวข้อที่ต้องการดู</div></div></div>'
+    place('<div id="hubView"><div class="hv-head"><div><button type="button" class="hv-back" data-hubhome>‹ หน้ารวมแบรนด์</button><div class="hv-t">'+b.n+'</div><div class="hv-s">'+((SCP&&SCP.lab)||label(curM))+(FILT.zone!=='all'?' · '+scopeName():'')+' · เลือกหัวข้อที่ต้องการดู</div></div></div>'
       +'<div class="hv-grid">'+TOPICS.map(t=>{
         /* หมวดที่ยังไม่เปิดใช้งาน: การ์ดรอข้อมูล กดไม่ได้ */
         if(t.soon) return '<span class="hv-tile soon"><span class="hv-top">'+hvIcon(t.k)+'<span class="hv-n">'+t.n+'</span><span class="hv-chip">เร็ว ๆ นี้</span></span>'
@@ -8897,7 +8904,7 @@ function emptyApply(){
   $('#hsub').textContent=b.n; $('#nav').innerHTML=''; const tbar=$('#tabbar'); if(tbar) tbar.innerHTML='';
   const ico='<img class="bh-ico" src="'+b.ico+'" alt="โลโก้ '+b.n+'">';
   if(!TOPIC){
-    main.innerHTML='<div id="hubView"><div class="hv-head"><div><div class="hv-t">'+b.n+'</div><div class="hv-s">ยังไม่มีข้อมูลในระบบ · เลือกหัวข้อเพื่อดูว่าต้องใช้ข้อมูลอะไร</div></div><button type="button" class="btn primary" data-imp>⤒ นำเข้าข้อมูล '+b.n+'</button></div>'
+    main.innerHTML='<div id="hubView"><div class="hv-head"><div><button type="button" class="hv-back" data-hubhome>‹ หน้ารวมแบรนด์</button><div class="hv-t">'+b.n+'</div><div class="hv-s">ยังไม่มีข้อมูลในระบบ · เลือกหัวข้อเพื่อดูว่าต้องใช้ข้อมูลอะไร</div></div><button type="button" class="btn primary" data-imp>⤒ นำเข้าข้อมูล '+b.n+'</button></div>'
       +'<div class="hv-grid">'+TOPICS.map(t=>t.soon
         ?'<span class="hv-tile soon"><span class="hv-top">'+hvIcon(t.k)+'<span class="hv-n">'+t.n+'</span><span class="hv-chip">เร็ว ๆ นี้</span></span>'
           +'<span class="hv-rows"><span class="hv-r"><span>'+t.soon+'</span></span></span></span>'
@@ -8970,6 +8977,10 @@ window.__hub={openTopic,goHub,TOPICS};
   new MutationObserver(sched).observe(document.body,{childList:true,subtree:true});
   scan();
 })();
+</script>
+<script>
+/* ปุ่ม ‹ หน้ารวมแบรนด์ บนหน้าหัวข้อของแบรนด์ */
+document.addEventListener('click',function(e){ var b=e.target.closest&&e.target.closest('[data-hubhome]'); if(b&&typeof goHome==='function'){ e.preventDefault(); goHome(); } });
 </script>
 </body>
 </html>
