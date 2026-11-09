@@ -7773,7 +7773,9 @@ function getLog(){ try{ return JSON.parse(localStorage.getItem(LOG_KEY))||[]; }c
 function logImport(e){ const L=getLog(); L.unshift(e); try{ localStorage.setItem(LOG_KEY,JSON.stringify(L.slice(0,20))); }catch(err){} }
 /* ใช้แทน showMsg ภายใน importFile: แสดงผล + บันทึกประวัติ + วาดแผงใหม่ */
 let SAVE_ERR=null;
+let IMP_QUIET=null;   /* นำเข้าให้อีกแบรนด์แบบเงียบ ๆ (KT ↔ Easy) เก็บผลไว้รวมแสดงทีเดียว */
 function finish(t,c){
+  if(IMP_QUIET){ IMP_QUIET.res={t,c,kind:IMP&&IMP.kind,months:IMP&&IMP.months}; IMP=null; return; }
   if(c==='ok'&&SYNC.key&&SYNC.err){ t+=' — ⚠ แต่ส่งขึ้นฐานข้อมูลกลางไม่สำเร็จ เครื่องอื่นจะยังไม่เห็นข้อมูลนี้ ('+String(SYNC.err.message||SYNC.err).slice(0,120)+')'; c='err'; }
   if(SAVE_ERR&&c==='ok'&&!dbDoc&&!(SYNC.key&&!SYNC.err)){ t+=' — ⚠ แต่บันทึกลงเครื่องไม่สำเร็จ ('+(SAVE_ERR.name||SAVE_ERR.message)+') เปิดเว็บใหม่แล้วข้อมูลนี้จะหาย: ล้างข้อมูลแบรนด์อื่นที่ไม่ใช้ หรือกดล้างประวัติ แล้วนำเข้าอีกครั้ง'; c='err'; }
   showMsg(t,c);
@@ -7921,7 +7923,7 @@ function importBadge(){ const b=$('#importBtn'); if(!b) return;
   b.innerHTML='⤒ นำเข้าข้อมูล'+(n?`<span class="nbadge" title="${label(curM)} ยังขาด ${n} ชนิดข้อมูล">${n}</span>`:''); }
 
 function showMsg(t,c){const el=$('#msg');el.textContent=t;el.className='msg '+c;}
-async function importFile(file){
+async function importFileOne(file){
   if(YEAR!==YEAR_REAL){ IMP=null; showMsg('กำลังดูข้อมูลปี '+YEAR+' (ย้อนหลัง) — เลือกปี '+YEAR_REAL+' ที่ช่อง "ปี" ก่อนจึงนำเข้าไฟล์ได้','err'); return; }
   IMP={file:file.name,size:file.size,kind:null,months:null};
   try{
@@ -8096,6 +8098,33 @@ async function importFile(file){
     curM=ms[ms.length-1]; await saveState();
     finish('นำเข้าสำเร็จ: '+ms.map(label).join(', '),'ok');
   }catch(e){ finish('นำเข้าไม่สำเร็จ: '+e.message,'err'); }
+}
+/* นำเข้าไฟล์เดียว ได้ทั้ง Santa Fe KT และ Santa Fe Easy: ไฟล์รูปแบบเดียวกัน (ยอดรายสาขา 2 ปี · STF · แบบฟอร์มส่งยอดขาย · Daily Sale)
+   นำเข้าจากหน้าไหนก็ได้ — ระบบแยกตามรหัสสาขา KT = 50xx · Easy = 55xx แล้วเก็บเข้าแบรนด์ของตัวเองทั้งคู่ */
+async function importFile(file){
+  const cur=BRAND;
+  if((cur!=='kt'&&cur!=='ez')||YEAR!==YEAR_REAL||/\.csv$/i.test(file.name)) return importFileOne(file);
+  let dual=false;
+  try{ const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+    dual=!isCogsWb(wb)&&!isHourlySumWb(wb)&&!isHourlyWb(wb)&&!isCEMWb(wb)&&!isOSSWb(wb)&&!isJDPLWb(wb)&&!isPLWb(wb)&&(isSTFWb(wb)||isSales2YWb(wb)||isSalesFormWb(wb)||isDailySaleWb(wb));
+  }catch(e){ dual=false; }
+  if(!dual) return importFileOne(file);
+  const BN=k=>(BRANDS.find(b=>b.k===k)||{n:k}).n, res=[];
+  try{
+    for(const B of [cur,cur==='kt'?'ez':'kt']){
+      if(BRAND!==B){ BRAND=B; useBrandData(B); }
+      IMP_QUIET={}; try{ await importFileOne(file); }catch(e){ IMP_QUIET.res={t:'นำเข้าไม่สำเร็จ: '+e.message,c:'err'}; }
+      res.push({B,r:IMP_QUIET.res||{t:'ไม่มีผล',c:'err'}}); IMP_QUIET=null;
+    }
+  } finally { IMP_QUIET=null; if(BRAND!==cur){ BRAND=cur; useBrandData(cur); } }
+  const oks=res.filter(x=>x.r.c==='ok'), none=x=>/ไม่พบแถวสาขา|ไม่ตรงกับสาขาในระบบ|ไม่พบ/.test(x.r.t);
+  (oks.length?oks:res).forEach(x=>logImport({t:new Date().toISOString(),file:file.name,size:file.size,kind:(x.r.kind||'ไฟล์ข้อมูลเว็บ')+' · '+BN(x.B),months:x.r.c==='ok'?(x.r.months||[]):[],ok:x.r.c==='ok',msg:String(x.r.t).slice(0,240)}));
+  const txt=oks.length
+    ? oks.map(x=>BN(x.B)+': '+x.r.t).join(' ‖ ')+res.filter(x=>x.r.c!=='ok').map(x=>' · '+BN(x.B)+': '+(none(x)?'ไม่มีสาขาของแบรนด์นี้ในไฟล์':x.r.t)).join('')
+    : res.map(x=>BN(x.B)+': '+x.r.t).join(' ‖ ');
+  showMsg(txt,oks.length?'ok':'err');
+  try{ build(curM); }catch(e){}
+  renderImportPanel(); importBadge();
 }
 $('#importBtn').onclick=()=>{showMsg('','');
   const ih=document.querySelector('#importModal h2'); if(ih) ih.textContent='นำเข้าข้อมูล · '+((BRANDS.find(b=>b.k===BRAND)||{n:''}).n);
