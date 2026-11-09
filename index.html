@@ -5892,17 +5892,16 @@ function brandStoreKey(k){ return k==='kt'?'sf-kpi-data':'sf-kpi-data-'+k; }
 function brandHasData(){ return MONTHLY.length>0 || Object.keys(DETAIL||{}).some(k=>DETAIL[k]&&Object.keys(DETAIL[k]).length); }
 function useBrandData(k){
   if(k===DATA_BRAND) return;
-  BSTORE[DATA_BRAND]={MONTHLY,DETAIL,EXTRA,BY_IMPORT,PNL_BASE,curM,BRANCH_META,ZONES_LIST,COGS,COGSI};
+  BSTORE[DATA_BRAND]={MONTHLY,DETAIL,EXTRA,BY_IMPORT,PNL_BASE,curM,BRANCH_META,ZONES_LIST};
   let t=BSTORE[k];
   if(!t){ let loc=null; try{ loc=JSON.parse(localStorage.getItem(brandStoreKey(k))); }catch(e){}
     const ke=BSTORE.kt&&BSTORE.kt.EXTRA, meta=k==='jd'?JD_META:(ke&&ke.pnlFull&&ke.pnlFull.meta);
     t={MONTHLY:(loc&&loc.monthly)||[], DETAIL:(loc&&loc.detail)||{}, EXTRA:{pnlFull:meta?{meta,months:[],actual:{},ly:{},branch:{},branchLY:{}}:null, branchYears:[]},
-       BY_IMPORT:null, PNL_BASE:null, curM:null, BRANCH_META:null, ZONES_LIST:[], COGS:{}, COGSI:{}}; }
-  COGS=t.COGS||{}; COGSI=t.COGSI||{};   /* รายงาน 401 (ต้นทุนสินค้าขาย) แยกตามแบรนด์ — ของ KT ไม่โผล่ในแบรนด์อื่น */
+       BY_IMPORT:null, PNL_BASE:null, curM:null, BRANCH_META:null, ZONES_LIST:[]}; }
   MONTHLY=t.MONTHLY; DETAIL=t.DETAIL; EXTRA=t.EXTRA; BY_IMPORT=t.BY_IMPORT; PNL_BASE=t.PNL_BASE; BRANCH_META=t.BRANCH_META; ZONES_LIST=t.ZONES_LIST;
   if(k!=='kt'&&!BRANCH_META) BRANCH_META=brandMetaFromData();
   DATA_BRAND=k; FILT.zone='all';
-  if(k==='kt') cogsApplyBundle();
+  cgRebuild();   /* รายงาน 401: KT = สาขา 50xx · Easy = สาขา 55xx จากข้อมูลชุดเดียวกัน */
   refreshMonths();
   if(t.curM&&(months.includes(t.curM)||DETAIL[t.curM])) curM=t.curM;
   else if(months.length) curM=defaultMonth();
@@ -6623,13 +6622,13 @@ function applyBY(list){ if(!Array.isArray(list)||!list.length) return; BY_IMPORT
       if(v.ly!=null) o.ly=v.ly; if(v.ty!=null){ o.ty=v.ty; delete o.src; } }); }); }
 function applyState(s){ if(YEAR!==YEAR_REAL){ if(s&&Array.isArray(s.monthly)) YSTORE.pending=s; return; }   // กำลังดูปีย้อนหลัง: เก็บไว้ใช้ตอนกลับปีปัจจุบัน
   if(!s||!Array.isArray(s.monthly)) return; if(!s.monthly.length&&!Object.keys(s.detail||{}).length) return;
-  MONTHLY=s.monthly; DETAIL=s.detail||{}; if(s.by) applyBY(s.by); if(s.hr) HOURLY=Object.assign({},HOURLY,s.hr); if(s.cg&&DATA_BRAND==='kt') COGS=Object.assign({},COGS,s.cg); if(DATA_BRAND==='kt'){ cogsApplyBundle(); cgOnlyKT(); } refreshMonths();
+  MONTHLY=s.monthly; DETAIL=s.detail||{}; if(s.by) applyBY(s.by); if(s.hr) HOURLY=Object.assign({},HOURLY,s.hr); if(s.cg) cgMergeAll(s.cg); cogsApplyBundle(); cgRebuild(); refreshMonths();
   if(curM==null){ const dm=Object.keys(DETAIL).map(Number).filter(Boolean); curM=dm.length?Math.max(...dm):null; }
   setMonth(curM); if(s.updatedAt) $('#status').textContent='อัปเดต '+new Date(s.updatedAt).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'}); }
 async function saveState(){
   if(YEAR!==YEAR_REAL) return;   // ห้ามบันทึกข้อมูลย้อนหลัง (สร้างจากไฟล์ STF) ทับข้อมูลจริง
   fillLyFromBranches();
-  const s={monthly:MONTHLY, detail:DETAIL, by:BY_IMPORT||undefined, hr:Object.keys(HOURLY).length?HOURLY:undefined, cg:(DATA_BRAND==='kt'&&Object.keys(COGS).length)?COGS:undefined, v:DATA_V, updatedAt:new Date().toISOString()};
+  const s={monthly:MONTHLY, detail:DETAIL, by:BY_IMPORT||undefined, hr:Object.keys(HOURLY).length?HOURLY:undefined, cg:Object.keys(COGS_ALL).length?COGS_ALL:undefined, v:DATA_V, updatedAt:new Date().toISOString()};
   /* บันทึกในเครื่องไม่สำเร็จ (เช่น พื้นที่เบราว์เซอร์เต็ม) ต้องบอก ไม่งั้นเปิดเว็บใหม่ข้อมูลที่นำเข้าจะหายเงียบ ๆ */
   SAVE_ERR=null;
   try{localStorage.setItem(brandStoreKey(DATA_BRAND),JSON.stringify(s))}catch(e){ console.warn(e); SAVE_ERR=e; }
@@ -6643,7 +6642,7 @@ async function boot(){
   let local=null; try{local=JSON.parse(localStorage.getItem('sf-kpi-data'))}catch(e){}
   // ข้อมูลที่ค้างในเครื่องจะใช้ได้ก็ต่อเมื่อเป็นข้อมูลชุดเดียวกับที่ฝังมาในไฟล์
   // (ไฟล์ใหม่ = เวอร์ชันใหม่ → ทิ้งของเก่า ไม่งั้นจะเห็นข้อมูลเก่าค้างตลอด)
-  if(local && local.v && DATA_V && local.v===DATA_V){ MONTHLY=local.monthly; DETAIL=local.detail||{}; if(local.by) applyBY(local.by); if(local.hr) HOURLY=local.hr; if(local.cg) COGS=local.cg; }
+  if(local && local.v && DATA_V && local.v===DATA_V){ MONTHLY=local.monthly; DETAIL=local.detail||{}; if(local.by) applyBY(local.by); if(local.hr) HOURLY=local.hr; if(local.cg){ COGS_ALL=local.cg; cgRebuild(); } }
   else if(local){ try{localStorage.removeItem('sf-kpi-data')}catch(e){} }
   refreshMonths();
   // เปิดหน้ามาที่เดือนที่ปิดครบแล้ว (LM เดือนปัจจุบัน) · ถ้าเดือนนั้นยังไม่มีข้อมูล ใช้เดือนล่าสุดก่อนหน้านั้น
@@ -7325,15 +7324,24 @@ function cgPrevKey(y,m,cmp){ return cmp==='ly'?cgKeyOf(y-1,m):(m>1?cgKeyOf(y,m-1
 /* ชุดข้อมูลรายการวัตถุดิบ (รายงาน 401) — ไฟล์ cogs401.enc.json เข้ารหัสด้วยรหัสเดียวกับเว็บ · ถอดหลังใส่รหัสแล้วเท่านั้น
    รูปแบบเดือน: {key,short,label,note,b:[[รหัส,ชื่อ,ยอดขาย,ต้นทุนมาตรฐาน,ต้นทุนจริง,[[หมวด,std,act,[[รหัสสินค้า,ชื่อ,หน่วย,จำนวนสูตร,std,จำนวนจริง,act]]]]]]} */
 let COGS_BUNDLE=null, COGSI={}, COGS_ERR="";
-/* รายงาน 401 ของ KT เหลือเฉพาะสาขา 50xx (ไฟล์ทั้งบริษัทมีสาขา Easy 55xx ปนมาด้วย) */
-function cgOnlyKT(){ Object.keys(COGS).forEach(k=>{ const d=COGS[k]; if(!d) return; if(d.br) Object.keys(d.br).forEach(c=>{ if(!/^50[0-9]{2}$/.test(c)) delete d.br[c]; });
-  if(d.adj) d.adj=d.adj.filter(x=>/^50[0-9]{2}$/.test(String(x.c))); if(d.br) d.branches=Object.keys(d.br).length; }); }
-function cogsApplyBundle(){ if(!COGS_BUNDLE||!COGS_BUNDLE.months||DATA_BRAND!=='kt') return;
+/* รายงาน 401: เก็บข้อมูลทุกสาขาไว้ชุดเดียว (COGS_ALL) แล้วแสดงตามแบรนด์: KT = รหัส 50xx · Easy = รหัส 55xx (COGS = มุมมองของแบรนด์ที่เปิดอยู่) */
+let COGS_ALL={};
+const cgCodeOk=(b,c)=>b==='ez'?/^55[0-9]{2}$/.test(String(c)):(b==='kt'?/^50[0-9]{2}$/.test(String(c)):false);
+function cgRebuild(){ const B=(typeof DATA_BRAND!=='undefined')?DATA_BRAND:'kt', V={};
+  Object.keys(COGS_ALL).forEach(k=>{ const d=COGS_ALL[k]; if(!d) return; const br={};
+    Object.keys(d.br||{}).forEach(c=>{ if(cgCodeOk(B,c)) br[c]=d.br[c]; });
+    if(!Object.keys(br).length) return;
+    V[k]=Object.assign({},d,{br,adj:(d.adj||[]).filter(x=>cgCodeOk(B,x.c)),branches:Object.keys(br).length}); });
+  COGS=V; }
+/* รวมข้อมูลจากที่เก็บ: เดือนเดียวกันเลือกชุดที่ใหม่กว่า */
+function cgMergeAll(src){ Object.keys(src||{}).forEach(k=>{ const n=src[k], o=COGS_ALL[k]; if(!o||((n&&n.at)||0)>=(o.at||0)) COGS_ALL[k]=n; }); }
+function cogsApplyBundle(){ if(!COGS_BUNDLE||!COGS_BUNDLE.months) return;
   COGS_BUNDLE.months.forEach(M=>{ const br={}, by={};
-    M.b.forEach(b=>{ if(!/^50[0-9]{2}$/.test(String(b[0]))) return; br[b[0]]={n:b[1],s:b[2],t:b[3],a:b[4]}; by[b[0]]=b[5]; });
-    COGS[M.key]={file:'รายงาน 401',at:Date.now(),fmt:'bundle',br,adj:[],branches:M.b.length};
+    M.b.forEach(b=>{ br[b[0]]={n:b[1],s:b[2],t:b[3],a:b[4]}; by[b[0]]=b[5]; });
+    const o0=COGS_ALL[M.key]; if(o0&&o0.br) Object.keys(o0.br).forEach(c=>{ if(!br[c]) br[c]=o0.br[c]; });   /* สาขาที่นำเข้าเองและไม่อยู่ในชุดรายละเอียด (เช่น Easy) ไม่ถูกลบ */
+    COGS_ALL[M.key]={file:'รายงาน 401',at:Date.now(),fmt:'bundle',br,adj:[],branches:Object.keys(br).length};
     COGSI[M.key]={note:M.note||'',by}; });
-  if(document.getElementById('cogsrep')) cogsRefresh(); }
+  cgRebuild(); if(document.getElementById('cogsrep')) cogsRefresh(); }
 async function cogsLoadBundle(pass){
   COGS_ERR="";
   try{ const r=await fetch('cogs401.enc.json',{cache:'no-cache'}); if(!r.ok){ COGS_ERR="ไม่พบไฟล์รายละเอียดวัตถุดิบ (cogs401.enc.json · "+r.status+")"; if(document.getElementById('cogsrep')) cogsRefresh(); return; } const o=await r.json();
@@ -7975,11 +7983,11 @@ async function importFileOne(file){
     if(isCogsWb(wb)){ IMP.kind='ต้นทุนสินค้าขาย (COGS · รายงาน 401)';
       const R=parseCogs(wb,file.name);
       /* ไฟล์เดือนเดิมนำเข้าซ้ำ = อัปเดตเฉพาะสาขาที่อยู่ในไฟล์ (ไฟล์แก้เฉพาะสาขาไม่ลบสาขาอื่นของเดือนนั้น) */
-      const old=COGS[R.key], got=Object.keys(R.br), merged=!!old&&got.length<Object.keys(old.br).length;
+      const old=COGS_ALL[R.key], got=Object.keys(R.br), merged=!!old&&got.length<Object.keys(old.br).filter(c=>cgCodeOk(DATA_BRAND,c)).length;
       const nb=Object.assign({},old?old.br:{},R.br), na=((old&&old.adj)||[]).filter(x=>!R.br[x.c]).concat(R.adj);
-      COGS[R.key]={file:file.name,at:Date.now(),fmt:R.fmt,br:nb,adj:na,branches:Object.keys(nb).length};
+      COGS_ALL[R.key]={file:file.name,at:Date.now(),fmt:R.fmt,br:nb,adj:na,branches:Object.keys(nb).length}; cgRebuild();
       IMP.months=R.y===YEAR?[R.m]:[]; await saveState();
-      finish('นำเข้ารายงานต้นทุนสินค้าขายสำเร็จ: '+MONTH_FULL[R.m-1]+' '+R.y+' · '+R.branches+' สาขา'+(merged?' (อัปเดตเฉพาะสาขาในไฟล์ · รวมเป็น '+COGS[R.key].branches+' สาขา)':'')+' · ยอดขาย '+(R.sale/1e6).toFixed(2)+'M · ต้นทุนจริง '+(R.act/R.sale*100).toFixed(2)+'% (มาตรฐาน '+(R.theo/R.sale*100).toFixed(2)+'%)'+(R.adj.length?' · ปรับรายการราคาผิดปกติ '+R.adj.length+' รายการ':'')+(/csv/.test(R.fmt)&&!/20\d{2}/.test(file.name)?' · ไฟล์ไม่ระบุปี ใช้ปี '+R.y:'')+' — ดูที่หน้า Profit ต่อท้าย Branch × Month Matrix','ok');
+      finish('นำเข้ารายงานต้นทุนสินค้าขายสำเร็จ: '+MONTH_FULL[R.m-1]+' '+R.y+' · '+R.branches+' สาขา'+(merged?' (อัปเดตเฉพาะสาขาในไฟล์ · รวมเป็น '+(COGS[R.key]||{}).branches+' สาขา)':'')+' · ยอดขาย '+(R.sale/1e6).toFixed(2)+'M · ต้นทุนจริง '+(R.act/R.sale*100).toFixed(2)+'% (มาตรฐาน '+(R.theo/R.sale*100).toFixed(2)+'%)'+(R.adj.length?' · ปรับรายการราคาผิดปกติ '+R.adj.length+' รายการ':'')+(/csv/.test(R.fmt)&&!/20\d{2}/.test(file.name)?' · ไฟล์ไม่ระบุปี ใช้ปี '+R.y:'')+' — ดูที่หน้า Profit ต่อท้าย Branch × Month Matrix','ok');
       return; }
     if(isHourlySumWb(wb)){ IMP.kind='ยอดขายรายช่องทาง (Hourly · ไฟล์สรุป ไม่มีชั่วโมง)';
       const R=parseHourlySum(wb,file.name), old=HOURLY[R.key];
