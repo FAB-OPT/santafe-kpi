@@ -5906,7 +5906,7 @@ function brandEmpty(){
   const go=document.querySelector('[data-brand-go]'); if(go) go.onclick=()=>setBrand('kt');
   setStick();
 }
-/* เติมยอดปีนี้ในตารางยอดรายสาขา 2 ปี จากแบบฟอร์มส่งยอดขาย (เฉพาะเดือนที่ตารางยังไม่มี)
+/* ยอดปีนี้ในตารางยอดรายสาขา: ใช้ตามแบบฟอร์มส่งยอดขาย (ทับค่าจากไฟล์ยอดรายสาขา 2 ปีในเดือนที่นำเข้าแบบฟอร์มแล้ว)
    ค่าที่เติมมีป้าย src:'form' ถ้านำเข้าแบบฟอร์มใหม่จะเติมซ้ำด้วยตัวเลขล่าสุด แต่ไม่ทับยอดจากไฟล์ยอดรายสาขา 2 ปี */
 function syncBranchYears(){
   const BY=EXTRA&&EXTRA.branchYears; if(!BY) return;
@@ -5917,7 +5917,10 @@ function syncBranchYears(){
       if(!b){ const meta=(BRANCH_META&&BRANCH_META[code])||{};
         b={code, name:r.name||meta.name||code, zone:meta.zone||'', mall:meta.mall||meta.loc2||'Other', m:{}, fromForm:true}; BY.push(b); byCode[code]=b; }
       b.m=b.m||{}; const v=b.m[mm]||(b.m[mm]={});
-      if(!(v.ty>0)||v.src==='form'){ v.ty=r.sales; v.src='form'; } }); });
+      /* ยอดปีนี้ใช้ตามแบบฟอร์มส่งยอดขายเสมอ (ทุกสาขา ทุกเดือนที่นำเข้าแบบฟอร์มแล้ว) — ไฟล์ยอดรายสาขา 2 ปีมีเดือน ม.ค. ต่ำกว่าแบบฟอร์มราว 10%
+         ค่าเดิมจากไฟล์เก็บไว้ที่ tyFile ใช้เทียบ/ย้อนกลับได้ · LY (ปีก่อน) ยังมาจากไฟล์ 2 ปีตามเดิม */
+      if(v.src!=='form'&&v.ty>0&&v.tyFile==null) v.tyFile=v.ty;
+      v.ty=r.sales; v.src='form'; }); });
 }
 function build(m){
   renderFilters();
