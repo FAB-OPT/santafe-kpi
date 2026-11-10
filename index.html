@@ -5321,7 +5321,7 @@ function ovBrHtml(){
     const plan=months.reduce((t,mm)=>t+planM(b,mm),0);
     const lyv=months.reduce((t,mm)=>t+(((b.m&&b.m[mm])||{}).ly||0),0);
     return {b,v,now,plan,ly:lyv,avg:has.length?has.reduce((a,c)=>a+c,0)/has.length:0,g:ref>0&&now>0?(now/ref-1)*100:null,
-      gl:lmv>0&&now>0?(now/lmv-1)*100:null, lm:lmv}; }).filter(r=>r.now>0);
+      gl:lmv>0&&now>0?(now/lmv-1)*100:null, lm:lmv, ref}; }).filter(r=>r.now>0);
   /* คำอธิบายสั้น ๆ ว่าสาขานั้นโต/ลดมาจากอะไร · ใช้ประวัติรายสาขา (ยอดแยกช่องทาง · Ticket Avg. · ลูกค้า) */
   /* เรียงตาม % เทียบค่าที่เลือกของเดือนล่าสุด · สาขาที่ไม่มีค่าเทียบ (เช่น เปิดใหม่ไม่มียอด LY) อยู่ท้ายสุด */
   /* หน่วยของยอดเงินในตาราง: ล้านบาท (ทศนิยม 2) หรือบาทเต็ม */
@@ -5364,11 +5364,10 @@ function ovBrHtml(){
   if(!(ALLM&&!many)) months.forEach((mm,ix)=>COL.push({k:'m'+mm,t:MS(mm),n:1,get:r=>r.v[ix],cell:r=>f(r.v[ix])}));
   if(many) COL.push({k:'avg',t:'Avg',n:1,get:r=>r.avg,cell:r=>`<b>${f(r.avg)}</b>`});
   const lmLab=lmMs.length?`${MS(lmMs[0])}${lmMs.length>1?'–'+MS(lmMs[lmMs.length-1]):''}`:'';
-  const lmCol={k:'lmamt',t:lmLab,n:1,get:r=>r.lm>0?r.lm:null,cell:r=>`<span style="color:var(--mute)">${f(r.lm/1e6)}</span>`};
-  if(lmMs.length&&!ALLM) COL.push(lmCol);
+  const lmCol={k:'lmamt',t:'LM '+lmLab,n:1,get:r=>r.lm>0?r.lm:null,cell:r=>`<span style="color:var(--mute)">${f(r.lm/1e6)}</span>`};
+
   if(ALLM){
     COL.push({k:'now',t:`Total Sales ${YEAR}`,n:1,get:r=>r.now,cell:r=>`<b>${M1(r.now)}</b>`});
-    if(lmMs.length) COL.push(lmCol);
     COL.push({k:'ly',t:`Total Sales ${YEAR-1}`,n:1,get:r=>r.ly,cell:r=>M1(r.ly)});
     COL.push({k:'yoy',t:'YoY',n:1,get:r=>r.ly>0?(r.now/r.ly-1)*100:null,cell:r=>pill(r.ly>0?(r.now/r.ly-1)*100:null)});
     COL.push({k:'plan',t:`Budget ${YEAR}`,n:1,get:r=>r.plan,cell:r=>M1(r.plan)});
@@ -5379,7 +5378,12 @@ function ovBrHtml(){
   } else if(SALES){
     COL.push({k:'diff',t:'ขาด / เกินแผน',n:1,get:r=>r.plan>0?r.now-r.plan:null,
       cell:r=>r.plan>0?`<b class="${cls(r.now-r.plan)}">${DB(r.now-r.plan)}</b>`:'<span class="mute">ไม่มีแผน</span>'});
-  } else COL.push({k:'g',t:'vs '+ML+' '+refTxt,n:1,get:r=>r.g,cell:r=>pill(r.g)});
+  } else {
+    /* ยอดค่าเทียบ (LY / Budget) ตามด้วย % ของมันเอง */
+    COL.push({k:'refamt',t:ML+' '+refTxt,n:1,get:r=>r.ref>0?r.ref:null,cell:r=>`<span style="color:var(--mute)">${f(r.ref/1e6)}</span>`});
+    COL.push({k:'g',t:'vs '+ML+' '+refTxt,n:1,get:r=>r.g,cell:r=>pill(r.g)});
+  }
+  if(lmMs.length) COL.push(lmCol);   /* ยอดเดือนก่อน ตามด้วย % vs LM */
   if(lmMs.length) COL.push({k:'gl',t:`vs LM ${MS(lmMs[0])}${lmMs.length>1?'–'+MS(lmMs[lmMs.length-1]):''}`,n:1,get:r=>r.gl,cell:r=>pill(r.gl)});
   /* เริ่มต้นเรียงตามรหัสสาขาน้อยไปมาก · ค่าว่างอยู่ท้ายเสมอ */
   const SK=COL.find(c=>c.k===OVB.sort)||COL[0], SD=OVB.dir==='asc'?1:-1;
