@@ -7750,7 +7750,7 @@ function parseCEM(wb){
 
 /* ===== ตัวอ่านไฟล์ OSS (ใบตรวจมาตรฐาน 1 สาขา ต่อ 1 ไฟล์) ===== */
 function isOSSWb(wb){ const s=wb.SheetNames.map(n=>n.trim().toLowerCase());
-  return s.includes('summary') && s.includes('detail') && s.includes('code'); }
+  return s.includes('summary') && s.includes('detail') && (s.includes('code')||s.includes('สรุป')); }
 function parseOSS(wb){
   const key=wb.SheetNames.find(n=>n.trim().toLowerCase()==='summary');
   const rs=XLSX.utils.sheet_to_json(wb.Sheets[key],{header:1,defval:null});
@@ -7758,8 +7758,9 @@ function parseOSS(wb){
   const lastNum=r=>{ for(let c=r.length-1;c>=0;c--) if(typeof r[c]==='number'&&isFinite(r[c])) return r[c]; return null; };
   for(const r of rs){ if(!r) continue;
     const a=typeof r[0]==='string'?r[0].trim():'';
-    if(/^สาขา/.test(a)){ code=r[1]!=null?String(r[1]).trim():null; name=typeof r[2]==='string'?r[2].trim():null; }
-    if(/^วัน/.test(a) && typeof r[1]==='string') dateTxt=r[1];
+    if(/^สาขา/.test(a)){ if(r[1]!=null&&String(r[1]).trim()!==''){ code=String(r[1]).trim(); name=typeof r[2]==='string'?r[2].trim():null; }
+      else { const mt=a.match(/^สาขา\s*([0-9]{4})\s*(.*)$/); if(mt){ code=mt[1]; name=mt[2].trim()||null; } } }   /* Easy: "สาขา 5504 LT Wanghin" อยู่ในเซลล์เดียว */
+    if(/^วัน/.test(a)){ if(typeof r[1]==='string') dateTxt=r[1]; else if(TH_FULL.some(t=>a.indexOf(t)>=0)) dateTxt=a; }
     // คอลัมน์ "Total score คะแนนที่ได้" จากหัวตาราง
     if(cScore<0) r.forEach((v,c)=>{ if(typeof v==='string'&&/Total\s*score/i.test(v)) cScore=c; });
     // แถวรวม → คะแนนรวมก่อนหักหมวดพิเศษ
@@ -7775,11 +7776,13 @@ function parseOSS(wb){
     if(mi>=0) ym={m:mi+1, y:yy?yy-543:YEAR}; }
   // ---- คะแนนรายหมวด จากชีต Summary ----
   const sections=[];
+  let LC=-1; for(const r of rs){ if(!r||LC>=0) continue; for(const c of [3,4]) if(/^[A-Z]$/.test(String(r[c]||'').trim())&&typeof r[c+1]==='string'&&typeof r[c+2]==='number'){ LC=c; break; } }
+  if(LC<0) LC=4;
   for(const r of rs){ if(!r) continue;
-    const L=typeof r[4]==='string'?r[4].trim():'';
+    const L=typeof r[LC]==='string'?r[LC].trim():'';
     if(!/^[A-Z]$/.test(L)) continue;
-    const nm=typeof r[5]==='string'?r[5].trim():''; const pctv=r[9];
-    if(nm&&typeof pctv==='number'&&isFinite(pctv)) sections.push({code:L, name:nm, pct:+pctv.toFixed(1), items:+(r[6]||0), miss:+(r[7]||0)});
+    const nm=typeof r[LC+1]==='string'?r[LC+1].trim():''; const pctv=r[LC+5];
+    if(nm&&typeof pctv==='number'&&isFinite(pctv)) sections.push({code:L, name:nm, pct:+pctv.toFixed(1), items:+(r[LC+2]||0), miss:+(r[LC+3]||0)});
   }
   // ---- ข้อที่ถูกหักคะแนน จากชีต detail ----
   const fails=[];
@@ -8024,7 +8027,7 @@ async function importFileOne(file){
           : 'ไฟล์ P&L นี้ไม่มีงบของ '+BN+' (มีชีต SF · ES · MM · FS)'); }
       if(BRAND!=='ez') throw new Error('หน้า '+BN+' รับไฟล์ Daily Sale (ชีต Summary Salse '+YEAR+')'+(BRAND==='jd'?' และไฟล์ PL Jaedang':'')+' · ไฟล์ชนิดนี้ใช้กับ Santa Fe KT');
       /* Santa Fe Easy: ไฟล์รูปแบบเดียวกับ KT แต่ดึงเฉพาะสาขารหัส 55xx (ผ่านต่อไปยังตัวอ่านด้านล่าง) */
-      if(isHourlySumWb(wb)||isHourlyWb(wb)||isCEMWb(wb)||isOSSWb(wb)) throw new Error('หน้า '+BN+' ยังไม่รองรับไฟล์ชนิดนี้ (รองรับ: ยอดรายสาขา 2 ปี · ประวัติ STF · แบบฟอร์มส่งยอดขาย · Daily Sale · Summary Salse · P&L · รายงาน 401)');
+      if(isHourlySumWb(wb)||isHourlyWb(wb)||isCEMWb(wb)) throw new Error('หน้า '+BN+' ยังไม่รองรับไฟล์ชนิดนี้ (รองรับ: ยอดรายสาขา 2 ปี · ประวัติ STF · แบบฟอร์มส่งยอดขาย · Daily Sale · Summary Salse · P&L · รายงาน 401 · OSS)');
     }
     if(isJDPLWb(wb)) throw new Error('ไฟล์นี้เป็นงบกำไรขาดทุนของ Jaedang — เปิดหน้า Jaedang ก่อนนำเข้า');
     if(isCogsWb(wb)){ IMP.kind='ต้นทุนสินค้าขาย (COGS · รายงาน 401)';
@@ -8176,15 +8179,17 @@ async function importFileOne(file){
 async function importFile(file){
   const cur=BRAND;
   if((cur!=='kt'&&cur!=='ez')||YEAR!==YEAR_REAL||/\.csv$/i.test(file.name)) return importFileOne(file);
-  let dual=false, sumOnly=false;
+  let dual=false, sumOnly=false, only=null;
   try{ const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
     sumOnly=isSalesSummaryWb(wb)&&!isJDPLWb(wb)&&!isPLWb(wb);   /* Daily Sale แบบ Summary Salse: ใช้กับ Easy (KT ใช้แบบฟอร์มส่งยอดขาย) */
-    dual=sumOnly||!isHourlySumWb(wb)&&!isHourlyWb(wb)&&!isCEMWb(wb)&&!isOSSWb(wb)&&!isJDPLWb(wb)&&(isCogsWb(wb)||isPLWb(wb)||isSTFWb(wb)||isSales2YWb(wb)||isSalesFormWb(wb)||isDailySaleWb(wb));
+    /* ไฟล์ OSS (ใบตรวจ 1 สาขา): ส่งเข้าแบรนด์ตามรหัสสาขา · 55xx = Easy · อื่น ๆ = KT */
+    if(isOSSWb(wb)){ const R0=parseOSS(wb); if(R0&&R0.code){ only=[/^55[0-9]{2}$/.test(String(R0.code))?'ez':'kt']; dual=true; } }
+    if(!only) dual=sumOnly||!isHourlySumWb(wb)&&!isHourlyWb(wb)&&!isCEMWb(wb)&&!isOSSWb(wb)&&!isJDPLWb(wb)&&(isCogsWb(wb)||isPLWb(wb)||isSTFWb(wb)||isSales2YWb(wb)||isSalesFormWb(wb)||isDailySaleWb(wb));
   }catch(e){ dual=false; }
   if(!dual) return importFileOne(file);
   const BN=k=>(BRANDS.find(b=>b.k===k)||{n:k}).n, res=[];
   try{
-    for(const B of (sumOnly?['ez']:[cur,cur==='kt'?'ez':'kt'])){
+    for(const B of (only||(sumOnly?['ez']:[cur,cur==='kt'?'ez':'kt']))){
       if(BRAND!==B){ BRAND=B; useBrandData(B); }
       IMP_QUIET={}; try{ await importFileOne(file); }catch(e){ IMP_QUIET.res={t:'นำเข้าไม่สำเร็จ: '+e.message,c:'err'}; }
       res.push({B,r:IMP_QUIET.res||{t:'ไม่มีผล',c:'err'}}); IMP_QUIET=null;
