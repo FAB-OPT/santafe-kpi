@@ -5291,7 +5291,7 @@ function ovTrendHtml(){
   return head+ovyChips()+`<div class="ovcap">${cap}</div><div class="ovchart">${ovChart(rows,MAIN,REFS2)}</div>`+tbl+focus+note;
 }
 /* ยอดขายรายสาขารายเดือน เรียงตามเดือนล่าสุด · แสดง 10 อันดับ กดดูทั้งหมดได้ */
-const OVB={all:false,sort:'code',dir:'asc'};
+const OVB={all:false,sort:'code',dir:'asc',unit:(function(){ try{ return localStorage.getItem('sf-kpi-ovunit')==='b'?'b':'m'; }catch(e){ return 'm'; } })()};   /* unit: m = ล้านบาท · b = บาท */
 function ovBrHtml(){
   const S=SCP||{}, m=S.multi?S.last:curM, by0=brOfYear(); if(!by0.length) return '';
   /* เลือก Zone ใน Performance Trend: ตารางแสดงเฉพาะสาขาในโซนนั้น */
@@ -5321,12 +5321,15 @@ function ovBrHtml(){
     const plan=months.reduce((t,mm)=>t+planM(b,mm),0);
     const lyv=months.reduce((t,mm)=>t+(((b.m&&b.m[mm])||{}).ly||0),0);
     return {b,v,now,plan,ly:lyv,avg:has.length?has.reduce((a,c)=>a+c,0)/has.length:0,g:ref>0&&now>0?(now/ref-1)*100:null,
-      gl:lmv>0&&now>0?(now/lmv-1)*100:null}; }).filter(r=>r.now>0);
+      gl:lmv>0&&now>0?(now/lmv-1)*100:null, lm:lmv}; }).filter(r=>r.now>0);
   /* คำอธิบายสั้น ๆ ว่าสาขานั้นโต/ลดมาจากอะไร · ใช้ประวัติรายสาขา (ยอดแยกช่องทาง · Ticket Avg. · ลูกค้า) */
   /* เรียงตาม % เทียบค่าที่เลือกของเดือนล่าสุด · สาขาที่ไม่มีค่าเทียบ (เช่น เปิดใหม่ไม่มียอด LY) อยู่ท้ายสุด */
-  const f=v=>v>0?v.toFixed(2):'—';
+  /* หน่วยของยอดเงินในตาราง: ล้านบาท (ทศนิยม 2) หรือบาทเต็ม */
+  const BAHT=OVB.unit==='b';
+  const f=v=>v>0?(BAHT?Math.round(v*1e6).toLocaleString('en-US'):v.toFixed(2)):'—';   /* รับค่าเป็นล้านบาท */
   /* ปุ่มตัวเทียบชุดเดียวกับ Performance Trend · กดที่นี่ก็เปลี่ยนทั้งกราฟและตารางด้านบนด้วย */
   const seg=`<span class="ovseg">${[['all','ALL'],['sales','Sales (บาท)'],['bud','vs Budget'],['ly','vs LY'],['ss','vs SSSG']].map(([k,t])=>`<button type="button" class="${OVT.mode===k?'on':''}" data-ovmode="${k}">${t}</button>`).join('')}</span>`;
+  const unitSeg=`<span class="ovseg" title="หน่วยยอดเงินในตาราง">${[['m','ล้านบาท'],['b','บาท']].map(([k,t])=>`<button type="button" class="${OVB.unit===k?'on':''}" data-ovunit="${k}">${t}</button>`).join('')}</span>`;
   /* การ์ดสรุปเหนือตาราง · เปลี่ยนชุดตามปุ่มที่เลือก */
   const MB2=v=>Math.abs(v)>=1e6?(Math.abs(v)/1e6).toFixed(2)+'M':Math.round(Math.abs(v)/1000)+'K';
   const card=(tone,lab,val,unit,sub,share)=>{ const c=tone==='pos'?'#1c8a4b':tone==='neg'?'#cf3a3a':'#D9822D';
@@ -5352,16 +5355,20 @@ function ovBrHtml(){
   else if(ALLM) cards=planCards.concat(lyCards);
   else cards=lyCards;
   const strip=cards.length?`<div class="dcards" style="margin:12px 0 0">${cards.join('')}</div>`:'';
-  const DB=v=>(v>=0?'+':'-')+(Math.abs(v)>=1e6?(Math.abs(v)/1e6).toFixed(2)+'M':Math.round(Math.abs(v)/1000)+'K');
+  const DB=v=>(v>=0?'+':'-')+(BAHT?Math.round(Math.abs(v)).toLocaleString('en-US'):(Math.abs(v)>=1e6?(Math.abs(v)/1e6).toFixed(2)+'M':Math.round(Math.abs(v)/1000)+'K'));
   const many=months.length>1, rangeTxt=many?`${MS(months[0])} to ${MS(months[months.length-1])}`:MS(months[0]);
   const refTxt=(BM==='lm'&&refMs!==months)?`${MS(refMs[0])}–${MS(refMs[refMs.length-1])}`:rangeTxt.replace(' to ','–');
   /* ---- คอลัมน์ของตาราง · กดหัวคอลัมน์เพื่อเรียงมาก/น้อยได้ทุกช่อง ---- */
-  const M1=v=>v>0?f(v/1e6):'—';
+  const M1=v=>v>0?f(v/1e6):'—';   /* รับค่าเป็นบาท */
   const COL=[{k:'code',t:'Branch',cell:r=>`${r.b.code} ${r.b.name}`,get:r=>+r.b.code||0,asc:1}];
   if(!(ALLM&&!many)) months.forEach((mm,ix)=>COL.push({k:'m'+mm,t:MS(mm),n:1,get:r=>r.v[ix],cell:r=>f(r.v[ix])}));
   if(many) COL.push({k:'avg',t:'Avg',n:1,get:r=>r.avg,cell:r=>`<b>${f(r.avg)}</b>`});
+  const lmLab=lmMs.length?`${MS(lmMs[0])}${lmMs.length>1?'–'+MS(lmMs[lmMs.length-1]):''}`:'';
+  const lmCol={k:'lmamt',t:lmLab,n:1,get:r=>r.lm>0?r.lm:null,cell:r=>`<span style="color:var(--mute)">${f(r.lm/1e6)}</span>`};
+  if(lmMs.length&&!ALLM) COL.push(lmCol);
   if(ALLM){
     COL.push({k:'now',t:`Total Sales ${YEAR}`,n:1,get:r=>r.now,cell:r=>`<b>${M1(r.now)}</b>`});
+    if(lmMs.length) COL.push(lmCol);
     COL.push({k:'ly',t:`Total Sales ${YEAR-1}`,n:1,get:r=>r.ly,cell:r=>M1(r.ly)});
     COL.push({k:'yoy',t:'YoY',n:1,get:r=>r.ly>0?(r.now/r.ly-1)*100:null,cell:r=>pill(r.ly>0?(r.now/r.ly-1)*100:null)});
     COL.push({k:'plan',t:`Budget ${YEAR}`,n:1,get:r=>r.plan,cell:r=>M1(r.plan)});
@@ -5381,7 +5388,7 @@ function ovBrHtml(){
     return (a>b?1:a<b?-1:0)*SD; });
   const shown=OVB.all?rows:rows.slice(0,10);
   const arrow=c=>c.k===SK.k?`<i class="srt">${OVB.dir==='asc'?'▲':'▼'}</i>`:'<i class="srt off">↕</i>';
-  return `<div class="ovth"><h3>Branch detail Sales</h3>${seg}</div>
+  return `<div class="ovth"><h3>Branch detail Sales</h3><span style="display:flex;gap:8px;flex-wrap:wrap">${unitSeg}${seg}</span></div>
     ${strip}
     <div class="scroll" style="margin-top:10px"><table class="ovbt"><tr><th>#</th>${
       COL.map(c=>`<th class="${c.n?'n ':''}srth${c.k===SK.k?' on':''}" data-brsort="${c.k}">${c.t}${arrow(c)}</th>`).join('')}</tr>
@@ -5421,6 +5428,7 @@ document.addEventListener('click',e=>{
     if(OVB.sort===k) OVB.dir=OVB.dir==='asc'?'desc':'asc';
     else { OVB.sort=k; OVB.dir=(k==='code')?'asc':'desc'; }   /* ตัวเลขเริ่มที่มาก → น้อย */
     ovRender('ovBranch',ovBrHtml); return; }
+  const un=e.target.closest('[data-ovunit]'); if(un){ OVB.unit=un.dataset.ovunit==='b'?'b':'m'; try{ localStorage.setItem('sf-kpi-ovunit',OVB.unit); }catch(x){} ovRender('ovBranch',ovBrHtml); return; }
   if(e.target.closest('[data-ovbrall]')){ OVB.all=!OVB.all; ovRender('ovBranch',ovBrHtml); return; }
   const sc=e.target.closest('[data-ovscope]');
   if(sc){ OVT.scope=sc.dataset.ovscope; const by=brOfYear();
