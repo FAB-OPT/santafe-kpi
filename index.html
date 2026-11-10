@@ -5105,7 +5105,7 @@ function ovyRealBY(){ const R=YSTORE&&YSTORE.real; return YEAR===YEAR_REAL?(EXTR
 function ovyYears(){
   const ys=new Set([YEAR_REAL]);
   ovyRealBY().forEach(b=>Object.keys(b.h||{}).forEach(y=>{ if(+y<YEAR_REAL&&((b.h[y].s||[]).some(v=>typeof v==='number'&&v>0))) ys.add(+y); }));
-  try{ hrYears().forEach(y=>ys.add(y)); }catch(e){}
+  try{ if(DATA_BRAND==='kt') hrYears().forEach(y=>ys.add(y)); }catch(e){}   /* ยอดรายชั่วโมงเป็นของ KT เท่านั้น ไม่เอาไปเป็นปีย้อนหลังของแบรนด์อื่น */
   return [...ys].sort((a,b)=>b-a); }
 function ovyList(){
   let L=filtZone(ovyRealBY());
@@ -5125,7 +5125,7 @@ function ovyMonthly(y){
     } else if(hasH){
       L.forEach(b=>{ const v=b.h&&b.h[y]&&(b.h[y].s||[])[m-1]; if(typeof v==='number'&&v>0){ t+=v; n++; } });
     } else {
-      const d=(typeof HOURLY!=='undefined')&&HOURLY[y+'-'+String(m).padStart(2,'0')];
+      const d=(typeof HOURLY!=='undefined'&&DATA_BRAND==='kt')&&HOURLY[y+'-'+String(m).padStart(2,'0')];
       if(d&&d.br) Object.entries(d.br).forEach(([c,b])=>{ if(OVT.scope!=='all'||FILT.zone!=='all'){ if(!codes.has(String(c))) return; }
         let net=0; for(let h=0;h<24;h++) net+=b.h[h*3]; if(net>0){ t+=net; n++; } });
     }
