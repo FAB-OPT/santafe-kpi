@@ -6662,7 +6662,11 @@ function applyBY(list){ if(!Array.isArray(list)||!list.length) return; BY_IMPORT
     if(n.name) b.name=n.name; if(n.zone) b.zone=n.zone; if(n.mall) b.mall=n.mall; delete b.fromForm; b.m=b.m||{};
     if(n.h) b.h=n.h; if(n.region) b.region=n.region; if(n.owner) b.owner=n.owner; if(n.open) b.open=n.open;
     Object.entries(n.m||{}).forEach(([mm,v])=>{ const o=b.m[mm]||(b.m[mm]={});
-      if(v.ly!=null) o.ly=v.ly; if(v.ty!=null){ o.ty=v.ty; delete o.src; } }); }); }
+      if(v.ly!=null) o.ly=v.ly; if(v.ty!=null){ o.ty=v.ty; delete o.src; } }); });
+  /* ที่เก็บถาวรต้องมีประวัติรายสาขา (h = ปีย้อนหลังจาก STF) ติดไปด้วยเสมอ — ไม่งั้นนำเข้า Sales 2025_2026 ทีหลัง ประวัติ 2024/2025 หายหลังรีเฟรช */
+  const inList=new Set(list.map(n=>String(n.code)));
+  BY_IMPORT=list.map(n=>{ const b=idx[String(n.code)]; return (!n.h&&b&&b.h)?Object.assign({},n,{h:b.h}):n; })
+    .concat(BY.filter(b=>b.h&&!inList.has(String(b.code))).map(b=>({code:b.code,name:b.name,zone:b.zone,mall:b.mall,m:{},h:b.h,region:b.region,owner:b.owner,open:b.open}))); }
 function applyState(s){ if(YEAR!==YEAR_REAL){ if(s&&Array.isArray(s.monthly)) YSTORE.pending=s; return; }   // กำลังดูปีย้อนหลัง: เก็บไว้ใช้ตอนกลับปีปัจจุบัน
   if(!s||!Array.isArray(s.monthly)) return; if(!s.monthly.length&&!Object.keys(s.detail||{}).length) return;
   MONTHLY=s.monthly; DETAIL=s.detail||{}; if(s.by) applyBY(s.by); if(s.hr) HOURLY=Object.assign({},HOURLY,s.hr); if(s.cg) cgMergeAll(s.cg); cogsApplyBundle(); cgRebuild(); refreshMonths();
