@@ -529,6 +529,7 @@ body:not(.present) .brcards{grid-template-columns:repeat(auto-fit,minmax(126px,1
 .fdbar.fold::before{content:"▾"}
 .fdbar::after{content:"ซ่อนตาราง";font-weight:700}
 .fdbar.fold::after{content:"แสดงตาราง"}
+.fdbar.mon{display:flex;width:fit-content;margin:12px auto 6px}
 .fdbar.mon::after{content:"ซ่อน เหลือเดือนล่าสุด"}
 .fdbar.mon.fold::after{content:"ดูทุกเดือน"}
 .scroll.fd-m table.ovtab tr:not(:first-child):not(.ltr){display:none}
@@ -1777,6 +1778,7 @@ table tr.hi td{background:#FFF1E6!important}
 #hubView .hv-tile.soon .hv-n{white-space:nowrap}
 #hubView .hv-tile.soon .hv-chip{margin:0 0 0 auto;white-space:nowrap;flex:0 0 auto}
 table tr.hi .pill.neg{background:#F8D3D9}table tr.hi .pill.pos{background:#CDEBD9}
+table tr.hi td .pill.neg{color:#C82A40}table tr.hi td .pill.pos{color:#08794F}
 /* การ์ดสรุปเหนือตารางสาขา: พื้นขาว จุดสีหน้าชื่อ ตัวเลขใหญ่ */
 .st.big{background:#fff!important;border:1px solid rgba(15,23,42,.06);border-left:1px solid rgba(15,23,42,.06)!important;border-radius:18px;box-shadow:0 10px 24px -20px rgba(15,23,42,.35);padding:16px 20px}
 .st.big .l{font-size:12px;font-weight:700;color:var(--ink-2);display:flex;align-items:center;gap:8px}
@@ -8975,8 +8977,8 @@ window.__hub={openTopic,goHub,TOPICS};
       sc.querySelectorAll('tr.ltr').forEach(function(r){ r.classList.remove('ltr'); });
       if(rs.length>1) rs[rs.length-1].classList.add('ltr');
       if(sc.dataset.fdk) return;
-      var k='ovtab|'+((sc.closest('section')||{}).id||''), pv=sc.previousElementSibling, bar=(pv&&pv.classList.contains('fdbar'))?pv:null;
-      if(!bar){ bar=document.createElement('div'); bar.className='fdbar mon'; bar.textContent=''; sc.parentNode.insertBefore(bar,sc); }
+      var k='ovtab|'+((sc.closest('section')||{}).id||''), nx=sc.nextElementSibling, bar=(nx&&nx.classList.contains('fdbar'))?nx:null;
+      if(!bar){ bar=document.createElement('div'); bar.className='fdbar mon'; bar.textContent=''; sc.parentNode.insertBefore(bar,sc.nextSibling); }
       bar.dataset.fdk=k; sc.dataset.fdk=k; bar.title='กดเพื่อสลับระหว่างเดือนล่าสุดกับทุกเดือน';
       var fold=st[k]!==0; bar.classList.toggle('fold',fold); sc.classList.toggle('fd-m',fold);
     });
@@ -8986,7 +8988,7 @@ window.__hub={openTopic,goHub,TOPICS};
     var h=e.target.closest('.grp.big.fdh');
     if(h){ var f=!h.classList.contains('fold'); apply(h,f); st[h.dataset.fdk]=f?1:0; save(); return; }
     var b=e.target.closest('.fdbar');
-    if(b){ var f2=!b.classList.contains('fold'); b.classList.toggle('fold',f2); var sc=b.nextElementSibling; if(sc) sc.classList.toggle('fd-m',f2);
+    if(b){ var f2=!b.classList.contains('fold'); b.classList.toggle('fold',f2); var sc=b.previousElementSibling; if(sc) sc.classList.toggle('fd-m',f2);
       st[b.dataset.fdk]=f2?1:0; save(); }
   });
   var q=0; function sched(){ if(q) return; q=requestAnimationFrame(function(){ q=0; scan(); }); }
