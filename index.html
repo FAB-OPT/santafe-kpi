@@ -1580,7 +1580,11 @@ body.brand-home #presentBtn,body.brand-home .tabbar,body.brand-home .brandsw{dis
 /* ---- เลือกเรื่องพรีเซนต์ · เต็มจอ · รายละเอียดสาขา ---- */
 .pres{max-width:660px;width:100%}
 .pg-chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}
-.pg-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-height:52vh;overflow:auto;padding:2px}
+.pg-list{max-height:52vh;overflow:auto;padding:2px}
+.pg-gh{font-size:12.5px;font-weight:800;color:var(--mute);margin:12px 0 6px}
+.pg-grp:first-child .pg-gh{margin-top:2px}
+.pg-items{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.pg-chips .chip small{opacity:.7;font-weight:700;margin-left:2px}
 .pg-it{display:flex;align-items:center;gap:9px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;cursor:pointer;font-size:14px;background:#fff;min-height:44px}
 .pg-it:has(input:checked){border-color:var(--accent);background:#FFF7F0}
 .pg-it input{width:18px;height:18px;accent-color:var(--accent);flex:0 0 auto}
@@ -2516,7 +2520,7 @@ section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):n
 </div>
 
 <div class="modal" id="presModal"><div class="box pres" role="dialog" aria-labelledby="presH">
-  <div class="imphd"><div><h2 id="presH">เลือกเรื่องที่จะพรีเซนต์</h2><p>เลือกหมวด แล้วติ๊กหัวข้อที่จะเอาขึ้นสไลด์</p></div><button class="btn" id="presClose">ปิด</button></div>
+  <div class="imphd"><div><h2 id="presH">เลือกเรื่องที่จะพรีเซนต์</h2><p>ติ๊กหัวข้อได้ทุกหมวดพร้อมกัน หรือกดชื่อหมวดเพื่อเลือก/เอาออกทั้งหมวด</p></div><button class="btn" id="presClose">ปิด</button></div>
   <div class="pg-chips" id="presGroups"></div>
   <div class="pg-list" id="presList"></div>
   <div class="pg-foot"><button type="button" class="btn small" id="presAll">เลือกทั้งหมด</button><button type="button" class="btn small" id="presNone">ไม่เลือก</button>
@@ -6405,25 +6409,36 @@ function startPresent(ids){ PRES_IDS=ids&&ids.length?ids:null; enterPresent(); }
 function presSecs(g){ const els=[...document.querySelectorAll('#main section.slide')];
   const ids=g==='all'?SEC_ORDER:((GROUPS.find(x=>x.k===g)||{subs:[]}).subs.flatMap(sb=>sb.ids));
   return ids.map(id=>els.find(e=>e.id===id)).filter(Boolean); }
-function openPresPicker(){ if(!document.querySelector('#main section.slide')) return;
-  PRES_G=GRP||'sales'; renderPresPicker(); $('#presModal').classList.add('open'); }
+/* เลือกพรีเซนต์: ติ๊กข้ามหมวดได้พร้อมกัน (ทุกหัวข้อสร้างอยู่ในหน้าแล้ว โหมดพรีเซนต์แสดงข้ามหมวดได้) */
+let PRES_SEL=null;
+function closePresPicker(){ $('#presModal').classList.remove('open'); }
+function openPresPicker(){
+  if(!document.querySelector('#main section.slide')) return;
+  PRES_SEL=null; renderPresPicker(); $('#presModal').classList.add('open'); }
 function renderPresPicker(){
-  const chips=GROUPS.map(g=>({k:g.k,n:g.ic+' '+g.name})).concat([{k:'all',n:'ทุกหมวด'}]);
-  $('#presGroups').innerHTML=chips.map(c=>`<button type="button" class="chip ${c.k===PRES_G?'on':''}" data-pg="${c.k}">${c.n}</button>`).join('');
-  const secs=presSecs(PRES_G);
-  $('#presList').innerHTML=secs.length?secs.map((e,i)=>`<label class="pg-it"><input type="checkbox" value="${e.id}" checked><span class="pg-n">${i+1}</span><span>${NAV_SHORT[e.id]||e.dataset.title}</span></label>`).join('')
-    :'<div class="empty">หมวดนี้ยังไม่มีหัวข้อ</div>';
-  const cnt=()=>{ const n=document.querySelectorAll('#presList input:checked').length; $('#presCnt').textContent=n+' สไลด์'; $('#presGo').disabled=!n; };
-  document.querySelectorAll('#presGroups [data-pg]').forEach(b=>b.onclick=()=>{ PRES_G=b.dataset.pg; renderPresPicker(); });
-  document.querySelectorAll('#presList input').forEach(x=>x.onchange=cnt);
-  $('#presAll').onclick=()=>{ document.querySelectorAll('#presList input').forEach(x=>x.checked=true); cnt(); };
-  $('#presNone').onclick=()=>{ document.querySelectorAll('#presList input').forEach(x=>x.checked=false); cnt(); };
-  $('#presGo').onclick=()=>{ const ids=[...document.querySelectorAll('#presList input:checked')].map(x=>x.value); if(!ids.length) return;
+  const avail=new Set([...document.querySelectorAll('#main section.slide')].map(e=>e.id));
+  if(!PRES_SEL) PRES_SEL=new Set(SEC_ORDER.filter(id=>avail.has(id)));
+  const groups=GROUPS.map(g=>({g,ids:g.subs.flatMap(sb=>sb.ids).filter(id=>avail.has(id))})).filter(x=>x.ids.length);
+  const keep=($('#presList')||{}).scrollTop||0;
+  $('#presGroups').innerHTML=groups.map(x=>{ const n=x.ids.filter(id=>PRES_SEL.has(id)).length;
+    return `<button type="button" class="chip ${n===x.ids.length?'on':''}" data-pg="${x.g.k}" title="ติ๊ก/เอาออกทั้งหมวด">${x.g.ic} ${x.g.name} <small>${n}/${x.ids.length}</small></button>`; }).join('');
+  let k=0;
+  $('#presList').innerHTML=groups.length?groups.map(x=>`<div class="pg-grp"><div class="pg-gh">${x.g.ic} ${x.g.name}</div><div class="pg-items">${x.ids.map(id=>{ k++; const e=document.getElementById(id);
+      return `<label class="pg-it"><input type="checkbox" value="${id}" ${PRES_SEL.has(id)?'checked':''}><span class="pg-n">${k}</span><span>${NAV_SHORT[id]||e.dataset.title}</span></label>`; }).join('')}</div></div>`).join('')
+    :'<div class="empty">ยังไม่มีหัวข้อให้พรีเซนต์</div>';
+  $('#presList').scrollTop=keep;
+  const cnt=()=>{ const n=PRES_SEL.size; $('#presCnt').textContent=n+' สไลด์'; $('#presGo').disabled=!n; };
+  document.querySelectorAll('#presGroups [data-pg]').forEach(b=>b.onclick=()=>{ const x=groups.find(y=>y.g.k===b.dataset.pg); if(!x) return;
+    const all=x.ids.every(id=>PRES_SEL.has(id)); x.ids.forEach(id=>all?PRES_SEL.delete(id):PRES_SEL.add(id)); renderPresPicker(); });
+  document.querySelectorAll('#presList input').forEach(x=>x.onchange=()=>{ x.checked?PRES_SEL.add(x.value):PRES_SEL.delete(x.value); renderPresPicker(); });
+  $('#presAll').onclick=()=>{ groups.forEach(x=>x.ids.forEach(id=>PRES_SEL.add(id))); renderPresPicker(); };
+  $('#presNone').onclick=()=>{ PRES_SEL.clear(); renderPresPicker(); };
+  $('#presGo').onclick=()=>{ const ids=SEC_ORDER.filter(id=>PRES_SEL.has(id)&&avail.has(id)); if(!ids.length) return;
     $('#presModal').classList.remove('open'); startPresent(ids); };
   cnt(); }
 $('#presentBtn').onclick=openPresPicker; $('#pExit').onclick=exitPresent;
-$('#presClose').onclick=()=>$('#presModal').classList.remove('open');
-$('#presModal').onclick=e=>{ if(e.target.id==='presModal') $('#presModal').classList.remove('open'); };
+$('#presClose').onclick=closePresPicker;
+$('#presModal').onclick=e=>{ if(e.target.id==='presModal') closePresPicker(); };
 /* ---- รายละเอียดสาขา (กดชื่อสาขาในตารางไหนก็ได้) ---- */
 function drawBranchPop(code,box){
   if(!box) return; code=String(code);
@@ -6524,7 +6539,7 @@ $('#pNext').onclick=()=>showSlide(slideIdx+1); $('#pPrev').onclick=()=>showSlide
 document.addEventListener('keydown',e=>{
   if(e.target.closest&&e.target.closest('input,select,textarea')) return;
   if(!document.body.classList.contains('present')){
-    if(e.key==='Escape'){ $('#presModal').classList.remove('open'); closeBranch(); return; }
+    if(e.key==='Escape'){ closePresPicker(); closeBranch(); return; }
     if((e.key==='p'||e.key==='P')&&!document.querySelector('.modal.open')) openPresPicker(); return; }
   if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();showSlide(slideIdx+1);}
   else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();showSlide(slideIdx-1);}
