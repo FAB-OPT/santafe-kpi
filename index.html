@@ -1582,7 +1582,7 @@ body.brand-home #presentBtn,body.brand-home .tabbar,body.brand-home .brandsw{dis
 .pres{max-width:1180px;width:96vw}
 @media (min-width:900px){
   .pres{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);column-gap:22px;align-content:start}
-  .pres>.imphd,.pres>.pg-chips,.pres>.pg-foot{grid-column:1/-1}
+  .pres>.imphd,.pres>.pg-chips,.pres>.pg-sets,.pres>.pg-foot{grid-column:1/-1}
   .pres .pg-list{max-height:calc(90vh - 285px);grid-column:1;padding-right:6px}
   .pres .pg-ordw{grid-column:2;margin-top:0;display:flex;flex-direction:column;min-height:0}
   .pres #presOrd{max-height:calc(90vh - 335px)}
@@ -1600,6 +1600,14 @@ body.brand-home #presentBtn,body.brand-home .tabbar,body.brand-home .brandsw{dis
 .pg-it:has(input:checked){border-color:var(--accent);background:#FFF7F0}
 .pg-it input{width:18px;height:18px;accent-color:var(--accent);flex:0 0 auto}
 .pg-n{font-size:11.5px;font-weight:700;color:var(--faint);min-width:16px}
+.pg-sets{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:8px 10px;border:1px dashed var(--line);border-radius:12px;background:#FCFBF9;font-size:13px}
+.pg-sets>b{color:var(--ink-2)}#presSets{display:inline-flex;gap:6px;flex-wrap:wrap}
+.pg-sets .empty-s{color:var(--mute);font-size:12.5px}
+.pg-st{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;background:#fff;overflow:hidden}
+.pg-st.on{border-color:var(--accent);background:#FFF7F0}
+.pg-st button{border:0;background:none;cursor:pointer;font:inherit;font-size:13px;padding:5px 10px}.pg-st .ld small{color:var(--mute);margin-left:4px}
+.pg-st .dl{padding:5px 9px 5px 4px;color:var(--faint)}.pg-st .dl:hover{color:#B91C1C}
+.pg-sn{margin-left:auto;display:inline-flex;gap:6px}.pg-sn input{border:1px solid var(--line);border-radius:8px;padding:6px 10px;font:inherit;font-size:13px;width:230px;max-width:100%}
 .pg-ordw{margin-top:12px;border:1px solid var(--line);border-radius:12px;background:#fff}
 .pg-ords{display:flex;align-items:center;gap:6px;padding:10px 14px 4px;font-weight:800;font-size:14px;color:var(--accent-ink)}
 .pg-ords small{color:var(--mute);font-weight:700}.pg-ords .btn{margin-left:auto}
@@ -2543,6 +2551,8 @@ section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):n
 <div class="modal" id="presModal"><div class="box pres" role="dialog" aria-labelledby="presH">
   <div class="imphd"><div><h2 id="presH">เลือกเรื่องที่จะพรีเซนต์</h2><p>ติ๊กหัวข้อได้ทุกหมวดพร้อมกัน หรือกดชื่อหมวดเพื่อเลือก/เอาออกทั้งหมวด</p></div><button class="btn" id="presClose">ปิด</button></div>
   <div class="pg-chips" id="presGroups"></div>
+  <div class="pg-sets"><b>ชุดที่บันทึกไว้</b><span id="presSets"></span>
+    <span class="pg-sn"><input id="presSetName" maxlength="40" placeholder="ตั้งชื่อชุด เช่น ประชุมประจำเดือน" autocomplete="off"><button type="button" class="btn small" id="presSetSave">💾 บันทึกชุดนี้</button></span></div>
   <div class="pg-list" id="presList"></div>
   <div class="pg-ordw" id="presOrdW"><div class="pg-ords">↕ ลำดับการแสดง <small id="presOrdN"></small><button type="button" class="btn small" id="presOrdReset">เรียงตามเดิม</button></div>
     <div class="pg-ordh">ลากแถวไปวาง หรือกด ▲ ▼ · จำลำดับไว้ในเครื่องนี้</div>
@@ -6457,7 +6467,8 @@ function presSecs(g){ const els=[...document.querySelectorAll('#main section.sli
   return ids.map(id=>els.find(e=>e.id===id)).filter(Boolean); }
 /* เลือกพรีเซนต์: ติ๊กข้ามหมวดได้พร้อมกัน (ทุกหัวข้อสร้างอยู่ในหน้าแล้ว โหมดพรีเซนต์แสดงข้ามหมวดได้) */
 let PRES_SEL=null, PRES_ORD=null;
-const PRES_ORD_KEY='opkt_pres_order_v1', PRES_SEL_KEY='opkt_pres_sel_v1';
+const esc2=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const PRES_SETS_KEY='opkt_pres_sets_v1', PRES_ORD_KEY='opkt_pres_order_v1', PRES_SEL_KEY='opkt_pres_sel_v1';
 /* จำการติ๊กล่าสุด: เก็บ รายการที่ติ๊ก + รายการที่เคยเห็น (หัวข้อใหม่ที่ไม่เคยเห็นจะถูกติ๊กให้เอง) · หัวข้อที่หน้านี้ไม่มี คงค่าเดิมไว้ */
 function presSelLoad(avail){ let o=null; try{ o=JSON.parse(localStorage.getItem(PRES_SEL_KEY)||'null'); }catch(e){}
   if(!o||!Array.isArray(o.sel)||!Array.isArray(o.known)) return new Set(SEC_ORDER.filter(id=>avail.has(id)));
@@ -6506,6 +6517,21 @@ function renderPresPicker(){
     r.ondragover=e=>{ if(!dragId) return; e.preventDefault(); document.querySelectorAll('#presOrd .pg-oi').forEach(x=>x.classList.toggle('over',x===r&&r.dataset.oid!==dragId)); };
     r.ondrop=e=>{ e.preventDefault(); if(!dragId) return; const from=sel.indexOf(dragId), to=sel.indexOf(r.dataset.oid); moveTo(dragId,r.dataset.oid,from<to); };
   });
+  /* ชุดที่บันทึกไว้ (ชื่อ + หัวข้อที่ติ๊ก + ลำดับ) */
+  const loadSets=()=>{ try{ const a=JSON.parse(localStorage.getItem(PRES_SETS_KEY)||'[]'); return Array.isArray(a)?a.filter(x=>x&&x.name&&Array.isArray(x.ids)):[]; }catch(e){ return []; } };
+  const saveSets=a=>{ try{ localStorage.setItem(PRES_SETS_KEY,JSON.stringify(a)); }catch(e){ alert('บันทึกไม่ได้ (เบราว์เซอร์ปิดการเก็บข้อมูล)'); } };
+  const cur=sel.join(','), sets=loadSets();
+  $('#presSets').innerHTML=sets.length?sets.map((x,i)=>{ const ids=x.ids.filter(id=>avail.has(id)); return `<span class="pg-st ${ids.join(',')===cur?'on':''}"><button type="button" class="ld" data-ps="${i}" title="ใช้ชุดนี้ (ติ๊กและเรียงตามที่บันทึกไว้)">${esc2(x.name)}<small>${ids.length}</small></button><button type="button" class="dl" data-pd="${i}" title="ลบชุดนี้">✕</button></span>`; }).join(''):'<span class="empty-s">ยังไม่มี · ติ๊กและเรียงลำดับตามต้องการ แล้วตั้งชื่อด้านขวา</span>';
+  document.querySelectorAll('#presSets [data-ps]').forEach(b=>b.onclick=()=>{ const x=loadSets()[+b.dataset.ps]; if(!x) return;
+    const ids=x.ids.filter(id=>avail.has(id)); if(!ids.length){ alert('หัวข้อในชุดนี้ไม่มีในหน้านี้'); return; }
+    PRES_SEL=new Set(ids); PRES_ORD=ids.concat(PRES_ORD.filter(id=>!ids.includes(id))); presOrdSave(); renderPresPicker(); });
+  document.querySelectorAll('#presSets [data-pd]').forEach(b=>b.onclick=()=>{ const a=loadSets(), x=a[+b.dataset.pd]; if(!x||!confirm('ลบชุด "'+x.name+'" ?')) return; a.splice(+b.dataset.pd,1); saveSets(a); renderPresPicker(); });
+  $('#presSetSave').onclick=()=>{ const inp=$('#presSetName'), name=inp.value.trim();
+    if(!name){ inp.focus(); inp.placeholder='พิมพ์ชื่อชุดก่อน'; return; }
+    if(!sel.length){ alert('ยังไม่ได้ติ๊กสไลด์'); return; }
+    const a=loadSets(), i=a.findIndex(x=>x.name===name);
+    if(i>=0){ if(!confirm('มีชุดชื่อ "'+name+'" อยู่แล้ว · ทับด้วยการติ๊กและลำดับตอนนี้?')) return; a[i]={name,ids:sel.slice()}; } else a.push({name,ids:sel.slice()});
+    saveSets(a); inp.value=''; renderPresPicker(); };
   $('#presOrdReset').onclick=()=>{ PRES_ORD=SEC_ORDER.filter(id=>avail.has(id)); presOrdSave(); renderPresPicker(); };
   document.querySelectorAll('#presGroups [data-pg]').forEach(b=>b.onclick=()=>{ const x=groups.find(y=>y.g.k===b.dataset.pg); if(!x) return;
     const all=x.ids.every(id=>PRES_SEL.has(id)); x.ids.forEach(id=>all?PRES_SEL.delete(id):PRES_SEL.add(id)); renderPresPicker(); });
