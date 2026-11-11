@@ -8478,6 +8478,16 @@ body.hist-open #fMode,body.hist-open #fMonthBox,body.hist-open #fQuarter,body.hi
 .cgit{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}.cgit th{font-size:11.5px;color:var(--mute);font-weight:600;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
 .cgit th.n,.cgit td.n{text-align:right}.cgit td{padding:7px 8px;border-bottom:1px solid var(--hair);white-space:nowrap}.cgit td small{color:var(--faint);font-size:11.5px}.cgit .mute{color:var(--ink-2)}
 @media (max-width:900px){.cgdt-h,.cgcat-h{grid-template-columns:minmax(140px,1fr) 90px 90px 90px}.cgt tr.cg-dtr>td{padding-left:8px}}
+/* ===== โหมดพรีเซนต์ (เต็มจอ): เว้นขอบรอบกรอบ + หัวข้อสไลด์ใหญ่เด่น =====
+   หัวข้อของบางกล่อง (Monthly KPI · Customers · P&L · Sales Mix · CEM · OSS) ตั้ง padding 0 ไว้สำหรับหน้าปกติ แล้วโหมดเต็มจอรับค่านั้นไปด้วย เลยกรอบชิดขอบจอและหัวข้อเล็ก */
+body.present :is(#overview,#salesmix,#customers,#pl,#cem,#oss)>.bar,
+body.present section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):not(#oss)>.bar{margin:0!important;padding:34px clamp(28px,4.2vw,84px) 16px!important;background:transparent!important;border-bottom:2px solid var(--accent-3)!important;flex:0 0 auto}
+body.present :is(#overview,#salesmix,#customers,#pl,#cem,#oss)>.bar h2,
+body.present section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):not(#oss)>.bar h2{display:flex!important;align-items:center;gap:16px;font-size:clamp(28px,2.5vw,42px)!important;font-weight:800!important;letter-spacing:-.015em;line-height:1.15;color:var(--ink)}
+body.present :is(#overview,#salesmix,#customers,#pl,#cem,#oss)>.bar h2::before,
+body.present section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):not(#oss)>.bar h2::before{content:""!important;display:block!important;flex:none;width:9px!important;height:1.05em!important;border-radius:5px!important;background:var(--accent)!important;color:transparent!important}
+body.present section.slide>.body,body.present :is(#overview,#salesmix,#customers,#pl,#cem,#oss)>.body{padding:26px clamp(28px,4.2vw,84px) 84px!important}
+body.present .pctl{padding-left:clamp(28px,4.2vw,84px);padding-right:clamp(28px,4.2vw,84px)}
 </style>
 <script>
 /* ========================= ข้อมูลย้อนหลัง (ปีก่อน ๆ) =========================
