@@ -4131,11 +4131,21 @@ function customersSection(m){
     return `<span class="tiny ${Math.abs(g)<0.05?'':cls(g)}">${sgn(g)} vs ${RNc}</span>`; };
   const tile=(l,a,b,f,note)=>`<div class="st ${a!=null&&b!=null&&PV?cls(pct(a,b)):''}"><div class="l">${l}</div><div class="v">${f(b)}</div><div class="s">${a!=null&&b!=null&&PV?`${pill(pct(a,b))} vs ${PV} (${f(a)})`:(note||(S.multi?'ไม่มีช่วงก่อนหน้าให้เทียบ':''))}</div></div>`;
   const LYA=lyTrAgg(S.multi?S.ms:[m]);
+  /* ถ้าไม่มี LY: บอกสาเหตุจริง (ไม่ใช่แค่ว่าไม่มี) */
+  const lyWhy=ms=>{ const by=filtZone(EXTRA.branchYears||[]), Y=YEAR-1, mn=ms.map(x=>MONTH_TH[x-1]).join(', ');
+    if(!by.length) return 'ยังไม่ได้นำเข้าไฟล์ STF - Data (ประวัติรายสาขา) ในเครื่องนี้';
+    const wh=by.filter(b=>b.h&&b.h[Y]); if(!wh.length) return 'ไฟล์ STF ที่นำเข้ามีไม่ถึงปี '+Y+' ('+by.length+' สาขา ไม่มีประวัติปี '+Y+')';
+    const has=k=>wh.filter(b=>ms.some(x=>(b.h[Y][k]||[])[x-1]>0));
+    if(!has('s').length) return 'STF ไม่มียอดขายปี '+Y+' ของ '+mn;
+    if(!has('k').length) return 'STF ไม่มีจำนวนบิล (Ticket/Total) ปี '+Y+' ของ '+mn+' · มีเฉพาะยอดขาย (ตรวจว่าไฟล์มีบล็อก Ticket)';
+    const f={}; ms.forEach(x=>{ f[x]=new Set(filtZone((DETAIL[x]||{}).branchRows||[]).filter(r=>r.tr>0).map(r=>String(r.code))); });
+    if(!wh.some(b=>ms.some(x=>f[x].has(String(b.code))&&(b.h[Y].s||[])[x-1]>0&&(b.h[Y].k||[])[x-1]>0))) return 'สาขาที่มีประวัติ LY ไม่ตรงกับสาขาที่ส่งบิลของ '+mn+' (แบบฟอร์มเดือนนี้ไม่มีบิลรายสาขา หรือรหัสสาขาไม่ตรงกับ STF)';
+    return 'คำนวณ LY ไม่ได้'; };
   const kc=(l,a,b,f,note,ly,unit)=>{ const ok=a!=null&&b!=null&&PV&&a; const g=ok?pct(a,b):null;
     const row=(g2,txt)=>`<div class="kp">${pill(g2)}<span>${txt}</span></div>`;
     return `<div class="kc"><div class="kl">${l}</div><div class="kvr"><span class="kv">${f(b)}</span>${unit?`<small class="ku">${unit}</small>`:''}</div>
       ${ok?row(g,`vs ${PV} ${f(a)}`):`<div class="kp"><span>${note||(S.multi?'ไม่มีช่วงก่อนหน้าให้เทียบ':'')}</span></div>`}
-      ${ly!=null&&b!=null?row(pct(ly,b),`vs LY ${f(ly)}`):(b!=null?`<div class="kp"><span class="mute">vs LY — ยังไม่มีข้อมูลปีก่อน</span></div>`:'')}</div>`; };
+      ${ly!=null&&b!=null?row(pct(ly,b),`vs LY ${f(ly)}`):(b!=null?`<div class="kp"><span class="mute">vs LY — ไม่มีข้อมูล</span></div>`:'')}</div>`; };
   const strip=`<div class="kcs">
     ${kc('Total Trans',P.trans,now.trans,fN,'',LYA&&LYA.trans,'บิล')}
     ${kc('Customers',P.customer,now.customer,fN,now.customer==null?'ไม่มีข้อมูลลูกค้า':'',LYA&&LYA.customer,'คน')}
@@ -4144,7 +4154,7 @@ function customersSection(m){
     ${kc('Per Customer',spend(prv),spend(now),fB,'',LYA&&LYA.perBill)}
   </div>`;
   /* สรุปสั้นๆ เทียบ LY */
-  let ins='';
+  let ins=LYA?'':`<div class="hint" style="margin-top:10px"><b>ไม่มี LY เพราะ:</b> ${lyWhy(S.multi?S.ms:[m])}</div>`;
   if(LYA&&LYA.trans&&LYA.customer!=null&&now.customer!=null&&LYA.ticket){
     const gT=pct(LYA.trans,now.trans), gC=pct(LYA.customer,now.customer), gA=(LYA.custAvg&&now.custAvg)?pct(LYA.custAvg,now.custAvg):null, gK=pct(LYA.ticket,now.ticket);
     const B=g=>`<b class="${g>=0?'pos':'neg'}">${sgn(g)}</b>`, ud=g=>g>=0?'เพิ่มขึ้น':'ลดลง';
