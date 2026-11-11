@@ -1579,7 +1579,17 @@ body.brand-home #presentBtn,body.brand-home .tabbar,body.brand-home .brandsw{dis
 .bh-card .bh-ico{width:104px;height:104px;border-radius:24px}
 @media (max-width:760px){.bh-card{min-height:170px}.bh-card .bh-ico{width:84px;height:84px;border-radius:20px}}
 /* ---- เลือกเรื่องพรีเซนต์ · เต็มจอ · รายละเอียดสาขา ---- */
-.pres{max-width:660px;width:100%}
+.pres{max-width:1180px;width:96vw}
+@media (min-width:900px){
+  .pres{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);column-gap:22px;align-content:start}
+  .pres>.imphd,.pres>.pg-chips,.pres>.pg-foot{grid-column:1/-1}
+  .pres .pg-list{max-height:calc(90vh - 285px);grid-column:1;padding-right:6px}
+  .pres .pg-ordw{grid-column:2;margin-top:0;display:flex;flex-direction:column;min-height:0}
+  .pres #presOrd{max-height:calc(90vh - 335px)}
+  .pres .pg-it{padding:7px 10px;min-height:38px}
+  .pres .pg-oi{padding:4px 10px}
+  .pres .pg-mv{width:28px;height:28px}
+}
 .pg-chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}
 .pg-list{max-height:52vh;overflow:auto;padding:2px}
 .pg-gh{font-size:12.5px;font-weight:800;color:var(--mute);margin:12px 0 6px}
@@ -1591,8 +1601,8 @@ body.brand-home #presentBtn,body.brand-home .tabbar,body.brand-home .brandsw{dis
 .pg-it input{width:18px;height:18px;accent-color:var(--accent);flex:0 0 auto}
 .pg-n{font-size:11.5px;font-weight:700;color:var(--faint);min-width:16px}
 .pg-ordw{margin-top:12px;border:1px solid var(--line);border-radius:12px;background:#fff}
-.pg-ordw>summary{cursor:pointer;padding:11px 14px;font-weight:800;font-size:14px;color:var(--accent-ink);user-select:none}
-.pg-ordw>summary small{color:var(--mute);font-weight:700;margin-left:4px}
+.pg-ords{display:flex;align-items:center;gap:6px;padding:10px 14px 4px;font-weight:800;font-size:14px;color:var(--accent-ink)}
+.pg-ords small{color:var(--mute);font-weight:700}.pg-ords .btn{margin-left:auto}
 .pg-ordh{padding:0 14px 8px;font-size:12.5px;color:var(--mute);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 #presOrd{max-height:30vh;overflow:auto;border-top:1px solid var(--hair)}
 .pg-oi{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--hair);font-size:14px;cursor:grab;background:#fff}
@@ -2534,9 +2544,9 @@ section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):n
   <div class="imphd"><div><h2 id="presH">เลือกเรื่องที่จะพรีเซนต์</h2><p>ติ๊กหัวข้อได้ทุกหมวดพร้อมกัน หรือกดชื่อหมวดเพื่อเลือก/เอาออกทั้งหมวด</p></div><button class="btn" id="presClose">ปิด</button></div>
   <div class="pg-chips" id="presGroups"></div>
   <div class="pg-list" id="presList"></div>
-  <details class="pg-ordw" id="presOrdW"><summary>↕ จัดลำดับสไลด์ <small id="presOrdN"></small></summary>
-    <div class="pg-ordh">ลากแถวไปวาง หรือกด ▲ ▼ · สไลด์จะแสดงตามลำดับนี้ · เครื่องจะจำลำดับไว้ให้ <button type="button" class="btn small" id="presOrdReset">เรียงตามเดิม</button></div>
-    <div id="presOrd"></div></details>
+  <div class="pg-ordw" id="presOrdW"><div class="pg-ords">↕ ลำดับการแสดง <small id="presOrdN"></small><button type="button" class="btn small" id="presOrdReset">เรียงตามเดิม</button></div>
+    <div class="pg-ordh">ลากแถวไปวาง หรือกด ▲ ▼ · จำลำดับไว้ในเครื่องนี้</div>
+    <div id="presOrd"></div></div>
   <div class="pg-foot"><button type="button" class="btn small" id="presAll">เลือกทั้งหมด</button><button type="button" class="btn small" id="presNone">ไม่เลือก</button>
     <span id="presCnt"></span><button type="button" class="btn primary" id="presGo">▶ เริ่มพรีเซนต์</button></div>
 </div></div>
