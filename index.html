@@ -6499,7 +6499,7 @@ async function presPush(){ if(!SYNC.key||!SYNC.token) return;
     SYNC.row[PRES_ID]=await r.json(); PRES_ERR=null; }
   catch(e){ console.warn('pres push',e); PRES_ERR=String(e&&e.message||e); } presSyncNote(); }
 function presSyncNote(){ const el=document.getElementById('presSync'); if(!el) return;
-  el.textContent=!SYNC.key?'':(PRES_ERR?'⚠ ซิงก์ข้ามเครื่องยังไม่ได้ · เก็บในเครื่องนี้ก่อน':'☁ ใช้ร่วมกันทุกเครื่อง'); el.title=PRES_ERR||'ชุดที่บันทึกเก็บในฐานข้อมูลกลาง (เข้ารหัส) ทุกเครื่องที่ล็อกอินเห็นชุดเดียวกัน'; }
+  el.textContent=!SYNC.key?'':(PRES_ERR?'⚠ ซิงก์ข้ามเครื่องยังไม่ได้ · เก็บในเครื่องนี้ก่อน ('+String(PRES_ERR).replace(/\s+/g,' ').slice(0,110)+')':'☁ ใช้ร่วมกันทุกเครื่อง'); el.title=PRES_ERR||'ชุดที่บันทึกเก็บในฐานข้อมูลกลาง (เข้ารหัส) ทุกเครื่องที่ล็อกอินเห็นชุดเดียวกัน'; }
 /* คืน true ถ้าได้ข้อมูลใหม่จากฐานกลางมาใช้ (ผู้เรียกควรวาดหน้าต่างใหม่) */
 async function presPull(){ if(!SYNC.key) return false;
   try{ const q=SB_URL+'/rest/v1/sfkpi_state?id=eq.'+encodeURIComponent(PRES_ID)+'&select=';
