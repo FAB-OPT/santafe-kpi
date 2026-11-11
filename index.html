@@ -6489,7 +6489,7 @@ function presOrdSync(avail){
   PRES_ORD=cur.concat(base.filter(id=>!cur.includes(id))); }
 /* ซิงก์ชุดพรีเซนต์ (ชุดที่ตั้งชื่อ · ลำดับ · การติ๊กล่าสุด) ขึ้นฐานกลางตัวเดียวกับข้อมูลนำเข้า (เข้ารหัสด้วยรหัสเข้าเว็บ)
    ทุกเครื่องที่ล็อกอินด้วยรหัสเดียวกันเห็นชุดเดียวกัน · ฉบับที่แก้ล่าสุดชนะ (เทียบเวลา) · ต่อฐานกลางไม่ได้ = ใช้ในเครื่องตามเดิม */
-const PRES_ID='sf-kpi-pres', PRES_TS_KEY='opkt_pres_ts_v1'; let PRES_ERR=null, _presT=null;
+const PRES_ID='sf-kpi-data-pres', PRES_TS_KEY='opkt_pres_ts_v1'; let PRES_ERR=null, _presT=null;
 const presRd=k=>{ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch(e){ return null; } };
 function presBundle(){ return {updatedAt:localStorage.getItem(PRES_TS_KEY)||'', sets:presRd(PRES_SETS_KEY)||[], ord:presRd(PRES_ORD_KEY)||[], sel:presRd(PRES_SEL_KEY)}; }
 function presTouch(){ try{ localStorage.setItem(PRES_TS_KEY,new Date().toISOString()); }catch(e){} clearTimeout(_presT); _presT=setTimeout(presPush,1200); }
