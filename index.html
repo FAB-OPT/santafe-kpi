@@ -1590,6 +1590,16 @@ body.brand-home #presentBtn,body.brand-home .tabbar,body.brand-home .brandsw{dis
 .pg-it:has(input:checked){border-color:var(--accent);background:#FFF7F0}
 .pg-it input{width:18px;height:18px;accent-color:var(--accent);flex:0 0 auto}
 .pg-n{font-size:11.5px;font-weight:700;color:var(--faint);min-width:16px}
+.pg-ordw{margin-top:12px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.pg-ordw>summary{cursor:pointer;padding:11px 14px;font-weight:800;font-size:14px;color:var(--accent-ink);user-select:none}
+.pg-ordw>summary small{color:var(--mute);font-weight:700;margin-left:4px}
+.pg-ordh{padding:0 14px 8px;font-size:12.5px;color:var(--mute);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#presOrd{max-height:30vh;overflow:auto;border-top:1px solid var(--hair)}
+.pg-oi{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--hair);font-size:14px;cursor:grab;background:#fff}
+.pg-oi.drag{opacity:.35}.pg-oi.over{box-shadow:inset 0 3px 0 var(--accent)}
+.pg-oi .pg-n{min-width:22px;text-align:right}.pg-oi .gp{color:var(--faint);letter-spacing:-2px;font-size:13px}.pg-oi .tt{flex:1;min-width:0}
+.pg-mv{width:32px;height:32px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;font-size:12px;color:var(--ink-2)}
+.pg-mv:disabled{opacity:.35;cursor:default}.pg-mv:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
 .pg-foot{display:flex;align-items:center;gap:8px;margin-top:14px;flex-wrap:wrap}
 .pg-foot #presCnt{margin-left:auto;font-size:13px;color:var(--mute)}
 #presGo:disabled{opacity:.5;cursor:not-allowed}
@@ -2524,6 +2534,9 @@ section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):n
   <div class="imphd"><div><h2 id="presH">เลือกเรื่องที่จะพรีเซนต์</h2><p>ติ๊กหัวข้อได้ทุกหมวดพร้อมกัน หรือกดชื่อหมวดเพื่อเลือก/เอาออกทั้งหมวด</p></div><button class="btn" id="presClose">ปิด</button></div>
   <div class="pg-chips" id="presGroups"></div>
   <div class="pg-list" id="presList"></div>
+  <details class="pg-ordw" id="presOrdW"><summary>↕ จัดลำดับสไลด์ <small id="presOrdN"></small></summary>
+    <div class="pg-ordh">ลากแถวไปวาง หรือกด ▲ ▼ · สไลด์จะแสดงตามลำดับนี้ · เครื่องจะจำลำดับไว้ให้ <button type="button" class="btn small" id="presOrdReset">เรียงตามเดิม</button></div>
+    <div id="presOrd"></div></details>
   <div class="pg-foot"><button type="button" class="btn small" id="presAll">เลือกทั้งหมด</button><button type="button" class="btn small" id="presNone">ไม่เลือก</button>
     <span id="presCnt"></span><button type="button" class="btn primary" id="presGo">▶ เริ่มพรีเซนต์</button></div>
 </div></div>
@@ -6433,7 +6446,15 @@ function presSecs(g){ const els=[...document.querySelectorAll('#main section.sli
   const ids=g==='all'?SEC_ORDER:((GROUPS.find(x=>x.k===g)||{subs:[]}).subs.flatMap(sb=>sb.ids));
   return ids.map(id=>els.find(e=>e.id===id)).filter(Boolean); }
 /* เลือกพรีเซนต์: ติ๊กข้ามหมวดได้พร้อมกัน (ทุกหัวข้อสร้างอยู่ในหน้าแล้ว โหมดพรีเซนต์แสดงข้ามหมวดได้) */
-let PRES_SEL=null;
+let PRES_SEL=null, PRES_ORD=null;
+const PRES_ORD_KEY='opkt_pres_order_v1';
+/* ลำดับสไลด์ที่เรียงเอง: PRES_ORD = หัวข้อทั้งหมดที่มี เรียงตามที่ผู้ใช้จัด (จำไว้ในเครื่อง) · ตอนเล่นใช้เฉพาะที่ติ๊ก ตามลำดับนี้ */
+function presOrdSync(avail){
+  const base=SEC_ORDER.filter(id=>avail.has(id));
+  if(!PRES_ORD){ try{ PRES_ORD=JSON.parse(localStorage.getItem(PRES_ORD_KEY)||'null'); }catch(e){} }
+  const cur=(Array.isArray(PRES_ORD)?PRES_ORD:[]).filter((id,i,a)=>avail.has(id)&&a.indexOf(id)===i);
+  PRES_ORD=cur.concat(base.filter(id=>!cur.includes(id))); }
+function presOrdSave(){ try{ localStorage.setItem(PRES_ORD_KEY,JSON.stringify(PRES_ORD)); }catch(e){} }
 function closePresPicker(){ $('#presModal').classList.remove('open'); }
 function openPresPicker(){
   if(!document.querySelector('#main section.slide')) return;
@@ -6441,6 +6462,7 @@ function openPresPicker(){
 function renderPresPicker(){
   const avail=new Set([...document.querySelectorAll('#main section.slide')].map(e=>e.id));
   if(!PRES_SEL) PRES_SEL=new Set(SEC_ORDER.filter(id=>avail.has(id)));
+  presOrdSync(avail);
   const groups=GROUPS.map(g=>({g,ids:g.subs.flatMap(sb=>sb.ids).filter(id=>avail.has(id))})).filter(x=>x.ids.length);
   const keep=($('#presList')||{}).scrollTop||0;
   $('#presGroups').innerHTML=groups.map(x=>{ const n=x.ids.filter(id=>PRES_SEL.has(id)).length;
@@ -6451,12 +6473,26 @@ function renderPresPicker(){
     :'<div class="empty">ยังไม่มีหัวข้อให้พรีเซนต์</div>';
   $('#presList').scrollTop=keep;
   const cnt=()=>{ const n=PRES_SEL.size; $('#presCnt').textContent=n+' สไลด์'; $('#presGo').disabled=!n; };
+  /* แผงจัดลำดับ */
+  const sel=PRES_ORD.filter(id=>PRES_SEL.has(id)), ttl=id=>{ const e=document.getElementById(id); return NAV_SHORT[id]||(e&&e.dataset.title)||id; };
+  $('#presOrdN').textContent='('+sel.length+' สไลด์)';
+  $('#presOrd').innerHTML=sel.length?sel.map((id,i)=>`<div class="pg-oi" draggable="true" data-oid="${id}"><span class="gp">⋮⋮</span><span class="pg-n">${i+1}</span><span class="tt">${ttl(id)}</span><button type="button" class="pg-mv" data-mv="-1" ${i?'':'disabled'} title="เลื่อนขึ้น">▲</button><button type="button" class="pg-mv" data-mv="1" ${i<sel.length-1?'':'disabled'} title="เลื่อนลง">▼</button></div>`).join(''):'<div class="empty">ยังไม่ได้เลือกสไลด์</div>';
+  const moveTo=(id,toId,after)=>{ if(id===toId) return; PRES_ORD=PRES_ORD.filter(x=>x!==id); let j=PRES_ORD.indexOf(toId); if(j<0) j=PRES_ORD.length; PRES_ORD.splice(after?j+1:j,0,id); presOrdSave(); renderPresPicker(); };
+  document.querySelectorAll('#presOrd [data-mv]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); const id=b.closest('.pg-oi').dataset.oid, i=sel.indexOf(id), d=+b.dataset.mv, nb=sel[i+d]; if(!nb) return; moveTo(id,nb,d>0); });
+  let dragId=null;
+  document.querySelectorAll('#presOrd .pg-oi').forEach(r=>{
+    r.ondragstart=e=>{ dragId=r.dataset.oid; r.classList.add('drag'); try{ e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',dragId); }catch(x){} };
+    r.ondragend=()=>{ dragId=null; document.querySelectorAll('#presOrd .pg-oi').forEach(x=>x.classList.remove('drag','over')); };
+    r.ondragover=e=>{ if(!dragId) return; e.preventDefault(); document.querySelectorAll('#presOrd .pg-oi').forEach(x=>x.classList.toggle('over',x===r&&r.dataset.oid!==dragId)); };
+    r.ondrop=e=>{ e.preventDefault(); if(!dragId) return; const from=sel.indexOf(dragId), to=sel.indexOf(r.dataset.oid); moveTo(dragId,r.dataset.oid,from<to); };
+  });
+  $('#presOrdReset').onclick=()=>{ PRES_ORD=SEC_ORDER.filter(id=>avail.has(id)); presOrdSave(); renderPresPicker(); };
   document.querySelectorAll('#presGroups [data-pg]').forEach(b=>b.onclick=()=>{ const x=groups.find(y=>y.g.k===b.dataset.pg); if(!x) return;
     const all=x.ids.every(id=>PRES_SEL.has(id)); x.ids.forEach(id=>all?PRES_SEL.delete(id):PRES_SEL.add(id)); renderPresPicker(); });
   document.querySelectorAll('#presList input').forEach(x=>x.onchange=()=>{ x.checked?PRES_SEL.add(x.value):PRES_SEL.delete(x.value); renderPresPicker(); });
   $('#presAll').onclick=()=>{ groups.forEach(x=>x.ids.forEach(id=>PRES_SEL.add(id))); renderPresPicker(); };
   $('#presNone').onclick=()=>{ PRES_SEL.clear(); renderPresPicker(); };
-  $('#presGo').onclick=()=>{ const ids=SEC_ORDER.filter(id=>PRES_SEL.has(id)&&avail.has(id)); if(!ids.length) return;
+  $('#presGo').onclick=()=>{ const ids=PRES_ORD.filter(id=>PRES_SEL.has(id)&&avail.has(id)); if(!ids.length) return;
     $('#presModal').classList.remove('open'); startPresent(ids); };
   cnt(); }
 $('#presentBtn').onclick=openPresPicker; $('#pExit').onclick=exitPresent;
