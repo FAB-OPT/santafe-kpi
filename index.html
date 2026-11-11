@@ -1602,6 +1602,7 @@ body.brand-home #presentBtn,body.brand-home .tabbar,body.brand-home .brandsw{dis
 .pg-n{font-size:11.5px;font-weight:700;color:var(--faint);min-width:16px}
 .pg-sets{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px;padding:8px 10px;border:1px dashed var(--line);border-radius:12px;background:#FCFBF9;font-size:13px}
 .pg-sets>b{color:var(--ink-2)}#presSets{display:inline-flex;gap:6px;flex-wrap:wrap}
+.pg-sy{color:var(--mute);font-size:12px;font-weight:600}
 .pg-sets .empty-s{color:var(--mute);font-size:12.5px}
 .pg-st{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;background:#fff;overflow:hidden}
 .pg-st.on{border-color:var(--accent);background:#FFF7F0}
@@ -2551,7 +2552,7 @@ section.slide:not(#overview):not(#salesmix):not(#customers):not(#pl):not(#cem):n
 <div class="modal" id="presModal"><div class="box pres" role="dialog" aria-labelledby="presH">
   <div class="imphd"><div><h2 id="presH">เลือกเรื่องที่จะพรีเซนต์</h2><p>ติ๊กหัวข้อได้ทุกหมวดพร้อมกัน หรือกดชื่อหมวดเพื่อเลือก/เอาออกทั้งหมวด</p></div><button class="btn" id="presClose">ปิด</button></div>
   <div class="pg-chips" id="presGroups"></div>
-  <div class="pg-sets"><b>ชุดที่บันทึกไว้</b><span id="presSets"></span>
+  <div class="pg-sets"><b>ชุดที่บันทึกไว้</b><small id="presSync" class="pg-sy"></small><span id="presSets"></span>
     <span class="pg-sn"><input id="presSetName" maxlength="40" placeholder="ตั้งชื่อชุด เช่น ประชุมประจำเดือน" autocomplete="off"><button type="button" class="btn small" id="presSetSave">💾 บันทึกชุดนี้</button></span></div>
   <div class="pg-list" id="presList"></div>
   <div class="pg-ordw" id="presOrdW"><div class="pg-ords">↕ ลำดับการแสดง <small id="presOrdN"></small><button type="button" class="btn small" id="presOrdReset">เรียงตามเดิม</button></div>
@@ -6474,21 +6475,61 @@ function presSelLoad(avail){ let o=null; try{ o=JSON.parse(localStorage.getItem(
   if(!o||!Array.isArray(o.sel)||!Array.isArray(o.known)) return new Set(SEC_ORDER.filter(id=>avail.has(id)));
   const sel=new Set(o.sel), known=new Set(o.known);
   return new Set(SEC_ORDER.filter(id=>avail.has(id)&&(sel.has(id)||!known.has(id)))); }
-function presSelSave(avail){ let o=null; try{ o=JSON.parse(localStorage.getItem(PRES_SEL_KEY)||'null'); }catch(e){}
+let _presHold=false;   /* ระหว่างรอดึงจากฐานกลางตอนเปิด: ยังไม่บันทึกค่าเริ่มต้น (กันไปทับชุดที่อยู่บนฐานกลาง) */
+function presSelSave(avail){ if(_presHold) return; let o=null, before=localStorage.getItem(PRES_SEL_KEY)||''; try{ o=JSON.parse(before||'null'); }catch(e){}
   const sel=new Set((o&&o.sel)||[]), known=new Set((o&&o.known)||[]);
   avail.forEach(id=>{ known.add(id); PRES_SEL.has(id)?sel.add(id):sel.delete(id); });
-  try{ localStorage.setItem(PRES_SEL_KEY,JSON.stringify({sel:[...sel],known:[...known]})); }catch(e){} }
+  const nw=JSON.stringify({sel:[...sel],known:[...known]}); if(nw===before) return;
+  try{ localStorage.setItem(PRES_SEL_KEY,nw); }catch(e){} presTouch(); }
 /* ลำดับสไลด์ที่เรียงเอง: PRES_ORD = หัวข้อทั้งหมดที่มี เรียงตามที่ผู้ใช้จัด (จำไว้ในเครื่อง) · ตอนเล่นใช้เฉพาะที่ติ๊ก ตามลำดับนี้ */
 function presOrdSync(avail){
   const base=SEC_ORDER.filter(id=>avail.has(id));
   if(!PRES_ORD){ try{ PRES_ORD=JSON.parse(localStorage.getItem(PRES_ORD_KEY)||'null'); }catch(e){} }
   const cur=(Array.isArray(PRES_ORD)?PRES_ORD:[]).filter((id,i,a)=>avail.has(id)&&a.indexOf(id)===i);
   PRES_ORD=cur.concat(base.filter(id=>!cur.includes(id))); }
-function presOrdSave(){ try{ localStorage.setItem(PRES_ORD_KEY,JSON.stringify(PRES_ORD)); }catch(e){} }
+/* ซิงก์ชุดพรีเซนต์ (ชุดที่ตั้งชื่อ · ลำดับ · การติ๊กล่าสุด) ขึ้นฐานกลางตัวเดียวกับข้อมูลนำเข้า (เข้ารหัสด้วยรหัสเข้าเว็บ)
+   ทุกเครื่องที่ล็อกอินด้วยรหัสเดียวกันเห็นชุดเดียวกัน · ฉบับที่แก้ล่าสุดชนะ (เทียบเวลา) · ต่อฐานกลางไม่ได้ = ใช้ในเครื่องตามเดิม */
+const PRES_ID='sf-kpi-pres', PRES_TS_KEY='opkt_pres_ts_v1'; let PRES_ERR=null, _presT=null;
+const presRd=k=>{ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch(e){ return null; } };
+function presBundle(){ return {updatedAt:localStorage.getItem(PRES_TS_KEY)||'', sets:presRd(PRES_SETS_KEY)||[], ord:presRd(PRES_ORD_KEY)||[], sel:presRd(PRES_SEL_KEY)}; }
+function presTouch(){ try{ localStorage.setItem(PRES_TS_KEY,new Date().toISOString()); }catch(e){} clearTimeout(_presT); _presT=setTimeout(presPush,1200); }
+async function presPush(){ if(!SYNC.key||!SYNC.token) return;
+  try{ const r=await fetch(SB_URL+'/rest/v1/rpc/sfkpi_save',{method:'POST',headers:sbH(),body:JSON.stringify({p_id:PRES_ID,p_blob:await syncEnc(presBundle()),p_v:null,p_token:SYNC.token})});
+    if(!r.ok) throw new Error('HTTP '+r.status+' '+(await r.text()).slice(0,120));
+    SYNC.row[PRES_ID]=await r.json(); PRES_ERR=null; }
+  catch(e){ console.warn('pres push',e); PRES_ERR=String(e&&e.message||e); } presSyncNote(); }
+function presSyncNote(){ const el=document.getElementById('presSync'); if(!el) return;
+  el.textContent=!SYNC.key?'':(PRES_ERR?'⚠ ซิงก์ข้ามเครื่องยังไม่ได้ · เก็บในเครื่องนี้ก่อน':'☁ ใช้ร่วมกันทุกเครื่อง'); el.title=PRES_ERR||'ชุดที่บันทึกเก็บในฐานข้อมูลกลาง (เข้ารหัส) ทุกเครื่องที่ล็อกอินเห็นชุดเดียวกัน'; }
+/* คืน true ถ้าได้ข้อมูลใหม่จากฐานกลางมาใช้ (ผู้เรียกควรวาดหน้าต่างใหม่) */
+async function presPull(){ if(!SYNC.key) return false;
+  try{ const q=SB_URL+'/rest/v1/sfkpi_state?id=eq.'+encodeURIComponent(PRES_ID)+'&select=';
+    let r=await fetch(q+'updated_at',{headers:sbH()}); if(!r.ok) throw new Error('HTTP '+r.status);
+    const head=(await r.json())[0], loc=presBundle(), hasLocal=(loc.sets.length||loc.ord.length||loc.sel);
+    if(!head){ if(hasLocal){ if(!loc.updatedAt) presTouch(); await presPush(); } else PRES_ERR=null; presSyncNote(); return false; }
+    if(SYNC.row[PRES_ID]===head.updated_at){ PRES_ERR=null; presSyncNote(); return false; }
+    r=await fetch(q+'updated_at,blob',{headers:sbH()}); if(!r.ok) throw new Error('HTTP '+r.status);
+    const row=(await r.json())[0], rm=await syncDec(row.blob); SYNC.row[PRES_ID]=row.updated_at; PRES_ERR=null;
+    let adopt=(rm.updatedAt||'')>(loc.updatedAt||'');
+    const put=(k,v)=>{ try{ if(v==null) localStorage.removeItem(k); else localStorage.setItem(k,JSON.stringify(v)); }catch(e){} };
+    if(adopt){
+      let sets=Array.isArray(rm.sets)?rm.sets:[];
+      /* เครื่องนี้มีชุดที่เคยบันทึกไว้ก่อนมีการซิงก์ (ยังไม่มีเวลาแก้ไข) → รวมชื่อชุดเข้าด้วยกัน ไม่ทับของเดิม */
+      if(!loc.updatedAt&&loc.sets.length){ const nm=new Set(sets.map(x=>x.name)); sets=sets.concat(loc.sets.filter(x=>x&&!nm.has(x.name))); }
+      put(PRES_SETS_KEY,sets); put(PRES_ORD_KEY,rm.ord||[]); put(PRES_SEL_KEY,rm.sel||null);
+      try{ localStorage.setItem(PRES_TS_KEY,rm.updatedAt||new Date().toISOString()); }catch(e){}
+      PRES_ORD=null; PRES_SEL=null;
+      if(!loc.updatedAt&&loc.sets.length&&sets.length!==(rm.sets||[]).length){ presTouch(); }
+      presSyncNote(); return true; }
+    if((loc.updatedAt||'')>(rm.updatedAt||'')) await presPush();
+    presSyncNote(); return false; }
+  catch(e){ console.warn('pres pull',e); PRES_ERR=String(e&&e.message||e); presSyncNote(); return false; } }
+function presOrdSave(){ try{ localStorage.setItem(PRES_ORD_KEY,JSON.stringify(PRES_ORD)); }catch(e){} presTouch(); }
 function closePresPicker(){ $('#presModal').classList.remove('open'); }
 function openPresPicker(){
   if(!document.querySelector('#main section.slide')) return;
-  PRES_SEL=null; renderPresPicker(); $('#presModal').classList.add('open'); }
+  _presHold=!!SYNC.key;
+  PRES_SEL=null; renderPresPicker(); $('#presModal').classList.add('open');
+  presPull().then(ch=>{ _presHold=false; if($('#presModal').classList.contains('open')){ if(ch) PRES_SEL=null; renderPresPicker(); } }); }
 function renderPresPicker(){
   const avail=new Set([...document.querySelectorAll('#main section.slide')].map(e=>e.id));
   if(!PRES_SEL) PRES_SEL=presSelLoad(avail);
@@ -6502,7 +6543,7 @@ function renderPresPicker(){
       return `<label class="pg-it"><input type="checkbox" value="${id}" ${PRES_SEL.has(id)?'checked':''}><span class="pg-n">${k}</span><span>${NAV_SHORT[id]||e.dataset.title}</span></label>`; }).join('')}</div></div>`).join('')
     :'<div class="empty">ยังไม่มีหัวข้อให้พรีเซนต์</div>';
   $('#presList').scrollTop=keep;
-  presSelSave(avail);
+  presSelSave(avail); presSyncNote();
   const cnt=()=>{ const n=PRES_SEL.size; $('#presCnt').textContent=n+' สไลด์'; $('#presGo').disabled=!n; };
   /* แผงจัดลำดับ */
   const sel=PRES_ORD.filter(id=>PRES_SEL.has(id)), ttl=id=>{ const e=document.getElementById(id); return NAV_SHORT[id]||(e&&e.dataset.title)||id; };
@@ -6519,7 +6560,7 @@ function renderPresPicker(){
   });
   /* ชุดที่บันทึกไว้ (ชื่อ + หัวข้อที่ติ๊ก + ลำดับ) */
   const loadSets=()=>{ try{ const a=JSON.parse(localStorage.getItem(PRES_SETS_KEY)||'[]'); return Array.isArray(a)?a.filter(x=>x&&x.name&&Array.isArray(x.ids)):[]; }catch(e){ return []; } };
-  const saveSets=a=>{ try{ localStorage.setItem(PRES_SETS_KEY,JSON.stringify(a)); }catch(e){ alert('บันทึกไม่ได้ (เบราว์เซอร์ปิดการเก็บข้อมูล)'); } };
+  const saveSets=a=>{ try{ localStorage.setItem(PRES_SETS_KEY,JSON.stringify(a)); presTouch(); }catch(e){ alert('บันทึกไม่ได้ (เบราว์เซอร์ปิดการเก็บข้อมูล)'); } };
   const cur=sel.join(','), sets=loadSets();
   $('#presSets').innerHTML=sets.length?sets.map((x,i)=>{ const ids=x.ids.filter(id=>avail.has(id)); return `<span class="pg-st ${ids.join(',')===cur?'on':''}"><button type="button" class="ld" data-ps="${i}" title="ใช้ชุดนี้ (ติ๊กและเรียงตามที่บันทึกไว้)">${esc2(x.name)}<small>${ids.length}</small></button><button type="button" class="dl" data-pd="${i}" title="ลบชุดนี้">✕</button></span>`; }).join(''):'<span class="empty-s">ยังไม่มี · ติ๊กและเรียงลำดับตามต้องการ แล้วตั้งชื่อด้านขวา</span>';
   document.querySelectorAll('#presSets [data-ps]').forEach(b=>b.onclick=()=>{ const x=loadSets()[+b.dataset.ps]; if(!x) return;
