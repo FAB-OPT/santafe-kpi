@@ -6739,7 +6739,7 @@ let db=null, dbDoc=null, saving=false;
    เก็บเป็นก้อนเข้ารหัส AES-GCM (กุญแจสร้างจากรหัสเข้าเว็บ) · ใครอ่านก็ถอดไม่ได้ถ้าไม่มีรหัส
    เขียนได้ผ่านฟังก์ชัน sfkpi_save ที่ตรวจกุญแจเขียน (สร้างจากรหัสเข้าเว็บ) เท่านั้น · ต่อไม่ได้ = ใช้ข้อมูลในเครื่องตามเดิม */
 const SB_URL='https://prkoyrorasldnqekhhtv.supabase.co', SB_KEY='sb_publishable_iNEgZgxU0QSn_WtCrRZtRg_5AbWjaQO';
-const SYNC={key:null, token:null, row:{}, err:null, busy:false};
+const SYNC={key:null, token:null, row:{}, err:null, busy:false, busyId:{}, did:{}};
 let SYNC_IT=200000;   // รอบ PBKDF2 (ต้องตรงกับแฮชกุญแจเขียนในฐาน)
 const b64e=u=>{ let s=''; const a=new Uint8Array(u); for(let i=0;i<a.length;i+=0x8000) s+=String.fromCharCode.apply(null,a.subarray(i,i+0x8000)); return btoa(s); };
 async function syncKeys(pass){ try{
@@ -6767,23 +6767,28 @@ async function syncPush(id,s){ if(!SYNC.key||!SYNC.token) return;
     SYNC.row[id]=await r.json(); SYNC.err=null; syncBadge('ok'); }
   catch(e){ console.warn('sync push',e); SYNC.err=e; syncBadge('err'); } }
 /* ดึงจากฐานกลาง: เช็กเวลาอัปเดตก่อน (เบา) · ของฐานใหม่กว่าในเครื่อง → ใช้ของฐาน · ในเครื่องใหม่กว่า/ฐานยังว่าง → ส่งขึ้น */
-async function syncPull(id){ if(!SYNC.key||SYNC.busy) return; SYNC.busy=true;
+async function syncPull(id){ if(!SYNC.key||SYNC.busyId[id]) return; SYNC.busyId[id]=true;
   try{ const q=SB_URL+'/rest/v1/sfkpi_state?id=eq.'+encodeURIComponent(id)+'&select=';
     let r=await fetch(q+'updated_at',{headers:sbH()}); if(!r.ok) throw new Error('HTTP '+r.status+' '+(await r.text()).slice(0,160));
     const head=(await r.json())[0];
     let local=null; try{ local=JSON.parse(localStorage.getItem(id)); }catch(e){}
-    const okV=x=>x&&(!DATA_V||!x.v||x.v===DATA_V), lt=okV(local)&&local.updatedAt||'';
+    const isKt=id==='sf-kpi-data';   /* DATA_V = เวอร์ชันของข้อมูลที่ฝังในเว็บ (มีเฉพาะ KT) */
+    const okV=x=>x&&(!isKt||!DATA_V||!x.v||x.v===DATA_V), lt=okV(local)&&local.updatedAt||'';
     if(!head){ if(lt) await syncPush(id,local); else { SYNC.err=null; syncBadge('ok'); } return; }
     if(SYNC.row[id]===head.updated_at){ SYNC.err=null; syncBadge('ok'); return; }
     r=await fetch(q+'updated_at,blob',{headers:sbH()}); if(!r.ok) throw new Error('HTTP '+r.status);
     const row=(await r.json())[0]; const s=await syncDec(row.blob), st=okV(s)&&s.updatedAt||'';
     SYNC.row[id]=row.updated_at;
     if(st&&st>lt){ try{ localStorage.setItem(id,JSON.stringify(s)); }catch(e){}
-      if(brandStoreKey(DATA_BRAND)===id) applyState(s); }
+      if(brandStoreKey(DATA_BRAND)===id){ SYNC.did[id]=1; applyState(s); }
+      else { const bk=isKt?'kt':id.replace(/^sf-kpi-data-/,''); delete BSTORE[bk]; delete SYNC.row[id]; delete SYNC.did[id]; } }   // แบรนด์ที่ยังไม่ได้เปิด: ล้างแคชในหน้า ให้โหลดใหม่ตอนสลับไป
+    /* ในเครื่องเท่ากับบนฐานแล้ว แต่ยังไม่เคยนำชุดเต็ม (ประวัติรายสาขา · รายชั่วโมง · วัตถุดิบ) มาใช้ในรอบนี้ → ใช้ตอนเปิดแบรนด์นั้น
+       (ตอนสลับแบรนด์ ระบบโหลดแค่ยอดรายเดือน/รายละเอียดจากเครื่อง ส่วนที่เหลือมาจากขั้นนี้) · KT ใช้ตอนเปิดเว็บไปแล้ว */
+    else if(st&&st===lt&&!isKt&&!SYNC.did[id]&&brandStoreKey(DATA_BRAND)===id){ SYNC.did[id]=1; applyState(s); }
     else if(lt&&lt>st) await syncPush(id,local);
     SYNC.err=null; syncBadge('ok'); }
   catch(e){ console.warn('sync pull',e); SYNC.err=e; syncBadge('err'); }
-  finally{ SYNC.busy=false; } }
+  finally{ SYNC.busyId[id]=false; } }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') syncPull(brandStoreKey(DATA_BRAND)); });
 setInterval(()=>{ if(document.visibilityState==='visible') syncPull(brandStoreKey(DATA_BRAND)); },120000);
 /* ยอดรายสาขา 2 ปีที่นำเข้าจากเครื่องนี้: รวมเข้ากับชุดที่ฝังในเว็บ (ตัวเลขจากไฟล์ชนะ)
